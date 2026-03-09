@@ -23,6 +23,11 @@ class View extends BaseView
      */
     public $saveData = true;
 
+      public $viewPaths = [
+         APPPATH . 'Views/',
+         APPPATH . 'modules/',
+    ];
+
     /**
      * Parser Filters map a filter name with any PHP callable. When the
      * Parser prepares a variable for display, it will chain it
@@ -48,6 +53,8 @@ class View extends BaseView
      * @phpstan-var array<string, list<parser_callable_string>|parser_callable_string|parser_callable>
      */
     public $plugins = [];
+
+  
 
     /**
      * View Decorators are class methods that will be run in sequence to

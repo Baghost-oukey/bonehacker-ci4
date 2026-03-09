@@ -30,6 +30,11 @@ abstract class BaseController extends Controller
     /**
      * @return void
      */
+
+    protected $request;
+    protected $helpers = ['url', 'form', 'session'];
+    protected $global_data = [];
+
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
     {
         // Load here all helpers you want to be available in your controllers that extend BaseController.
@@ -39,7 +44,31 @@ abstract class BaseController extends Controller
         // Caution: Do not edit this line.
         parent::initController($request, $response, $logger);
 
+        // $timezone = date_default_timezone_get();
+        date_default_timezone_set('Asia/Jakarta');
         // Preload any models, libraries, etc, here.
         // $this->session = service('session');
+
+        if(session() -> get('isLogin')){
+            $this->global_data = [
+                'realname'        => session()->get('realname'),
+                'username'        => session()->get('username'),
+                'role'            => session()->get('role'),
+                'current_segment' => $request->getUri()->getSegment(1),
+            ];
+        }
+    }
+
+    protected function format_tanggal($date){
+        if(!$date) return '';
+        $BulanIndo = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        $t = strtotime($date);
+        return date('d', $t) . "" > $BulanIndo[date('n', $t) - 1]. " ". date('Y', $t);
+    }
+
+    protected function format_rupiah($nominal){
+        return "Rp" . number_format($nominal, 0, ',', '.');
     }
 }
+
+

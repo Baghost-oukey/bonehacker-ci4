@@ -1,0 +1,67 @@
+<?php
+
+namespace App\modules\auth\Controller;
+
+use App\Controllers\BaseController;
+use App\modules\auth\models\MAuth;
+use CodeIgniter\HTTP\RedirectResponse;
+use CodeIgniter\HTTP\ResponseInterface;
+
+class Auth extends BaseController
+{
+
+    protected $authModel;
+    public function __construct()
+    {
+        $this->authModel = new MAuth();
+    }
+
+
+    public function index()
+    {
+        //
+        if (session()->get('isLogin')) {
+            return redirect()->to(base_url('dashboard'));
+        }
+
+        $data = [
+            'title' => 'Masuk',
+            'msg' => session()->getFlashdata('pesan')
+        ];
+        return view('\App\modules\auth\Views\auth_views', $data);
+    }
+
+    public function authValidate(): RedirectResponse
+    {
+        $username = $this->request->getPost('username');
+        $password = $this->request->getPost('password');
+
+        $user = $this->authModel->verifyLogin((string) $username, (string)$password);
+
+        if ($user) {
+            $sessionData = [
+                'isLogin'         => true,
+                'userId'          => $user->id,
+                'realname'        => $user->realname,
+                'role'            => $user->role,
+                'regions_patient' => $user->regions_patient,
+            ];
+            session()->set($sessionData);
+
+            session()->regenerate();
+
+            return redirect()->to(base_url('dashboard'));
+        } else {
+            $params = ['1', 'error', 'Nama pengguna dan kata sandi tidak sesuai', ''];
+            session()->setFlashdata('pesan', $params);
+
+            return redirect()->to(base_url('auth'));
+        }
+    }
+
+    public function destroy(): RedirectResponse
+    {
+        session()->destroy();
+        return redirect()->to(base_url('auth'));
+    }
+}
