@@ -43,6 +43,7 @@ class Autoload extends AutoloadConfig
 
         
         'App\modules' => APPPATH . 'modules',
+        'Jenssegers\Blade' => ROOTPATH . 'vendor/jenssegers/blade/src',
     ];
 
     /**

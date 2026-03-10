@@ -1,6 +1,6 @@
 <?php
 
-namespace App\modules\auth\Controller;
+namespace App\modules\auth\Controllers;
 
 use App\Controllers\BaseController;
 use App\modules\auth\models\MAuth;

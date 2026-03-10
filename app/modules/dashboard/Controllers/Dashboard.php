@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controllers;
+namespace App\modules\dashboard\Controllers;
 
 use App\Controllers\BaseController;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -16,7 +16,7 @@ class Dashboard extends BaseController
 
         $mRegion    = model('App\modules\region\Models\MRegion');
         $mCountries = model('App\modules\countries\Models\MCountries');
-        $mPatient   = model('App\modules\patient\Models\MPatient');
+        $mPatient   = model('App\modules\patients\Models\MPatients');
 
         $regions_patient = session()->get('regions_patient');
 
@@ -27,12 +27,13 @@ class Dashboard extends BaseController
             'current_segment' => $this->request->getUri()->getSegment(1),
             'title'           => 'Rekam Medis',
             'msg'             => session()->getFlashdata('message'),
-            // Memanggil data dari model
-            'wilayah'         => $mRegion->getData(),
-            'resources'       => $mPatient->get_resources(),
-            'negara'          => $mCountries->getData()
+            'wilayah'         => $mRegion->getData() ?? [], 
+            'resources'       => $mPatient->get_resources() ?? [],
+            'negara'          => $mCountries->getData() ?? [],
+            'patient_information' => null, 
+
         ];
 
-        return view('\App\modules\dashboard\Views\dashboard_view', $data);
+        return view('App\modules\dashboard\Views\dashboard_views', $data);
     }
 }

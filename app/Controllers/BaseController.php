@@ -49,7 +49,7 @@ abstract class BaseController extends Controller
         // Preload any models, libraries, etc, here.
         // $this->session = service('session');
 
-        if(session() -> get('isLogin')){
+        if (session()->get('isLogin')) {
             $this->global_data = [
                 'realname'        => session()->get('realname'),
                 'username'        => session()->get('username'),
@@ -59,16 +59,22 @@ abstract class BaseController extends Controller
         }
     }
 
-    protected function format_tanggal($date){
-        if(!$date) return '';
+    protected function format_tanggal($date)
+    {
+        if (!$date) return '';
         $BulanIndo = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
         $t = strtotime($date);
-        return date('d', $t) . "" > $BulanIndo[date('n', $t) - 1]. " ". date('Y', $t);
+        return date('d', $t) . " " . $BulanIndo[date('n', $t) - 1] . " " . date('Y', $t);
     }
 
-    protected function format_rupiah($nominal){
+    protected function format_rupiah($nominal)
+    {
         return "Rp" . number_format($nominal, 0, ',', '.');
     }
+
+    protected function render(string $view, array $data = [])
+    {
+        $combinedData = array_merge($this->global_data, $data);
+        return view($view, $combinedData);
+    }
 }
-
-
