@@ -62,11 +62,14 @@ class Patients extends BaseController
         // Custom Date Handling
         $visitDate = $this->request->getPost('visit_date');
         if ($visitDate) {
-            $patientData['created_at'] = $visitDate . ' ' . date('H:i:s');
+            $formattedDate = date('Y-m-d', strtotime($visitDate));
+            $patientData['created_at'] = $formattedDate . ' ' . date('H:i:s');
+        } else {
+            $patientData['created_at'] = date('Y-m-d H:i:s');
         }
 
         // Insert ke Database
-        $patientId = $this->patientModel->store($patientData);
+        $patientId = $this->patientModel->insert($patientData);
 
         if ($patientId) {
             // Data Alamat
@@ -84,9 +87,9 @@ class Patients extends BaseController
             ];
 
             $addressModel->insert($addressData);
-            $this->session->setFlashdata('message', ['success', 'Data Berhasil Disimpan']);
+            session()->setFlashdata('msg', ['success', 'Data Berhasil Disimpan']);
         } else {
-            $this->session->setFlashdata('message', ['error', 'Gagal menyimpan data pasien']);
+            session()->setFlashdata('msg', ['error', 'Gagal menyimpan data pasien']);
         }
 
         return redirect()->to(site_url('dashboard'));
@@ -95,7 +98,7 @@ class Patients extends BaseController
     public function fetch2()
     {
         $db = db_connect();
-        
+
         $request = \Config\Services::request();
 
         $limit = $this->request->getPost('length') ?? 10;
@@ -121,7 +124,7 @@ class Patients extends BaseController
         ')
             ->join('regions r', 'r.id = p.region_id', 'left')
             ->join('patient_address pa', 'pa.patient_id = p.id', 'left');
-            // ->limit($limit, $start);
+        // ->limit($limit, $start);
 
         if (!empty($region)) {
             $builder->where('p.region_id', $region);
@@ -182,17 +185,24 @@ class Patients extends BaseController
     public function check_phone()
     {
         $phone = $this->request->getPost('phone');
+        if (!$phone) {
+            return $this->response->setJSON(['exists' => false, 'patients' => []]);
+        }
 
         $phone628 = preg_replace('/^08/', '628', $phone);
         $phone08  = preg_replace('/^628/', '08', $phone);
 
-        $patients = $this->patientModel->get_by_phone($phone08, $phone628);
+
+        $patients = $this->patientModel
+            ->whereIn('phone', [$phone08, $phone628])
+            ->findAll();
 
         return $this->response->setJSON([
             'exists'   => !empty($patients),
             'patients' => $patients
         ]);
     }
+
 
 
 

@@ -28,7 +28,7 @@ class Region extends BaseController
             'msg'             => session()->getFlashdata('message')
         ];
 
-        return view('App/modules/region/Views/region', $data);
+        return view('App\modules\region\Views\views_regions', $data);
     }
 
     public function fetch()

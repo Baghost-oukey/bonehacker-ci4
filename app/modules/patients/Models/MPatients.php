@@ -140,4 +140,15 @@ class MPatients extends Model
     {
         return $this->update($id, ['is_delete' => 1]);
     }
+
+    public function get_by_phone($phone08, $phone628)
+{
+    return $this->select('patients.*, m_address.desa_nama, m_address.kecamatan_nama, m_address.kabupaten_nama')
+                ->join('m_address', 'm_address.patient_id = patients.id', 'left') // Sesuaikan nama tabel & PK/FK
+                ->groupStart()
+                    ->where('phone', $phone08)
+                    ->orWhere('phone', $phone628)
+                ->groupEnd()
+                ->findAll();
+}
 }

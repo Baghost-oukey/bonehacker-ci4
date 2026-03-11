@@ -91,10 +91,10 @@
                 </li>
 
                 <li class="<?= $current_segment == 'users' ? 'active' : '' ?>">
-                    <a class="nav-link" href="<?= $url ?>users"><i class="fas fa-users"></i> <span>Manajemen User</span></a>
+                    <a class="nav-link" href="<?= $url ?>users"><i class="fas fa-users"></i> <span>Users</span></a>
                 </li>
                 <li class="<?= $current_segment == 'terapis' ? 'active' : '' ?>">
-                    <a class="nav-link" href="<?= $url ?>terapis"><i class="fas fa-user-md"></i> <span>Data Terapis</span></a>
+                    <a class="nav-link" href="<?= $url ?>terapis"><i class="fas fa-user-md"></i> <span>Terapis</span></a>
                 </li>
             <?php endif; ?>
         </ul>

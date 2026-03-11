@@ -44,15 +44,14 @@ class MRegion extends Model
     protected $beforeDelete   = [];
     protected $afterDelete    = [];
 
-    // Query
+
     public function querySql()
     {
-        return 'SELECT r.id, r.name, r.created_at, r.updated_at, 
-        (SELECT COUNT(id) FROM patients WHERE region_id = r.id) 
-        as jumlah FROM {$this->table} as r';
+        return "SELECT r.id, r.name, r.created_at, r.updated_at, 
+            (SELECT COUNT(id) FROM patients WHERE region_id = r.id) as jumlah 
+            FROM " . $this->table . " as r ";
     }
 
-    // Get data Yang ada di Dashboard
     public function getData(array $column = null)
     {
         $builder = $this->builder();
@@ -64,30 +63,41 @@ class MRegion extends Model
 
     public function getListData($options = [])
     {
-        // Nilai default 
+
         $limit      = $options['limit'] ?? 10;
         $offset     = $options['offset'] ?? 0;
         $order      = $options['order'] ?? 'id';
         $mode       = $options['mode'] ?? 'ASC';
-        $where_like = empty($option['where_like']) ? '' : 'AND (' . implode(' AND ', $options['where_like']) . ')';
+        $sql = $this->querySql() . " WHERE 1 = 1";
 
-        $sql = $this->querySql() . " WHERE 1 = 1 " . $where_like .
-            " GROUP BY r.id ORDER BY " . $order . " " . $mode .
-            " LIMIT " . $offset . ", " . $limit;
+        if (!empty($options['where_like'])) {
+            foreach ($options['where_like'] as $like) {
+                $sql .= " AND " . $like;
+            }
+        }
+
+        $sql .= " GROUP BY r.id";
+        $sql .= " ORDER BY $order $mode";
+        $sql .= " LIMIT $offset, $limit";
 
         return $this->db->query($sql)->getResult();
     }
 
     public function getTotalData($options = [])
     {
-        $where_like = empty($options['where_like']) ? '' : 'AND (' . implode(' AND ', $options['where_like']) . ')';
-
+        $where_like = "";
+        if (!empty($options['where_like'])) {
+            $where_like = ' AND (' . implode(' AND ', $options['where_like']) . ')';
+        }
         $sql = "SELECT COUNT(DISTINCT id) AS total FROM ( ";
         $sql .= $this->querySql();
-        $sql .= " GROUP BY r.id) AS temp_table WHERE 1 = 1 " . $where_like;
-
+        $sql .= ") AS temp_table WHERE 1 = 1 " . $where_like;
         $query = $this->db->query($sql)->getRow();
+        return $query ? (int)$query->total : 0;
+    }
 
-        return $query ? $query->total : 0;
+    public function getTotal()
+    {
+        return $this->countAllResults();
     }
 }

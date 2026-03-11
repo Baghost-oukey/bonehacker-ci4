@@ -28,7 +28,6 @@
                                                 <?php if (!empty($regions_patient) && is_array($regions_patient)): ?>
                                                     <?php foreach ($wilayah as $value): ?>
                                                         <?php
-                                                        // Cek apakah ID wilayah ini ada di dalam array regions milik user
                                                         $selected = (in_array($value->id, $regions_patient)) ? 'selected' : '';
                                                         ?>
                                                         <option value="<?= $value->id ?>" <?= $selected ?>>
@@ -50,7 +49,7 @@
                                         <th>Alamat</th>
                                         <th>Kunjungan Terakhir</th>
                                         <th>Jumlah Kunjungan</th>
-                                        <th class="text-right"></th>
+                                        <th class="text-right">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody></tbody>
@@ -78,6 +77,7 @@
                     <div class="form-group">
                         <label>Nama Lengkap</label>
                         <input type="text" class="form-control" name="name" required autofocus>
+                        <div class="invalid-feedback">Nama tidak Boleh Kosong</div>
                     </div>
 
                     <div class="row">
@@ -85,10 +85,11 @@
                             <div class="form-group">
                                 <label>Jenis Kelamin</label>
                                 <select class="form-control" name="gender" required>
-                                    <option value="">-- Pilih --</option>
+                                    <option value="">-- Pilih Jenis Kelamin --</option>
                                     <option value="Man">Laki-laki</option>
                                     <option value="Woman">Perempuan</option>
                                 </select>
+                                <div class="invalid-feedback">Jenis Kelamin tidak boleh kosong</div>
                             </div>
                         </div>
                         <div class="col-6">
@@ -102,6 +103,27 @@
                             </div>
                         </div>
                     </div>
+                    <div class="form-group">
+                        <div id="keterangan_rentan" style="display: none;">
+                            <label for="suspectiveNotes">Keterangan Rentan</label>
+                            <textarea id="ket_rentan" class="form-control" name="ket_rentan" rows="4"
+                                placeholder="Masukkan keterangan rentan di sini..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Domestik</label>
+                        <div class="radio">
+                            <label>
+                                <input type="radio" name="domestic" value="dalam_negeri" checked>
+                                Dalam Negeri
+                            </label>
+                            <label>
+                                <input type="radio" name="domestic" value="luar_negeri">
+                                Luar Negeri
+                            </label>
+                        </div>
+                    </div>
 
                     <div class="form-group" id="country-group" style="display: none;">
                         <label>Negara</label>
@@ -111,6 +133,15 @@
                                 <option value="<?= $value->id ?>"><?= $value->country ?></option>
                             <?php endforeach; ?>
                         </select>
+                    </div>
+
+                    <div class="form-group" id="desa-group">
+                        <label for="desa_id">Pencarian Desa</label>
+                        <select class="form-control" name="desa_id" id="desa_id" style="width: 100%;">
+                            <option value="">Temukan Desa</option>
+                            <!-- Options will be populated dynamically via AJAX -->
+                        </select>
+                        <div class="invalid-feedback">Wilayah tidak boleh kosong</div>
                     </div>
 
                     <div class="form-group" id="region-group">
@@ -131,6 +162,35 @@
                         </select>
                     </div>
 
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label>Umur</label>
+                                <input type="number" class="form-control" name="age" minlength="1"
+                                    maxlength="2">
+                            </div>
+                        </div>
+
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label>No. Telepon/WhatsApp</label>
+                                <input type="number" class="form-control" id="phone" name="phone"
+                                    minlength="10" maxlength="14">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Alamat Jalan</label>
+                        <textarea rows="10" class="form-control" name="address"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Upload Files & Pictures</label>
+                        <input type="file" class="form-control" name="userfiles[]" id="userfiles" multiple
+                            onchange="previewFiles()">
+                        <div id="file-previews" class="mt-3"></div>
+                    </div>
+
                     <div class="form-group">
                         <label>Sumber Informasi</label>
                         <select class="form-control" name="patient_information">
@@ -143,6 +203,20 @@
                             <?php endforeach; ?>
                         </select>
                     </div>
+
+                    <div class="form-group">
+                        <label>Tanggal Kedatangan</label>
+                        <input type="datetime-local" class="form-control" name="visit_date" required>
+                        <div class="invalid-feedback">Tanggal Kedatangan tidak boleh kosong</div>
+                    </div>
+
+                    <input type="hidden" name="desa_nama" id="desa_nama">
+                    <input type="hidden" name="kecamatan_id" id="kecamatan_id">
+                    <input type="hidden" name="kecamatan_nama" id="kecamatan_nama">
+                    <input type="hidden" name="kabupaten_id" id="kabupaten_id">
+                    <input type="hidden" name="kabupaten_nama" id="kabupaten_nama">
+                    <input type="hidden" name="provinsi_id" id="provinsi_id">
+                    <input type="hidden" name="provinsi_nama" id="provinsi_nama">
 
                 </div>
                 <div class="modal-footer">
@@ -271,7 +345,11 @@
                     class: "text-center"
                 },
                 {
-                    data: "name"
+                    data: "name",
+                    // render: function (data, type, row){
+                    //     var phoneDisplay = (row.phone && row.phone !== "" && row.phone !== null) ? `<br><small class="text-muted">(${row.phone})</small>` : "";
+                    //     return `<strong>${data}</strong>${phoneDisplay}`;
+                    // }
                 },
                 {
                     data: "name_region"
@@ -311,7 +389,6 @@
             table.ajax.reload();
         });
 
-        // Form Submit with Duplicate Phone Check
         $('#submitBtn').on('click', function(e) {
             e.preventDefault();
             var form = $(this).closest('form')[0];
@@ -326,7 +403,7 @@
                 type: 'POST',
                 data: {
                     phone: phone,
-                    "<?= csrf_token() ?>": "<?= csrf_hash() ?>" // CSRF protection
+                    "<?= csrf_token() ?>": "<?= csrf_hash() ?>" 
                 },
                 dataType: 'json',
                 success: function(response) {

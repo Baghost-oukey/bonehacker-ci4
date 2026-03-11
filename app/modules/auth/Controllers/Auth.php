@@ -21,7 +21,7 @@ class Auth extends BaseController
     {
         //
         if (session()->get('isLogin')) {
-            return redirect()->to(base_url('dashboard'));
+            return redirect()->to(base_url('beranda_views'));
         }
 
         $data = [

@@ -77,8 +77,8 @@
         });
     </script>
 
-    <?php if(session()->has('msg')): ?>
-        <?php $msg = session('msg'); ?>
+    <?php if(session()->has('message')): ?>
+        <?php $msg = session('message'); ?>
         <script>
             $(document).ready(function() {
                 toastr.options = {

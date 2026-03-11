@@ -1,4 +1,5 @@
-<?= $this->extend('App\Views\blade\layout') ?> <?= $this->section('content') ?>
+<?= $this->extend('layout/layout') ?>
+<?= $this->section('content') ?>
 <section class="section">
     <div class="section-header">
         <h1><?= esc($title) ?></h1>
@@ -65,29 +66,48 @@
 
 <?= $this->section('scripts') ?>
 <script>
-$(document).ready(function() {
-    if ($.fn.DataTable.isDataTable('#table-region')) {
-        $('#table-region').DataTable().clear().destroy();
-    }
+    $(document).ready(function() {
+        if ($.fn.DataTable.isDataTable('#table-region')) {
+            $('#table-region').DataTable().clear().destroy();
+        }
 
-    $('#table-region').DataTable({
-        "processing": true,
-        "serverSide": true,
-        "ajax": {
-            "url": "<?= base_url('region/fetch') ?>", 
-            "type": "POST",
-            "data": function(d) {
-                d.<?= csrf_token() ?> = '<?= csrf_hash() ?>';
-            }
-        },
-        "columns": [
-            { "data": "id", "width": "7%" },
-            { "data": "name_view", "width": "37.5%" },
-            { "data": "created_at", "width": "20.5%" },
-            { "data": "updated_at", "width": "20.5%" },
-            { "data": "action", "class": "text-center", "width": "10%", "orderable": false }
-        ]
+        $('#table-region').DataTable({
+            "processing": true,
+            "serverSide": true,
+            "ajax": {
+                "url": "<?= base_url('region/fetch') ?>",
+                "type": "POST",
+                "data": function(d) {
+                    d.<?= csrf_token() ?> = '<?= csrf_hash() ?>';
+                },
+                error: function(xhr, error, code) {
+                    console.log(xhr.responseText); // Lihat error detail di console
+                }
+            },
+            "columns": [{
+                    "data": "id",
+                    "width": "7%"
+                },
+                {
+                    "data": "name_view",
+                    "width": "37.5%"
+                },
+                {
+                    "data": "created_at",
+                    "width": "20.5%"
+                },
+                {
+                    "data": "updated_at",
+                    "width": "20.5%"
+                },
+                {
+                    "data": "action",
+                    "class": "text-center",
+                    "width": "10%",
+                    "orderable": false
+                }
+            ]
+        });
     });
-});
 </script>
 <?= $this->endSection() ?>

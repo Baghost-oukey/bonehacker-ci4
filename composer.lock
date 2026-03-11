@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7204f33fbbc6457035d38c35c7a62c67",
+    "content-hash": "73de014124a9b984a852df511420dbf7",
     "packages": [
         {
             "name": "carbonphp/carbon-doctrine-types",
@@ -298,6 +298,48 @@
                 "source": "https://github.com/greenlion/PHP-SQL-Parser"
             },
             "time": "2024-12-02T12:14:07+00:00"
+        },
+        {
+            "name": "hermawan/codeigniter4-datatables",
+            "version": "v0.8.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/hermawanramadhan/CodeIgniter4-DataTables.git",
+                "reference": "cdd5c2b1f939528b4825d394db157396e8848a1f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/hermawanramadhan/CodeIgniter4-DataTables/zipball/cdd5c2b1f939528b4825d394db157396e8848a1f",
+                "reference": "cdd5c2b1f939528b4825d394db157396e8848a1f",
+                "shasum": ""
+            },
+            "require": {
+                "codeigniter4/framework": "^4",
+                "greenlion/php-sql-parser": ">=4.5",
+                "php": ">=7.3"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Hermawan\\DataTables\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Hermawan Ramadhan",
+                    "email": "hermawanramadhan@gmail.com"
+                }
+            ],
+            "description": "Serverside Datatables library for CodeIgniter4",
+            "support": {
+                "issues": "https://github.com/hermawanramadhan/CodeIgniter4-DataTables/issues",
+                "source": "https://github.com/hermawanramadhan/CodeIgniter4-DataTables/tree/v0.8.0"
+            },
+            "time": "2025-01-09T02:06:46+00:00"
         },
         {
             "name": "illuminate/bus",
