@@ -1,0 +1,52 @@
+<?php
+
+namespace App\modules\statisktik\Controllers;
+
+use App\Controllers\BaseController;
+use App\modules\region\Models\MRegion;
+use App\modules\statisktik\Models\MStatistik;
+use CodeIgniter\HTTP\ResponseInterface;
+
+class Statistik extends BaseController
+{
+    protected $model_statistik;
+    protected $model_region;
+    protected $session;
+
+    public function __construct()
+    {
+        $this->model_statistik = new MStatistik();
+        $this->model_region = new MRegion();
+        $this->session = \Config\Services::session();
+    }
+    public function index()
+    {
+        //
+        $msg = $this->session->get('pesan');
+        $regions_patient = json_decode($this->session->get('regions_patient') ?? '[]', true);
+
+        $data = [
+            'realname'        => $this->session->get('realname'),
+            'role'            => $this->session->get('role'),
+            'regions_patient' => $regions_patient,
+            'base_url'        => base_url(),
+            'current_segment' => $this->request->getUri()->getSegment(1),
+            'title'           => 'Statistik',
+            'wilayah'         => $this->model_region->findAll(), // Sesuaikan method di model CI4 Anda
+            'msg'             => $msg ?: $this->session->getFlashdata('message') ?: ['', '', '']
+        ];
+
+        return view('App\modules\statisktik\Views\views_statistik', $data);
+    }
+
+    public function fetch_statistics()
+    {
+        $startDate = $this->request->getGet('start_date');
+        $endDate   = $this->request->getGet('end_date');
+        $filter    = $this->request->getGet('filter') ?? 'daily';
+        $regid     = $this->request->getGet('region_id');
+        $data = $this->model_statistik->get_statistics($startDate, $endDate, $regid, $filter);
+
+        return $this->response->setJSON($data);
+    }
+}

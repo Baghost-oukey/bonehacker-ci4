@@ -61,9 +61,9 @@
                 <ul class="dropdown-menu">
                     <li class="<?= $current_segment == 'statistiktag' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>statistiktag">Keluhan & Medis</a></li>
                     <li class="<?= $current_segment == 'statistik' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>statistik">Riwayat Pasien</a></li>
-                    <li class="<?= $current_segment == 'statresult' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>statresult">Hasil Pemeriksaan</a></li>
+                    <li class="<?= $current_segment == 'statistikresult' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>statistikresult">Hasil Pemeriksaan</a></li>
                     <li class="<?= $current_segment == 'statistikgender' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>statistikgender">Jenis Kelamin</a></li>
-                    <li class="<?= $current_segment == 'statsdaerah' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>statsdaerah">Daerah</a></li>
+                    <li class="<?= $current_segment == 'statistikdaerah' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>statistikdaerah">Daerah</a></li>
                 </ul>
             </li>
 

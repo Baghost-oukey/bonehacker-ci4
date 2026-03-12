@@ -34,11 +34,63 @@ $routes->group('antrean', ['namespace' => 'App\modules\antrean\Controllers'], fu
     $routes->post('destroy/(:num)', 'Antrean::destroy/$1');
 });
 
-
+// Wilayah
 $routes->group('region', ['namespace' => 'App\modules\region\Controllers'], function ($routes) {
-    $routes->get('/', 'Region::index');    
-    $routes->post('fetch', 'Region::fetch');  
+    $routes->get('/', 'Region::index');
+    $routes->post('fetch', 'Region::fetch');
     $routes->post('store', 'Region::store');
     $routes->post('update/(:num)', 'Region::update/$1');
-    $routes->get('destroy/(:num)', 'Region::destroy/$1'); 
+    $routes->get('destroy/(:num)', 'Region::destroy/$1');
+});
+
+
+// app/Config/Routes.php
+
+// Journal
+$routes->group('journal', function ($routes) {
+    $routes->get('/', '\App\Modules\Journal\Controllers\Journal::index');
+    $routes->post('fetch', '\App\Modules\Journal\Controllers\Journal::fetch');
+    $routes->get('export_excell', '\App\Modules\Journal\Controllers\Journal::export_excell');
+    $routes->get('export_pdf', '\App\Modules\Journal\Controllers\Journal::export_pdf');
+});
+
+// Statistik
+$routes->group('statistik',  ['namespace' => 'App\modules\statisktik\Controllers'], function ($routes) {
+    $routes->get('/', 'Statistik::index');
+    $routes->get('statistik/fetch_statistics', 'Statistik::fetch_statistics');
+});
+
+// Statistik - Tag
+$routes->group('statistiktag',  ['namespace' => 'App\modules\statistiktag\Controllers'], function ($routes) {
+    $routes->get('/', 'StatistikTag::index');
+    $routes->get('fetch_statistics', 'StatistikTag::fetch_statistics');
+});
+
+// Statistik - Hasil Pemeriksaan
+$routes->group('statistikresult', ['namespace' => 'App\modules\statistikresult\Controllers'], function ($routes) {
+    $routes->get('/', 'Statistikresult::index');
+    $routes->get('fetch_statistics', 'Statistikresult::fetch_statistics');
+});
+
+// Statistik - Gender
+$routes->group('statistikgender', ['namespace' => 'App\modules\statistikgender\Controllers', 'filter' => 'auth'], function ($routes) {
+    $routes->get('/', 'Statistikgender::index');
+    $routes->get('fetch_statistics', 'Statistikgender::fetch_statistics');
+});
+
+
+// Statistik - Gender
+$routes->group('statistikdaerah', ['namespace' => 'App\modules\statistikdaerah\Controllers', 'filter' => 'auth'], function ($routes) {
+    $routes->get('/', 'Statistikdaerah::index');
+    $routes->get('fetch_statistics', 'Statistikdaerah::fetch_statistics');
+});
+
+// Jabatan
+$routes->group('jabatan', ['namespace' => 'App\modules\jabatan\Controllers'], function ($routes) {
+    $routes->get('/', 'Jabatan::index');
+    $routes->post('fetch', 'Jabatan::fetch');
+    $routes->post('store', 'Jabatan::store');
+    $routes->post('update/(:num)', 'Jabatan::update/$1');
+    $routes->post('destroy/(:num)', 'Jabatan::destroy/$1');
+    $routes->post('check_name_exists', 'Jabatan::check_name_exists');
 });

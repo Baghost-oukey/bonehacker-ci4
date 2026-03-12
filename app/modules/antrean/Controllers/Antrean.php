@@ -59,7 +59,6 @@ public function __construct()
             ->join('patient_address pa', 'pa.patient_id = p.id', 'left')
             ->where('h.finish_at', null);
 
-        // Filter berdasarkan Role & Region Session
         $regions_session = json_decode(session()->get('regions_patient'), true);
         if (session()->get('role') === 'user' && !empty($regions_session)) {
             $builder->whereIn('pq.region_id', is_array($regions_session) ? $regions_session : [$regions_session]);
