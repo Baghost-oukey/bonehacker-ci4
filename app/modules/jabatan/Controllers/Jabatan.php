@@ -34,7 +34,7 @@ class Jabatan extends BaseController
             'role'            => $this->session->get('role')
         ];
 
-        return view('App\modules\jabatan\Views\jabatan', $data);
+        return view('App\modules\jabatan\Views\views_jabatan', $data);
     }
 
     public function fetch()

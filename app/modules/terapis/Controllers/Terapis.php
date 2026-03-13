@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controllers;
+namespace App\modules\terapis\Controllers;
 
 use App\Controllers\BaseController;
 use App\modules\jabatan\Models\Mjabatan;
@@ -48,7 +48,7 @@ class Terapis extends BaseController
         ];
         $data['wilayah'] = $this->model_region->getData();
 
-        return view('App\modules\terapis\Views\terapis', $data);
+        return view('App\modules\terapis\Views\views_terapis', $data);
     }
 
     public function detail_terapis($user_id)
@@ -68,7 +68,7 @@ class Terapis extends BaseController
         $qrContent = base_url('terapis/public_info/' . $user_id);
         $data['qr_code_base64'] = ""; 
 
-        return view('App\modules\terapis\Views\detail', $data);
+        return view('App\modules\terapis\Views\views_detail', $data);
     }
 
     public function public_info($id)
@@ -82,7 +82,7 @@ class Terapis extends BaseController
             'wilayah'         => $this->model_terapis->getRegionById($id),
         ];
 
-        return view('App\modules\terapis\Views\public_info', $data);
+        return view('App\modules\terapis\Views\views_info_publik', $data);
     }
 
     public function store()

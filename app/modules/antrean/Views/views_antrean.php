@@ -233,212 +233,264 @@
 </div>
 <?= $this->endSection() ?>
 
+
+<?= $this->section('scripts') ?>
 <script>
-$(document).ready(function() {
+    $(document).ready(function() {
 
-    function getCsrfData() {
-        return {
-            [$('meta[name="csrf-token-name"]').attr('content')]: $('meta[name="csrf-token-hash"]').attr('content')
-        };
-    }
-
-    $.ajaxSetup({
-        data: getCsrfData()
-    });
-
-    // Inisialisasi DataTables Antrean
-    var table1 = $('#table-1').DataTable({
-        processing: true,
-        serverSide: true,
-        ajax: {
-            url: "<?= site_url('antrean/fetchDataTable') ?>",
-            type: "POST",
-            data: function(d) {
-                $.extend(d, getCsrfData());
-                // PERBAIKAN: Mengganti #region menjadi #region_id sesuai dengan HTML
-                d.region = $('#region_id').val() || '';
-                d.start_date = $('#startDate').val();
-                d.end_date = $('#endDate').val();
-            },
-            error: function(xhr) {
-                console.error("Error Table 1:", xhr.responseText);
-                if (typeof toastr !== 'undefined') toastr.error("Gagal mengambil data antrean.");
-            }
-        },
-        columns: [
-            { data: 'patient_id' },
-            { data: 'visit_date' },
-            { data: 'name' },
-            { data: 'age' },
-            { data: 'address' },
-            { data: 'phone' },
-            { data: 'note' },
-            { 
-                data: 'action', 
-                orderable: false, 
-                searchable: false, 
-                className: 'text-right' 
-            }
-        ]
-    });
-
-    // Inisialisasi DataTables Pasien
-    var table2 = $('#table-2').DataTable({
-        processing: true,
-        serverSide: true,
-        ajax: {
-            url: "<?= site_url('antrean/fetchPatientsDataTable') ?>",
-            type: "POST",
-            data: function(d) {
-                $.extend(d, getCsrfData());
-                // PERBAIKAN: Mengganti #region menjadi #region_id
-                d.region = $('#region_id').val() || '';
-            }
+        function getCsrfData() {
+            return {
+                "<?= csrf_token() ?>": "<?= csrf_hash() ?>"
+            };
         }
-    });
 
-    $('#startDate, #endDate, #region_id').on('change', function() {
-        table1.ajax.reload();
-        table2.ajax.reload();
-    });
+        $.ajaxSetup({
+            data: getCsrfData()
+        });
 
-    if ($('#search_patient').length > 0) {
-        $('#search_patient').select2({
-            placeholder: "Temukan Pasien",
+        // Inisialisasi DataTables Antrean
+        var table1 = $('#table-1').DataTable({
+            processing: true,
+            serverSide: true,
             ajax: {
-                url: '<?= site_url('antrean/fetchJson') ?>',
+                url: "<?= site_url('antrean/fetchDataTable') ?>",
+                type: "POST",
+                data: function(d) {
+                    $.extend(d, getCsrfData());
+                    d.region = $('#region_id').val() || '';
+                    d.start_date = $('#startDate').val();
+                    d.end_date = $('#endDate').val();
+                },
+            },
+            columns: [{
+                    data: 'patient_id'
+                },
+                {
+                    data: 'date'
+                }, // Controller menggunakan ->add('date', ...)
+                {
+                    data: 'patient_name'
+                }, // Sesuai alias p.name as patient_name
+                {
+                    data: 'age'
+                },
+                {
+                    data: 'address_full'
+                }, // Sesuai ->add('address_full', ...)
+                {
+                    data: 'phone'
+                },
+                {
+                    data: 'description'
+                }, // Sesuai ->add('description', ...)
+                {
+                    data: 'action',
+                    orderable: false,
+                    searchable: false,
+                    className: 'text-right'
+                }
+            ]
+        });
+
+        // Inisialisasi DataTables Pasien
+        var table2;
+
+        $('#addPatientQueueModal').on('shown.bs.modal', function() {
+            console.log('MODAL SHOWN');
+            if (!$.fn.DataTable.isDataTable('#table-2')) {
+                table2 = $('#table-2').DataTable({
+                    processing: true,
+                    serverSide: true,
+                    ajax: {
+                        url: "<?= site_url('antrean/fetchPatientDataTables') ?>",
+                        type: "POST",
+                        data: function(d) {
+                            d.<?= csrf_token() ?> = "<?= csrf_hash() ?>";
+                            d.region = $('#region_id').val() || '';
+                        }
+                    },
+                    columns: [{
+                            data: 'patient_id'
+                        },
+                        {
+                            data: 'name'
+                        },
+                        {
+                            data: 'address'
+                        },
+                        {
+                            data: 'description'
+                        },
+                        {
+                            data: 'action',
+                            orderable: false,
+                            searchable: false
+                        }
+                    ]
+                });
+            } else {
+                table2.ajax.reload(null, false); // Reload tanpa reset paging
+                table2.columns.adjust().draw(); // Perbaiki layout kolom
+            }
+        });
+
+
+        $('#startDate, #endDate, #region_id').on('change', function() {
+            table1.ajax.reload();
+            table2.ajax.reload();
+        });
+
+        if ($('#search_patient').length > 0) {
+            $('#search_patient').select2({
+                placeholder: "Temukan Pasien",
+                ajax: {
+                    url: '<?= site_url('antrean/fetchJson') ?>',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            search: params.term,
+                            page: params.page || 1,
+                            ...getCsrfData()
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.items.map(item => ({
+                                id: item.id,
+                                text: item.name
+                            })),
+                            pagination: {
+                                more: data.pagination.more
+                            }
+                        };
+                    }
+                },
+                minimumInputLength: 1
+            });
+        }
+
+        // Select2 Wilayah Desa
+        $('#desa_id').select2({
+            placeholder: "Temukan Desa",
+            dropdownParent: $("#exampleModal"),
+            ajax: {
+                url: 'https://wilayah.smartsociety.id/public/desa',
                 dataType: 'json',
                 delay: 250,
                 data: function(params) {
                     return {
                         search: params.term,
-                        page: params.page || 1,
-                        ...getCsrfData()
+                        page: params.page || 1
                     };
                 },
                 processResults: function(data) {
+                    let options = [];
+                    if (data.data && data.data.data) {
+                        $.each(data.data.data, function(index, item) {
+                            let subText = item.kecamatan ? `Kec. ${item.kecamatan.kecNama}, ${item.kecamatan.kabupaten.kabNama}` : '';
+                            options.push({
+                                id: item.desIdDesa,
+                                text: `<strong>${item.desNama}</strong><br><small>${subText}</small>`,
+                                full_data: item
+                            });
+                        });
+                    }
                     return {
-                        results: data.items.map(item => ({ id: item.id, text: item.name })),
-                        pagination: { more: data.pagination.more }
+                        results: options,
+                        pagination: {
+                            more: data.data?.next_page_url ? true : false
+                        }
                     };
                 }
             },
-            minimumInputLength: 1
+            minimumInputLength: 1,
+            escapeMarkup: m => m,
+            templateResult: i => i.text,
+            templateSelection: i => i.text ? i.text.replace(/<br\s*\/?>/gi, ' ').replace(/<\/?[^>]+(>|$)/g, "") : i.text
         });
-    }
 
-    // Select2 Wilayah Desa
-    $('#desa_id').select2({
-        placeholder: "Temukan Desa",
-        dropdownParent: $("#exampleModal"),
-        ajax: {
-            url: 'https://wilayah.smartsociety.id/public/desa',
-            dataType: 'json',
-            delay: 250,
-            data: function(params) {
-                return { search: params.term, page: params.page || 1 };
-            },
-            processResults: function(data) {
-                let options = [];
-                if (data.data && data.data.data) {
-                    $.each(data.data.data, function(index, item) {
-                        let subText = item.kecamatan ? `Kec. ${item.kecamatan.kecNama}, ${item.kecamatan.kabupaten.kabNama}` : '';
-                        options.push({
-                            id: item.desIdDesa,
-                            text: `<strong>${item.desNama}</strong><br><small>${subText}</small>`,
-                            full_data: item
-                        });
-                    });
+        // Auto-fill dari Desa
+        $('#desa_id').on('select2:select', function(e) {
+            const d = e.params.data.full_data;
+            $('#desa_nama').val(d.desNama || '');
+            $('#kecamatan_id').val(d.kecamatan?.kecIdKecamatan || '');
+            $('#kecamatan_nama').val(d.kecamatan?.kecNama || '');
+            $('#kabupaten_id').val(d.kecamatan?.kabupaten?.kabIdKabupaten || '');
+            $('#kabupaten_nama').val(d.kecamatan?.kabupaten?.kabNama || '');
+            $('#provinsi_id').val(d.kecamatan?.kabupaten?.provinsi?.provIdProvinsi || '');
+            $('#provinsi_nama').val(d.kecamatan?.kabupaten?.provinsi?.provNama || '');
+        });
+
+        // Logika UI Toggle
+        $('#isSuspectiveCheckbox').on('change', function() {
+            $('#keterangan_rentan').css('display', this.checked ? 'block' : 'none');
+        });
+
+        $('input[name="domestic"]').on('change', function() {
+            const isLuarNegeri = (this.value === 'luar_negeri');
+            $('#country-group').toggle(isLuarNegeri);
+            $('#desa-group, #region-group').toggle(!isLuarNegeri);
+        });
+
+        if ($('input[name="domestic"]:checked').length > 0) {
+            $('input[name="domestic"]:checked').trigger('change');
+        }
+
+        // Hapus Data
+        let deleteId = null;
+        window.destroy = function(id) {
+            deleteId = id;
+            $('#deleteModal').modal('show');
+        };
+
+        $('#confirmDelete').on('click', function() {
+            if (!deleteId) return;
+            $.ajax({
+                url: "<?= site_url('antrean/destroy') ?>/" + deleteId,
+                type: "POST",
+                data: getCsrfData(),
+                dataType: "JSON",
+                success: function() {
+                    location.reload();
+                },
+                error: function() {
+                    alert('Terjadi kesalahan saat menghapus data');
                 }
-                return {
-                    results: options,
-                    pagination: { more: data.data?.next_page_url ? true : false }
-                };
-            }
-        },
-        minimumInputLength: 1,
-        escapeMarkup: m => m,
-        templateResult: i => i.text,
-        templateSelection: i => i.text ? i.text.replace(/<br\s*\/?>/gi, ' ').replace(/<\/?[^>]+(>|$)/g, "") : i.text
-    });
-
-    // Auto-fill dari Desa
-    $('#desa_id').on('select2:select', function(e) {
-        const d = e.params.data.full_data;
-        $('#desa_nama').val(d.desNama || '');
-        $('#kecamatan_id').val(d.kecamatan?.kecIdKecamatan || '');
-        $('#kecamatan_nama').val(d.kecamatan?.kecNama || '');
-        $('#kabupaten_id').val(d.kecamatan?.kabupaten?.kabIdKabupaten || '');
-        $('#kabupaten_nama').val(d.kecamatan?.kabupaten?.kabNama || '');
-        $('#provinsi_id').val(d.kecamatan?.kabupaten?.provinsi?.provIdProvinsi || '');
-        $('#provinsi_nama').val(d.kecamatan?.kabupaten?.provinsi?.provNama || '');
-    });
-
-    // Logika UI Toggle
-    $('#isSuspectiveCheckbox').on('change', function() {
-        $('#keterangan_rentan').css('display', this.checked ? 'block' : 'none');
-    });
-
-    $('input[name="domestic"]').on('change', function() {
-        const isLuarNegeri = (this.value === 'luar_negeri');
-        $('#country-group').toggle(isLuarNegeri);
-        $('#desa-group, #region-group').toggle(!isLuarNegeri);
-    });
-    
-    if($('input[name="domestic"]:checked').length > 0) {
-        $('input[name="domestic"]:checked').trigger('change');
-    }
-
-    // Hapus Data
-    let deleteId = null;
-    window.destroy = function(id) { 
-        deleteId = id;
-        $('#deleteModal').modal('show');
-    };
-
-    $('#confirmDelete').on('click', function() {
-        if (!deleteId) return;
-        $.ajax({
-            url: "<?= site_url('antrean/destroy') ?>/" + deleteId,
-            type: "POST",
-            data: getCsrfData(),
-            dataType: "JSON",
-            success: function() {
-                location.reload();
-            },
-            error: function() {
-                alert('Terjadi kesalahan saat menghapus data');
-            }
+            });
         });
-    });
 
-    // Pengecekan Nomor WA saat submit form
-    $('#submitBtn').on('click', function(e) {
-        e.preventDefault();
-        const $form = $(this).closest('form');
-        const phone = $('#phone').val();
+        // Pengecekan Nomor WA saat submit form
+        $('#submitBtn').on('click', function(e) {
+            e.preventDefault();
+            const $form = $(this).closest('form');
+            const phone = $('#phone').val();
 
-        $.ajax({
-            url: '<?= site_url('patient/check_phone') ?>',
-            type: 'POST',
-            data: { phone: phone, ...getCsrfData() },
-            dataType: 'json',
-            success: function(response) {
-                if (response.exists) {
-                    alert("Nomor HP sudah terdaftar di sistem.");
-                } else {
-                    $form[0].submit();
+            $.ajax({
+                url: '<?= site_url('patient/check_phone') ?>',
+                type: 'POST',
+                data: {
+                    phone: phone,
+                    ...getCsrfData()
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.exists) {
+                        alert("Nomor HP sudah terdaftar di sistem.");
+                    } else {
+                        $form[0].submit();
+                    }
+                },
+                error: function() {
+                    alert('Gagal melakukan verifikasi nomor HP.');
                 }
-            },
-            error: function() {
-                alert('Gagal melakukan verifikasi nomor HP.');
-            }
+            });
+        });
+
+        // Cegah submit pada pencarian Select2 jika dienter
+        $(document).on('keypress', '.select2-search__field', function(e) {
+            if (e.which === 13) e.preventDefault();
         });
     });
-
-    // Cegah submit pada pencarian Select2 jika dienter
-    $(document).on('keypress', '.select2-search__field', function(e) {
-        if (e.which === 13) e.preventDefault();
-    });
-});
 </script>
+<?= $this->endSection() ?>
