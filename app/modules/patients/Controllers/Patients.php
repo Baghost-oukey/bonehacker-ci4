@@ -59,7 +59,6 @@ class Patients extends BaseController
             'ket_suspect'         => $this->request->getPost('ket_rentan') ?: null,
         ];
 
-        // Custom Date Handling
         $visitDate = $this->request->getPost('visit_date');
         if ($visitDate) {
             $formattedDate = date('Y-m-d', strtotime($visitDate));

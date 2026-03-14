@@ -28,13 +28,16 @@ $routes->post('patient/check_phone', '\App\modules\patients\Controllers\Patients
 // Antrean
 $routes->group('antrean', ['namespace' => 'App\modules\antrean\Controllers'], function ($routes) {
     $routes->get('/', 'Antrean::index');
+    // Ambil Data
     $routes->get('fetchJson', 'Antrean::fetchJson');
-    // $routes->post('fetchPatientDataTables', 'Antrean::fetchPatientDataTables');
     $routes->post('fetchDataTable', 'Antrean::fetchDataTable');
+    // Ambil Data Untuk Pasien
     $routes->post('fetchPatientDataTables', 'Antrean::fetchPatientDataTables');
+    // Menambahkan ke Antrian
+    $routes->get('addToQueue/(:num)', 'Antrean::addToQueue/$1');
     $routes->post('destroy/(:num)', 'Antrean::destroy/$1');
     $routes->get('daftarAntrean', 'Antrean::daftarAntrean');
-    $routes->get('processQueue/(:num)', 'Antrean::processQueue/$1');
+    $routes->get('procesToQueue/(:num)', 'Antrean::procesToQueue/$1');
     $routes->get('finishQueue/(:num)', 'Antrean::finishQueue/$1');
 });
 

@@ -51,7 +51,7 @@ class Antrean extends BaseController
         $endDate   = $request->getPost('end_date');
 
         $builder = $this->db->table('patient_queues pq')
-            ->select('pq.id as queue_id, pq.queue_date, p.id as patient_id, p.name as patient_name, p.age, p.phone, p.address, pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama, h.process_at, h.finish_at')
+            ->select('pq.id as queue_id, pq.queue_date, p.id as patient_id, p.name as patient_name, p.age as patient_age, p.phone, p.address, pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama, h.process_at, h.finish_at')
             ->select('(SELECT COUNT(h2.id) FROM histories h2 WHERE h2.patient_id = p.id AND h2.is_delete = 0) AS visit_count')
             ->join('patients p', 'p.id = pq.patient_id', 'left')
             ->join('patient_address pa', 'pa.patient_id = p.id', 'left')
@@ -63,31 +63,61 @@ class Antrean extends BaseController
             $builder->whereIn('pq.region_id', is_array($regions_session) ? $regions_session : [$regions_session]);
         }
 
-        // Filter Input User
         if (!empty($region)) $builder->where('p.region_id', $region);
         if (!empty($startDate) && !empty($endDate)) {
-            $builder->where('DATE(pq.queue_date) >=', $startDate)
-                ->where('DATE(pq.queue_date) <=', $endDate);
+            $formatStart = date('Y-m-d', strtotime($startDate));
+            $formatEnd   = date('Y-m-d', strtotime($endDate));
+
+            $builder->where('DATE(pq.queue_date) >=', $formatStart)
+                ->where('DATE(pq.queue_date) <=', $formatEnd);
         }
 
+
         return \Hermawan\DataTables\DataTable::of($builder)
+            ->filter(function ($builder) use ($request) {
+                $search = $request->getPost('search');
+                $searchValue = $search['value'] ?? null;
+                if ($searchValue) {
+                    $builder->groupStart()
+                        ->like('p.name', $searchValue)
+                        ->orLike('p.phone', $searchValue)
+                        ->orLike('pa.kabupaten_nama', $searchValue)
+                        ->orLike('pq.queue_date', $searchValue)
+                        ->groupEnd();
+                }
+            }, true)
+
             ->add('date', function ($row) {
                 return !empty($row->queue_date) ? date('d-m-Y', strtotime($row->queue_date)) : '-';
             })
-            ->add('address_full', function ($row) {
+            ->add('name', function ($row) {
+                return $row->patient_name;
+            })
+            ->add('address', function ($row) {
                 return implode(', ', array_filter([$row->address, $row->desa_nama, $row->kecamatan_nama, $row->kabupaten_nama]));
+            })
+            ->add('age', function ($row) {
+                return $row->patient_age;
             })
             ->add('description', function ($row) {
                 return $row->visit_count > 0 ? 'Pasien Lama' : 'Pasien Baru';
             })
             ->add('action', function ($row) {
-                $btn = '<div class="btn-group">';
-                if ($row->process_at !== null) {
-                    $btn .= '<a href="' . site_url('antrean/finishQueue/' . $row->queue_id) . '" class="btn btn-warning btn-sm">Selesai</a>';
+                $btn = '<div class="btn-group d-flex justify-content-between align-items-center" style="gap: 5px;">';
+                $role = session()->get('role');
+                if ($role === 'superadmin') {
+                    if ($row->process_at !== null) {
+                        $btn .= '<a href="' . site_url('antrean/finishQueue/' . $row->queue_id) . '" class="btn btn-warning btn-md w-100">Selesai</a>';
+                    } else {
+                        $btn .= '<a href="' . site_url('antrean/procesToQueue/' . $row->queue_id) . '" class="btn btn-success btn-md w-100"> Proses Pasien </a>';
+                    }
                 } else {
-                    $btn .= '<a href="' . site_url('antrean/processQueue/' . $row->queue_id) . '" class="btn btn-success btn-sm">Proses</a>';
+                    if ($row->process_at !== null) {
+                        return '<span class="badge badge-primary">Pasien Dalam Terapi</span>';
+                    }
+                    return '<span class="badge badge-warning">Menunggu Konfirmasi</span>';
                 }
-                $btn .= '<a href="' . site_url('patient/show/' . $row->patient_id) . '?openModalRiwayat=true&queue_id=' . $row->queue_id . '" class="btn btn-info btn-sm"><i class="fas fa-file-medical"></i> Rekam Medis</a>';
+                $btn .= '<a href="' . site_url('patient/show/' . $row->patient_id) . '?openModalRiwayat=true&queue_id=' . $row->queue_id . '" class="btn btn-info btn-md"><i class="fas fa-file-medical"></i> Rekam Medis</a>';
                 $btn .= '</div>';
                 return $btn;
             })
@@ -125,7 +155,11 @@ class Antrean extends BaseController
                 return implode(', ', $addressFilter);
             })
             ->add('description', function ($row) {
-                return $row->visit_count > 0 ? '<span class="badge badge-info">Pasien Lama</span>' : '<span class="badge badge-success">Pasien Baru</span>';
+                if ($row->visit_count > 0) {
+                    return '<span class="badge badge-danger">Pasien Lama</span>';
+                } else {
+                    return '<span class="badge badge-primary">Pasien Baru</span>';
+                }
             })
             ->add('action', function ($row) {
                 return '<a href="' . site_url('antrean/addToQueue/' . $row->patient_id) . '" class="btn btn-success btn-sm"><i class="fas fa-plus"></i> Add to Queue</a>';
@@ -173,7 +207,7 @@ class Antrean extends BaseController
             ->where('patient_queue_id', $queueId)
             ->update(['finish_at' => date('Y-m-d H:i:s')]);
 
-        return redirect()->to('antrean')->with('message', ['success', 'Terapi selesai.']);
+        return redirect()->to('antrean')->with('message', ['success', 'Pasien telah selesai menjalani Terapi.']);
     }
 
     public function daftarAntrean()

@@ -47,8 +47,12 @@
                                         <th>Usia</th>
                                         <th>Alamat</th>
                                         <th>No WA</th>
-                                        <th>Keterangan</th>
-                                        <th class="text-right">Aksi</th>
+                                        <th>Status</th>
+                                        <?php if(session()->get('role') === 'superadmin') :?>
+                                        <th>Proses</th>
+                                        <?php else :  ?>
+                                            <th>Keterangan</th>
+                                        <?php endif;  ?>
                                     </tr>
                                 </thead>
                                 <tbody></tbody>
@@ -78,27 +82,35 @@
 </div>
 
 <div id="addPatientQueueModal" class="modal fade">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog">
         <div class="modal-content">
-            <div class="card-header">
-                <h4>Daftar Pasien</h4>
-                <div class="card-header-action">
-                    <a href="#" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">Tambah Data</a>
-                </div>
-            </div>
-            <div class="modal-body">
-                <div class="table-responsive">
-                    <table id="table-2" class="table table-striped w-100">
-                        <thead>
-                            <tr>
-                                <th>ID Pasien</th>
-                                <th>Nama</th>
-                                <th>Alamat</th>
-                                <th class="text-right">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
+            <div class="row">
+                <div class="col-20">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4>Daftar Pasien</h4>
+                            <div class="card-header-action">
+                                <a href="#" class="btn btn-primary" data-toggle="modal"
+                                    data-target="#exampleModal">Tambah Data</a>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table id="table-2" class="table table-striped w-100">
+                                    <thead>
+                                        <tr>
+                                            <th>ID Pasien</th>
+                                            <th>Nama</th>
+                                            <th>Alamat</th>
+                                            <th>Status</th>
+                                            <th>Tambahkan</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -238,6 +250,31 @@
 <script>
     $(document).ready(function() {
 
+        var buttonsConfig = [];
+        <?php if (session()->get('role') === 'superadmin'): ?>
+
+            // Tombol PDF
+            buttonsConfig.push({
+                className: 'btn btn-danger',
+                text: '<i class="fas fa-file-pdf"></i> PDF',
+                action: function(e, dt, node, config) {
+                    var regionId = $('#region_id').val() || ''; // Pastikan ID selector benar
+                    window.open('<?= site_url('patient/print_pdf') ?>?region_id=' + regionId, '_blank');
+                }
+            });
+
+            // Tombol Excel
+            buttonsConfig.push({
+                className: 'btn btn-success',
+                text: '<i class="fas fa-file-excel"></i> Export Excel',
+                action: function(e, dt, node, config) {
+                    var regionId = $('#region_id').val() || '';
+                    window.location.href = '<?= site_url('patient/export') ?>?region_id=' + regionId;
+                }
+            });
+        <?php endif; ?>
+
+        // Ambiil Token 
         function getCsrfData() {
             return {
                 "<?= csrf_token() ?>": "<?= csrf_hash() ?>"
@@ -250,6 +287,11 @@
 
         // Inisialisasi DataTables Antrean
         var table1 = $('#table-1').DataTable({
+            dom: '<"top"lBf>rt<"bottom"ip><"clear">',
+            buttons: buttonsConfig,
+            language: {
+                searchPlaceholder: 'ID Pasien/No.Telp/ Nama'
+            },
             processing: true,
             serverSide: true,
             ajax: {
@@ -263,74 +305,124 @@
                 },
             },
             columns: [{
-                    data: 'patient_id'
+                    data: 'patient_id',
+                    class: "text-center",
+                    width: "7%",
+                    sortable: true,
+                    searchable: true
                 },
                 {
-                    data: 'date'
-                }, // Controller menggunakan ->add('date', ...)
-                {
-                    data: 'patient_name'
-                }, // Sesuai alias p.name as patient_name
-                {
-                    data: 'age'
+                    data: 'date',
+                    class: "",
+                    width: "10%",
+                    sortable: false,
+                    searchable: false
                 },
                 {
-                    data: 'address_full'
-                }, // Sesuai ->add('address_full', ...)
-                {
-                    data: 'phone'
+                    data: 'name',
+                    class: "",
+                    width: "10%",
+                    sortable: true,
+                    searchable: true
                 },
                 {
-                    data: 'description'
-                }, // Sesuai ->add('description', ...)
+                    data: 'age',
+                    class: "",
+                    width: "20%",
+                    sortable: true,
+                    searchable: false
+                },
+                {
+                    data: 'address',
+                    class: "",
+                    width: "20%",
+                    sortable: true,
+                    searchable: false
+                },
+                {
+                    data: 'phone',
+                    class: "",
+                    width: "10%",
+                    sortable: true,
+                },
+                {
+                    data: 'description',
+                    class: "",
+                    width: "10%",
+                    sortable: false,
+                    searchable: false
+                },
                 {
                     data: 'action',
                     orderable: false,
                     searchable: false,
-                    className: 'text-right'
+                    className: 'text-center'
                 }
-            ]
+            ],
         });
 
         // Inisialisasi DataTables Pasien
         var table2;
 
         $('#addPatientQueueModal').on('shown.bs.modal', function() {
-            console.log('MODAL SHOWN');
             if (!$.fn.DataTable.isDataTable('#table-2')) {
                 table2 = $('#table-2').DataTable({
+                    dom: '<"top"lBf>rt<"bottom"ip><"clear">', 
+                    buttons: buttonsConfig, 
+                    language: {
+                        searchPlaceholder: 'ID Pasien/No.Telp/ Nama',
+                        processing: '<div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div>'
+                    },
                     processing: true,
                     serverSide: true,
+                    autoWidth: false,
                     ajax: {
                         url: "<?= site_url('antrean/fetchPatientDataTables') ?>",
                         type: "POST",
                         data: function(d) {
-                            d.<?= csrf_token() ?> = "<?= csrf_hash() ?>";
+                            $.extend(d, getCsrfData());
                             d.region = $('#region_id').val() || '';
                         }
                     },
                     columns: [{
-                            data: 'patient_id'
+                            data: 'patient_id',
+                            class: "text-center",
+                            width: "7%",
+                            sortable: true,
+                            searchable: true
+
                         },
                         {
-                            data: 'name'
+                            data: 'name',
+                            class: "",
+                            width: "30.5%",
+                            sortable: true,
+                            searchable: true
                         },
                         {
-                            data: 'address'
+                            data: 'address',
+                            class: "",
+                            width: "30.5%",
+                            sortable: false,
+                            searchable: false
                         },
+
                         {
-                            data: 'description'
+                            data: 'description',
                         },
                         {
                             data: 'action',
-                            orderable: false,
+                            class: "text-center",
+                            width: "25%",
+                            sortable: false,
                             searchable: false
-                        }
+                        },
+
                     ]
                 });
             } else {
-                table2.ajax.reload(null, false); // Reload tanpa reset paging
-                table2.columns.adjust().draw(); // Perbaiki layout kolom
+                table2.ajax.reload(null, false);
+                table2.columns.adjust().draw();
             }
         });
 
