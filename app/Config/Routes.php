@@ -182,3 +182,16 @@ $routes->group('users', ['namespace' => 'App\Modules\users\Controllers'], functi
     $routes->post('fetch_patients', 'Users::fetch_patients');
     $routes->post('add_outside_patient', 'Users::add_outside_patient');
 });
+
+// Patients - Routes
+$routes->group('patient', ['namespace' => 'App\Modules\patients\Controllers'], function ($routes) {
+    $routes->get('/', 'Patients::index');
+    $routes->post('fetch', 'Patients::fetch');
+    $routes->post('fetch2', 'Patients::fetch2');
+    $routes->get('show/(:any)', 'Patients::show/$1');
+    $routes->get('export', 'Patients::export');
+    $routes->get('print_pdf', 'Patients::print_pdf');
+    $routes->post('store', 'Patients::store');
+    $routes->post('update/(:any)', 'Patients::update/$1');
+    $routes->post('destroy/(:any)', 'Patients::destroy/$1');
+});

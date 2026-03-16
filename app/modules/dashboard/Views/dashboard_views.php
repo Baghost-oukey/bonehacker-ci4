@@ -337,7 +337,7 @@
                 type: "POST",
                 data: function(d) {
                     d.region = $('#region').val();
-                    d.<?= csrf_token() ?> = "<?= csrf_hash() ?>"; // Kirim CSRF Token
+                    d.<?= csrf_token() ?> = "<?= csrf_hash() ?>"; 
                 }
             },
             columns: [{
@@ -427,7 +427,6 @@
             });
         });
 
-        // Handle Delete Confirmation
         window.destroy = function(id) {
             $('#deleteModal').modal('show');
             $('#confirmDelete').off('click').on('click', function() {

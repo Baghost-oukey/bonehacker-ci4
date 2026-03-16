@@ -17,7 +17,8 @@
         "hermawan/codeigniter4-datatables": "^0.8.0",
         "jenssegers/blade": "^2.0",
         "ngekoding/codeigniter-datatables": "^1.0",
-        "phpoffice/phpspreadsheet": "^5.5"
+        "phpoffice/phpspreadsheet": "^5.5",
+        "tecnickcom/tcpdf": "^6.11"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9",
