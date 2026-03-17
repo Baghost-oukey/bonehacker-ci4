@@ -151,4 +151,9 @@ class MPatients extends Model
             ->groupEnd()
             ->findAll();
     }
+
+    public function getById($id)
+    {
+        return $this->where('id', $id)->first();
+    }
 }

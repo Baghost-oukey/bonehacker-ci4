@@ -144,6 +144,15 @@ $routes->group('whatsapp', ['namespace' => 'App\modules\whatsapp\Controllers'], 
     $routes->get('send_notif_patients/(:num)', 'Whatsapp::send_notif_patients/$1');
 });
 
+// History
+$routes->group('history', ['namespace' => 'App\modules\history\Controllers'], function($routes) {
+    $routes->post('fetch/(:num)', 'History::fetch/$1');
+    $routes->post('store', 'History::store');
+    $routes->post('update', 'History::update');
+    $routes->post('copy', 'History::copy');
+    $routes->post('destroy/(:num)', 'History::destroy/$1');
+    
+});
 // Log - WhatsApp
 $routes->group('log_whatsapp', ['namespace' => 'App\modules\log_whatsapp\Controllers'], function ($routes) {
     $routes->get('/', 'Logwhatsapp::index');

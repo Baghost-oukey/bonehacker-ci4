@@ -1,8 +1,11 @@
-<?= $this->extend('layout/layout') ?> 
+<?= $this->extend('layout/layout') ?>
 <?= $this->section('content') ?>
 <section class="section">
     <div class="section-header">
-        <h1><?= esc($title) ?></h1>
+        <h1><?= $title ?></h1>
+        <div class="section-header-breadcrumb">
+            <a href="<?= site_url('dashboard') ?>" class="btn btn-primary">Kembali</a>
+        </div>
     </div>
 
     <div class="section-body">

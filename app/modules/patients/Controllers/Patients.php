@@ -16,6 +16,7 @@ class Patients extends BaseController
     protected $jenisKelamin = ['Man' => 'Laki-laki', 'Woman' => 'Perempuan'];
     protected $patientModel;
     protected $session;
+
     protected $db;
 
     public function __construct()
@@ -49,17 +50,18 @@ class Patients extends BaseController
         $patientData = [
             'name'                => $this->request->getPost('name'),
             'gender'              => $this->request->getPost('gender'),
-            'age'                 => $this->request->getPost('age') ?: null,
+            'age'                 => $this->request->getPost('age') ?: 0,
             'country_id'          => $this->request->getPost('country_id'),
-            'address'             => $this->request->getPost('address') ?: null,
-            'phone'               => $this->request->getPost('phone') ?: null,
+            'address'             => $this->request->getPost('address') ?: "",
+            // 'phone'               => $this->request->getPost('phone') ?: "",
+            'phone' => (string) ($this->request->getPost('phone') ?? ""),
             'region_id'           => $this->request->getPost('region_id'),
             'is_suspective'       => $this->request->getPost('is_suspective') === 'on' ? 1 : 0,
             'domestic'            => $domestic,
             'url'                 => json_encode($file_urls),
             'created_by'          => $userId,
-            'patient_information' => $this->request->getPost('patient_information') ?: null,
-            'ket_suspect'         => $this->request->getPost('ket_rentan') ?: null,
+            'patient_information' => $this->request->getPost('patient_information') ?: "",
+            'ket_suspect'         => $this->request->getPost('ket_rentan') ?: "",
         ];
 
         $visitDate = $this->request->getPost('visit_date');
@@ -70,11 +72,8 @@ class Patients extends BaseController
             $patientData['created_at'] = date('Y-m-d H:i:s');
         }
 
-        // Insert ke Database
-        $patientId = $this->patientModel->insert($patientData);
-
-        if ($patientId) {
-            // Data Alamat
+        if ($this->patientModel->insert($patientData)) {
+            $patientId = $this->patientModel->getInsertID();
             $addressModel = new MAddress();
             $addressData = [
                 'patient_id'     => $patientId,
@@ -89,8 +88,10 @@ class Patients extends BaseController
             ];
 
             $addressModel->insert($addressData);
+
             session()->setFlashdata('msg', ['success', 'Data Berhasil Disimpan']);
         } else {
+            // Jika insert pasien gagal
             session()->setFlashdata('msg', ['error', 'Gagal menyimpan data pasien']);
         }
 
@@ -145,10 +146,8 @@ class Patients extends BaseController
         foreach ($dataOutput as &$value) {
             $value->no = $no;
 
-            // Format tanggal (Gunakan helper atau fungsi internal)
             $value->date = !empty($value->date) ? date('d-m-Y', strtotime($value->date)) : '-';
 
-            // Render Tombol Aksi
             $value->action = '
             <a href="' . site_url('patient/show/' . $value->id) . '" class="btn btn-primary btn-sm mr-1">
                 <i class="fas fa-eye"></i>
@@ -302,20 +301,26 @@ class Patients extends BaseController
 
         $mAddress   = new \App\modules\address\Models\MAddress();
         $mCountries = new \App\modules\countries\Models\MCountries();
+        $mRegion    = new \App\modules\region\Models\MRegion();
         $mTerapis   = new \App\modules\terapis\Models\MTerapis();
 
         $regions_patient = json_decode($this->session->get('regions_patient') ?? '[]', true);
 
-        $data = array_merge((array) $patientData, $addressData, [
+        $data = [
             'title'           => 'Detil Pasien',
+            'patient'         => $patientData,
+            'address'         => (object)$addressData,
+            'alamat_patient'  => $mAddress->asObject()->findAll(),
+            'wilayah'         => $mRegion->asObject()->findAll(),
+            'negara'          => $mCountries->asObject()->findAll(),
+            'terapis'         => $mTerapis->asObject()->findAll(),
+            'resources'       => $this->patientModel->get_resources(),
+
+
             'patient_id'      => $id,
             'queue_id'        => $queue_id,
             'history_id'      => $historyId,
             'file_urls'       => json_decode($patientData->url ?? '[]', true),
-            'wilayah'         => $mAddress->asObject()->findAll(),
-            'negara'          => $mCountries->asObject()->findAll(),
-            'terapis'         => $mTerapis->asObject()->findAll(),
-            'resources'       => $this->patientModel->get_resources(),
             'current_date'    => date("Y-m-d"),
             'created_at'      => !empty($patientData->created_at) ? date("j F Y H:i", strtotime($patientData->created_at)) : '-',
             'updated_at'      => !empty($patientData->updated_at) ? date("j F Y H:i", strtotime($patientData->updated_at)) : '-',
@@ -325,7 +330,7 @@ class Patients extends BaseController
             'role'            => $this->session->get('role'),
             'regions_patient' => [$regions_patient],
             'msg'             => $this->session->getFlashdata('message') ?? ['', '', ''],
-        ]);
+        ];
 
         $data['has_updated'] = ($data['updated_at'] !== '-');
 
@@ -406,114 +411,6 @@ class Patients extends BaseController
     }
 
 
-    // public function update($id = null)
-    // {
-    //     // Jika ID dikirim via POST
-    //     $id = $this->request->getPost('id') ?? $id;
-
-    //     $patientModel = new \App\modules\patients\Models\PatientModel(); // Sesuaikan namespace model Anda
-    //     $patient = $patientModel->find($id);
-
-    //     if (!$patient) {
-    //         return redirect()->back()->with('message', ['error', 'Data pasien tidak ditemukan']);
-    //     }
-
-    //     // 1. Logika Tanggal Kedatangan (created_at)
-    //     $existingCreatedAt = $patient['created_at'];
-    //     $existingDate = date('Y-m-d', strtotime($existingCreatedAt));
-    //     $submittedDate = $this->request->getPost('visit_date');
-
-    //     // 2. Logika Handle File (Upload & Delete)
-    //     $existingFiles = empty($patient['url']) ? [] : json_decode($patient['url'], true);
-
-    //     // Hapus file yang dipilih
-    //     $deleteFiles = $this->request->getPost('delete_files');
-    //     if (!empty($deleteFiles)) {
-    //         foreach ($deleteFiles as $index) {
-    //             if (isset($existingFiles[$index])) {
-    //                 $fileUrl = $existingFiles[$index];
-    //                 // Ambil path relatif dari URL untuk dihapus dari folder public
-    //                 $relativePath = str_replace(base_url(), '', $fileUrl);
-    //                 if (file_exists(FCPATH . $relativePath)) {
-    //                     unlink(FCPATH . $relativePath);
-    //                 }
-    //                 unset($existingFiles[$index]);
-    //             }
-    //         }
-    //         $existingFiles = array_values($existingFiles);
-    //     }
-
-    //     // Upload file baru
-    //     $newFileUrls = [];
-    //     $files = $this->request->getFileMultiple('userfiles');
-    //     if ($files) {
-    //         foreach ($files as $file) {
-    //             if ($file->isValid() && !$file->hasMoved()) {
-    //                 $newName = $file->getRandomName();
-    //                 $file->move(FCPATH . 'patient_file', $newName);
-    //                 $newFileUrls[] = base_url('patient_file/' . $newName);
-    //             }
-    //         }
-    //     }
-
-    //     $finalFileUrls = array_merge($existingFiles, $newFileUrls);
-
-    //     // 3. Persiapan Data Utama Pasien
-    //     $data = [
-    //         'name'                => $this->request->getPost('name'),
-    //         'gender'              => $this->request->getPost('gender'),
-    //         'age'                 => $this->request->getPost('age') ?: null,
-    //         'address'             => $this->request->getPost('address') ?: null,
-    //         'phone'               => $this->request->getPost('phone') ?: null,
-    //         'is_suspective'       => $this->request->getPost('is_suspective') == "on" ? 1 : 0,
-    //         'domestic'            => $this->request->getPost('domestic') == "on" ? 1 : 0,
-    //         'url'                 => json_encode($finalFileUrls),
-    //         'updated_at'          => date('Y-m-d H:i:s'),
-    //         'updated_by'          => session()->get('userId'),
-    //         'patient_information' => $this->request->getPost('patient_information') ?: null,
-    //         'ket_suspect'         => ($this->request->getPost('is_suspective') == "on") ? $this->request->getPost('ket_rentan') : null,
-    //     ];
-
-    //     // Jika tanggal kunjungan diubah, update created_at
-    //     if ($submittedDate && $submittedDate != $existingDate) {
-    //         $data['created_at'] = $submittedDate . ' ' . date('H:i:s');
-    //     }
-
-    //     // Update data utama
-    //     $update = $patientModel->update($id, $data);
-
-    //     // 4. Logika Update/Insert Alamat (Table Terpisah)
-    //     $addressData = [
-    //         'patient_id'     => $id,
-    //         'desa_id'        => $this->request->getPost('desa_id'),
-    //         'desa_nama'      => $this->request->getPost('desa_nama'),
-    //         'kecamatan_id'   => $this->request->getPost('kecamatan_id'),
-    //         'kecamatan_nama' => $this->request->getPost('kecamatan_nama'),
-    //         'kabupaten_id'   => $this->request->getPost('kabupaten_id'),
-    //         'kabupaten_nama' => $this->request->getPost('kabupaten_nama'),
-    //         'provinsi_id'    => $this->request->getPost('provinsi_id'),
-    //         'provinsi_nama'  => $this->request->getPost('provinsi_nama'),
-    //         'date_updated'   => date('Y-m-d H:i:s')
-    //     ];
-
-    //     // Gunakan query builder atau model untuk alamat
-    //     $db = \Config\Database::connect();
-    //     $existingAddress = $db->table('patient_addresses')->where('patient_id', $id)->get()->getRow();
-
-    //     if ($existingAddress) {
-    //         $db->table('patient_addresses')->where('patient_id', $id)->update($addressData);
-    //     } else {
-    //         $db->table('patient_addresses')->insert($addressData);
-    //     }
-
-    //     if ($update) {
-    //         return redirect()->to('patient/show/' . $id)->with('message', ['success', 'Data Berhasil Disimpan']);
-    //     } else {
-    //         return redirect()->back()->withInput()->with('message', ['error', 'Gagal menyimpan data']);
-    //     }
-    // }
-
-
     public function destroy($id)
     {
         if ($this->patientModel->destroy($id)) {
@@ -552,7 +449,7 @@ class Patients extends BaseController
         $patients = $this->patientModel->getAllData($region_id);
 
         // Inisialisasi Model History (untuk menghitung rekam medis)
-        $historyModel = new \App\modules\histories\Models\MHistory();
+        $historyModel = new \App\modules\history\Models\MHistory();
 
         // Gunakan property jenisKelamin yang sudah didefinisikan di controller
         $jenisKelamin = $this->jenisKelamin;
@@ -641,7 +538,7 @@ class Patients extends BaseController
         $region_id = $this->request->getGet('region_id');
 
         // 2. Inisialisasi Model History (Karena PatientModel sudah ada di construct)
-        $historyModel = new \App\modules\histories\Models\MHistory();
+        $historyModel = new \App\modules\history\Models\MHistory();
 
         // 3. Ambil data dari model
         $data = $this->patientModel->getAllData($region_id);
@@ -742,12 +639,5 @@ class Patients extends BaseController
         $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
         $writer->save('php://output');
         exit();
-    }
-
-
-
-    public function index()
-    {
-        //
     }
 }

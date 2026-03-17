@@ -50,7 +50,7 @@ class Auth extends BaseController
 
             session()->regenerate();
 
-            return redirect()->to(base_url('dashboard'));
+            return redirect()->to(base_url('beranda_views'));
         } else {
             $params = ['1', 'error', 'Nama pengguna dan kata sandi tidak sesuai', ''];
             session()->setFlashdata('pesan', $params);
