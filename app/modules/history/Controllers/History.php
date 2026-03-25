@@ -91,20 +91,26 @@ class History extends BaseController
     }
 
 
-    private function processTags($jsonTags, $tableName)
+    private function processTags($inputTags, $tableName)
     {
-        if (empty($jsonTags)) return null;
-        $tags = json_decode($jsonTags, true);
-        if (!is_array($tags)) return null;
+        if (empty($inputTags)) return null;
+        $tags = json_decode($inputTags, true);
+        if (is_array($tags)) {
+            $tagName = array_column($tags, 'value');
+        } else {
+            $tagName = explode(',', $inputTags);
+        }
 
         $tagIds = [];
-        foreach ($tags as $tag) {
-            $tagName = $tag['value'];
-            $existing = $this->db->table($tableName)->where('name', $tagName)->get()->getRow();
+        foreach ($tagName as $name) {
+            $name = trim($name);
+            if ($name === '') continue;
+
+            $existing = $this->db->table($tableName)->where('name', $name)->get()->getRow();
             if ($existing) {
                 $tagIds[] = $existing->id;
             } else {
-                $this->db->table($tableName)->insert(['name' => $tagName]);
+                $this->db->table($tableName)->insert(['name' => $name]);
                 $tagIds[] = $this->db->insertID();
             }
         }
@@ -132,15 +138,20 @@ class History extends BaseController
         $resultValues    = $this->processTags($this->request->getPost('result'), 'result_tags');
 
         $data = $this->mapHistoryData($patientId, $complaintValues, $medhisValues, $resultValues);
+        if (isset($data['phone']) && empty($data['phone'])) {
+            $data['phone'] = $data['phone'] ?: '-';
+        }
         $kejantananData = $this->mapKejantananData();
-        
+
         if ($this->model_history->insert($data)) {
             $historyId = $this->model_history->getInsertID();
+            unset($data['phone']);
             $this->model_history->updateKejantanan($historyId, $data, $kejantananData);
-            $patient = $this->model_patient->getById($patientId);
+            $patient = $this->model_patient->find($patientId);
             $whatsappData = $this->model_whatsapp->getMessageAndCredentials();
             if ($this->request->getPost('notifikasi') && $whatsappData && $patient) {
-                $phone = (strpos($patient->phone, '0') === 0) ? '62' . substr($patient->phone, 1) : $patient->phone;
+                $rawPhone = $patient->phone ?? "-";
+                $phone = (strpos($rawPhone, '0') === 0) ? '62' . substr($rawPhone, 1) : $rawPhone;
                 $this->sendAndLogWhatsApp($historyId, $patient->name, $phone, $whatsappData);
             }
             session()->setFlashdata('message', ['success', 'Data riwayat berhasil disimpan']);
@@ -162,6 +173,8 @@ class History extends BaseController
         $resultValues    = $this->processTags($this->request->getPost('result'), 'result_tags');
 
         $data = $this->mapHistoryData($patientId, $complaintValues, $medhisValues, $resultValues);
+        unset($data['created_by']);
+
         $data['updated_by'] = session()->get('userId');
         $data['date_modified'] = date('Y-m-d H:i:s');
 
@@ -176,6 +189,75 @@ class History extends BaseController
         }
 
         return redirect()->to('patient/show/' . $patientId);
+    }
+
+    private function getRealname($userId)
+    {
+        if (empty($userId)) return '-';
+
+        // Sesuaikan dengan nama tabel user kamu, biasanya 'users'
+        $user = $this->db->table('users')
+            ->select('realname') // atau 'realname' sesuai kolom di DB
+            ->where('id', $userId)
+            ->get()
+            ->getRow();
+
+        return $user ? $user->realname : '-';
+    }
+
+    public function show($id = null)
+    {
+        if (!$this->request->isAJAX()) {
+            return redirect()->to(site_url('history'));
+        }
+
+        // 1. Ambil data utama history
+        $data = $this->model_history->find($id);
+
+        if (!$data) {
+            return $this->response->setJSON(['message' => 'Data tidak ditemukan'])->setStatusCode(404);
+        }
+        $data->active_terapis = $this->model_history->getActiveTerapis();
+        $data->selected_terapis = $this->model_history->getSelectedTerapis($id);
+        $kejantananData = $this->model_history->getKejantananById($id);
+        if ($kejantananData) {
+            foreach ($kejantananData as $key => $value) {
+                if ($key !== 'id') {
+                    $data->$key = $value;
+                }
+            }
+        }
+
+        $data->complaint = $this->_getTagNameFromIds($data->complaint, 'complaint_tags');
+        $data->medhis    = $this->_getTagNameFromIds($data->medhis, 'medhis_tags');
+        $data->results   = $this->_getTagNameFromIds($data->results, 'result_tags');
+
+        $data->history_created_by = !empty($data->created_by) ? $this->getRealname($data->created_by) : '-';
+        $data->history_updated_by = !empty($data->updated_by) ? $this->getRealname($data->updated_by) : '-';
+
+        if (!empty($data->finish_at) && !empty($data->process_at)) {
+            $diff = strtotime($data->finish_at) - strtotime($data->process_at);
+            $data->time_consume = round($diff / 3600, 2) . ' jam';
+        } else {
+            $data->time_consume = null;
+        }
+
+        return $this->response->setJSON($data);
+    }
+
+    private function _getTagNameFromIds($ids, $table)
+    {
+        if (empty($ids) || $ids === '-') return '-';
+
+        $idArray = explode(',', $ids);
+        $db = \Config\Database::connect();
+        $builder = $db->table($table);
+        $tags = $builder->whereIn('id', $idArray)->get()->getResultArray();
+
+        if (empty($tags)) return '-';
+
+        $tagNames = array_column($tags, 'name');
+        return implode(', ', $tagNames);
     }
 
     private function mapHistoryData($patientId, $complaint, $medhis, $results)
@@ -335,20 +417,13 @@ class History extends BaseController
         if ($phone && strpos($phone, '0') === 0) {
             $phone = '62' . substr($phone, 1);
         }
-
-        // 2. Ambil data WhatsApp Credentials
         $whatsappData = $this->model_whatsapp->getMessageAndCredentials();
-
-        // 3. Proses Tags (Complaint, Medhis, Result) menggunakan Mapper Tagify
         $complaintValues = $this->processTags($this->request->getPost('complaint'), 'complaint_tags');
         $medhisValues    = $this->processTags($this->request->getPost('medhis'), 'medhis_tags');
         $resultValues    = $this->processTags($this->request->getPost('result'), 'result_tags');
-
-        // 4. Fetch data lama untuk pengecekan
         $existingData = $this->model_history->getById($id);
 
         if ($existingData) {
-            // Gunakan mapper history yang sudah kita buat sebelumnya
             $data = $this->mapHistoryData($patientId, $complaintValues, $medhisValues, $resultValues);
 
             // Sesuaikan tanggal khusus untuk fungsi Copy
@@ -382,7 +457,6 @@ class History extends BaseController
     public function destroy($id)
     {
         $destroy = $this->model_history->delete($id);
-
         if ($destroy) {
             session()->setFlashdata('message', ['success', 'Data riwayat berhasil dihapus']);
             $response = ["status" => true];
@@ -390,7 +464,6 @@ class History extends BaseController
             session()->setFlashdata('message', ['danger', 'Data riwayat gagal dihapus']);
             $response = ["status" => false];
         }
-
         return $this->response->setJSON($response);
     }
 }

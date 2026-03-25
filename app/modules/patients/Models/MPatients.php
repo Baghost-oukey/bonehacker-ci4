@@ -54,9 +54,9 @@ class MPatients extends Model
 
     // Callbacks
     protected $allowCallbacks = true;
-    protected $beforeInsert   = [];
+    protected $beforeInsert   = ['fixPhonevalue'];
     protected $afterInsert    = [];
-    protected $beforeUpdate   = [];
+    protected $beforeUpdate   = ['fixPhonevalue'];
     protected $afterUpdate    = [];
     protected $beforeFind     = [];
     protected $afterFind      = [];
@@ -102,6 +102,36 @@ class MPatients extends Model
             ->limit($options['limit'], $options['offset'])
             ->get()
             ->getResult();
+    }
+
+    public function getAllData($region = null)
+    {
+        $builder = $this->builder();
+
+        $builder->select('
+       patients.id, patients.name, patients.gender, patients.age, 
+        patients.address, patients.phone, patients.is_suspective,
+        r.name AS name_region,
+        a.desa_nama, a.kecamatan_nama, a.kabupaten_nama,
+        /* Subquery: Hitung jumlah RM & Tanggal terakhir dalam satu jalan */
+        (SELECT COUNT(h.id) FROM histories h WHERE h.patient_id = patients.id AND h.is_delete = 0) AS total_history,
+        (SELECT MAX(date) FROM histories h WHERE h.patient_id = patients.id AND h.is_delete = 0) AS last_visit
+    ');
+
+        // Join tabel regions dan patient_address
+        $builder->join('regions r', 'r.id = patients.region_id', 'left');
+        $builder->join('patient_address a', 'a.patient_id = patients.id', 'left');
+
+        // Filter berdasarkan region jika ada
+        if (!empty($region)) {
+            $builder->where('patients.region_id', $region);
+        }
+
+        // Biasanya kita hanya ingin data yang belum dihapus (soft delete)
+        $builder->where('patients.is_delete', 0);
+
+        // Mengembalikan hasil sebagai array of objects (stdClass)
+        return $builder->get()->getResult();
     }
 
     public function getTotalData(string $search = '')
@@ -155,5 +185,13 @@ class MPatients extends Model
     public function getById($id)
     {
         return $this->where('id', $id)->first();
+    }
+
+    public function fixPhonevalue(array $data)
+    {
+        if (!isset($data['data']['phone']) || empty($data['data']['phone'])) {
+            $data['data']['phone'] = '-';
+        }
+        return $data;
     }
 }

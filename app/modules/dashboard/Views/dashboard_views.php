@@ -346,10 +346,6 @@
                 },
                 {
                     data: "name",
-                    // render: function (data, type, row){
-                    //     var phoneDisplay = (row.phone && row.phone !== "" && row.phone !== null) ? `<br><small class="text-muted">(${row.phone})</small>` : "";
-                    //     return `<strong>${data}</strong>${phoneDisplay}`;
-                    // }
                 },
                 {
                     data: "name_region"

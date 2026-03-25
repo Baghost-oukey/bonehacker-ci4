@@ -177,6 +177,7 @@ class Patients extends BaseController
 
         $limit = $this->request->getPost('length') ?? 10;
         $start = $this->request->getPost('start') ?? 0;
+        $search = $request->getPost('search')['value'] ?? '';
 
         $region = $this->request->getPost('region');
 
@@ -204,6 +205,12 @@ class Patients extends BaseController
             $builder->where('p.region_id', $region);
         }
 
+        if (!empty($search)) {
+            $builder->groupStart()->like('p.name', $search)->orLike('p.phone', $search)
+                ->orLike('p.address', $search)
+                ->orLike('p.id', $search)
+                ->groupEnd();
+        }
         $totalFiltered = $builder->countAllResults(false);
         $data = $builder->limit($limit, $start)->get()->getResult();
         $totalData = $db->table('patients')->countAllResults();
@@ -345,7 +352,7 @@ class Patients extends BaseController
         }
 
         $patient = $this->patientModel->asArray()->find($id);
-        if ($patient) {
+        if (!$patient) {
             return redirect()->back()->with('message', ['error', 'danger', 'Pasien tidak ditemukan']);
         }
 
@@ -356,8 +363,8 @@ class Patients extends BaseController
         $delete_files = $this->request->getPost('delete_files');
         if (!empty($delete_files)) {
             foreach ($delete_files as $index) {
-                if (isset($existing_files[$index])) {
-                    $file_to_delete = $existing_files[$index];
+                if (isset($existingFiles[$index])) {
+                    $file_to_delete = $existingFiles[$index];
 
                     // Ubah URL menjadi path sistem (FCPATH)
                     $file_path = str_replace(base_url(), '', $file_to_delete);
@@ -366,10 +373,10 @@ class Patients extends BaseController
                     if (file_exists($full_path)) {
                         unlink($full_path);
                     }
-                    unset($existing_files[$index]);
+                    unset($existingFiles[$index]);
                 }
             }
-            $existing_files = array_values($existing_files);
+            $existingFiles = array_values($existingFiles);
         }
 
         $new_file_urls = [];
@@ -391,13 +398,14 @@ class Patients extends BaseController
             }
         }
 
-        $final_file_urls = array_merge($existing_files, $new_file_urls);
+        $final_file_urls = array_merge($existingFiles, $new_file_urls);
         $updateData = [
             'url'        => json_encode($final_file_urls),
             'updated_at' => date('Y-m-d H:i:s'),
-            'updated_by' => session()->get('userId')
+            'updated_by' => session()->get('userId'),
+            'phone'      => (!empty($patient['phone'])) ? $patient['phone'] : "-"
         ];
-
+        dd($updateData);
         $update = $this->patientModel->update($id, $updateData);
 
         // Logging (Opsional)
@@ -444,167 +452,221 @@ class Patients extends BaseController
 
     public function print_pdf()
     {
-        // 1. Ambil Parameter & Data
+        // 1. Ambil Data (Eager Loaded dari Model)
         $region_id = $this->request->getGet('region_id');
         $patients = $this->patientModel->getAllData($region_id);
-
-        // Inisialisasi Model History (untuk menghitung rekam medis)
-        $historyModel = new \App\modules\history\Models\MHistory();
-
-        // Gunakan property jenisKelamin yang sudah didefinisikan di controller
         $jenisKelamin = $this->jenisKelamin;
 
-        // 2. Inisialisasi TCPDF
-        // TCPDF akan otomatis terload jika diinstal via composer
-        $pdf = new \TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
+        // 2. Inisialisasi TCPDF (Ubah ke Landscape 'L' agar muat banyak kolom)
+        $pdf = new \TCPDF('L', 'mm', 'A4', true, 'UTF-8', false);
 
+        // Setup Metadata
         $pdf->SetCreator(PDF_CREATOR);
-        $pdf->SetAuthor('Medical Application');
         $pdf->SetTitle('Data Pasien');
-
         $pdf->setPrintHeader(false);
         $pdf->setPrintFooter(false);
-        $pdf->SetMargins(8, 10, 8, true);
-        $pdf->SetAutoPageBreak(TRUE, 10);
+        $pdf->SetMargins(10, 10, 10);
+        $pdf->SetAutoPageBreak(TRUE, 15);
 
         $pdf->AddPage();
 
-        // 3. Header Tabel
-        $pdf->SetFont('times', 'B', 12);
-        $pdf->Cell(0, 10, 'Data Pasien', 0, 1, 'C');
-        $pdf->Ln(4);
+        // 3. Header Judul
+        $pdf->SetFont('times', 'B', 14);
+        $pdf->Cell(0, 10, 'LAPORAN DATA PASIEN', 0, 1, 'C');
+        $pdf->Ln(5);
 
-        $pdf->SetFont('times', 'B', 8);
-        $pdf->SetFillColor(240, 240, 240);
-
-        // MultiCell(width, height, text, border, align, fill, next_line)
-        $pdf->MultiCell(10, 8, 'NO', 1, 'C', 1, 0);
-        $pdf->MultiCell(10, 8, 'ID', 1, 'C', 1, 0);
-        $pdf->MultiCell(20, 8, 'Nama', 1, 'C', 1, 0);
-        $pdf->MultiCell(15, 8, 'Jenis Kelamin', 1, 'C', 1, 0);
-        $pdf->MultiCell(8, 8, 'Usia', 1, 'C', 1, 0);
-        $pdf->MultiCell(16, 8, 'Wilayah', 1, 'C', 1, 0);
-        $pdf->MultiCell(15, 8, 'No. Telp', 1, 'C', 1, 0);
-        $pdf->MultiCell(24, 8, 'Alamat', 1, 'C', 1, 0);
-        $pdf->MultiCell(16, 8, 'Desa', 1, 'C', 1, 0);
-        $pdf->MultiCell(16, 8, 'Kecamatan', 1, 'C', 1, 0);
-        $pdf->MultiCell(18, 8, 'Kabupaten', 1, 'C', 1, 0);
-        $pdf->MultiCell(15, 8, 'Rentan', 1, 'C', 1, 0);
-        $pdf->MultiCell(11, 8, 'RM', 1, 'C', 1, 1);
-
-        // 4. Baris Data
+        $this->drawHeader($pdf);
         $pdf->SetFont('times', '', 8);
         $no = 1;
 
         foreach ($patients as $patient) {
-            // Konversi ke object jika perlu
-            if (is_array($patient)) $patient = (object) $patient;
-
-            $jumlahRekamMedis = $historyModel->count_histories_by_patient_id($patient->id);
-
-            // Cek apakah butuh halaman baru
-            if ($pdf->GetY() + 8 > $pdf->getPageHeight() - 10) {
+            $row = (object) $patient;
+            if ($pdf->GetY() > 180) {
                 $pdf->AddPage();
-                // Opsional: Cetak header tabel lagi di halaman baru
+                $this->drawHeader($pdf);
             }
 
-            // Ambil label jenis kelamin dengan aman
-            $genderLabel = $jenisKelamin[$patient->gender] ?? $patient->gender;
+            // Ambil data yang sudah dihitung di model (total_history)
+            $jumlahRM = $row->total_history ?? 0;
+            $gender   = $jenisKelamin[$row->gender] ?? $row->gender;
 
-            $pdf->MultiCell(10, 8, $no++, 1, 'C', 0, 0);
-            $pdf->MultiCell(10, 8, $patient->id, 1, 'C', 0, 0);
-            $pdf->MultiCell(20, 8, $patient->name, 1, 'L', 0, 0);
-            $pdf->MultiCell(15, 8, $genderLabel, 1, 'C', 0, 0);
-            $pdf->MultiCell(8, 8, $patient->age, 1, 'C', 0, 0);
-            $pdf->MultiCell(16, 8, $patient->name_region ?? '-', 1, 'L', 0, 0);
-            $pdf->MultiCell(15, 8, $patient->phone, 1, 'L', 0, 0);
-            $pdf->MultiCell(24, 8, $patient->address ?? '-', 1, 'L', 0, 0);
-            $pdf->MultiCell(16, 8, $patient->desa_nama ?? '-', 1, 'L', 0, 0);
-            $pdf->MultiCell(16, 8, $patient->kecamatan_nama ?? '-', 1, 'L', 0, 0);
-            $pdf->MultiCell(18, 8, $patient->kabupaten_nama ?? '-', 1, 'L', 0, 0);
-            $pdf->MultiCell(15, 8, ($patient->is_suspective ? 'Ya' : 'Tidak'), 1, 'C', 0, 0);
-            $pdf->MultiCell(11, 8, $jumlahRekamMedis, 1, 'C', 0, 1);
+            // Render Row
+            $pdf->MultiCell(10, 7, $no++, 1, 'C', 0, 0);
+            $pdf->MultiCell(12, 7, $row->id, 1, 'C', 0, 0);
+            $pdf->MultiCell(35, 7, $row->name, 1, 'L', 0, 0);
+            $pdf->MultiCell(20, 7, $gender, 1, 'C', 0, 0);
+            $pdf->MultiCell(10, 7, $row->age, 1, 'C', 0, 0);
+            $pdf->MultiCell(25, 7, $row->name_region ?? '-', 1, 'L', 0, 0);
+            $pdf->MultiCell(25, 7, $row->phone, 1, 'L', 0, 0);
+            $pdf->MultiCell(30, 7, $row->desa_nama ?? '-', 1, 'L', 0, 0);
+            $pdf->MultiCell(30, 7, $row->kecamatan_nama ?? '-', 1, 'L', 0, 0);
+            $pdf->MultiCell(30, 7, $row->kabupaten_nama ?? '-', 1, 'L', 0, 0);
+            $pdf->MultiCell(15, 7, ($row->is_suspective ? 'Ya' : 'Tdk'), 1, 'C', 0, 0);
+            $pdf->MultiCell(15, 7, $jumlahRM, 1, 'C', 0, 1);
         }
 
-        // 5. Output
+        // 6. Output
         $this->response->setHeader('Content-Type', 'application/pdf');
-        $pdf->Output('all_patient_data.pdf', 'I');
+        $pdf->Output('Laporan_Pasien_' . date('Ymd') . '.pdf', 'I');
         exit();
+    }
+
+
+    private function drawHeader($pdf)
+    {
+        $pdf->SetFont('times', 'B', 8);
+        $pdf->SetFillColor(230, 230, 230);
+        $pdf->MultiCell(10, 8, 'NO', 1, 'C', 1, 0);
+        $pdf->MultiCell(12, 8, 'ID', 1, 'C', 1, 0);
+        $pdf->MultiCell(35, 8, 'Nama', 1, 'C', 1, 0);
+        $pdf->MultiCell(20, 8, 'Gender', 1, 'C', 1, 0);
+        $pdf->MultiCell(10, 8, 'Usia', 1, 'C', 1, 0);
+        $pdf->MultiCell(25, 8, 'Wilayah', 1, 'C', 1, 0);
+        $pdf->MultiCell(25, 8, 'No. Telp', 1, 'C', 1, 0);
+        $pdf->MultiCell(30, 8, 'Desa', 1, 'C', 1, 0);
+        $pdf->MultiCell(30, 8, 'Kecamatan', 1, 'C', 1, 0);
+        $pdf->MultiCell(30, 8, 'Kabupaten', 1, 'C', 1, 0);
+        $pdf->MultiCell(15, 8, 'Rentan', 1, 'C', 1, 0);
+        $pdf->MultiCell(15, 8, 'RM', 1, 'C', 1, 1);
+
+        $pdf->SetFont('times', '', 8);
+    }
+
+    public function update($id = null)
+    {
+        // 1. Ambil ID dari segment URL atau Post (Fallback)
+        $id = $id ?? $this->request->getPost('id');
+        $patientModel = new \App\modules\patients\Models\MPatients();
+
+        // 2. Ambil data lama
+        $patient = $patientModel->find($id);
+        if (!$patient) {
+            return redirect()->back()->with('message', ['error', 'Pasien tidak ditemukan']);
+        }
+
+        // 3. Logika Tanggal (Created At)
+        $existingCreatedAt = $patient->created_at;
+        $existingDate = date('Y-m-d', strtotime($existingCreatedAt));
+        $submittedDate = $this->request->getPost('visit_date');
+
+        // 4. Handle File Lama (JSON)
+        $existingFiles = empty($patient->url) ? [] : json_decode($patient->url, true);
+
+        // 5. Hapus File yang dipilih
+        $deleteFiles = $this->request->getPost('delete_files');
+        if (!empty($deleteFiles)) {
+            foreach ($deleteFiles as $index) {
+                if (isset($existingFiles[$index])) {
+                    $fileToDelete = $existingFiles[$index];
+                    // Hapus domain base_url untuk mendapatkan path lokal
+                    $relativeInfo = parse_url($fileToDelete);
+                    $filePath = FCPATH . ltrim($relativeInfo['path'], '/');
+
+                    if (file_exists($filePath)) {
+                        unlink($filePath);
+                    }
+                    unset($existingFiles[$index]);
+                }
+            }
+            $existingFiles = array_values($existingFiles); // Reindex
+        }
+
+        // 6. Handle Upload File Baru (CI4 Multiple Upload)
+        $newFileUrls = [];
+        if ($imageFiles = $this->request->getFiles()) {
+            if (isset($imageFiles['userfiles'])) {
+                foreach ($imageFiles['userfiles'] as $img) {
+                    if ($img->isValid() && !$img->hasMoved()) {
+                        $newName = $img->getRandomName();
+                        $img->move(FCPATH . 'patient_file', $newName);
+                        $newFileUrls[] = base_url('patient_file/' . $newName);
+                    }
+                }
+            }
+        }
+
+        // Gabungkan file lama dan baru
+        $finalFileUrls = array_merge($existingFiles, $newFileUrls);
+
+        // 7. Siapkan Data Pasien
+        $userData = session()->get('userId'); // Pastikan session CI4 sudah aktif
+
+        $data = [
+            'name'                => $this->request->getPost('name'),
+            'gender'              => $this->request->getPost('gender'),
+            'age'                 => $this->request->getPost('age') ?: null,
+            'country_id'          => $this->request->getPost('country_id'),
+            'address'             => $this->request->getPost('address') ?: null,
+            'phone'               => $this->request->getPost('phone') ?: null,
+            'region_id'           => $this->request->getPost('region_id'),
+            'is_suspective'       => $this->request->getPost('is_suspective') === 'on' ? 1 : 0,
+            'domestic'            => $this->request->getPost('domestic') === 'on' ? 1 : 0,
+            'url'                 => json_encode($finalFileUrls),
+            'created_at'          => ($submittedDate && $submittedDate != $existingDate) ? $submittedDate . ' ' . date('H:i:s') : $existingCreatedAt,
+            'updated_at'          => date('Y-m-d H:i:s'),
+            'updated_by'          => $userData,
+            'patient_information' => $this->request->getPost('patient_information') ?: null,
+            'ket_suspect'         => ($this->request->getPost('is_suspective') === 'on') ? $this->request->getPost('ket_rentan') : null
+        ];
+
+        $update = $patientModel->update($id, $data);
+
+        $addressModel = new \App\modules\address\Models\MAddress();
+        $addressData = [
+            'patient_id'     => $id,
+            'desa_id'        => $this->request->getPost('desa_id'),
+            'desa_nama'      => $this->request->getPost('desa_nama'),
+            'kecamatan_id'   => $this->request->getPost('kecamatan_id'),
+            'kecamatan_nama' => $this->request->getPost('kecamatan_nama'),
+            'kabupaten_id'   => $this->request->getPost('kabupaten_id'),
+            'kabupaten_nama' => $this->request->getPost('kabupaten_nama'),
+            'provinsi_id'    => $this->request->getPost('provinsi_id'),
+            'provinsi_nama'  => $this->request->getPost('provinsi_nama'),
+            'date_updated'   => date('Y-m-d H:i:s')
+        ];
+
+        // CI4 menggunakan upsert atau cek manual
+        $existingAddress = $addressModel->where('patient_id', $id)->first();
+        if ($existingAddress) {
+            $addressModel->update($existingAddress['id'], $addressData);
+        } else {
+            $addressModel->insert($addressData);
+        }
+
+        // 10. Flash Message & Redirect
+        if ($update) {
+            session()->setFlashdata('message', ['success', 'Data Berhasil disimpan']);
+        } else {
+            session()->setFlashdata('message', ['error', 'Gagal menyimpan data']);
+        }
+
+        return redirect()->to('patient/show/' . $id);
     }
 
     public function export()
     {
-        // 1. Ambil Parameter (Input GET)
+        set_time_limit(0);
+        ini_set('memory_limit', '512M');
+
         $region_id = $this->request->getGet('region_id');
-
-        // 2. Inisialisasi Model History (Karena PatientModel sudah ada di construct)
-        $historyModel = new \App\modules\history\Models\MHistory();
-
-        // 3. Ambil data dari model
         $data = $this->patientModel->getAllData($region_id);
 
-        // 4. Inisialisasi Spreadsheet
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
-        // 5. Header Tabel
-        $headers = [
-            'A1' => 'No',
-            'B1' => 'ID Pasien',
-            'C1' => 'Name',
-            'D1' => 'Gender',
-            'E1' => 'Age',
-            'F1' => 'Address',
-            'G1' => 'Phone',
-            'H1' => 'Pasien Rentan',
-            'I1' => 'Region Name',
-            'J1' => 'Desa',
-            'K1' => 'Kecamatan',
-            'L1' => 'Kabupaten',
-            'M1' => 'Date',
-            'N1' => 'Jumlah Rekam Medis'
-        ];
+        $headers = ['No', 'ID Pasien', 'Name', 'Gender', 'Age', 'Address', 'Phone', 'Rentan', 'Region', 'Desa', 'Kecamatan', 'Kabupaten', 'Date', 'Total RM'];
+        $sheet->fromArray($headers, NULL, 'A1');
 
-        foreach ($headers as $cell => $value) {
-            $sheet->setCellValue($cell, $value);
-        }
-
-        // 6. Styling Header
         $headerStyle = [
-            'font' => ['bold' => true, 'size' => 12],
-            'alignment' => [
-                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
-                'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
-            ],
-            'fill' => [
-                'fillType'   => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                'startColor' => ['rgb' => 'B6D7A8'],
-            ],
-            'borders' => [
-                'allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN],
-            ],
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+            'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => '2E7D32']],
+            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER]
         ];
         $sheet->getStyle('A1:N1')->applyFromArray($headerStyle);
 
-        // 7. Loop Data
         $row = 2;
         $no = 1;
         foreach ($data as $item) {
-            // Pastikan item diperlakukan sebagai object
-            if (is_array($item)) $item = (object) $item;
-
-            // Highlight Merah jika is_delete = 1
-            if (isset($item->is_delete) && $item->is_delete == 1) {
-                $sheet->getStyle('A' . $row . ':N' . $row)
-                    ->getFill()
-                    ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-                    ->getStartColor()
-                    ->setARGB('FFFF0000'); // Merah (Alpha ditambahkan di awal)
-            }
-
-            // Hitung jumlah rekam medis dari model histories
-            $jumlahRekamMedis = $historyModel->count_histories_by_patient_id($item->id);
-
             $sheet->setCellValue('A' . $row, $no);
             $sheet->setCellValue('B' . $row, $item->id);
             $sheet->setCellValue('C' . $row, $item->name);
@@ -613,30 +675,35 @@ class Patients extends BaseController
             $sheet->setCellValue('F' . $row, $item->address);
             $sheet->setCellValue('G' . $row, $item->phone);
             $sheet->setCellValue('H' . $row, $item->is_suspective ? 'Ya' : 'Tidak');
-            $sheet->setCellValue('I' . $row, $item->name_region ?? '-');
-            $sheet->setCellValue('J' . $row, $item->desa_nama ?? '-');
-            $sheet->setCellValue('K' . $row, $item->kecamatan_nama ?? '-');
-            $sheet->setCellValue('L' . $row, $item->kabupaten_nama ?? '-');
-            $sheet->setCellValue('M' . $row, $item->date ?? '-');
-            $sheet->setCellValue('N' . $row, $jumlahRekamMedis);
+            $sheet->setCellValue('I' . $row, $item->name_region);
+            $sheet->setCellValue('J' . $row, $item->desa_nama);
+            $sheet->setCellValue('K' . $row, $item->kecamatan_nama);
+            $sheet->setCellValue('L' . $row, $item->kabupaten_nama);
+            $sheet->setCellValue('M' . $row, $item->last_visit);
+            $sheet->setCellValue('N' . $row, $item->total_history);
+
+            if (isset($item->is_delete) && $item->is_delete == 1) {
+                $sheet->getStyle('A' . $row . ':N' . $row)->getFill()
+                    ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                    ->getStartColor()->setARGB('FFFFCCCC'); // Merah sangat muda agar tetap terbaca
+            }
 
             $row++;
             $no++;
         }
 
-        // 8. Auto-size kolom agar rapi
-        foreach (range('A', 'N') as $columnID) {
-            $sheet->getColumnDimension($columnID)->setAutoSize(true);
+        $widths = ['A' => 5, 'B' => 10, 'C' => 25, 'D' => 10, 'E' => 8, 'F' => 30, 'G' => 15, 'H' => 10, 'I' => 15, 'J' => 15, 'K' => 15, 'L' => 15, 'M' => 18, 'N' => 10];
+        foreach ($widths as $col => $w) {
+            $sheet->getColumnDimension($col)->setWidth($w);
         }
 
-        // 9. Proses Download
-        $filename = 'Data_Patient_' . date('Y-m-d') . '.xlsx';
-
+        // DOWNLOAD PROSES
+        $filename = 'Data_Patient_' . date('Ymd') . '.xlsx';
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $filename . '"');
         header('Cache-Control: max-age=0');
 
-        $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
         $writer->save('php://output');
         exit();
     }

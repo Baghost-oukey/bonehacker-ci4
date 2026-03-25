@@ -21,9 +21,18 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css">
 
     <style>
-        .dataTables_wrapper .dataTables_filter { float: right; }
-        .dataTables_wrapper .dataTables_length { display: inline-block; margin-right: 20px; }
-        .export-hidden { display: none; }
+        .dataTables_wrapper .dataTables_filter {
+            float: right;
+        }
+
+        .dataTables_wrapper .dataTables_length {
+            display: inline-block;
+            margin-right: 20px;
+        }
+
+        .export-hidden {
+            display: none;
+        }
     </style>
 </head>
 
@@ -31,7 +40,7 @@
     <div id="app">
         <div class="main-wrapper main-wrapper-1">
             <div class="navbar-bg"></div>
-            
+
             <?= $this->include('App\Views\layout\headers') ?>
 
             <div class="main-content">
@@ -54,30 +63,43 @@
     <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
     <script src="<?= base_url('assets/js/scripts.js') ?>"></script>
 
+    <!-- Kalo mau pakai tag diaktifkan -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.polyfills.min.js"></script> -->
+
     <script>
-        var csrfName = $('meta[name="csrf-token-name"]').attr('content');
-        var csrfHash = $('meta[name="csrf-token-hash"]').attr('content');
+        (function() {
+            var metaName = document.querySelector('meta[name="csrf-token-name"]');
+            var metaHash = document.querySelector('meta[name="csrf-token-hash"]');
+            var csrfName = metaName ? metaName.getAttribute('content') : null;
+            var csrfHash = metaHash ? metaHash.getAttribute('content') : null;
 
-        function updateAjaxSetup(newHash) {
-            if (csrfName && newHash) {
-                $.ajaxSetup({
-                    data: { [csrfName]: newHash }
-                });
-                $('meta[name="csrf-token-hash"]').attr('content', newHash);
+            function updateAjaxSetup(newHash) {
+                if (window.jQuery && csrfName && newHash) {
+                    $.ajaxSetup({
+                        data: {
+                            [csrfName]: newHash
+                        }
+                    });
+                    var hashField = document.querySelector('meta[name="csrf-token-hash"]');
+                    if (hashField) hashField.setAttribute('content', newHash);
+                }
             }
-        }
 
-        updateAjaxSetup(csrfHash);
-
-        $(document).ajaxComplete(function(event, xhr, settings) {
-            let newHash = xhr.getResponseHeader('X-CSRF-TOKEN');
-            if (newHash) {
-                updateAjaxSetup(newHash);
-            }
-        });
+            // Tunggu dokumen siap untuk perintah jQuery
+            document.addEventListener('DOMContentLoaded', function() {
+                if (window.jQuery) {
+                    updateAjaxSetup(csrfHash);
+                    $(document).ajaxComplete(function(event, xhr, settings) {
+                        var newHash = xhr.getResponseHeader('X-CSRF-TOKEN');
+                        if (newHash) updateAjaxSetup(newHash);
+                    });
+                }
+            });
+        })();
     </script>
 
-    <?php if(session()->has('message')): ?>
+    <?php if (session()->has('message')): ?>
         <?php $msg = session('message'); ?>
         <script>
             $(document).ready(function() {
@@ -85,7 +107,7 @@
                     "progressBar": true,
                     "positionClass": "toast-top-right"
                 };
-                
+
                 toastr['<?= $msg[0] ?>']('<?= $msg[1] ?>');
             });
         </script>
@@ -93,4 +115,5 @@
 
     <?= $this->renderSection('scripts') ?>
 </body>
+
 </html>

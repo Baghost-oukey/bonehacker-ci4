@@ -923,7 +923,7 @@
             {
                 "data": "action",
                 "class": "text-center",
-                "width": "10%",
+                "width": "30%",
                 'sortable': false
             },
         ],
@@ -943,10 +943,28 @@
                 $(row).css('color', 'red').css('text-decoration', 'line-through');
             }
             if (data.kejantanan === "ya") {
-                $(row).css('color', 'blue');
+                $(row).css('color', 'black');
             }
         }
     });
+
+    // Ini di nyalakan kalo mau pakai tag 
+
+    // var complaintTagify, medhisTagify, resultTagify;
+    // $(document).ready(function() {
+    //     // Inisialisasi
+    //     complaintTagify = new Tagify(document.querySelector('textarea[name="complaint"]'), {
+    //         originalInputValueFormat: valuesArr => valuesArr.map(item => item.value).join(',')
+    //     });
+
+    //     medhisTagify = new Tagify(document.querySelector('textarea[name="medhis"]'), {
+    //         originalInputValueFormat: valuesArr => valuesArr.map(item => item.value).join(',')
+    //     });
+
+    //     resultTagify = new Tagify(document.querySelector('textarea[name="result"]'), {
+    //         originalInputValueFormat: valuesArr => valuesArr.map(item => item.value).join(',')
+    //     });
+    // });
 
     function formatDate(dateTime) {
         const date = new Date(dateTime);
@@ -973,6 +991,8 @@
         // $('#exampleModal form').attr('action', '{{ site_url('history/store') }}');
         $('#exampleModal form').attr('action', '<?= site_url('history/store') ?>');
         $('#exampleModal form')[0].reset();
+        document.getElementById("terapi-kejantanan").style.display = "block";
+        document.getElementById("kejantanan").checked = false;
 
         if (typeof complaintTagify !== 'undefined') complaintTagify.removeAllTags();
         if (typeof medhisTagify !== 'undefined') medhisTagify.removeAllTags();
@@ -1031,12 +1051,12 @@
         }
     }
 
+
     function show(id) {
         $('#exampleModal form')[0].reset();
+        $('input[type="checkbox"]').prop('checked', false);
+        $('input[type="radio"]').prop('checked', false);
 
-        complaintTagify = new Tagify($('textarea[name="complaint"]')[0]);
-        medhisTagify = new Tagify($('textarea[name="medhis"]')[0]);
-        resultTagify = new Tagify($('textarea[name="result"]')[0]);
 
         $.ajax({
             url: "<?= site_url('history/show/') ?>/" + id,
@@ -1044,27 +1064,59 @@
             dataType: "JSON",
             success: function(data) {
                 console.log("Data received from server:", data);
-                $('#exampleModal').modal('show');
+                $('#exampleModal').appendTo('body').modal('show');
                 $('#exampleModal form').attr('action', '<?= site_url('history/update') ?>');
                 $('#exampleModal .modal-title').text('Detil Riwayat Pasien');
 
                 // Hide the WhatsApp notification section
                 $('#notif-wa').hide();
 
-                complaintTagify.removeAllTags();
-                if (data.complaint && data.complaint !== '-') {
-                    complaintTagify.addTags(data.complaint.split(','));
+                $('#exampleModal').modal('show');
+                document.getElementById("terapi-kejantanan").style.display = "block";
+
+                if (data.kejantanan === 'ya') {
+                    document.getElementById('kejantanan').checked = true;
+                } else {
+                    document.getElementById('kejantanan').checked = false;
+                }
+                toggleTerapiForm();
+
+                if (data.ereksi) {
+                    $(`input[name="ereksi"][value="${data.ereksi}"]`).prop('checked', true);
+                }
+                if (data.porno) {
+                    $(`input[name="nonton_porno"][value="${data.porno}"]`).prop('checked', true);
                 }
 
-                medhisTagify.removeAllTags();
-                if (data.medhis && data.medhis !== '-') {
-                    medhisTagify.addTags(data.medhis.split(','));
+                // Kalo mau pakai Tag
+
+                // complaintTagify.removeAllTags();
+                // if (data.complaint && data.complaint !== '-') {
+                //     complaintTagify.addTags(data.complaint.split(', '));
+                // }
+
+                // medhisTagify.removeAllTags();
+                // if (data.medhis && data.medhis !== '-') {
+                //     medhisTagify.addTags(data.medhis.split(', '));
+                // }
+
+                // resultTagify.removeAllTags();
+                // if (data.results && data.results !== '-') {
+                //     resultTagify.addTags(data.results.split(', '));
+                // }
+
+                $('textarea[name="complaint"]').val(data.complaint && data.complaint !== '-' ? data.complaint : '');
+                $('textarea[name="medhis"]').val(data.medhis && data.medhis !== '-' ? data.medhis : '');
+
+                if (typeof resultTagify !== 'undefined') {
+                    resultTagify.removeAllTags();
+                    if (data.results && data.results !== '-') {
+                        resultTagify.addTags(data.results.split(', '));
+                    }
+                } else {
+                    $('textarea[name="results"]').val(data.results);
                 }
 
-                resultTagify.removeAllTags();
-                if (data.results && data.results !== '-') {
-                    resultTagify.addTags(data.results.split(','));
-                }
 
                 $('#history-info').show();
                 updateHistoryInfo(data);
@@ -1586,9 +1638,9 @@
     function duplicate(id) {
         $('#exampleModal form')[0].reset();
 
-        complaintTagify = new Tagify($('textarea[name="complaint"]')[0]);
-        medhisTagify = new Tagify($('textarea[name="medhis"]')[0]);
-        resultTagify = new Tagify($('textarea[name="result"]')[0]);
+        // complaintTagify = new Tagify($('textarea[name="complaint"]')[0]);
+        // medhisTagify = new Tagify($('textarea[name="medhis"]')[0]);
+        // resultTagify = new Tagify($('textarea[name="result"]')[0]);
         $('#region_history').prop('disabled', false);
 
 
@@ -1607,17 +1659,17 @@
 
                 complaintTagify.removeAllTags();
                 if (data.complaint && data.complaint !== '-') {
-                    complaintTagify.addTags(data.complaint.split(','));
+                    complaintTagify.addTags(data.complaint.split(', '));
                 }
 
                 medhisTagify.removeAllTags();
                 if (data.medhis && data.medhis !== '-') {
-                    medhisTagify.addTags(data.medhis.split(','));
+                    medhisTagify.addTags(data.medhis.split(', '));
                 }
 
-                resultTagify.removeAllTags();
+                resultTagify.removeAllTags(); // 
                 if (data.results && data.results !== '-') {
-                    resultTagify.addTags(data.results.split(','));
+                    resultTagify.addTags(data.results.split(', '));
                 }
 
                 if (data.history_region) {
@@ -2102,36 +2154,63 @@
         });
     }
 
+    var deleteId = null;
+
     function destroy(id) {
         deleteId = id; // Set the ID to delete
-        $('#deleteModal').modal('show'); // Show the modal
+        $('#deleteModal').appendTo('body').modal('show'); // Show the modal
     }
 
-    document.getElementById('confirmDeleteButton').addEventListener('click', function() {
-        if (deleteId !== null) {
-            $.ajax({
-                url: '<?= site_url('history/destroy') ?>/' + deleteId, // Adjust URL as needed
-                type: 'POST',
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status) {
-                        // Handle success
-                        location.reload(); // Reload page or update the UI
-                    } else {
-                        // Handle failure
-                        alert('Data gagal dihapus');
-                    }
-                },
-                error: function() {
-                    // Handle error
-                    alert('Terjadi kesalahan');
-                }
-            });
+    $(document).ready(function() {
+        $('#confirmDeleteButton').off('click').on('click', function() {
+            var $btn = $(this);
 
-            $('#deleteModal').modal('hide'); // Hide the modal
-            deleteId = null; // Clear the ID
-        }
-    });
+            if (deleteId !== null) {
+                $.ajax({
+                    url: '<?= site_url('patient/destroy') ?>/' + deleteId, // Adjust URL as needed
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        "<?= csrf_token() ?>": "<?= csrf_hash() ?>"
+                    },
+                    beforeSend: function() {
+                        // Matikan tombol agar user tidak klik berkali-kali
+                        $btn.prop('disabled', true).text('Memproses...');
+                    },
+                    success: function(response) {
+                        if (response.status) {
+                            // Handle success
+                            $('#deleteModal').modal('hide');
+
+                            if ($.fn.DataTable.isDataTable('#table-2')) {
+                                $('#table-2').DataTable().ajax.reload(null, false);
+                            } else {
+                                location.reload();
+                            }
+
+                        } else {
+                            // Handle failure
+                           alert('Data gagal dihapus: ' + (response.message || 'Error server'));
+                        }
+                    },
+                    error: function() {
+                        // Handle error
+                        alert('Terjadi kesalahan');
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false).text('Ya, Hapus');
+                        deleteId = null;
+                    }
+                });
+
+                // $('#deleteModal').modal('hide'); // Hide the modal
+                // deleteId = null; // Clear the ID
+            }
+        });
+
+    })
+
+
 
     document.addEventListener('DOMContentLoaded', function() {
         var complaintTextarea = document.querySelector('textarea[name="complaint"]');
@@ -2442,7 +2521,7 @@
             setTimeout(function() {
                 show(<?= $history_id ?>);
 
-                $('.modal-backdrop').not(':last').remove(); 
+                $('.modal-backdrop').not(':last').remove();
                 $('.modal').appendTo("body");
             }, 500)
 

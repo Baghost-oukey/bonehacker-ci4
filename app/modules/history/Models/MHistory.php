@@ -84,7 +84,7 @@ class MHistory extends Model
     protected $beforeDelete   = [];
     protected $afterDelete    = [];
 
-    public function getListData($id, $option = [])
+    public function getListData($id, array $options)
     {
         $builder = $this->db->table($this->table . ' h');
 
@@ -136,12 +136,66 @@ class MHistory extends Model
         return $builder->get()->getRow()->total ?? 0;
     }
 
+    public function count_histories_by_patient_id($patient_id)
+    {
+        return $this->builder()
+            ->where('patient_id', $patient_id)
+            ->where('is_delete', 0) // Tambahan: agar data yang dihapus tidak ikut terhitung
+            ->countAllResults();
+    }
+
+    public function getById($id)
+    {
+        return $this->where('id', $id)->first();
+    }
+
+    public function getActiveTerapis()
+    {
+        return $this->db->table('terapis')
+            ->where('is_active', 1)
+            ->orderBy('nama', 'ASC')
+            ->get()->getResult();
+    }
+
+    public function getSelectedTerapis($history_id)
+    {
+        return $this->db->table('terapis')
+            ->select('terapis.id, terapis.nama')
+            ->join('histories', 'FIND_IN_SET(terapis.id, histories.terapis_id) > 0', 'inner')
+            ->where('histories.id', $history_id)
+            ->get()->getResult();
+    }
+    public function getKejantananById($id_history)
+    {
+        return $this->db->table('kejantanan')
+            ->where('id_history', $id_history)
+            ->get()->getRow();
+    }
+
     public function getKeterangan($patient_id)
     {
         return $this->select('keterangan_verteba, keterangan_thorax, keterangan_kompresi, keterangan_plintiran, keterangan_visualfoot')
             ->where('patient_id', $patient_id)
             ->orderBy('id', 'DESC')
             ->first();
+    }
+
+    public function getComplaintTags($ids)
+    {
+        if (empty($ids)) return [];
+        return $this->db->table('complaint_tags')->whereIn('id', $ids)->get()->getResultArray();
+    }
+
+    public function getMedhisTags($ids)
+    {
+        if (empty($ids)) return [];
+        return $this->db->table('medhis_tags')->whereIn('id', $ids)->get()->getResultArray();
+    }
+
+    public function getResultTags($ids)
+    {
+        if (empty($ids)) return [];
+        return $this->db->table('result_tags')->whereIn('id', $ids)->get()->getResultArray();
     }
 
     // Fungsi Transaksi Kejantanan (Gaya CI4)

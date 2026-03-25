@@ -145,14 +145,15 @@ $routes->group('whatsapp', ['namespace' => 'App\modules\whatsapp\Controllers'], 
 });
 
 // History
-$routes->group('history', ['namespace' => 'App\modules\history\Controllers'], function($routes) {
+$routes->group('history', ['namespace' => 'App\modules\history\Controllers'], function ($routes) {
     $routes->post('fetch/(:num)', 'History::fetch/$1');
     $routes->post('store', 'History::store');
     $routes->post('update', 'History::update');
     $routes->post('copy', 'History::copy');
     $routes->post('destroy/(:num)', 'History::destroy/$1');
-    
+    $routes->get('show/(:num)', 'History::show/$1');
 });
+
 // Log - WhatsApp
 $routes->group('log_whatsapp', ['namespace' => 'App\modules\log_whatsapp\Controllers'], function ($routes) {
     $routes->get('/', 'Logwhatsapp::index');
@@ -167,7 +168,7 @@ $routes->group('greeting', ['namespace' => 'App\modules\greeting\Controllers'], 
 });
 
 // Terapis
-$routes->group('terapis', ['namespace' => 'App\modules\terapis\Controllers'], function($routes) {
+$routes->group('terapis', ['namespace' => 'App\modules\terapis\Controllers'], function ($routes) {
     $routes->get('/', 'Terapis::index');
     $routes->get('detail_terapis/(:any)', 'Terapis::detail_terapis/$1');
     $routes->post('store', 'Terapis::store');
@@ -179,13 +180,13 @@ $routes->group('terapis', ['namespace' => 'App\modules\terapis\Controllers'], fu
 $routes->get('p/(:any)', '\App\Controllers\Terapis::public_info/$1');
 
 // Users
-$routes->group('users', ['namespace' => 'App\Modules\users\Controllers'], function($routes) {
+$routes->group('users', ['namespace' => 'App\Modules\users\Controllers'], function ($routes) {
     $routes->get('/', 'Users::index');
     $routes->post('fetch', 'Users::fetch');
     $routes->post('store', 'Users::store');
     $routes->post('update/(:num)', 'Users::update/$1');
     $routes->get('destroy/(:num)', 'Users::destroy/$1');
-    
+
     // Pasien Luar 
     $routes->get('view_patient/(:num)', 'Users::view_patient/$1');
     $routes->post('fetch_patients', 'Users::fetch_patients');
@@ -201,6 +202,9 @@ $routes->group('patient', ['namespace' => 'App\Modules\patients\Controllers'], f
     $routes->get('export', 'Patients::export');
     $routes->get('print_pdf', 'Patients::print_pdf');
     $routes->post('store', 'Patients::store');
+    $routes->post('update', 'Patients::update');
     $routes->post('update/(:any)', 'Patients::update/$1');
+
+    // Delete/Hapus
     $routes->post('destroy/(:any)', 'Patients::destroy/$1');
 });
