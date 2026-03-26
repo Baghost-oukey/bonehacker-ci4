@@ -47,7 +47,7 @@ $routes->group('region', ['namespace' => 'App\modules\region\Controllers'], func
     $routes->post('fetch', 'Region::fetch');
     $routes->post('store', 'Region::store');
     $routes->post('update/(:num)', 'Region::update/$1');
-    $routes->get('destroy/(:num)', 'Region::destroy/$1');
+    $routes->post('destroy/(:num)', 'Region::destroy/$1');
 });
 // app/Config/Routes.php
 
@@ -62,7 +62,7 @@ $routes->group('journal', function ($routes) {
 // Statistik
 $routes->group('statistik',  ['namespace' => 'App\modules\statisktik\Controllers'], function ($routes) {
     $routes->get('/', 'Statistik::index');
-    $routes->get('statistik/fetch_statistics', 'Statistik::fetch_statistics');
+    $routes->get('fetch_statistics', 'Statistik::fetch_statistics');
 });
 
 // Statistik - Tag
@@ -73,8 +73,8 @@ $routes->group('statistiktag',  ['namespace' => 'App\modules\statistiktag\Contro
 
 // Statistik - Hasil Pemeriksaan
 $routes->group('statistikresult', ['namespace' => 'App\modules\statistikresult\Controllers'], function ($routes) {
-    $routes->get('/', 'Statistikresult::index');
-    $routes->get('fetch_statistics', 'Statistikresult::fetch_statistics');
+    $routes->get('/', 'StatistikResult::index');
+    $routes->get('fetch_statistics', 'StatistikResult::fetch_statistics');
 });
 
 // Statistik - Gender
@@ -83,10 +83,13 @@ $routes->group('statistikgender', ['namespace' => 'App\modules\statistikgender\C
     $routes->get('fetch_statistics', 'Statistikgender::fetch_statistics');
 });
 
-// Statistik - Gender
+// Statistik - Daerah
 $routes->group('statistikdaerah', ['namespace' => 'App\modules\statistikdaerah\Controllers', 'filter' => 'auth'], function ($routes) {
     $routes->get('/', 'Statistikdaerah::index');
     $routes->get('fetch_statistics', 'Statistikdaerah::fetch_statistics');
+    $routes->get('fetch_kabupaten', 'Statistikdaerah::fetch_kabupaten');
+    $routes->get('fetch_kecamatan', 'Statistikdaerah::fetch_kecamatan');
+    $routes->get('fetch_desa', 'Statistikdaerah::fetch_desa');
 });
 
 // Jabatan

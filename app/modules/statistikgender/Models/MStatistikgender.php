@@ -48,9 +48,9 @@ class MStatistikgender extends Model
     {
         $groupFormat = $this->getDateFormat($filter);
         $this->select("{$groupFormat} as date")
-            ->selectCount("CASE WHEN gender = 'Man' THEN 1 END", 'total_male')
-            ->selectCount("CASE WHEN gender = 'Woman' THEN 1 END", 'total_female')
-            ->selectCount('*', 'total');
+            ->select("COUNT(CASE WHEN gender = 'Man' THEN 1 END) as total_male")
+            ->select("COUNT(CASE WHEN gender = 'Woman' THEN 1 END) as total_female")
+            ->select("COUNT(*) as total");
 
         $this->where('DATE(created_at) >=', $startDate)
             ->where('DATE(created_at) <=', $endDate)
@@ -62,7 +62,7 @@ class MStatistikgender extends Model
 
         return $this->groupBy('date')
             ->orderBy('date', 'ASC')
-            ->findAll(); 
+            ->findAll();
     }
 
     private function getDateFormat(string $filter): string

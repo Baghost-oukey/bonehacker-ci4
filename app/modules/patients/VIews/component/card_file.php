@@ -36,9 +36,12 @@
                                         </span>
                                     </td>
                                     <td class="text-center">
-                                        <a href="<?= base_url($file_url) ?>" target="_blank" class="btn btn-outline-primary btn-sm previewBtn">
+                                        <!-- <a href="<?= base_url($file_url) ?>" target="_blank" class="btn btn-outline-primary btn-sm previewBtn">
                                             <i class="fas fa-eye"></i> Lihat
-                                        </a>
+                                        </a> -->
+                                        <button type="button" class="btn btn-outline-primary btn-sm previewBtn" data-id="<?= $index ?>">
+                                            <i class="fas fa-eye"></i> Lihat
+                                        </button>
                                     </td>
                                     <td class="text-center">
                                         <div class="form-check">
@@ -127,14 +130,19 @@
 <?= $this->section('scripts') ?>
 <script>
     function file_preview(id) {
-        
-        $('#fileUploadModal').modal('show'); // Show the modal
-        $('#fileUploadContent').html(''); // Clear any existing content in the modal
+
+        // $('#fileUploadModal').appendTo('body').modal('show'); // Show the modal
+        // $('#fileUploadContent').html(''); // Clear any existing content in the modal
+
+         $('#mauupload').modal('hide');
+        var modalPreview = $('#fileUploadModal');
+        modalPreview.appendTo('body');
+        $('#fileUploadContent').html('<div class="text-center p-3"><i class="fas fa-spinner fa-spin"></i> Loading...</div>');
 
         // Assuming `file_urls` is available as a global variable or accessible via AJAX
         var fileUrls = <?= json_encode($file_urls) ?>; // Encode the PHP array into a JSON array
-        console.log("Membuka preview untuk index:", id);
-        console.log("Daftar URL:", fileUrls);
+        // console.log("Membuka preview untuk index:", id);
+        // console.log("Daftar URL:", fileUrls);
 
         if (fileUrls[id]) {
             var fileUrl = fileUrls[id];
@@ -153,6 +161,16 @@
             }
 
             $('#fileUploadContent').html(fileContent);
+
+            modalPreview.modal('show');
+            modalPreview.off('shown.bs.modal').on('shown.bs.modal', function() {
+                var zIndexBase = 1060;
+                // Pastikan backdrop ada di bawah modal
+                $('.modal-backdrop').last().css('z-index', zIndexBase);
+                // Paksa modal ada di atas backdrop
+                $(this).css('z-index', zIndexBase + 10);
+            });
+
         } else {
             $('#fileUploadContent').html('<p>No file available for preview.</p>');
         }

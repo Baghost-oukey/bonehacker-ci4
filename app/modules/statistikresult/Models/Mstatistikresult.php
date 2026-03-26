@@ -45,7 +45,7 @@ class Mstatistikresult extends Model
     protected $afterDelete    = [];
 
 
-    public function getResultStatistic(string $startDate, string $endDate, ?int $regionId = null): array
+    public function getResultStatistic(string $startDate, string $endDate, int $regionId = null, $filter = null): array
     {
         $tagNames = $this->builder()
             ->select('name')

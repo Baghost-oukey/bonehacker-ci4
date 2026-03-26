@@ -114,9 +114,20 @@
                 type: 'bar',
                 data: {
                     labels: labels,
-                    datasets: [
-                        { label: 'Laki-laki', data: male, backgroundColor: '#3498db' },
-                        { label: 'Perempuan', data: female, backgroundColor: '#e74c3c' }
+                    datasets: [{
+                            label: 'Laki-laki',
+                            data: male,
+                            backgroundColor: 'rgba(0, 123, 255, 0.5)',
+                            borderColor: 'rgba(0, 123, 255, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Perempuan',
+                            data: female,
+                            backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 1
+                        }
                     ]
                 },
                 options: {

@@ -62,6 +62,58 @@
     </div>
 </div>
 
+
+<!-- Modela Edit -->
+<div id="modal_edit_region" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Ubah Data Wilayah</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="form_edit_region" action="" method="post" class="needs-validation" novalidate="">
+                <?= csrf_field() ?> <div class="modal-body">
+                    <div class="form-group">
+                        <label>Nama Wilayah</label>
+                        <input type="text" class="form-control" id="edit_name" name="name" required autofocus>
+                        <div class="invalid-feedback">Nama wilayah tidak boleh kosong</div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-whitesmoke br">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modela Hapus -->
+<div id="modal_delete_region" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Peringatan!</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="form_delete_region" action="" method="post">
+                <?= csrf_field() ?>
+                <div class="modal-body">
+                    <p>Apakah Anda yakin ingin menghapus data wilayah ini? Tindakan ini tidak dapat dibatalkan.</p>
+                </div>
+                <div class="modal-footer bg-whitesmoke br">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-danger">Ya, Hapus</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
@@ -74,6 +126,8 @@
         $('#table-region').DataTable({
             "processing": true,
             "serverSide": true,
+            "responsive": true,
+            "autoWidth": false,
             "ajax": {
                 "url": "<?= base_url('region/fetch') ?>",
                 "type": "POST",
@@ -106,8 +160,33 @@
                     "width": "10%",
                     "orderable": false
                 }
+            ],
+            "order": [
+                [0, 'desc']
             ]
         });
+
+$(document).on('click', '.btn_edit', function(e) {
+    e.preventDefault();
+    const href = $(this).data('href'); 
+    const name = $(this).data('name');
+    $("#modal_edit_region form").attr("action", href);
+    $("#modal_edit_region #edit_name").val(name); 
+
+    $("#modal_edit_region").modal('show');
+});
+
+$(document).on('click', '.btn_delete', function(e) {
+    e.preventDefault();
+    const href = $(this).data('href');
+
+    if (!href) {
+        console.error("URL tidak ditemukan pada atribut data-href!");
+        return;
+    }
+    $("#modal_delete_region form").attr("action", href);
+    $("#modal_delete_region").modal('show');
+});
     });
 </script>
 <?= $this->endSection() ?>

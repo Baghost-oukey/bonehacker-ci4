@@ -1,4 +1,4 @@
-<?= $this->extend('layout/layout') ?> 
+<?= $this->extend('layout/layout') ?>
 <?= $this->section('content') ?>
 <section class="section">
     <div class="section-header">
@@ -58,7 +58,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        </tbody>
+                                    </tbody>
                                 </table>
                             </div>
                         </div>
@@ -73,7 +73,9 @@
 <?= $this->section('scripts') ?>
 <script>
     $(document).ready(function() {
-        $('#regionSelect').select2({ width: '150px' });
+        $('#regionSelect').select2({
+            width: '150px'
+        });
 
         if ($('#statisticTable').length) {
             var currentFilter = 'daily';
@@ -96,7 +98,9 @@
             $('#rangefilter').daterangepicker({
                 startDate: previousStartDate,
                 endDate: previousEndDate,
-                locale: { format: 'D MMMM YYYY' },
+                locale: {
+                    format: 'D MMMM YYYY'
+                },
                 ranges: {
                     'Hari Ini': [moment(), moment()],
                     'Kemarin': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
@@ -158,16 +162,25 @@
                     },
                     success: function(data) {
                         table.clear();
-                        Object.keys(data).forEach(function(tagName) {
-                            var total = data[tagName].total || 0;
-                            var cleanTagName = tagName.trim();
-                            
-                            // Filter data kosong seperti di logika lama Anda
-                            if (cleanTagName !== '-' && cleanTagName !== "'" && cleanTagName !== "" && total > 0) {
-                                table.row.add([cleanTagName, total]);
-                            }
-                        });
-                        table.draw();
+                        var rows = [];
+
+                        if (data && typeof data === 'object') {
+                            Object.keys(data).forEach(function(tagName) {
+                                // Ambil total dari nested object: { "NamaTag": { "total": 5, ... } }
+                                let total = data[tagName].total || 0;
+
+                                if (total > 0) { // Hanya masukkan jika jumlahnya lebih dari 0
+                                    rows.push([tagName, total]);
+                                }
+                            });
+                        }
+
+                        if (rows.length > 0) {
+                            table.rows.add(rows).draw();
+                        } else {
+                            console.warn("Data diterima tapi tidak ada tag dengan jumlah > 0:", data);
+                            table.draw();
+                        }
                     },
                     error: function(xhr) {
                         console.error("Error fetching data:", xhr.responseText);

@@ -45,8 +45,9 @@ class Statistikgender extends BaseController
         $startDate = $this->request->getGet('start_date');
         $endDate   = $this->request->getGet('end_date');
         $filter    = $this->request->getGet('filter') ?? 'daily';
-        $regid     = $this->request->getGet('region_id');
-        $data = $this->model_statistic_gender->get_statistics($startDate, $endDate, $regid, $filter);
+        // $regid     = $this->request->getGet('region_id');
+        $regionId  = (!empty($regionId)) ? (int)$regionId : null;
+        $data = $this->model_statistic_gender->get_statistics($startDate, $endDate, $regionId, $filter);
         return $this->response->setJSON($data);
     }
 }

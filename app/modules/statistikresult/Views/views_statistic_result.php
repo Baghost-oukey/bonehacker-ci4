@@ -172,13 +172,37 @@
                     success: function(data) {
                         table.clear();
                         var rows = [];
-                        Object.keys(data).forEach(function(tagName) {
-                            let total = data[tagName].total || 0;
-                            if (total > 0) { // Hanya tampilkan yang ada datanya
-                                rows.push([tagName, total]);
-                            }
-                        });
-                        table.rows.add(rows).draw();
+
+                        if (Array.isArray(data)) {
+                            data.forEach(function(item) {
+                                let name = item.tagName || item.tagName || item.name;
+                                let total = parseInt(item.total) || 0;
+                                if (total > 0) {
+                                    rows.push([name, total]);
+                                }
+                            })
+                        } else if (typeof data === 'object' && data !== null) {
+                            Object.keys(data).forEach(function(tagName) {
+                                let total = (typeof data[tagName] === 'object') ? (data[tagName].total || 0) : data[tagName];
+                                if (total > 0) {
+                                    rows.push([tagName, total]);
+                                }
+                            });
+                        }
+
+                        if (rows.length > 0) {
+                            table.rows.add(rows).draw();
+                        } else {
+                            console.log("Data diterima tapi tidak ada baris yang valid:", data);
+                            table.draw();
+                        }
+                        // Object.keys(data).forEach(function(tagName) {
+                        //     let total = data[tagName].total || 0;
+                        //     if (total > 0) { // Hanya tampilkan yang ada datanya
+                        //         rows.push([tagName, total]);
+                        //     }
+                        // });
+                        // table.rows.add(rows).draw();
                     },
                     error: function(xhr) {
                         console.error("Error fetch statistics:", xhr.responseText);

@@ -41,7 +41,8 @@ class Statistikresult extends BaseController
         $startDate = $this->request->getGet('start_date');
         $endDate   = $this->request->getGet('end_date');
         $filter    = $this->request->getGet('filter');
-        $regionId  = $this->request->getGet('region_id');
+        $regionId  = (!empty($regionId)) ? (int)$regionId: null;
+        // $regionId  = $this->request->getGet('region_id');
         $data = $this->model_statistik_result->getResultStatistic($startDate, $endDate, $regionId, $filter);
 
         return $this->response->setJSON($data);

@@ -89,10 +89,10 @@ class Patients extends BaseController
 
             $addressModel->insert($addressData);
 
-            session()->setFlashdata('msg', ['success', 'Data Berhasil Disimpan']);
+            session()->setFlashdata('message', ['success', 'Data Berhasil Disimpan']);
         } else {
             // Jika insert pasien gagal
-            session()->setFlashdata('msg', ['error', 'Gagal menyimpan data pasien']);
+            session()->setFlashdata('message', ['error', 'Gagal menyimpan data pasien']);
         }
 
         return redirect()->to(site_url('dashboard'));
@@ -423,6 +423,7 @@ class Patients extends BaseController
     {
         if ($this->patientModel->destroy($id)) {
             $this->session->setFlashdata('message', ['success', 'Data Berhasil dihapus']);
+    
             return $this->response->setJSON(['status' => true]);
         }
 

@@ -4,7 +4,7 @@ namespace App\modules\statistikdaerah\Controllers;
 
 use App\Controllers\BaseController;
 use App\modules\region\Models\MRegion;
-use App\modules\statistikgender\Models\MStatistikgender;
+use App\modules\statistikdaerah\Models\Mstatistikdaerah;
 use CodeIgniter\HTTP\ResponseInterface;
 
 class Statistikdaerah extends BaseController
@@ -15,7 +15,7 @@ class Statistikdaerah extends BaseController
 
     public function __construct()
     {
-        $this->model_statistic_daerah = new MStatistikgender();
+        $this->model_statistic_daerah = new Mstatistikdaerah();
         $this->session = \Config\Services::session();
     }
     public function index()
@@ -42,14 +42,19 @@ class Statistikdaerah extends BaseController
     }
     public function fetch_statistics()
     {
-        $data = $this->model_statistic_daerah->get_statistics(
+        $regionId = $this->request->getGet('region_id');
+        $kabupatenId = $this->request->getGet('kabupaten_id');
+        $kecamatanId = $this->request->getGet('kecamatan_id');
+        $desaId      = $this->request->getGet('desa_id');
+
+        $data = $this->model_statistic_daerah->get_statistic(
             $this->request->getGet('start_date'),
             $this->request->getGet('end_date'),
-            $this->request->getGet('region_id'),
+            !empty($regionId) ? (int)$regionId : null,
             $this->request->getGet('filter') ?? 'daily',
-            $this->request->getGet('kabupaten_id'),
-            $this->request->getGet('kecamatan_id'),
-            $this->request->getGet('desa_id')
+            !empty($kabupatenId) ? $kabupatenId : null,
+            !empty($kecamatanId) ? $kecamatanId : null,
+            !empty($desaId) ? $desaId : null
         );
 
         return $this->response->setJSON($data);

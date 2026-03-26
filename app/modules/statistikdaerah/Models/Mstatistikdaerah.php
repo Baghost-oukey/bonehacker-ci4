@@ -46,15 +46,15 @@ class Mstatistikdaerah extends Model
 
     public function get_statistic($startDate, $endDate, $regionId, $filter = 'daily', $kabupatenId = null, $kecamatanId = null, $desaId = null): array
     {
-        $groupFormat = match ($filter) {
-            'weekly'  => "CONCAT(YEAR(date), '-', WEEK(date, 1))",
-            'monthly' => "DATE_FORMAT(date, '%Y-%m')",
-            'yearly'  => "YEAR(date)",
-            default   => "DATE(date)",
-        };
+       $groupFormat = match ($filter) {
+        'weekly'  => "CONCAT(YEAR(h.date), '-', WEEK(h.date, 1))",
+        'monthly' => "DATE_FORMAT(h.date, '%Y-%m')",
+        'yearly'  => "YEAR(h.date)",
+        default   => "DATE(h.date)", // Mengelompokkan murni per TANGGAL saja (tanpa jam)
+    };
 
-        $builder = $this->db->table($this->table . 'h');
-        $builder->select("$groupFormat as date, COUNT(*) as total");
+        $builder = $this->db->table($this->table . ' h');
+        $builder->select("$groupFormat as date, COUNT(h.id) as total");
         $builder->join('patients p', 'p.id = h.patient_id', 'left');
         $builder->join('patient_address pa', 'pa.patient_id = p.id', 'left');
 
@@ -74,10 +74,10 @@ class Mstatistikdaerah extends Model
             $builder->where('pa.desa_id', $desaId);
         }
 
-        return $builder->groupBy('date')
-            ->orderBy('date', 'ASC')
-            ->get()
-            ->getResult();
+       return $builder->groupBy("$groupFormat") 
+        ->orderBy('date', 'ASC')
+        ->get()
+        ->getResultArray();
     }
 
     public function get_all_kabupaten(): array

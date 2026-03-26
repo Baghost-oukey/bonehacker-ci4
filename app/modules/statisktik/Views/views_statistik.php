@@ -15,7 +15,7 @@
                                 <i class="fa fa-calendar"></i>&nbsp;
                                 <span></span> <i class="fa fa-caret-down"></i>
                             </div>
-                            <div>
+                            <div class="d-flex align-item-center">
                                 <select id="statisticFilter" style="width : 150px; padding : 5px; margin-top : 5px; cursor: pointer">
                                     <option value="daily">Hari</option>
                                     <option value="weekly">Minggu</option>
@@ -57,9 +57,12 @@
 </section>
 <?= $this->endSection() ?>
 
-<script type="text/javascript">
+<?= $this->section('scripts') ?>
+<script>
     $(document).ready(function() {
-        $('#region_id').select2({});
+        $('#region_id').select2({
+            width: '100%'
+        });
 
         var currentFilter = 'daily';
         moment.locale('id');
@@ -96,126 +99,198 @@
 
         function fetchStatistics(startDate, endDate, filter) {
             var regionId = $('#region_id').val();
-            
-            // Penyesuaian Yearly seperti di logika Anda sebelumnya
-            var finalStart = (filter === 'yearly') ? moment(startDate).startOf('year') : startDate;
-            var finalEnd = (filter === 'yearly') ? moment(endDate).endOf('year') : endDate;
+            let finalStart = startDate.clone();
+            let finalEnd = endDate.clone();
+
+            if (filter === 'yearly') {
+                finalStart.startOf('year');
+                finalEnd.endOf('year');
+            } else if (filter === 'monthly') {
+                finalStart.startOf('month');
+                finalEnd.endOf('month');
+            }
+
+            // if (filter === 'yearly') {
+            //     // Ubah startDate menjadi awal tahun dan endDate menjadi akhir tahun
+            //     startDate = moment(startDate).startOf('year'); // Awal tahun dari startDate
+            //     endDate = moment(endDate).endOf('year'); // Akhir tahun dari endDate
+            // }
 
             $.ajax({
                 url: '<?= site_url('statistik/fetch_statistics') ?>',
                 method: 'GET',
                 data: {
-                    start_date: finalStart.format('YYYY-MM-DD'),
-                    end_date: finalEnd.format('YYYY-MM-DD'),
+                    start_date: startDate.format('YYYY-MM-DD'),
+                    end_date: endDate.format('YYYY-MM-DD'),
                     filter: filter,
                     region_id: regionId
                 },
+
                 dataType: 'json',
                 success: function(data) {
+                    console.log('Data yang diterima untuk weekly:', data);
+
                     var dateLabels = [];
                     var dateMap = {};
                     var totalCount = 0;
                     var oldPatientsCount = 0;
                     var newPatientsCount = 0;
+                    var currentDate = moment(startDate);
 
-                    // 1. Generate Empty Slots (Agar chart tetap rapi meski data kosong)
-                    var iterDate = finalStart.clone();
+                    // Populate date labels based on filter
                     if (filter === 'daily') {
-                        while (iterDate.isSameOrBefore(finalEnd)) {
-                            var key = iterDate.format('YYYY-MM-DD');
-                            dateLabels.push(key);
-                            dateMap[key] = 0;
-                            iterDate.add(1, 'days');
+                        while (currentDate.isSameOrBefore(endDate)) {
+                            var formattedDate = currentDate.format('YYYY-MM-DD');
+                            dateLabels.push(formattedDate);
+                            dateMap[formattedDate] = 0;
+                            currentDate.add(1, 'days');
                         }
                     } else if (filter === 'weekly') {
-                        var tempStart = finalStart.clone().startOf('isoWeek');
-                        while (tempStart.isSameOrBefore(finalEnd)) {
-                            var weekKey = tempStart.format('YYYY-MM-DD') + ' - ' + tempStart.clone().endOf('isoWeek').format('YYYY-MM-DD');
-                            dateLabels.push(weekKey);
-                            dateMap[weekKey] = 0;
-                            tempStart.add(1, 'weeks');
+                        var tempStartDate = startDate.clone().startOf('isoWeek');
+                        var tempEndDate = endDate.clone().endOf('isoWeek');
+                        while (tempStartDate.isSameOrBefore(tempEndDate)) {
+                            var weekStart = tempStartDate.clone().format('YYYY-MM-DD');
+                            var weekEnd = tempStartDate.clone().add(6, 'days').format('YYYY-MM-DD');
+                            var weekKey = weekStart + ' - ' + weekEnd;
+                            if (!dateMap.hasOwnProperty(weekKey)) {
+                                dateLabels.push(weekKey);
+                                dateMap[weekKey] = 0;
+                            }
+                            tempStartDate.add(7, 'days');
                         }
                     } else if (filter === 'monthly') {
-                        while (iterDate.isSameOrBefore(finalEnd, 'month')) {
-                            var key = iterDate.format('YYYY-MM');
-                            dateLabels.push(key);
-                            dateMap[key] = 0;
-                            iterDate.add(1, 'month');
+                        var tempDate = startDate.clone().startOf('month');
+                        var endOfMonth = endDate.clone().endOf('month');
+                        while (tempDate.isSameOrBefore(endOfMonth)) {
+                            var formattedMonth = tempDate.format('YYYY-MM');
+                            if (!dateLabels.includes(formattedMonth)) {
+                                dateLabels.push(formattedMonth);
+                                dateMap[formattedMonth] = 0;
+                            }
+                            tempDate.add(1, 'month').startOf('month');
                         }
                     } else if (filter === 'yearly') {
-                        while (iterDate.isSameOrBefore(finalEnd, 'year')) {
-                            var key = iterDate.format('YYYY');
-                            dateLabels.push(key);
-                            dateMap[key] = 0;
-                            iterDate.add(1, 'year');
+                        var tempDate = startDate.clone().startOf(
+                            'year'); // Awal tahun dari startDate
+                        var endOfYear = endDate.clone().endOf('year'); // Akhir tahun dari endDate
+
+                        // Loop through each year from startDate to endDate
+                        while (tempDate.isSameOrBefore(endOfYear)) {
+                            var formattedYear = tempDate.format('YYYY');
+                            if (!dateLabels.includes(formattedYear)) {
+                                dateLabels.push(formattedYear);
+                                dateMap[formattedYear] = 0;
+                            }
+                            tempDate.add(1, 'year'); // Tambah 1 tahun
                         }
                     }
 
-                    // 2. Map Data from Backend
+                    // Process fetched data and map to the appropriate date ranges
                     data.forEach(function(item) {
+                        console.log('Data yang diterima:', item);
+                        var itemDate = moment(item.date, filter === 'weekly' ? 'YYYY-0WWW' :
+                            'YYYY-MM-DD');
                         var key = item.date;
-                        
-                        // Handle formatting untuk Weekly agar match dengan map label
-                        if (filter === 'weekly') {
-                            var parts = item.date.split('-');
-                            var mWeek = moment().year(parts[0]).isoWeek(parts[1]);
-                            key = mWeek.startOf('isoWeek').format('YYYY-MM-DD') + ' - ' + mWeek.endOf('isoWeek').format('YYYY-MM-DD');
-                        }
 
-                        if (dateMap.hasOwnProperty(key)) {
-                            var val = parseInt(item.total);
-                            dateMap[key] += val;
-                        }
-                        
-                        totalCount += parseInt(item.total);
                         oldPatientsCount += parseInt(item.oldPatientsCount);
                         newPatientsCount += parseInt(item.newPatientsCount);
+
+                        if (filter === 'daily') {
+                            key = itemDate.format('YYYY-MM-DD');
+                        } else if (filter === 'weekly') {
+                            var weekStart = moment(item.date, 'YYYY-WW').startOf('isoWeek')
+                                .format('YYYY-MM-DD');
+                            var weekEnd = moment(item.date, 'YYYY-WW').endOf('isoWeek')
+                                .format('YYYY-MM-DD');
+                            key = weekStart + ' - ' + weekEnd;
+                        } else if (filter === 'monthly') {
+                            key = itemDate.format('YYYY-MM');
+                        } else if (filter === 'yearly') {
+                            key = itemDate.format('YYYY');
+                        }
+
+                        if (key && dateMap.hasOwnProperty(key)) {
+                            var roundedValue = Math.round(parseInt(item.total));
+                            dateMap[key] += roundedValue; // Add the data to the dateMap
+                            totalCount += roundedValue; // Increment the total count
+
+
+                        }
                     });
 
-                    // 3. Update UI Labels
+                    // Display total count
                     $('#totalCount').text('Total Rekam Medis: ' + totalCount);
+                    // Display old and new patients count
                     $('#oldPatientsCount').text('Jumlah Pasien Lama: ' + oldPatientsCount);
                     $('#newPatientsCount').text('Jumlah Pasien Baru: ' + newPatientsCount);
 
-                    // 4. Render Chart
-                    renderChart(dateLabels, dateMap, filter);
-                }
-            });
-        }
+                    // Prepare labels and values for the chart
+                    var labels = dateLabels.map(function(date) {
+                        if (filter === 'daily') {
+                            return moment(date).format('D MMM');
+                        } else if (filter === 'weekly') {
+                            var dates = date.split(' - ');
+                            var start = moment(dates[0]).format('D MMM');
+                            var end = moment(dates[1]).format('D MMM');
+                            return start + ' - ' + end;
+                        } else if (filter === 'monthly') {
+                            return moment(date, 'YYYY-MM').format('MMM YYYY');
+                        } else if (filter === 'yearly') {
+                            return date;
+                        }
+                    });
 
-        function renderChart(labels, dateMap, filter) {
-            var ctx = document.getElementById('statisticChart').getContext('2d');
-            var displayLabels = labels.map(function(label) {
-                if (filter === 'daily') return moment(label).format('D MMM');
-                if (filter === 'monthly') return moment(label, 'YYYY-MM').format('MMM YYYY');
-                if (filter === 'weekly') {
-                    var parts = label.split(' - ');
-                    return moment(parts[0]).format('D MMM') + ' - ' + moment(parts[1]).format('D MMM');
-                }
-                return label;
-            });
+                    var values = dateLabels.map(function(date) {
+                        return dateMap[date];
+                    });
 
-            var chartExists = Chart.getChart('statisticChart');
-            if (chartExists) chartExists.destroy();
+                    // Create or update the chart
+                    var ctx = document.getElementById('statisticChart').getContext('2d');
+                    var chartExists = Chart.getChart('statisticChart');
+                    if (chartExists) {
+                        chartExists.destroy();
+                    }
 
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: displayLabels,
-                    datasets: [{
-                        label: 'Jumlah Rekam Medis',
-                        data: labels.map(l => dateMap[l]),
-                        backgroundColor: 'rgba(0, 123, 255, 0.5)',
-                        borderColor: 'rgba(0, 123, 255, 1)',
-                        borderWidth: 1
-                    }]
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Jumlah Rekam Medis',
+                                data: values,
+                                backgroundColor: 'rgba(0, 123, 255, 0.2)',
+                                borderColor: 'rgba(0, 123, 255, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: {
+                                    ticks: {
+                                        autoSkip: false
+                                    }
+                                },
+                                y: {
+                                    beginAtZero: true
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: false,
+                                    position: 'top'
+                                }
+                            }
+                        }
+                    });
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: true } }
+                error: function(xhr, status, error) {
+                    console.error('Failed to fetch data:', error);
                 }
             });
         }
+
     });
 </script>
+<?= $this->endSection() ?>

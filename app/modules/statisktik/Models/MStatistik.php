@@ -67,7 +67,6 @@ class MStatistik extends Model
         }
 
         // 2. Subquery untuk menghitung total history per pasien
-        // Kita gunakan query builder untuk mendapatkan string subquery
         $subquery = $db->table('histories')
             ->select('patient_id, COUNT(DISTINCT id) as history_count')
             ->groupBy('patient_id')

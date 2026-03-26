@@ -62,6 +62,29 @@
     </div>
 </section>
 
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Konfirmasi Hapus</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Anda yakin ingin menghapus data ini?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-danger" id="confirmDelete">Hapus</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <div id="exampleModal" class="modal fade">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -337,7 +360,7 @@
                 type: "POST",
                 data: function(d) {
                     d.region = $('#region').val();
-                    d.<?= csrf_token() ?> = "<?= csrf_hash() ?>"; 
+                    d.<?= csrf_token() ?> = "<?= csrf_hash() ?>";
                 }
             },
             columns: [{
@@ -365,10 +388,10 @@
                     class: "text-center",
                     orderable: false
                 },
-                {
-                    data: "phone",
-                    visible: false
-                }
+                // {
+                //     data: "phone",
+                //     visible: false
+                // }
             ],
             rowCallback: function(row, data) {
                 if (data.is_delete === "1") {
@@ -387,11 +410,13 @@
 
         $('#submitBtn').on('click', function(e) {
             e.preventDefault();
-            var form = $(this).closest('form')[0];
+            var btn = $(this)
+            var form = btn.closest('form')[0];
             if (!form.checkValidity()) {
                 form.classList.add('was-validated');
                 return;
             }
+
 
             var phone = $('#phone').val();
             $.ajax({
@@ -399,7 +424,7 @@
                 type: 'POST',
                 data: {
                     phone: phone,
-                    "<?= csrf_token() ?>": "<?= csrf_hash() ?>" 
+                    "<?= csrf_token() ?>": "<?= csrf_hash() ?>"
                 },
                 dataType: 'json',
                 success: function(response) {
@@ -414,6 +439,7 @@
                         $('#modalConfirm').modal('show');
 
                         $('#confirmSave').off('click').on('click', function() {
+                            $('#modalConfirm').modal('hide');
                             form.submit();
                         });
                     } else {
@@ -424,16 +450,44 @@
         });
 
         window.destroy = function(id) {
+            // console.log("Tombol hapus diklik untuk ID:", id);
             $('#deleteModal').modal('show');
-            $('#confirmDelete').off('click').on('click', function() {
+            $('#confirmDelete').off('click').one('click', function() {
                 $.ajax({
                     url: "<?= site_url('patient/destroy') ?>/" + id,
                     type: "POST",
+                    dataType: "JSON",
                     data: {
                         "<?= csrf_token() ?>": "<?= csrf_hash() ?>"
                     },
-                    success: function() {
-                        window.location.reload();
+                    success: function(response) {
+
+                        if (response.status) {
+                            $('#deleteModal').modal('hide');
+                            window.location.reload();
+                        }
+
+                        // Notif Lebih Modern
+                        // $('body').trigger('focus');
+                        // $('#deleteModal').modal('hide');
+                        // if (response && response.status) {
+                        //     iziToast.success({
+                        //         title: 'Berhasil',
+                        //         message: 'Data pasien berhasil dihapus',
+                        //         position: 'topRight'
+                        //     })
+
+                        //     $('#table-1').DataTable().ajax.reload(null, false);
+
+                        //     // console.log("DataTable reloaded automatically");
+                        // }
+
+
+                        // // if (typeof table !== 'undefined') {
+                        // //     table.ajax.reload(null, false);
+                        // // } else {
+                        // //     window.location.reload();
+                        // // }
                     },
                     error: function() {
                         alert('Gagal menghapus data.');

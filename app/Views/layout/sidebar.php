@@ -1,8 +1,8 @@
 <?php
-    $uri = service('request')->getUri();
-    // Mengambil segment pertama, jika kosong (home) maka default ke string kosong
-    $current_segment = $uri->getTotalSegments() > 0 ? $uri->getSegment(1) : ''; 
-    $url = base_url() . '/';
+$uri = service('request')->getUri();
+// Mengambil segment pertama, jika kosong (home) maka default ke string kosong
+$current_segment = $uri->getTotalSegments() > 0 ? $uri->getSegment(1) : '';
+$url = base_url() . '/';
 ?>
 
 <aside class="main-sidebar sidebar-style-2 elevation-4">
@@ -15,7 +15,7 @@
         </div>
         <ul class="sidebar-menu">
             <li class="menu-header">Dashboard</li>
-            
+
             <li class="<?= in_array($current_segment, ['beranda', '']) ? 'active' : '' ?>">
                 <a class="nav-link" href="<?= $url ?>">
                     <i class="fas fa-home"></i>
@@ -59,34 +59,34 @@
                     <span>Statistik</span>
                 </a>
                 <ul class="dropdown-menu">
-                    <li class="<?= $current_segment == 'statistiktag' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>statistiktag">Keluhan & Medis</a></li>
-                    <li class="<?= $current_segment == 'statistik' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>statistik">Riwayat Pasien</a></li>
-                    <li class="<?= $current_segment == 'statistikresult' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>statistikresult">Hasil Pemeriksaan</a></li>
-                    <li class="<?= $current_segment == 'statistikgender' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>statistikgender">Jenis Kelamin</a></li>
-                    <li class="<?= $current_segment == 'statistikdaerah' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>statistikdaerah">Daerah</a></li>
+                    <li class="<?= $current_segment == 'statistiktag' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>statistiktag"><i class="fas fa-file-medical-alt"></i><span>Keluhan & Medis</span></a></li>
+                    <li class="<?= $current_segment == 'statistik' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>statistik"><i class="fas fa-chart-bar"></i><span>Riwayat Pasien</span></a></li>
+                    <li class="<?= $current_segment == 'statistikresult' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>statistikresult"><i class="fas fa-stethoscope"></i><span>Hasil Pemeriksaan</span></a></li>
+                    <li class="<?= $current_segment == 'statistikgender' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>statistikgender"><i class="fas fa-venus-mars"></i><span>Jenis Kelamin</span></a></li>
+                    <li class="<?= $current_segment == 'statistikdaerah' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>statistikdaerah"><i class="fas fa-map-marked-alt"></i><span>Daerah</span></a></li>
                 </ul>
             </li>
 
             <?php if (isset($role) && $role == 'superadmin'): ?>
                 <li class="menu-header">Administrator</li>
-                
+
                 <li class="nav-item dropdown <?= in_array($current_segment, ['complaint', 'medis', 'result']) ? 'active' : '' ?>">
                     <a href="#" class="nav-link has-dropdown" data-toggle="dropdown"><i class="fas fa-tags"></i> <span>Tags</span></a>
                     <ul class="dropdown-menu">
-                        <li class="<?= $current_segment == 'complaint' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>complaint">Tag Keluhan</a></li>
-                        <li class="<?= $current_segment == 'medis' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>medis">Tag Rekam Medis</a></li>
-                        <li class="<?= $current_segment == 'result' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>result">Tag Pemeriksaan</a></li>
+                        <li class="<?= $current_segment == 'complaint' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>complaint"><i class="fas fa-tag"></i><span>Tag Keluhan</span></a></li>
+                        <li class="<?= $current_segment == 'medis' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>medis"><i class="fas fa-tag"></i><span>Tag Rekam Medis</span></a></li>
+                        <li class="<?= $current_segment == 'result' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>result"><i class="fas fa-tag"></i><span>Tag Pemeriksaan</span></a></li>
                     </ul>
                 </li>
 
                 <li class="nav-item dropdown <?= in_array($current_segment, ['logs', 'whatsapp', 'log_whatsapp', 'jabatan', 'greeting']) ? 'active' : '' ?>">
                     <a href="#" class="nav-link has-dropdown" data-toggle="dropdown"><i class="fas fa-cog"></i> <span>Pengaturan</span></a>
                     <ul class="dropdown-menu">
-                        <li class="<?= $current_segment == 'logs' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>logs">System Logs</a></li>
-                        <li class="<?= $current_segment == 'whatsapp' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>whatsapp">Config WhatsApp</a></li>
-                        <li class="<?= $current_segment == 'log_whatsapp' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>log_whatsapp">Log WhatsApp</a></li>
-                        <li class="<?= $current_segment == 'jabatan' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>jabatan">Data Jabatan</a></li>
-                        <li class="<?= $current_segment == 'greeting' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>greeting">Greetings</a></li>
+                        <li class="<?= $current_segment == 'logs' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>logs"><i class="fas fa-file-alt"></i><span>Logs</span></a></li>
+                        <li class="<?= $current_segment == 'whatsapp' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>whatsapp"><i class="fas fa-comments"></i><span>WhatsApp</span></a></li>
+                        <li class="<?= $current_segment == 'log_whatsapp' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>log_whatsapp"><i class="fas fa-check-double"></i><span>Log WhatsApp</span></a></li>
+                        <li class="<?= $current_segment == 'jabatan' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>jabatan"><i class="fas fa-address-card"></i><span>Jabatan</span></a></li>
+                        <li class="<?= $current_segment == 'greeting' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>greeting"><i class="fas fa-smile"></i><span>Greetings</span></a></li>
                     </ul>
                 </li>
 

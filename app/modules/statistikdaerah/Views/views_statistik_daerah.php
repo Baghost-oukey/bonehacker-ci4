@@ -77,7 +77,7 @@
         // Initialize Select2
         $('.select2').select2();
         $('#region_id').select2();
-        
+
         var currentFilter = 'daily';
         moment.locale('id');
 
@@ -151,7 +151,7 @@
 
         function fetchKabupaten() {
             $.ajax({
-                url: '<?= base_url('statsdaerah/fetch_kabupaten') ?>',
+                url: '<?= base_url('statistikdaerah/fetch_kabupaten') ?>',
                 method: 'GET',
                 dataType: 'json',
                 success: function(response) {
@@ -166,9 +166,11 @@
 
         function fetchKecamatan(kabId) {
             $.ajax({
-                url: '<?= base_url('statsdaerah/fetch_kecamatan') ?>',
+                url: '<?= base_url('statistikdaerah/fetch_kecamatan') ?>',
                 method: 'GET',
-                data: { kabupaten_id: kabId },
+                data: {
+                    kabupaten_id: kabId
+                },
                 dataType: 'json',
                 success: function(response) {
                     var options = '<option value="">Pilih Kecamatan</option>';
@@ -182,9 +184,11 @@
 
         function fetchDesa(kecId) {
             $.ajax({
-                url: '<?= base_url('statsdaerah/fetch_desa') ?>',
+                url: '<?= base_url('statistikdaerah/fetch_desa') ?>',
                 method: 'GET',
-                data: { kecamatan_id: kecId },
+                data: {
+                    kecamatan_id: kecId
+                },
                 dataType: 'json',
                 success: function(response) {
                     var options = '<option value="">Pilih Desa/Kelurahan</option>';
@@ -197,8 +201,10 @@
         }
 
         function fetchStatistics(startDate, endDate, filter) {
+            var finalStart = startDate.clone();
+            var finalEnd = endDate.clone();
             $.ajax({
-                url: '<?= base_url('statsdaerah/fetch_statistics') ?>',
+                url: '<?= base_url('statistikdaerah/fetch_statistics') ?>',
                 method: 'GET',
                 data: {
                     start_date: startDate.format('YYYY-MM-DD'),
@@ -211,27 +217,50 @@
                 },
                 dataType: 'json',
                 success: function(response) {
-                    renderChart(response, startDate, endDate, filter);
+                    var labels = [];
+                    var chartData = {};
+                    var iter = finalStart.clone();
+                    while (iter.isSameOrBefore(finalEnd, (filter === 'daily' ? 'day' : (filter === 'monthly' ? 'month' : 'year')))) {
+                        var key = (filter === 'daily' ? iter.format('YYYY-MM-DD') : (filter === 'monthly' ? iter.format('YYYY-MM') : iter.format('YYYY')));
+                        labels.push(key);
+                        chartData[key] = 0; // Set awal 0
+                        iter.add(1, (filter === 'daily' ? 'days' : (filter === 'monthly' ? 'months' : 'years')));
+                    }
+                    if (Array.isArray(response)) {
+                        response.forEach(function(item) {
+                            if (chartData.hasOwnProperty(item.date)) {
+                                chartData[item.date] = parseInt(item.total);
+                            }
+                        });
+                    }
+                    var finalValues = labels.map(l => chartData[l]);
+
+                    renderChart(labels, finalValues, filter);
+                    // renderChart(response, startDate, endDate, filter);
                 }
             });
         }
 
-        function renderChart(data, startDate, endDate, filter) {
-            // Logic label sesuai filter (Daily, Weekly, Monthly, Yearly)
-            var labels = data.map(item => item.date);
-            var values = data.map(item => parseInt(item.total));
-            
+        function renderChart(labels, values, filter) {
             var ctx = document.getElementById('statisticChart').getContext('2d');
+
+            // Format label sumbu X agar lebih cantik
+            var displayLabels = labels.map(function(l) {
+                if (filter === 'daily') return moment(l).format('D MMM');
+                if (filter === 'monthly') return moment(l, 'YYYY-MM').format('MMM YYYY');
+                return l;
+            });
+
             if (window.myChart instanceof Chart) window.myChart.destroy();
 
             window.myChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: labels,
+                    labels: displayLabels,
                     datasets: [{
-                        label: 'Jumlah Rekam Medis',
+                        label: "Jumlah Rekam Medis",
                         data: values,
-                        backgroundColor: 'rgba(0, 123, 255, 0.5)',
+                        backgroundColor: 'rgba(0, 123, 255, 0.2)',
                         borderColor: 'rgba(0, 123, 255, 1)',
                         borderWidth: 1
                     }]
@@ -239,23 +268,44 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            ticks: {
+                                autoSkip: false
+                            }
+                        },
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
                     plugins: {
                         legend: {
-                            display: true,
                             labels: {
+                                usePointStyle: true,
+                                pointStyle: 'circle',
                                 generateLabels: function(chart) {
-                                    const total = values.reduce((a, b) => a + b, 0);
-                                    return [{
-                                        text: 'Total: ' + total,
-                                        fillStyle: 'rgba(0, 123, 255, 0.5)',
-                                        strokeStyle: 'rgba(0, 123, 255, 1)',
-                                        lineWidth: 1
-                                    }];
+                                    const total = values.reduce((a, b) => a + b,
+                                        0);
+                                    return Chart.defaults.plugins.legend.labels
+                                        .generateLabels(chart).map((label,
+                                            index) => {
+                                            label.text =
+                                                `${"Jumlah Rekam Medis"} : ${total}`;
+                                            return label;
+                                        });
                                 }
+                            },
+                            onHover: function(event, legendItem) {
+                                const canvas = event.chart.canvas;
+                                canvas.style.cursor = 'pointer';
+                            },
+                            onLeave: function(event, legendItem) {
+                                const canvas = event.chart.canvas;
+                                canvas.style.cursor = 'default';
                             }
                         }
                     }
-                }
+                },
             });
         }
     });
