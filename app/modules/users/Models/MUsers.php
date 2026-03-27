@@ -65,11 +65,11 @@ class MUsers extends Model
         $builder->join('regions r', 'u.regions_patient = r.id', 'left');
 
         if (!empty($options['where_like'])) {
+            $builder->groupStart();
             foreach ($options['where_like'] as $like) {
-                // Perlu berhati-hati dengan format manual string, 
-                // lebih baik gunakan groupStart() di CI4
-                $builder->where($like);
+                $builder->orWhere($like);
             }
+            $builder->groupEnd();
         }
 
         $order = $options['order'] ?? 'u.realname';
@@ -83,11 +83,13 @@ class MUsers extends Model
 
     public function getTotalData($options)
     {
-        $builder = $this->db->table($this->table);
+        $builder = $this->db->table($this->table . ' u');
         if (!empty($options['where_like'])) {
+            $builder->groupStart();
             foreach ($options['where_like'] as $like) {
-                $builder->where($like);
+                $builder->orWhere($like);
             }
+            $builder->groupEnd();
         }
         return $builder->countAllResults();
     }
@@ -131,5 +133,74 @@ class MUsers extends Model
         return $this->where('username', $username)
             ->where('id !=', $user_id)
             ->countAllResults() > 0;
+    }
+
+    public function get_region_names($region_ids)
+    {
+        if (empty($region_ids) || !is_array($region_ids)) {
+            return [];
+        }
+
+        $builder = $this->db->table('regions');
+        $builder->select('name');
+        $builder->whereIn('id', $region_ids);
+        $query = $builder->get()->getResultArray();
+
+        // Mengambil kolom 'name' saja dari hasil query
+        return array_column($query, 'name');
+    }
+
+  
+    public function get_other_patients($user_id, $export = false)
+    {
+        $user = $this->show($user_id);
+        if (!$user) return $export ? [] : $this->db->table('patients');
+
+        $other_patients_ids = json_decode($user->other_patient, true) ?: [];
+
+        $builder = $this->db->table('patients p');
+        $builder->select('p.id, p.name as nama, p.gender, p.age, p.address, r.name as wilayah');
+        $builder->join('regions r', 'p.region_id = r.id', 'left');
+        $builder->where('p.is_delete', 0);
+
+        if (empty($other_patients_ids)) {
+            $builder->where('1=0'); // Pastikan hasil kosong jika tidak ada ID
+        } else {
+            $builder->whereIn('p.id', $other_patients_ids);
+        }
+
+        return $export ? $builder->get()->getResult() : $builder;
+    }
+
+    public function search_outside_patients($user_id, $search_term)
+    {
+        $user = $this->show($user_id);
+        $region_ids = json_decode($user->regions_patient, true) ?: [];
+        $other_patient_ids = json_decode($user->other_patient, true) ?: [];
+
+        $builder = $this->db->table('patients p');
+        $builder->select('p.id, p.name as nama, p.gender, p.age, p.address, r.name as wilayah');
+        $builder->join('regions r', 'p.region_id = r.id', 'left');
+        $builder->where('p.is_delete', 0);
+
+        // Kecualikan wilayah yang sudah dimiliki
+        if (!empty($region_ids)) {
+            $builder->whereNotIn('p.region_id', $region_ids);
+        }
+
+        // Kecualikan pasien yang sudah ditambahkan manual
+        if (!empty($other_patient_ids)) {
+            $builder->whereNotIn('p.id', $other_patient_ids);
+        }
+
+        if ($search_term) {
+            $builder->groupStart()
+                ->like('p.name', $search_term)
+                ->orLike('p.address', $search_term)
+                ->orLike('r.name', $search_term)
+                ->groupEnd();
+        }
+
+        return $builder->get()->getResult();
     }
 }

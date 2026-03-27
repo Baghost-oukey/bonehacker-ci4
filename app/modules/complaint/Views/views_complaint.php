@@ -5,15 +5,6 @@
         <h1><?= $title ?></h1>
     </div>
     <div class="section-body">
-        <?php if ($msg): ?>
-            <div class="alert alert-<?= $msg[0] ?> alert-dismissible show fade">
-                <div class="alert-body">
-                    <button class="close" data-dismiss="modal"><span>&times;</span></button>
-                    <?= $msg[1] ?>
-                </div>
-            </div>
-        <?php endif; ?>
-
         <div class="row">
             <div class="col-12">
                 <div class="card">
@@ -126,7 +117,10 @@
         </div>
     </div>
 </div>
+<?= $this->endSection() ?>
 
+
+<?= $this->section('scripts') ?>
 <script>
     $(document).ready(function() {
         // 1. Inisialisasi DataTable
@@ -136,7 +130,10 @@
             "order": [],
             "ajax": {
                 "url": "<?= site_url('complaint/fetch') ?>",
-                "type": "POST"
+                "type": "POST",
+                "data": function(d){
+                    d.<?= csrf_token() ?> = "<?= csrf_hash() ?>";
+                }
             },
             "columns": [{
                     "data": "no",

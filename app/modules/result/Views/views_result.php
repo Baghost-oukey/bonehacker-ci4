@@ -17,15 +17,6 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        <?php if (!empty($msg)): ?>
-                            <div class="alert alert-<?= $msg[0] ?> alert-dismissible show fade">
-                                <div class="alert-body">
-                                    <button class="close" data-dismiss="modal"><span>&times;</span></button>
-                                    <?= $msg[1] ?>
-                                </div>
-                            </div>
-                        <?php endif; ?>
-
                         <div class="table-responsive">
                             <table id="table-result" class="table table-striped w-100">
                                 <thead>
@@ -149,12 +140,35 @@
                     d.<?= csrf_token() ?> = "<?= csrf_hash() ?>"; // CSRF Token for DataTables
                 }
             },
-            "columns": [
-                { "data": "no", "width": "5%", "sortable": false, "searchable": false },
-                { "data": "nama", "width": "24.5%", "sortable": true },
-                { "data": "deskripsi", "width": "45.5%", "sortable": true },
-                { "data": "jumlah", "width": "10.5%", "sortable": false, "searchable": false },
-                { "data": "action", "class": "text-right", "width": "15%", "sortable": false, "searchable": false }
+            "columns": [{
+                    "data": "no",
+                    "width": "5%",
+                    "sortable": false,
+                    "searchable": false
+                },
+                {
+                    "data": "nama",
+                    "width": "24.5%",
+                    "sortable": true
+                },
+                {
+                    "data": "deskripsi",
+                    "width": "45.5%",
+                    "sortable": true
+                },
+                {
+                    "data": "jumlah",
+                    "width": "10.5%",
+                    "sortable": false,
+                    "searchable": false
+                },
+                {
+                    "data": "action",
+                    "class": "text-right",
+                    "width": "15%",
+                    "sortable": false,
+                    "searchable": false
+                }
             ]
         });
 
@@ -170,7 +184,7 @@
             $("#edit_name").val(name);
             $("#edit_deskripsi").val(deskripsi);
             $("#editResultForm").attr("action", href);
-            
+
             // Re-trigger validation check for edit
             validateInput('#edit_name', '#edit_submitBtn', '#edit_nameError', name, id, '#edit_deskripsi', deskripsi);
         });

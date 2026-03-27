@@ -56,22 +56,16 @@ class MJournal extends Model
 
 
         $builder = $this->db->table('patients p');
-        $builder->select('
-          p.id as patient_id, 
-        p.name as nama, 
-        p.address as alamat, 
-        pa.desa_nama, 
-        pa.kecamatan_nama, 
-        pa.kabupaten_nama, 
-        p.phone as nowa, 
-        r.name as name_region, 
-        h.date as tanggal, 
-        h.results, 
-        h.measure AS measures,
-       '-' as result_names
-
-        
-        ');
+        $builder->select([
+            'p.id as patient_id',
+            'p.name as nama',
+            'p.phone as nowa',
+            'h.date as tanggal',
+            'h.measure AS measures',
+            "'-' as result_names",
+            '(SELECT IF(COUNT(h2.id) > 1, "Pasien Lama", "Pasien Baru") FROM histories h2 WHERE h2.patient_id = p.id AND h2.is_delete = 0) as status',
+            'CONCAT_WS(", ", p.address, pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama) as alamat'
+        ]);
 
         $builder->join('patient_address pa', 'pa.patient_id = p.id', 'left');
         $builder->join('regions r', 'r.id = p.region_id', 'left');

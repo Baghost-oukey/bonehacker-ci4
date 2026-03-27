@@ -46,7 +46,8 @@ class Mjabatan extends Model
 
     public function getJabatan()
     {
-        return $this->builder()->select('id, nama_jabatan, deskripsi');
+        return $this->db->table($this->table)
+            ->select('id, nama_jabatan, deskripsi');
     }
 
     public function checkNameExists($name, $id = null)
@@ -55,7 +56,7 @@ class Mjabatan extends Model
         if ($id) {
             $builder->where('id !=', $id);
         }
-        
+
         return $builder->countAllResults() > 0;
     }
 

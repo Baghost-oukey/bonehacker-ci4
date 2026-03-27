@@ -42,20 +42,24 @@ class Medis extends BaseController
 
         $dataTables = new \Ngekoding\CodeIgniterDataTables\DataTables($queryBuilder, '4');
 
-        $dataTables->addColumn('no', function ($row, $index) {
-            return $index + 1;
-        });
-
-        $dataTables->addColumn('action', function ($row) {
-            return '<button data-name="' . $row->nama . '" data-description="' . $row->deskripsi . '" data-id="' . $row->id . '" data-href="' . site_url('medis/update/' . $row->id) . '" class="btn btn-primary btn-action mr-1 btn_edit"><i class="fas fa-edit"></i></button>' .
-                '<button type="button" data-href="' . site_url("medis/destroy/" . $row->id) . '" class="btn btn-danger btn-action btn_delete"><i class="fas fa-trash"></i></button>';
-        });
-
         // Mapping alias untuk pencarian dan pengurutan
         $dataTables->addColumnAliases([
             'medhis_tags.name'        => 'nama',
             'medhis_tags.description' => 'deskripsi'
         ]);
+
+        $start = (int)$this->request->getPost('start');
+
+        $dataTables->addColumn('no', function ($row, $index = null) use (&$start) {
+            return ++$start;
+        });
+
+        $dataTables->addColumn('action', function ($row, $index = null) {
+            return '<button data-name="' . $row->nama . '" data-description="' . $row->deskripsi . '" data-id="' . $row->id . '" data-href="' . site_url('medis/update/' . $row->id) . '" class="btn btn-primary btn-action mr-1 btn_edit"><i class="fas fa-edit"></i></button>' .
+                '<button type="button" data-href="' . site_url("medis/destroy/" . $row->id) . '" class="btn btn-danger btn-action btn_delete"><i class="fas fa-trash"></i></button>';
+        });
+
+
 
         $dataTables->asObject();
         return $dataTables->generate();
@@ -84,13 +88,14 @@ class Medis extends BaseController
         return $this->response->setJSON(['exists' => $exists]);
     }
 
+    // data baru
     public function store()
     {
         $data = [
             'name'        => $this->request->getPost('name'),
             'description' => $this->request->getPost('deskripsi'),
-            'created_at'  => date('Y-m-d H:i:s'),
-            'updated_at'  => date('Y-m-d H:i:s')
+            // 'created_at'  => date('Y-m-d H:i:s'),
+            // 'updated_at'  => date('Y-m-d H:i:s')
         ];
 
         if ($this->model_medis->store($data)) {
@@ -102,12 +107,16 @@ class Medis extends BaseController
         return redirect()->to('medis');
     }
 
+    // data lama
     public function update($id)
     {
         $data = [
             'name'        => $this->request->getPost('name'),
             'description' => $this->request->getPost('deskripsi'),
-            'updated_at'  => date('Y-m-d H:i:s')
+
+            // Kalo mau pakai keterangan di buat w
+            // 'created_at'  => date('Y-m-d H:i:s'),
+            // 'updated_at'  => date('Y-m-d H:i:s')
         ];
 
         if ($this->model_medis->update($id, $data)) {

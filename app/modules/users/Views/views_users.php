@@ -140,27 +140,59 @@
 </div>
 <?= $this->endSection() ?>
 
-<?= $this->section('script') ?>
+<?= $this->section('scripts') ?>
 <script>
     $(document).ready(function() {
         // Initialization DataTable
         var table = $('#table-user').DataTable({
             processing: true,
             serverSide: true,
+            order: [[1, 'asc']],
             ajax: {
                 url: "<?= base_url('users/fetch'); ?>",
                 type: "POST",
                 data: function(d) {
                     d.search_value = d.search.value;
+                    d.<?= csrf_token() ?> = $('meta[name="csrf-token-hash"]').attr('content');
+                },
+
+                dataSrc: function(json) {
+                    if (json.csrfHash) {
+                        $('meta[name="csrf-token-hash"]').attr('content', json.csrfHash);
+                    }
+                    return json.data;
                 }
             },
-            columns: [
-                { data: "no", width: "5%", sortable: false },
-                { data: "realname", width: "25%" },
-                { data: "username", width: "15%" },
-                { data: "role", width: "15%" },
-                { data: "region_name", width: "20%" },
-                { data: "action", class: "text-right", width: "20%", sortable: false }
+            columns: [{
+                    data: "no",
+                    width: "5%",
+                    sortable: false,
+                    searchable: false
+                },
+                {
+                    data: "realname",
+                    width: "25%"
+                },
+                
+                {
+                    data: "username",
+                    width: "15%"
+                },
+                {
+                    data: "role",
+                    width: "15%"
+                },
+                {
+                    data: "region_name",
+                    width: "20%",
+                    orderable: false
+                },
+                {
+                    data: "action",
+                    class: "text-right",
+                    width: "20%",
+                    sortable: false
+                }
             ]
         });
 
@@ -180,16 +212,16 @@
         $(document).on('click', '.btn_edit', function() {
             const d = $(this).data();
             const modal = $('#modalEdit');
-            
+
             modal.find('form').attr('action', d.href);
             $('#edit_realname').val(d.realname);
             $('#edit_username').val(d.username);
             $('#edit_role').val(d.role).trigger('change');
-            
-            if(d.regions_patient) {
+
+            if (d.regions_patient) {
                 $('#edit_regions').val(d.regions_patient).trigger('change');
             }
-            
+
             modal.modal('show');
         });
 
@@ -210,10 +242,12 @@
         // Real-time Username Validation (Add)
         $('#username_add').on('keyup', function() {
             const username = $(this).val();
-            if(username.length < 3) return;
+            if (username.length < 3) return;
 
-            $.post("<?= base_url('users/check_username_exists') ?>", { username: username }, function(res) {
-                if(res.exists) {
+            $.post("<?= base_url('users/check_username_exists') ?>", {
+                username: username
+            }, function(res) {
+                if (res.exists) {
                     $('#username_add').addClass('is-invalid');
                     $('#usernameError').text('Username sudah digunakan');
                     $('#submitBtnAdd').prop('disabled', true);

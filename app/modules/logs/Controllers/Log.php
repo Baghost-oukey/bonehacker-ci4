@@ -21,16 +21,23 @@ class Log extends BaseController
     public function index()
     {
 
-        $date = $this->request->getGet('date');
+        $date = $this->request->getGet('date') ?? date('Y-m-d');
+        $logFile = WRITEPATH . 'logs/log-' . $date . '.php';
 
         if (!$date || !preg_match('/\d{4}-\d{2}-\d{2}/', $date)) {
             $date = date('Y-m-d');
         }
 
-        $logFile = WRITEPATH . 'logs/log-' . $date . '.log';
+        // $logFile = WRITEPATH . 'logs/log-' . $date . '.log';
 
         if (file_exists($logFile)) {
             $logContent = file_get_contents($logFile);
+            $logContent = str_replace(["<?php", "defined('COREPATH') || exit('No direct script access allowed');"], "", $logContent);
+            if (!str_contains($logContent, 'ERROR') && !str_contains($logContent, 'CRITICAL')) {
+                $logContent = "No logs found for the selected date: " . $date;
+            } else {
+                $logContent = trim($logContent);
+            }
         } else {
             $logFilePhp = WRITEPATH . 'logs/log-' . $date . '.php';
             if (file_exists($logFilePhp)) {

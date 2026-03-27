@@ -40,21 +40,22 @@ class Jabatan extends BaseController
     public function fetch()
     {
         $queryBuilder = $this->model_jabatan->getJabatan();
-
-        // Pastikan library Ngekoding sudah versi CI4
         $datatables = new \Ngekoding\CodeIgniterDataTables\DataTables($queryBuilder, '4');
-
-        $datatables->addColumn('no', function ($row, $index) {
-            return $index + 1;
+        $datatables->addColumn('no', function ($row) {
+            static $no = 0; 
+            return ++$no;
         });
 
         $datatables->addColumn('action', function ($row) {
+            $row = (object) $row;
             return '<button data-name="' . $row->nama_jabatan . '" data-description="' . $row->deskripsi . '" data-id="' . $row->id . '" data-href="' . site_url('jabatan/update/' . $row->id) . '" class="btn btn-primary btn-action mr-1 btn_edit"><i class="fas fa-edit"></i></button>' .
                 '<button type="button" data-href="' . site_url("jabatan/destroy/" . $row->id) . '" class="btn btn-danger btn-action btn_delete"><i class="fas fa-trash"></i></button>';
         });
 
         $datatables->asObject();
-        return $datatables->generate();
+        $output = $datatables->generate(false);
+        $output['csrfHash'] = csrf_hash();
+        return $this->response->setJSON($output);
     }
 
     public function check_name_exists()

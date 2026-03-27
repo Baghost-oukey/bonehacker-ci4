@@ -14,12 +14,15 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 8pt;
+            table-layout: fixed; /* JURUS KUNCI: Biar Dompdf gak capek ngitung */
+        word-wrap: break-word;
         }
 
         th,
         td {
             border: 1px solid #000;
             padding: 4px;
+            font-size: 10px;
             text-align: left;
             word-wrap: break-word;
         }
@@ -65,17 +68,18 @@
             </tr>
         </thead>
         <tbody>
-            <?php $no = 1; foreach ($journals as $item): ?>
-            <tr>
-                <td><?= $no++ ?></td>
-                <td><?= $item->tgl ?></td>
-                <td><?= $item->nama ?></td>
-                <td><?= $status[$item->id]?></td>
-                <td><?= $item->alamat ?></td>
-                <td><?= $item->result_names ?></td>
-                <td><?= $item->measures ?></td>
-                <td><?= $item->nowa ?></td>
-            </tr>
+            <?php $no = 1;
+            foreach ($journals as $item): ?>
+                <tr>
+                    <td><?= $no++ ?></td>
+                    <td><?= !empty($item->tanggal) ? date('d-m-Y', strtotime($item->tanggal)) : '-' ?></td>
+                    <td><?= esc($item->nama) ?></td>
+                    <td><?= $item->status ?? '-' ?></td>
+                    <td><?= esc($item->alamat) ?></td>
+                    <td><?= $item->result_names ?? '-' ?></td>
+                    <td><?= $item->measures ?? '-' ?></td>
+                    <td><?= esc($item->nowa) ?></td>
+                </tr>
             <?php endforeach; ?>
         </tbody>
     </table>

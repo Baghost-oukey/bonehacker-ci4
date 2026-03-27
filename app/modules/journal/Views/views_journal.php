@@ -81,12 +81,15 @@
                     text: '<i class="fas fa-file-pdf"></i> PDF',
                     className: 'btn btn-danger btn-sm mr-2',
                     action: function(e, dt, button, config) {
+
                         var params = $.param({
-                            region: $('#region').val(), 
+                            region_id: $('#region').val(),
                             start_date: $('#start_date').val(),
                             end_date: $('#end_date').val()
                         });
-                        window.open(url, '_blank');
+                        var exportUrl = "<?= base_url('journal/export_pdf') ?>?" + params;
+
+                        window.open(exportUrl, '_blank');
                     }
                 },
                 {
@@ -94,10 +97,12 @@
                     className: 'btn btn-success btn-sm',
                     action: function(e, dt, button, config) {
                         var params = $.param({
-                            region: $('#region').val(), 
+                            region: $('#region').val(),
                             start_date: $('#start_date').val(),
                             end_date: $('#end_date').val()
                         });
+
+                        var exportUrl = "<?= base_url('journal/export_excell') ?>?" + params;
                         window.location.href = url;
                     }
                 }
@@ -105,36 +110,45 @@
             "columns": [{
                     "data": "no",
                     "width": "5%",
-                    "sortable": false
+                    "sortable": false,
+                    "searchable": false,
                 },
                 {
                     "data": "tanggal",
-                    "width": "15%"
+                    "width": "15%",
+                    "searchable": true
+
                 },
                 {
                     "data": "nama",
-                    "width": "20%"
+                    "width": "20%",
+                    "searchable": true
                 },
                 {
                     "data": "status",
-                    "width": "10%"
+                    "width": "10%",
+                    "searchable": false
                 },
                 {
                     "data": "alamat",
-                    "width": "15%"
+                    "width": "15%",
+                    "searchable": false
                 },
                 {
                     "data": "result_names",
-                    "width": "15%"
+                    "width": "15%",
+                    "searchable": false
                 },
                 {
                     "data": "measures",
-                    "width": "15%"
+                    "width": "15%",
+                    "searchable": true
                 },
                 {
                     "data": "action",
                     "width": "5%",
-                    "sortable": false
+                    "sortable": false,
+                    "searchable": false
                 }
             ]
         });

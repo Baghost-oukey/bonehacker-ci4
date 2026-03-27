@@ -38,7 +38,7 @@ class Users extends BaseController
     {
         $draw         = $this->request->getPost('draw') ?? 1;
         $role         = $this->request->getPost('role');
-        $search_value = $this->request->getPost('search_value');
+        $search_value = $this->request->getPost('search_value') ?? '';
         $order        = $this->request->getPost('order');
         $columns      = $this->request->getPost('columns');
 
@@ -53,14 +53,14 @@ class Users extends BaseController
         if (!empty($search_value)) {
             $options['where_like'] = [
                 "u.realname LIKE '%$search_value%'",
-                "u.username LIKE '%$search_value%'",
-                "u.role LIKE '%$search_value%'"
+                "u.username LIKE '%$search_value%'"
+                // Kalau mau role gak ikut terfilter 'pe', u.role jangan dimasukin di sini
             ];
         }
 
         $dataOutput    = $this->model_users->getListData($options);
         $totalFiltered = $this->model_users->getTotalData($options);
-        $totalData     = $this->model_users->countAll(); // Bawaan model CI4
+        $totalData     = $this->model_users->countAll();
         $no            = $options['offset'] + 1;
 
         foreach ($dataOutput as $value) {

@@ -31,6 +31,7 @@ class Journal extends BaseController
         //
         $data = [
             'title' => 'Journal Patients',
+            'role'  => session()->get('role'),
             'wilayah' =>  $this->model_regions->findAll(),
         ];
 
@@ -46,7 +47,9 @@ class Journal extends BaseController
         $queryBuilder = $this->model_journal->get_query_for_Journal($region, $start_date, $end_date);
         $datatables = new DataTables($queryBuilder);
 
-        $start = $this->request->getPost('start') ?? 0;
+
+
+        $start = (int)($this->request->getPost('start') ?? 0);
 
         $datatables->addColumn('no', function ($row) use (&$start) {
             return ++$start;
@@ -56,7 +59,7 @@ class Journal extends BaseController
         });
 
         $datatables->addColumn('status', function ($row) {
-            return isset($row->patient_id) ? $this->model_journal->getPatients($row->patient_id) : '-';
+            return $row->status;
         });
 
 
@@ -70,13 +73,7 @@ class Journal extends BaseController
         });
 
         $datatables->addColumn('alamat', function ($row) {
-            $addressParts = array_filter([
-                $row->alamat,
-                $row->desa_nama,
-                $row->kecamatan_nama,
-                $row->kabupaten_nama,
-            ]);
-            return !empty($addressParts) ? implode(', ', $addressParts) : '-';
+            return $row->alamat;
         });
 
         $datatables->addColumn('result_names', function ($row) {
@@ -91,25 +88,29 @@ class Journal extends BaseController
             return '<a href="' . site_url('patient/show/' . $row->patient_id) . '" target="_blank" class="btn btn-primary btn-sm"><i class="fas fa-eye"></i></a>';
         });
 
-        return $datatables->generate(true);
+        return $datatables->asObject()->generate();
     }
 
     public function export_pdf()
     {
+
+        set_time_limit(300);
+        ini_set('memory_limit', '512M');
+
         $region_id  = $this->request->getGet('region_id');
         $start_date = $this->request->getGet('start_date');
         $end_date   = $this->request->getGet('end_date');
 
-        $journals = $this->model_journal->get_data_journal($region_id, $start_date, $end_date, true);
+        $journals = $this->model_journal->get_query_for_Journal($region_id, $start_date, $end_date, true);
 
         $data = [
             'journals' => $journals,
             'status'   => []
         ];
 
-        foreach ($journals as $journal) {
-            $data['status'][$journal->id] = $this->model_journal->getPatientStatus($journal->id);
-        }
+        // foreach ($journals as $journal) {
+        //     $data['status'][$journal->id] = $this->model_journal->getPatientStatus($journal->id);
+        // }
 
         $html = view('App\Modules\Journal\Views\pdf_template', $data);
 
