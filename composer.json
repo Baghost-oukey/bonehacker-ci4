@@ -13,7 +13,7 @@
         "php": "^8.1",
         "codeigniter4/framework": "^4.0",
         "dompdf/dompdf": "^3.1",
-        "endroid/qr-code": "5.0",
+        "endroid/qr-code": "^5.1",
         "hermawan/codeigniter4-datatables": "^0.8.0",
         "jenssegers/blade": "^2.0",
         "ngekoding/codeigniter-datatables": "^1.0",

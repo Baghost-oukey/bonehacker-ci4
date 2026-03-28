@@ -172,23 +172,63 @@
         var table = $('#table-terapis').DataTable({
             "processing": true,
             "serverSide": true,
-            "order": [[1, 'asc']],
+            "order": [
+                [1, 'asc']
+            ],
             "ajax": {
                 "url": "<?= base_url('terapis/fetch') ?>",
                 "type": "POST",
                 "data": function(d) {
                     d.<?= csrf_token() ?> = '<?= csrf_hash() ?>'; // CSRF CI4
                     d.region = $('#region_filter').val();
+                },
+                "dataSrc": function(json) {
+                    if (json.crsfHash) {
+                        $('meta[name="<?= csrf_token() ?>"]').attr('content', json.csrfHash);
+                    }
+                    return json.data;
                 }
             },
-            "columns": [
-                { "data": "terapis_id", "width": "5%", "sortable": false },
-                { "data": "nama", "width": "20%" },
-                { "data": "region_name", "width": "15%", "sortable": false },
-                { "data": "alamat", "width": "25%" },
-                { "data": "jml_tindakan", "class": "text-center" },
-                { "data": "status", "class": "text-center" },
-                { "data": "action", "class": "text-right", "sortable": false }
+            "columns": [{
+                    "data": "no",
+                    "width": "5%",
+                    "sortable": false,
+                    "searchable": false,
+                },
+                {
+                    "data": "nama",
+                    "width": "20%",
+                    "searchable": true,
+
+                },
+                {
+                    "data": "region_name",
+                    "width": "15%",
+                    "sortable": false,
+                    "searchable": true,
+                },
+                {
+                    "data": "alamat",
+                    "width": "25%",
+                    "searchable": false,
+                },
+                {
+                    "data": "jml_tindakan",
+                    "class": "text-center",
+                    "orderable": false,
+                    "searchable": false
+                },
+                {
+                    "data": "is_active",
+                    "class": "text-center",
+                    "searchable": false
+                },
+                {
+                    "data": "action",
+                    "class": "text-right",
+                    "sortable": false,
+                    "searchable": false
+                }
             ]
         });
 
@@ -199,17 +239,18 @@
 
         // Validation ID (NIK) Check via Ajax
         $('#terapis_id').on('input', function() {
-            var id = $(this).val();
+            var id = $(this).val().trim();
             var errorLabel = $('#idError');
             var btn = $('#add_submitBtn');
-
-            if (id.length < 3) {
+            if (id.length < 7) {
                 $(this).addClass('is-invalid');
                 errorLabel.text('ID terlalu pendek').show();
                 btn.prop('disabled', true);
                 return;
+            } else {
+                $(this).removeClass('is-invalid');
+                errorLabel.hide();
             }
-
             $.post("<?= base_url('terapis/checkId') ?>", {
                 terapis_id: id,
                 <?= csrf_token() ?>: '<?= csrf_hash() ?>'
@@ -242,8 +283,6 @@
             }
             modal.modal('show');
         });
-
-        // Detail Redirect
         $(document).on('click', '.btn_detail_terapis', function() {
             window.location.href = "<?= base_url('terapis/detail/') ?>/" + $(this).data('userid');
         });

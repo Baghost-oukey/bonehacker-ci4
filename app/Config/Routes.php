@@ -174,13 +174,18 @@ $routes->group('greeting', ['namespace' => 'App\modules\greeting\Controllers'], 
 $routes->group('terapis', ['namespace' => 'App\modules\terapis\Controllers'], function ($routes) {
     $routes->get('/', 'Terapis::index');
     $routes->get('detail_terapis/(:any)', 'Terapis::detail_terapis/$1');
+    $routes->post('fetch', 'Terapis::fetch'); // Untuk narik data tabel
+    $routes->get('active/(:num)', 'Terapis::active/$1');
+    $routes->get('nonActive/(:num)', 'Terapis::nonActive/$1');
+    $routes->post('checkId', 'Terapis::checkId');
     $routes->post('store', 'Terapis::store');
     $routes->post('update', 'Terapis::update');
     $routes->get('destroy/(:num)', 'Terapis::destroy/$1');
+    $routes->get('public_info/(:any)', 'Terapis::public_info/$1');
 });
 
 // Untuk Akses info publik
-$routes->get('p/(:any)', '\App\Controllers\Terapis::public_info/$1');
+// $routes->get('p/(:any)', '\App\Controllers\Terapis::public_info/$1');
 
 // Users
 $routes->group('users', ['namespace' => 'App\Modules\users\Controllers'], function ($routes) {
@@ -194,6 +199,11 @@ $routes->group('users', ['namespace' => 'App\Modules\users\Controllers'], functi
     $routes->get('view_patient/(:num)', 'Users::view_patient/$1');
     $routes->post('fetch_patients', 'Users::fetch_patients');
     $routes->post('add_outside_patient', 'Users::add_outside_patient');
+
+    $routes->post('fetch_patients_luar', 'Users::fetch_patients_luar'); 
+    $routes->post('get_outside_patients_select', 'Users::get_outside_patients_select'); 
+    $routes->post('delete_outside_patient', 'Users::delete_outside_patient'); 
+
 });
 
 // Patients - Routes

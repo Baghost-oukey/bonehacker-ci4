@@ -12,7 +12,19 @@ class MTerapis extends Model
     protected $returnType       = 'object';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['terapis_id', 'nama', 'alamat', 'is_active', 'region_id', 'jabatan_id', 'foto'];
+    protected $allowedFields    = [
+        'terapis_id',
+        'nama',
+        'alamat',
+        'tempat_lahir',  
+        'tanggal_lahir', 
+        'rank',
+        'is_active',
+        'region_id',
+        'jabatan_id',
+        'foto',
+        'is_active'
+    ];
 
     protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;
@@ -48,14 +60,14 @@ class MTerapis extends Model
     {
         $builder = $this->db->table($this->table . ' t');
 
-        $subQuery = "(SELECT COUNT(h.id) FROM histories h WHERE FIND_IN_SET(t.id, h.terapis_id)) as jml_tindakan";
-
-        $builder->select('t.id, t.terapis_id, t.nama, t.alamat, t.is_active as status, r.name as region_name, ' . $subQuery, false);
+        $subQuery = "(SELECT COUNT(h.id) FROM histories h WHERE FIND_IN_SET(t.id, h.terapis_id))";
+        $builder->select("t.id, t.terapis_id, t.nama, t.alamat, t.is_active, r.name as region_name, $subQuery as jml_tindakan", false);
         $builder->join('regions r', 'r.id = t.region_id', 'left');
 
         if (!empty($region)) {
             $builder->where('t.region_id', $region);
         }
+
 
         return $builder;
     }

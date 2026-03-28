@@ -37,32 +37,32 @@
                 </div>
 
                 <?php if ($user_role !== 'superadmin') : ?>
-                <div class="card">
-                    <div class="card-header">
-                        <h4>Data Pasien Luar</h4>
-                        <div class="card-header-action">
-                            <button class="btn btn-primary" data-toggle="modal" data-target="#modalAddOutside">Tambah Pasien Luar</button>
+                    <div class="card">
+                        <div class="card-header">
+                            <h4>Data Pasien Luar</h4>
+                            <div class="card-header-action">
+                                <button class="btn btn-primary" data-toggle="modal" data-target="#modalAddOutside">Tambah Pasien Luar</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table id="table-patients-luar" class="table table-striped w-100">
+                                    <thead>
+                                        <tr>
+                                            <th>No</th>
+                                            <th>Nama</th>
+                                            <th>Jenis Kelamin</th>
+                                            <th>Usia</th>
+                                            <th>Alamat</th>
+                                            <th>Wilayah</th>
+                                            <th>Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table id="table-patients-luar" class="table table-striped w-100">
-                                <thead>
-                                    <tr>
-                                        <th>No</th>
-                                        <th>Nama</th>
-                                        <th>Jenis Kelamin</th>
-                                        <th>Usia</th>
-                                        <th>Alamat</th>
-                                        <th>Wilayah</th>
-                                        <th>Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
                 <?php endif; ?>
             </div>
         </div>
@@ -89,10 +89,18 @@
                     <div id="patientInfo" class="p-3 bg-light rounded" style="display: none; border: 1px solid #e3e3e3;">
                         <h6 class="text-primary border-bottom pb-2">Detail Pasien</h6>
                         <div class="row">
-                            <div class="col-6"><small class="text-muted">Gender:</small><p id="pGender" class="mb-2">-</p></div>
-                            <div class="col-6"><small class="text-muted">Usia:</small><p id="pAge" class="mb-2">-</p></div>
-                            <div class="col-12"><small class="text-muted">Wilayah:</small><p id="pWilayah" class="mb-2">-</p></div>
-                            <div class="col-12"><small class="text-muted">Alamat:</small><p id="pAddress" class="mb-0 small">-</p></div>
+                            <div class="col-6"><small class="text-muted">Gender:</small>
+                                <p id="pGender" class="mb-2">-</p>
+                            </div>
+                            <div class="col-6"><small class="text-muted">Usia:</small>
+                                <p id="pAge" class="mb-2">-</p>
+                            </div>
+                            <div class="col-12"><small class="text-muted">Wilayah:</small>
+                                <p id="pWilayah" class="mb-2">-</p>
+                            </div>
+                            <div class="col-12"><small class="text-muted">Alamat:</small>
+                                <p id="pAddress" class="mb-0 small">-</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -106,28 +114,50 @@
 </div>
 <?= $this->endSection() ?>
 
-<?= $this->section('script') ?>
+<?= $this->section('scripts') ?>
 <script>
     $(document).ready(function() {
+        console.log("DataTable Start...");
         const userId = $('#user-info').data('user-id');
-        
-        // 1. Table Pasien Internal
         $('#table-patients').DataTable({
             processing: true,
             serverSide: true,
             ajax: {
                 url: "<?= base_url('users/fetch_patients'); ?>",
                 type: "POST",
-                data: { user_id: userId }
+                data: function(d) {
+                    d.user_id = userId;
+                    d["<?= csrf_token() ?>"] = typeof currentToken !== 'undefined' ? currentToken : "<?= csrf_hash() ?>";
+                },
+                dataSrc: function(json) {
+                    // UPDATE TOKEN SETIAP KALI REQUEST BERHASIL
+                    currentToken = json.csrfHash;
+                    return json.data;
+                }
             },
-            columns: [
-                { data: "no", width: "5%", sortable: false },
-                { data: "nama" },
-                { data: "gender" },
-                { data: "age" },
-                { data: "address" },
-                { data: "wilayah" }
-            ]
+            columns: [{
+                    data: "no",
+                    width: "5%",
+                    sortable: false
+                },
+                {
+                    data: "nama"
+                },
+                {
+                    data: "gender"
+                },
+                {
+                    data: "age"
+                },
+                {
+                    data: "address"
+                },
+                {
+                    data: "wilayah"
+                }
+            ],
+       
+
         });
 
         // 2. Table Pasien Luar
@@ -137,16 +167,36 @@
             ajax: {
                 url: "<?= base_url('users/fetch_patients_luar'); ?>",
                 type: "POST",
-                data: { user_id: userId }
+                data: function(d) {
+                    d.user_id = userId;
+                    d.<?= csrf_token() ?> = "<?= csrf_hash() ?>"; // TAMBAHKAN INI
+                }
             },
-            columns: [
-                { data: "no", width: "5%", sortable: false },
-                { data: "nama" },
-                { data: "gender" },
-                { data: "age" },
-                { data: "address" },
-                { data: "wilayah" },
-                { data: "aksi", class: "text-center", sortable: false }
+            columns: [{
+                    data: "no",
+                    width: "5%",
+                    sortable: false
+                },
+                {
+                    data: "nama"
+                },
+                {
+                    data: "gender"
+                },
+                {
+                    data: "age"
+                },
+                {
+                    data: "address"
+                },
+                {
+                    data: "wilayah"
+                },
+                {
+                    data: "aksi",
+                    class: "text-center",
+                    sortable: false
+                }
             ]
         });
 
@@ -158,7 +208,11 @@
                 type: 'POST',
                 dataType: 'json',
                 delay: 300,
-                data: (params) => ({ searchTerm: params.term, user_id: userId }),
+                data: (params) => ({
+                    searchTerm: params.term,
+                    user_id: userId,
+                    "<?= csrf_token() ?>": "<?= csrf_hash() ?>"
+                }),
                 processResults: (data) => ({
                     results: $.map(data, (item) => ({
                         id: item.id,
@@ -187,7 +241,7 @@
         $(document).on('click', '.btn-delete-patient', function() {
             const pid = $(this).data('patient-id');
             const uid = $(this).data('user-id');
-            
+
             Swal.fire({
                 title: 'Hapus Pasien?',
                 text: "Pasien akan dihapus dari daftar pantauan Anda.",
@@ -225,7 +279,7 @@
                     btn.addClass('btn-progress disabled');
                     $.post("<?= base_url('whatsapp/send_notif_patients'); ?>/" + pid, function(res) {
                         btn.removeClass('btn-progress disabled');
-                        if(res.status === 'success') {
+                        if (res.status === 'success') {
                             Swal.fire('Berhasil!', 'Pesan dalam antrean server.', 'success');
                         } else {
                             Swal.fire('Gagal', 'Gagal menghubungi server WA.', 'error');

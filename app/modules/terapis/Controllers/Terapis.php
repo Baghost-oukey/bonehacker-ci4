@@ -7,6 +7,10 @@ use App\modules\jabatan\Models\Mjabatan;
 use App\modules\region\Models\MRegion;
 use App\modules\terapis\Models\MTerapis;
 use CodeIgniter\HTTP\ResponseInterface;
+use Endroid\QrCode\Color\Color;
+use Endroid\QrCode\Encoding\Encoding;
+use Endroid\QrCode\QrCode;
+use Endroid\QrCode\Writer\PngWriter;
 
 class Terapis extends BaseController
 {
@@ -51,6 +55,57 @@ class Terapis extends BaseController
         return view('App\modules\terapis\Views\views_terapis', $data);
     }
 
+    public function fetch()
+    {
+        $region = $this->request->getPost('region');
+        $queryBuilder = $this->model_terapis->getTerapis($region);
+
+        $datatables = new \Ngekoding\CodeIgniterDataTables\DataTables($queryBuilder, '4');
+
+        $datatables->addColumn('no', function ($row) {
+            static $no = 0;
+            return ++$no;
+        });
+
+        $datatables->addColumn('jml_tindakan', function ($row) {
+            $row = (object) $row;
+            $jumlah = $row->jml_tindakan ?? 0;
+
+            if ($jumlah == 0) {
+                return '<span class="badge badge-danger">0 Tindakan</span>';
+            } else {
+
+                return '<span class="badge badge-info">' . $jumlah . ' Tindakan</span>';
+            }
+        });
+
+        $datatables->addColumn('is_active', function ($row) {
+            $row = (object) $row;
+            // Kita sesuaikan dengan style CI3 kamu pakai badge
+            if ($row->is_active == 1) {
+                return '<span class="badge badge-success">Aktif</span>';
+            } else {
+                return '<span class="badge badge-danger">Tidak Aktif</span>';
+            }
+        });
+
+        $datatables->addColumn('action', function ($row) {
+            $row = (object) $row;
+            $btn_status = ($row->is_active == 1)
+                ? '<a href="' . base_url("terapis/nonActive/" . $row->id) . '" class="btn btn-danger"><i class="fas fa-window-close"></i></a>'
+                : '<a href="' . base_url("terapis/active/" . $row->id) . '" class="btn btn-primary btn mr-1"><i class="fas fa-check-square"></i></a>';
+
+            return '
+            <a href="' . base_url('terapis/detail_terapis/' . $row->terapis_id) . '" class="btn btn-primary"><i class="fas fa-eye"></i></a>' . $btn_status;
+            // 'button type="button" data-href="' . base_url("terapis/destroy/" . $row->id) . '" class="btn btn-danger btn-sm btn_delete"><i class="fas fa-trash"></i></button>';
+        });
+
+        $datatables->asObject();
+        $output = $datatables->generate(false);
+        $output['csrfHash'] = csrf_hash();
+        return $this->response->setJSON($output);
+    }
+
     public function detail_terapis($user_id)
     {
         $data = [
@@ -66,9 +121,33 @@ class Terapis extends BaseController
         ];
 
         $qrContent = base_url('terapis/public_info/' . $user_id);
-        $data['qr_code_base64'] = ""; 
 
+        $writer = new PngWriter();
+        $qrCode = QrCode::create($qrContent)
+            ->setEncoding(new Encoding('UTF-8'))
+            ->setSize(300)
+            ->setMargin(10)
+            ->setForegroundColor(new Color(0, 0, 0)) // Warna QR (Hitam)
+            ->setBackgroundColor(new Color(255, 255, 255)); // Warna Background (Putih)
+
+        $result = $writer->write($qrCode);
+
+        $data['qr_code_base64'] = $result->getDataUri();
+        
         return view('App\modules\terapis\Views\views_detail', $data);
+    }
+
+    public function checkId()
+    {
+        $id = $this->request->getPost('terapis_id');
+        $currentId = $this->request->getPost('currentId');
+        $builder = $this->model_terapis; // Asumsi model sudah di-load di __construct
+        if (!empty($currentId)) {
+            $builder->where('terapis_id !=', $currentId);
+        }
+        $exists = $builder->where('terapis_id', $id)
+            ->countAllResults() > 0;
+        return $this->response->setJSON(['exists' => $exists]);
     }
 
     public function public_info($id)
@@ -89,7 +168,7 @@ class Terapis extends BaseController
     {
         $file = $this->request->getFile('foto');
         $tgl_kerja = $this->request->getPost('tgl_kerja');
-        
+
         $data = [
             'terapis_id'      => $this->request->getPost('terapis_id'),
             'nama'            => $this->request->getPost('nama'),
@@ -167,6 +246,22 @@ class Terapis extends BaseController
             }
             $this->model_terapis->delete($id);
             $this->session->setFlashdata('message', ['success', 'Data berhasil dihapus']);
+        }
+        return redirect()->to('terapis');
+    }
+
+    public function active($id)
+    {
+        if ($this->model_terapis->update($id, ['is_active' => 1])) {
+            $this->session->setFlashdata('message', ['success', 'Terapis berhasil diaktifkan']);
+        }
+        return redirect()->to('terapis');
+    }
+
+    public function nonActive($id)
+    {
+        if ($this->model_terapis->update($id, ['is_active' => 0])) {
+            $this->session->setFlashdata('message', ['success', 'Terapis berhasil dinonaktifkan']);
         }
         return redirect()->to('terapis');
     }
