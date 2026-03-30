@@ -144,7 +144,7 @@ $routes->group('whatsapp', ['namespace' => 'App\modules\whatsapp\Controllers'], 
     $routes->post('store', 'Whatsapp::store');
     $routes->post('edit/(:num)', 'Whatsapp::edit/$1');
     $routes->post('delete/(:num)', 'Whatsapp::delete/$1');
-    $routes->get('send_notif_patients/(:num)', 'Whatsapp::send_notif_patients/$1');
+    $routes->post('send_notif_patients/(:num)', 'Whatsapp::send_notif_patients/$1');
 });
 
 // History
@@ -199,11 +199,11 @@ $routes->group('users', ['namespace' => 'App\Modules\users\Controllers'], functi
     $routes->get('view_patient/(:num)', 'Users::view_patient/$1');
     $routes->post('fetch_patients', 'Users::fetch_patients');
     $routes->post('add_outside_patient', 'Users::add_outside_patient');
-
-    $routes->post('fetch_patients_luar', 'Users::fetch_patients_luar'); 
-    $routes->post('get_outside_patients_select', 'Users::get_outside_patients_select'); 
-    $routes->post('delete_outside_patient', 'Users::delete_outside_patient'); 
-
+    $routes->post('fetch_patients_luar', 'Users::fetch_patients_luar');
+    $routes->post('get_outside_patients_select', 'Users::get_outside_patients_select');
+    $routes->post('delete_outside_patient', 'Users::delete_outside_patient');
+    $routes->post('send_notif_patients/(:num)', 'Users::send_notif_patients/$1');
+    $routes->post('check_username_exists', 'Users::check_username_exists');
 });
 
 // Patients - Routes

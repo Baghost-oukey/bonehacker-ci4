@@ -3,8 +3,10 @@
 namespace App\modules\whatsapp\Controllers;
 
 use App\Controllers\BaseController;
+use App\modules\patients\Controllers\Patients;
 use App\modules\whatsapp\Models\MWhatsapp;
 use CodeIgniter\HTTP\ResponseInterface;
+use LDAP\Result;
 
 class Whatsapp extends BaseController
 {
@@ -88,20 +90,19 @@ class Whatsapp extends BaseController
     protected function _send_wa_post($phone, $message)
     {
         $config = $this->model_whatsapp->first();
-
         if (!$config) return false;
-
         $client = \Config\Services::curlrequest();
 
         try {
-            $response = $client->request('POST', $config->url_api, [
-                'form_params' => [
+            $response = $client->request('GET', $config->url_api, [
+                'query' => [
                     'instance_id' => $config->instance_id,
                     'token'       => $config->token,
                     'phone'       => $phone,
                     'message'     => $message
                 ],
-                'verify' => false
+                'verify' => false,
+                'http_errors' => false
             ]);
 
             return $response->getBody();
@@ -112,13 +113,22 @@ class Whatsapp extends BaseController
 
     public function send_notif_patients($id_patients)
     {
-        $patients = $this->db->table('patients')->getWhere(['id' => $id_patients])->getRow();
+        // $patients = $this->db->table('patients')->getWhere(['id' => $id_patients])->getRow();
+        $patients = $this->db->table('patients')->where('id', $id_patients)->get()->getRow();
         if (!$patients) {
             return $this->response->setJSON(['status' => 'error', 'message' => 'Data Pasien tidak ditemukan']);
         }
         $config = $this->model_whatsapp->first();
-        $message_users = str_replace('[nama]', $patients->nama, $config->message);
+        $namaPasien = $patients->name ?? $Patients->nama ?? 'Pasien';
+        $message_users = str_replace('[nama]', $namaPasien, $config->message);
         $result = $this->_send_wa_post($patients->phone, $message_users);
-        return $this->response->setJSON(['result' => $result]);
+        // return $this->response->setJSON(['result' => $result]);
+
+        return $this->response->setJSON([
+            'status' => 'success',
+            'massage' => 'Notifikasi Telah di kirimkan kepada ' .$namaPasien,
+            'detail' => $result,
+            'crsfHash' => csrf_hash()
+        ]);
     }
 }

@@ -9,7 +9,6 @@ class Dashboard extends BaseController
 {
     public function index()
     {
-        //
         if (!session()->get('isLogin')) {
             return redirect()->to(base_url('auth'));
         }

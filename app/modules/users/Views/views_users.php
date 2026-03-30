@@ -123,7 +123,7 @@
                     </div>
                     <div class="form-group" id="regionFieldEdit" style="display: none;">
                         <label>Wilayah</label>
-                        <select class="form-control select2" id="edit_regions" name="regions_patient[]" style="width:100%" multiple>
+                        <select class="form-control select2" id="edit_regions" name="regions_patient[]" style="width:100%" required>
                             <?php foreach ($regions as $region) : ?>
                                 <option value="<?= $region->id ?>"><?= $region->name ?></option>
                             <?php endforeach; ?>
@@ -147,7 +147,9 @@
         var table = $('#table-user').DataTable({
             processing: true,
             serverSide: true,
-            order: [[1, 'asc']],
+            order: [
+                [1, 'asc']
+            ],
             ajax: {
                 url: "<?= base_url('users/fetch'); ?>",
                 type: "POST",
@@ -173,7 +175,7 @@
                     data: "realname",
                     width: "25%"
                 },
-                
+
                 {
                     data: "username",
                     width: "15%"
@@ -228,10 +230,13 @@
         // Delete Handler (SweetAlert recommended)
         $(document).on('click', '.btn_delete', function() {
             const url = $(this).data('href');
-            swal({
+            Swal.fire({
                 title: "Konfirmasi Hapus",
                 text: "Apakah Anda yakin ingin menghapus user ini?",
                 icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Ya, Hapus",
+                confirmButtonText: "Tidak",
                 buttons: true,
                 dangerMode: true,
             }).then((willDelete) => {
@@ -244,15 +249,27 @@
             const username = $(this).val();
             if (username.length < 3) return;
 
+            if (username === '') {
+                $input.removeClass('is-invalid is-valid'); 
+                $errorLabel.text('').hide(); 
+                $('#submitBtnAdd').prop('disabled', false); 
+                return; 
+            }
+
             $.post("<?= base_url('users/check_username_exists') ?>", {
-                username: username
+                username: username,
+                "<?= csrf_token() ?>": typeof currentToken !== 'undefined' ? currentToken : "<?= csrf_hash() ?>"
             }, function(res) {
-                if (res.exists) {
-                    $('#username_add').addClass('is-invalid');
-                    $('#usernameError').text('Username sudah digunakan');
+                const errorLabel = $('#usernameError');
+                const inputField = $('#username_add');
+
+                if (res.exists === true || res.exists === "true") {
+                    inputField.addClass('is-invalid').removeClass('is-valid');
+                    errorLabel.text('Username sudah digunakan').css('color', 'red').show(); // Tambahkan .show()
                     $('#submitBtnAdd').prop('disabled', true);
                 } else {
-                    $('#username_add').removeClass('is-invalid');
+                    inputField.removeClass('is-invalid').addClass('is-valid');
+                    errorLabel.text('Username tersedia').css('color', 'green').show(); // Tambahkan .show()
                     $('#submitBtnAdd').prop('disabled', false);
                 }
             }, 'json');

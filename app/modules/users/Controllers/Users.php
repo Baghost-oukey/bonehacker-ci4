@@ -207,75 +207,87 @@ class Users extends BaseController
     public function fetch_patients()
     {
         $user_id = $this->request->getPost('user_id');
+        if (!$user_id) {
+            return $this->response->setJSON(['error' => 'Unauthorized access'])->setStatusCode(403);
+        }
         $queryBuilder = $this->model_users->get_patients_by_user_region($user_id);
-
         $datatables = new \Ngekoding\CodeIgniterDataTables\DataTables($queryBuilder, '4');
-        $start = $this->request->getPost('start') ?: 0;
+        $start = $this->request->getPost('start', FILTER_SANITIZE_NUMBER_INT) ?: 0;
+
+        // $datatables->only(['name', 'address']);
 
         $datatables->addColumn('no', function ($row) use (&$start) {
             return ++$start;
         });
 
-        // 1. Ambil data mentah dari library
-        $output = $datatables->generate();
-        $rawData = is_string($output) ? json_decode($output, true) : (array)$output;
-
-        // 2. Transformasi ke Objek Asli (stdClass)
-        $finalData = [];
-        if (isset($rawData['data']) && is_array($rawData['data'])) {
-            foreach ($rawData['data'] as $row) {
-                $obj = new \stdClass();
-                $obj->no      = (string) ($row[0] ?? '-');
-                $obj->nama    = (string) ($row[1] ?? '-');
-                $obj->gender  = ($row[2] === 'Man') ? 'Laki-Laki' : 'Perempuan';
-                $obj->age     = (string) ($row[3] ?? '-');
-                $obj->address = (string) ($row[4] ?? '-');
-                $obj->wilayah = (string) ($row[5] ?? '-');
-
-                $finalData[] = $obj;
-            }
-        }
-
-        return $this->response->setJSON([
-            'draw'            => intval($rawData['draw'] ?? 1),
-            'recordsTotal'    => intval($rawData['recordsTotal'] ?? 0),
-            'recordsFiltered' => intval($rawData['recordsFiltered'] ?? 0),
-            'data'            => $finalData, // Data sudah berlabel untuk JS kamu
-            'csrfHash'        => csrf_hash()
-        ]);
-    }
-
-    public function fetch_patients_luar()
-    {
-        $user_id = $this->request->getPost('user_id');
-        $queryBuilder = $this->model_users->get_other_patients($user_id);
-
-        // Jika library Ngekoding-mu sudah terinstall untuk CI4
-        $datatables = new \Ngekoding\CodeIgniterDataTables\DataTables($queryBuilder, '4');
-
-        $start = $this->request->getPost('start') ?: 0;
-
-        $datatables->addColumn('no', function ($row) use (&$start) {
-            return ++$start;
+        $datatables->addColumn('nama', function ($row) {
+            return esc($row->nama);
         });
 
         $datatables->addColumn('gender', function ($row) {
             return ($row->gender === 'Man') ? 'Laki-Laki' : 'Perempuan';
         });
 
-        $datatables->addColumn('aksi', function ($row) use ($user_id) {
-            return '
-                <button class="btn btn-danger btn-sm btn-delete-patient mr-1" data-patient-id="' . $row->id . '" data-user-id="' . $user_id . '"><i class="fas fa-trash"></i></button>
-                <button class="btn btn-success btn-sm btn-send-wa" data-patient-id="' . $row->id . '"><i class="fab fa-whatsapp"></i></button>
-            ';
+        $datatables->addColumn('address', function ($row) {
+            return esc($row->address ?? '-');
         });
 
+        $datatables->asObject();
         $output = $datatables->generate();
-        $data = is_string($output) ? json_decode($output, true) : (array)$output;
-        $data['csrfHash'] = csrf_hash();
 
-        return $this->response->setJSON($data);
+        $rawData = is_string($output) ? json_decode($output, true) : (array)$output;
+
+        return $this->response->setJSON(array_merge($rawData, [
+            'csrfHash' => csrf_hash()
+        ]));
     }
+
+    public function fetch_patients_luar()
+    {
+        $user_id = $this->request->getPost('user_id');
+        if (!$user_id) {
+            return $this->response->setJSON(['error' => 'invalid User Id'])->setStatusCode(403);
+        }
+
+        $queryBuilder = $this->model_users->get_other_patients($user_id);
+        $datatables = new \Ngekoding\CodeIgniterDataTables\DataTables($queryBuilder, '4');
+
+        $start = $this->request->getPost('start', FILTER_SANITIZE_NUMBER_INT) ?: 0;
+
+        $datatables->addColumn('no', function ($row) use (&$start) {
+            return ++$start;
+        });
+
+        $datatables->addColumn('nama', function ($row) {
+            return esc($row->nama); // Proteksi XSS
+        });
+
+        $datatables->addColumn('gender_label', function ($row) {
+            return ($row->gender === 'Man') ? 'Laki-Laki' : 'Perempuan';
+        });
+
+        $datatables->addColumn('address', function ($row) {
+            return esc($row->address ?? '-'); // Proteksi XSS
+        });
+
+        $datatables->addColumn('aksi', function ($row) use ($user_id) {
+            return '
+            <button class="btn btn-danger btn-sm btn-delete-patient mr-1" data-patient-id="' . (int)$row->id . '" data-user-id="' . (int)$user_id . '"><i class="fas fa-trash"></i></button>
+            <button class="btn btn-success btn-sm btn-send-wa" data-patient-id="' . (int)$row->id . '"><i class="fab fa-whatsapp"></i></button>
+        ';
+        });
+
+        $datatables->asObject();
+        $output = $datatables->generate();
+
+        $rawData = is_string($output) ? json_decode($output, true) : (array)$output;
+        $response = is_array($rawData) ? $rawData : [];
+
+        return $this->response->setJSON(array_merge($response, [
+            'csrfHash' => csrf_hash()
+        ]));
+    }
+
 
     public function add_outside_patient()
     {
@@ -284,8 +296,6 @@ class Users extends BaseController
 
         $user = $this->model_users->find($user_id);
         $user_regions = json_decode($user->regions_patient, true) ?: [];
-
-        // Ambil region_id pasien (bisa via model patients atau db query langsung)
         $db = \Config\Database::connect();
         $patient = $db->table('patients')->select('region_id')->where('id', $patient_id)->get()->getRow();
 
@@ -300,7 +310,29 @@ class Users extends BaseController
         return redirect()->to('users/view_patient/' . $user_id);
     }
 
-    // --- FITUR EDIT AKUN SENDIRI (AJAX) ---
+    public function get_outside_patients_select()
+    {
+        $user_id = $this->request->getPost('user_id');
+        $search_term = $this->request->getPost('searchTerm');
+
+        $patients = $this->model_users->search_outside_patients($user_id, $search_term, 20);
+
+        $data = [];
+        foreach ($patients as $patient) {
+            $gender = ($patient->gender === 'Man') ? 'Laki-Laki' : 'Perempuan';
+            $data[] = [
+                'id'      => $patient->id,
+                'text'    => esc($patient->nama . ' - ' . $gender . ' - ' . $patient->age . ' - ' . $patient->wilayah),
+                'nama'    => esc($patient->nama),
+                'gender'  => $gender,
+                'age'     => $patient->age,
+                'address' => esc($patient->address),
+                'wilayah' => esc($patient->wilayah)
+            ];
+        }
+
+        return $this->response->setJSON($data);
+    }
 
     public function edit_account()
     {
@@ -315,8 +347,6 @@ class Users extends BaseController
         if (!$id) return $this->response->setJSON(['status' => 'error', 'message' => 'Sesi berakhir']);
 
         $post = $this->request->getPost();
-
-        // Cek duplikasi username (kecuali user sendiri)
         $existing = $this->model_users->where('username', $post['username'])->where('id !=', $id)->first();
         if ($existing) {
             return $this->response->setJSON(['status' => 'error', 'message' => 'Username sudah digunakan']);
@@ -332,11 +362,71 @@ class Users extends BaseController
         }
 
         if ($this->model_users->update($id, $update_data)) {
-            // Update session realname jika berubah
             $this->session->set('realname', $post['realname']);
             return $this->response->setJSON(['status' => 'success', 'message' => 'Akun diperbarui', 'realname' => $post['realname']]);
         }
 
         return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal update']);
+    }
+
+    public function delete_outside_patient()
+    {
+        $patient_id = $this->request->getPost('patient_id');
+        $user_id = $this->request->getPost('user_id');
+        $user = $this->model_users->find($user_id);
+        if (!$user) return $this->response->setJSON(['success' => false]);
+        $other_patients = json_decode($user->other_patient, true) ?: [];
+        if (($key = array_search($patient_id, $other_patients)) !== false) {
+            unset($other_patients[$key]);
+            $other_patients = array_values($other_patients); 
+            $updated = $this->model_users->update($user_id, [
+                'other_patient' => json_encode($other_patients)
+            ]);
+
+            if ($updated) {
+                session()->setFlashdata('message', ['success', 'Data pasien luar berhasil dihapus']);
+            }
+            return $this->response->setJSON(['success' => (bool)$updated]);
+        }
+
+        return $this->response->setJSON(['success' => false, 'message' => 'Data tidak ditemukan']);
+    }
+
+    public function check_username_exists()
+    {
+        $username = $this->request->getPost('username');
+        $exists = $this->model_users->where('username', $username)->countAllResults() > 0;
+        return $this->response->setJSON(['exists' => $exists]);
+    }
+
+    public function check_username_exists_edit()
+    {
+        $username = $this->request->getPost('username');
+        $user_id = $this->request->getPost('user_id');
+        $exists = $this->model_users->where('username', $username)
+            ->where('id !=', $user_id)
+            ->countAllResults() > 0;
+        return $this->response->setJSON(['exists' => $exists]);
+    }
+
+    public function send_notif_patients($id)
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(403)->setJSON(['message' => 'Forbidden']);
+        }
+
+        $db = \Config\Database::connect();
+        $patient = $db->table('patients')->where('id', $id)->get()->getRow();
+
+        if (!$patient) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Pasien tidak ditemukan']);
+        }
+        $is_sent = true;
+
+        return $this->response->setJSON([
+            'status'   => $is_sent ? 'success' : 'error',
+            'message'  => $is_sent ? 'Notifikasi berhasil dikirim ke ' . esc($patient->nama) : 'Gagal mengirim.',
+            'csrfHash' => csrf_hash()
+        ]);
     }
 }

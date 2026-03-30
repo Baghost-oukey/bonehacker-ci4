@@ -23,9 +23,7 @@
                                             <button type="button" class="btn btn-sm btn-primary mr-2" onclick="editGreeting(<?= $index ?>, '<?= addslashes((string)esc($greeting)) ?>')">
                                                 <i class="fas fa-edit"></i> Edit
                                             </button>
-                                            <i class="fas fa-edit"></i> Edit
-                                            </button>
-                                            <a href="<?= base_url('greeting/delete/' . $index) ?>" class="btn btn-sm btn-danger" onclick="return confirm('Apakah Anda yakin ingin menghapus salam ini?')">
+                                            <a href="<?= base_url('greeting/delete/' . $index) ?>" class="btn btn-sm btn-danger">
                                                 <i class="fas fa-trash"></i> Delete
                                             </a>
                                         </div>

@@ -126,30 +126,77 @@
     $("#table-medhis").dataTable({
         "processing": true,
         "serverSide": true,
-        "columns": [
-            { "data": "no", "width": "5%", "sortable": false, "searchable": false },
-            { "data": "nama", "width": "24.5%", "sortable": true },
-            { "data": "deskripsi", "width": "45.5%", "sortable": true },
-            { "data": "jumlah", "width": "10.5%", "sortable": false, "searchable": false },
-            { "data": "action", "class": "text-center", "width": "10%", "sortable": false, "searchable": false },
+        "columns": [{
+                "data": "no",
+                "width": "5%",
+                "sortable": false,
+                "searchable": false
+            },
+            {
+                "data": "nama",
+                "width": "24.5%",
+                "sortable": true
+            },
+            {
+                "data": "deskripsi",
+                "width": "45.5%",
+                "sortable": true
+            },
+            {
+                "data": "jumlah",
+                "width": "10.5%",
+                "sortable": false,
+                "searchable": false
+            },
+            {
+                "data": "action",
+                "class": "text-center",
+                "width": "10%",
+                "sortable": false,
+                "searchable": false
+            },
         ],
         "order": [],
         "ajax": {
             "url": "<?= site_url('medis/fetch') ?>",
-            "type": "POST"
+            "type": "POST",
+            "data": function(d) {
+                d.<?= csrf_token() ?> = "<?= csrf_hash() ?>";
+            }
         },
     });
 
     // Event button edit
     $(document).on('click', '.btn_edit', function() {
-        const href = $(this).data('href');
-        const name = $(this).data('name');
-        const deskripsi = $(this).data('description');
+        var button = $(this);
+        var Id = button.data('id');
+        var Name = button.data('name');
+        var Description = button.data('description');
+        var href = button.data('href');
 
-        $("#modal_edit_medhis").modal('show');
-        $("#modal_edit_medhis #edit_name").val(name);
-        $("#modal_edit_medhis #edit_deskripsi").val(deskripsi);
-        $("#modal_edit_medhis form").attr("action", href);
+        if (Id && Name) {
+            // 1. Isi data ke input (HAPUS resetForm dari sini!)
+            $('#edit_name').val(Name).removeClass('is-invalid');
+            $('#edit_deskripsi').val(Description);
+            $('#edit_nameError').text('');
+
+            // 2. Pasang URL update ke form
+            $('#editMedhisForm').attr('action', href);
+
+            // 3. Simpan nilai asli buat validasi
+            originalName = Name;
+            originalId = Id;
+            originalDescription = Description;
+
+            // 4. Matikan tombol simpan dulu
+            $('#edit_submitBtn').prop('disabled', true);
+
+            // 5. Tampilkan modalnya
+            $("#modal_edit_medhis").modal('show');
+
+            // 6. Jalankan validasi (Pastikan fungsi ini sudah window.validateInput atau ada di luar ready)
+            validateInput('#edit_name', '#edit_submitBtn', '#edit_nameError', originalName, originalId, '#edit_deskripsi', originalDescription);
+        }
     });
 
     // Event button delete
@@ -167,7 +214,8 @@
         let ajaxRequest;
         let isNameInvalid = false;
 
-        function validateInput(inputId, submitBtnId, nameErrorId, originalValue, originalId, descriptionInputId, originalDescription) {
+       // TAMBAHKAN window. DI DEPANNYA:
+window.validateInput = function(inputId, submitBtnId, nameErrorId, originalValue, originalId, descriptionInputId, originalDescription) {
             let debounceTimer;
 
             $(inputId).on('input', function() {
@@ -186,12 +234,17 @@
                         return;
                     }
 
-                    if (ajaxRequest) { ajaxRequest.abort(); }
+                    if (ajaxRequest) {
+                        ajaxRequest.abort();
+                    }
 
                     ajaxRequest = $.ajax({
                         url: '<?= base_url('medis/check_name_exists') ?>',
                         type: 'POST',
-                        data: { name: name, id: originalId },
+                        data: {
+                            name: name,
+                            id: originalId
+                        },
                         dataType: 'json',
                         success: function(response) {
                             if (response.exists) {
@@ -246,25 +299,7 @@
             validateInput('#add_name', '#add_submitBtn', '#add_nameError', '', '', '#add_deskripsi', '');
         });
 
-        $(document).on('click', '.btn_edit', function(event) {
-            var button = $(this);
-            var Id = button.data('id');
-            var Name = button.data('name');
-            var Description = button.data('description');
 
-            if (Id && Name) {
-                $('#edit_name').val(Name);
-                $('#edit_deskripsi').val(Description);
-
-                originalName = Name;
-                originalId = Id;
-                originalDescription = Description;
-
-                resetForm('#edit_name', '#edit_nameError', '#edit_submitBtn');
-                $('#edit_submitBtn').prop('disabled', true); // Default disable sampai ada perubahan
-                validateInput('#edit_name', '#edit_submitBtn', '#edit_nameError', originalName, originalId, '#edit_deskripsi', originalDescription);
-            }
-        });
     });
 </script>
 <?= $this->endSection() ?>

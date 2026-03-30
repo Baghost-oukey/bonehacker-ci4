@@ -102,14 +102,20 @@ class Jabatan extends BaseController
         return redirect()->to('jabatan');
     }
 
-    public function destroy($id)
-    {
-        if ($this->model_jabatan->delete($id)) {
-            $this->session->setFlashdata('message', ['success', 'Data berhasil dihapus']);
-        } else {
-            $this->session->setFlashdata('message', ['danger', 'Data gagal dihapus']);
-        }
-
-        return redirect()->to('jabatan');
+   public function destroy($id)
+{
+    if ($this->model_jabatan->delete($id)) {
+        return $this->response->setJSON([
+            'status'  => 'success',
+            'message' => 'Data jabatan berhasil dihapus!'
+        ]);
+    } else {
+        return $this->response->setJSON([
+            'status'  => 'error',
+            'message' => 'Gagal menghapus data jabatan.'
+        ]);
     }
+
+    return redirect()->to('jabatan');
+}
 }

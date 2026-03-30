@@ -329,11 +329,11 @@
             $('#provinsi_nama').val(item.kecamatan && item.kecamatan.kabupaten && item.kecamatan.kabupaten.provinsi ? item.kecamatan.kabupaten.provinsi.provNama : '');
         });
 
-        // DataTable Initialization
         var buttonsConfig = [];
+
         <?php if (isset($role) && $role == 'superadmin'): ?>
             buttonsConfig.push({
-                className: 'btn btn-danger btn-sm',
+                className: 'btn btn-danger btn-sm mr-1',
                 text: '<i class="fas fa-file-pdf"></i> PDF',
                 action: function(e, dt, node, config) {
                     var regionId = $('#region').val();
@@ -344,8 +344,9 @@
                 className: 'btn btn-success btn-sm',
                 text: '<i class="fas fa-file-excel"></i> Excel',
                 action: function(e, dt, node, config) {
-                    var regionId = $('#region').val();
-                    window.location.href = '<?= site_url('patient/export') ?>?region_id=' + regionId;
+                    var regionId = $('#region').val() || '';
+                    var url = '<?= site_url('patient/export') ?>?region_id=' + regionId;
+                    window.open(url, '_blank');
                 }
             });
         <?php endif; ?>

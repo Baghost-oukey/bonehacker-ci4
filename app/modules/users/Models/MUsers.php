@@ -113,7 +113,7 @@ class MUsers extends Model
 
         if ($user->role !== 'superadmin') {
             if (empty($region_ids)) {
-                $builder->where('1=0'); // Force empty result
+                $builder->where('1=0'); 
             } else {
                 $builder->whereIn('p.region_id', $region_ids);
             }
@@ -145,8 +145,6 @@ class MUsers extends Model
         $builder->select('name');
         $builder->whereIn('id', $region_ids);
         $query = $builder->get()->getResultArray();
-
-        // Mengambil kolom 'name' saja dari hasil query
         return array_column($query, 'name');
     }
 
@@ -164,7 +162,7 @@ class MUsers extends Model
         $builder->where('p.is_delete', 0);
 
         if (empty($other_patients_ids)) {
-            $builder->where('1=0'); // Pastikan hasil kosong jika tidak ada ID
+            $builder->where('1=0'); 
         } else {
             $builder->whereIn('p.id', $other_patients_ids);
         }
@@ -172,7 +170,7 @@ class MUsers extends Model
         return $export ? $builder->get()->getResult() : $builder;
     }
 
-    public function search_outside_patients($user_id, $search_term)
+    public function search_outside_patients($user_id, $search_term, $limit = 20)
     {
         $user = $this->show($user_id);
         $region_ids = json_decode($user->regions_patient, true) ?: [];
@@ -201,6 +199,6 @@ class MUsers extends Model
                 ->groupEnd();
         }
 
-        return $builder->get()->getResult();
+        return $builder->limit($limit)->get()->getResult();
     }
 }

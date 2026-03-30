@@ -83,12 +83,15 @@
                     <div class="form-group">
                         <label>Cari Pasien (Nama/NIK)</label>
                         <select id="outsidePatientSelect" name="patient_id" class="form-control select2" required style="width:100%">
-                            <option value="">PILIH PASIEN</option>
+                            <option value="">pilih pasien luar</option>
                         </select>
                     </div>
                     <div id="patientInfo" class="p-3 bg-light rounded" style="display: none; border: 1px solid #e3e3e3;">
                         <h6 class="text-primary border-bottom pb-2">Detail Pasien</h6>
                         <div class="row">
+                            <div class="col-6"><small class="text-muted">Nama Pasien Luar</small>
+                        <p id="pNama" class="mb-2">-</p>
+                        </div>
                             <div class="col-6"><small class="text-muted">Gender:</small>
                                 <p id="pGender" class="mb-2">-</p>
                             </div>
@@ -130,7 +133,6 @@
                     d["<?= csrf_token() ?>"] = typeof currentToken !== 'undefined' ? currentToken : "<?= csrf_hash() ?>";
                 },
                 dataSrc: function(json) {
-                    // UPDATE TOKEN SETIAP KALI REQUEST BERHASIL
                     currentToken = json.csrfHash;
                     return json.data;
                 }
@@ -138,28 +140,35 @@
             columns: [{
                     data: "no",
                     width: "5%",
-                    sortable: false
+                    sortable: false,
+                    searchable: false
                 },
                 {
-                    data: "nama"
+                    data: "nama",
+                    searchable: true
                 },
                 {
-                    data: "gender"
+                    data: "gender",
+                    searchable: false
                 },
                 {
-                    data: "age"
+                    data: "age",
+                    searchable: false
                 },
                 {
-                    data: "address"
+                    data: "address",
+                    searchable: false
+                    
                 },
                 {
-                    data: "wilayah"
+                    data: "wilayah",
+                    searchable: false
                 }
             ],
-       
-
+            
+            
         });
-
+        
         // 2. Table Pasien Luar
         const tableLuar = $('#table-patients-luar').DataTable({
             processing: true,
@@ -169,67 +178,79 @@
                 type: "POST",
                 data: function(d) {
                     d.user_id = userId;
-                    d.<?= csrf_token() ?> = "<?= csrf_hash() ?>"; // TAMBAHKAN INI
+                    d.<?= csrf_token() ?> = "<?= csrf_hash() ?>";
                 }
             },
             columns: [{
-                    data: "no",
-                    width: "5%",
-                    sortable: false
-                },
-                {
-                    data: "nama"
-                },
-                {
-                    data: "gender"
-                },
-                {
-                    data: "age"
-                },
-                {
-                    data: "address"
-                },
-                {
-                    data: "wilayah"
-                },
-                {
-                    data: "aksi",
-                    class: "text-center",
-                    sortable: false
+                data: "no",
+                width: "5%",
+                sortable: false,
+                searchable: false
+            },
+            {
+                data: "nama",
+                searchable: true
+            },
+            {
+                data: "gender",
+                searchable: false
+            },
+            {
+                data: "age",
+                searchable: false
+            },
+            {
+                data: "address",
+                searchable: false
+            },
+            {
+                data: "wilayah",
+                searchable: false
+            },
+            {
+                data: "aksi",
+                class: "text-center",
+                sortable: false,
+                searchable: false
                 }
             ]
         });
 
-        // 3. Select2 Remote Data (Cari Pasien Luar)
         $('#outsidePatientSelect').select2({
             dropdownParent: $('#modalAddOutside'),
+            minimumInputLength: 1,
             ajax: {
                 url: '<?= base_url('users/get_outside_patients_select'); ?>',
                 type: 'POST',
                 dataType: 'json',
-                delay: 300,
+                delay: 500,
+                cache: true,
                 data: (params) => ({
                     searchTerm: params.term,
                     user_id: userId,
-                    "<?= csrf_token() ?>": "<?= csrf_hash() ?>"
+                    "<?= csrf_token() ?>": typeof currentToken !== 'undefined' ? currentToken : "<?= csrf_hash() ?>"
                 }),
-                processResults: (data) => ({
-                    results: $.map(data, (item) => ({
-                        id: item.id,
-                        text: item.text,
-                        nama: item.nama,
-                        gender: item.gender,
-                        age: item.age,
-                        address: item.address,
-                        wilayah: item.wilayah
-                    }))
-                })
+                processResults: function(data) {
+                    return {
+                        results: $.map(data, (item) => ({
+                            id: item.id,
+                            text: item.text,
+                            nama: item.nama,
+                            gender: item.gender,
+                            age: item.age,
+                            address: item.address,
+                            wilayah: item.wilayah
+                        }))
+
+                    }
+                }
             }
         });
 
         // Event saat pasien dipilih dari Select2
         $('#outsidePatientSelect').on('select2:select', function(e) {
             const d = e.params.data;
+            $('#pNama').text(d.nama);
             $('#pGender').text(d.gender);
             $('#pAge').text(d.age);
             $('#pAddress').text(d.address);
