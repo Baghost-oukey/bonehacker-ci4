@@ -852,6 +852,7 @@
         </div>
     </div>
 </div>
+
 <div class="row">
     <div class="col-12">
         <div class="card">
@@ -950,21 +951,21 @@
 
     // Ini di nyalakan kalo mau pakai tag 
 
-    // var complaintTagify, medhisTagify, resultTagify;
-    // $(document).ready(function() {
-    //     // Inisialisasi
-    //     complaintTagify = new Tagify(document.querySelector('textarea[name="complaint"]'), {
-    //         originalInputValueFormat: valuesArr => valuesArr.map(item => item.value).join(',')
-    //     });
+    var complaintTagify, medhisTagify, resultTagify;
+    $(document).ready(function() {
+        // Inisialisasi
+        complaintTagify = new Tagify(document.querySelector('textarea[name="complaint"]'), {
+            originalInputValueFormat: valuesArr => valuesArr.map(item => item.value).join(',')
+        });
 
-    //     medhisTagify = new Tagify(document.querySelector('textarea[name="medhis"]'), {
-    //         originalInputValueFormat: valuesArr => valuesArr.map(item => item.value).join(',')
-    //     });
+        medhisTagify = new Tagify(document.querySelector('textarea[name="medhis"]'), {
+            originalInputValueFormat: valuesArr => valuesArr.map(item => item.value).join(',')
+        });
 
-    //     resultTagify = new Tagify(document.querySelector('textarea[name="result"]'), {
-    //         originalInputValueFormat: valuesArr => valuesArr.map(item => item.value).join(',')
-    //     });
-    // });
+        resultTagify = new Tagify(document.querySelector('textarea[name="result"]'), {
+            originalInputValueFormat: valuesArr => valuesArr.map(item => item.value).join(',')
+        });
+    });
 
     function formatDate(dateTime) {
         const date = new Date(dateTime);
@@ -990,7 +991,11 @@
         $('#exampleModal .modal-title').text('Tambah Riwayat Pasien');
         // $('#exampleModal form').attr('action', '{{ site_url('history/store') }}');
         $('#exampleModal form').attr('action', '<?= site_url('history/store') ?>');
-        $('#exampleModal form')[0].reset();
+        // $('#exampleModal form')[0].reset();
+        var targetForm = $('#exampleModal form');
+        if (targetForm.length > 0) {
+            targetForm[0].reset();
+        }
         document.getElementById("terapi-kejantanan").style.display = "block";
         document.getElementById("kejantanan").checked = false;
 
@@ -2190,7 +2195,7 @@
 
                         } else {
                             // Handle failure
-                           alert('Data gagal dihapus: ' + (response.message || 'Error server'));
+                            alert('Data gagal dihapus: ' + (response.message || 'Error server'));
                         }
                     },
                     error: function() {

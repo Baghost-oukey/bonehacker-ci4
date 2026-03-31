@@ -48,8 +48,8 @@
                                         <th>Alamat</th>
                                         <th>No WA</th>
                                         <th>Status</th>
-                                        <?php if(session()->get('role') === 'superadmin') :?>
-                                        <th>Proses</th>
+                                        <?php if (session()->get('role') === 'superadmin') : ?>
+                                            <th>Proses</th>
                                         <?php else :  ?>
                                             <th>Keterangan</th>
                                         <?php endif;  ?>
@@ -298,7 +298,7 @@
                 url: "<?= site_url('antrean/fetchDataTable') ?>",
                 type: "POST",
                 data: function(d) {
-                    $.extend(d, getCsrfData());
+                    d[$('meta[name="csrf-token-name"]').attr('content')] = $('meta[name="csrf-token-hash"]').attr('content');
                     d.region = $('#region_id').val() || '';
                     d.start_date = $('#startDate').val();
                     d.end_date = $('#endDate').val();
@@ -367,8 +367,8 @@
         $('#addPatientQueueModal').on('shown.bs.modal', function() {
             if (!$.fn.DataTable.isDataTable('#table-2')) {
                 table2 = $('#table-2').DataTable({
-                    dom: '<"top"lBf>rt<"bottom"ip><"clear">', 
-                    buttons: buttonsConfig, 
+                    dom: '<"top"lBf>rt<"bottom"ip><"clear">',
+                    buttons: buttonsConfig,
                     language: {
                         searchPlaceholder: 'ID Pasien/No.Telp/ Nama',
                         processing: '<div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div>'
@@ -380,6 +380,9 @@
                         url: "<?= site_url('antrean/fetchPatientDataTables') ?>",
                         type: "POST",
                         data: function(d) {
+                            var csrfName = $('meta[name="csrf-token-name"]').attr('content');
+                            var csrfHash = $('meta[name="csrf-token-hash"]').attr('content');
+                            d[csrfHash] = csrfHash;
                             $.extend(d, getCsrfData());
                             d.region = $('#region_id').val() || '';
                         }
@@ -389,7 +392,7 @@
                             class: "text-center",
                             width: "7%",
                             sortable: true,
-                            searchable: true
+                            searchable: false
 
                         },
                         {
@@ -409,6 +412,7 @@
 
                         {
                             data: 'description',
+                            searchable: false
                         },
                         {
                             data: 'action',
@@ -468,6 +472,11 @@
             dropdownParent: $("#exampleModal"),
             ajax: {
                 url: 'https://wilayah.smartsociety.id/public/desa',
+                data: function(params) {
+                    return {
+                        search: params.term
+                    }
+                },
                 dataType: 'json',
                 delay: 250,
                 data: function(params) {

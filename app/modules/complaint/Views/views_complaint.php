@@ -132,7 +132,7 @@
                 "url": "<?= site_url('complaint/fetch') ?>",
                 "type": "POST",
                 "data": function(d){
-                    d.<?= csrf_token() ?> = "<?= csrf_hash() ?>";
+                 d["<?= csrf_token() ?>"] = $('meta[name="csrf-token-hash"]').attr('content');
                 }
             },
             "columns": [{

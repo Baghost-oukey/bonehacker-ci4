@@ -21,7 +21,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css">
     <!-- Buat Aktifkan Lib notif yang modern -->
     <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/css/iziToast.min.css"> -->
-     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
     <style>
         .dataTables_wrapper .dataTables_filter {
@@ -57,7 +57,7 @@
 
     <script src="<?= base_url('assets/modules/jquery.min.js') ?>"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script src="<?= base_url('assets/modules/bootstrap/js/bootstrap.min.js') ?>"></script>
+    <script src="<?= base_url('assets/modules/bootstrap/js/bootstrap.bundle.min.js') ?>"></script>
     <script src="<?= base_url('assets/modules/nicescroll/jquery.nicescroll.min.js') ?>"></script>
     <script src="<?= base_url('assets/js/stisla.js') ?>"></script>
     <script src="<?= base_url('assets/modules/datatables/datatables.min.js') ?>"></script>
@@ -70,8 +70,8 @@
     <!-- ini juga kalo mau pakai notif yang modern -->
     <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/js/iziToast.min.js"></script> -->
     <!-- Kalo mau pakai tag diaktifkan -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.polyfills.min.js"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.polyfills.min.js"></script>
 
     <script>
         (function() {
@@ -83,9 +83,19 @@
             function updateAjaxSetup(newHash) {
                 if (window.jQuery && csrfName && newHash) {
                     $.ajaxSetup({
-                        data: {
-                            [csrfName]: newHash
-                        }
+                        beforeSend: function(xhr, settings) {
+                            var isInternal = !(/^https?:\/\//i.test(settings.url)) || settings.url.indexOf(window.location.origin) === 0;
+                            if (isInternal) {
+                                xhr.setRequestHeader('X-CSRF-TOKEN', newHash);
+                                if (settings.type === 'POST') {
+                                    if (typeof settings.data === 'string' && settings.data.indexOf(csrfName) === -1) {
+                                        settings.data += (settings.data ? '&' : '') + csrfName + '=' + newHash;
+                                    } else if (typeof settings.data === 'object') {
+                                        settings.data[csrfName] = newHash;
+                                    }
+                                }
+                            }
+                        },
                     });
                     var hashField = document.querySelector('meta[name="csrf-token-hash"]');
                     if (hashField) hashField.setAttribute('content', newHash);
@@ -103,6 +113,44 @@
                 }
             });
         })();
+
+        function previewFiles(input) {
+            const previewContainer = document.querySelector('#preview-container') ||
+                document.querySelector('#filePreview');
+
+            if (!previewContainer) {
+                console.warn("[Bonehacker] Target preview container (id='preview-container') tidak ditemukan di HTML.");
+                return;
+            }
+
+            const oldImages = previewContainer.querySelectorAll('img[data-blob]');
+            oldImages.forEach(img => URL.revokeObjectURL(img.src));
+            previewContainer.innerHTML = '';
+
+            const files = input.files;
+            if (!files || files.length === 0) return;
+            const fragment = document.createDocumentFragment();
+
+            Array.from(files).forEach(file => {
+                // Validasi tipe file (Security Check)
+                if (/\.(jpe?g|png|gif|webp)$/i.test(file.name)) {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'position-relative d-inline-block mr-2 mb-2';
+
+                    const img = document.createElement('img');
+                    img.src = URL.createObjectURL(file);
+                    img.style.height = "100px";
+                    img.style.objectFit = "cover";
+                    img.className = 'img-thumbnail shadow-sm';
+                    img.setAttribute('data-blob', 'true');
+
+                    wrapper.appendChild(img);
+                    fragment.appendChild(wrapper);
+                }
+            });
+
+            previewContainer.appendChild(fragment);
+        }
     </script>
 
     <?php if (session()->has('message')): ?>

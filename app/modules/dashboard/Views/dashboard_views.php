@@ -210,8 +210,8 @@
                     <div class="form-group">
                         <label>Upload Files & Pictures</label>
                         <input type="file" class="form-control" name="userfiles[]" id="userfiles" multiple
-                            onchange="previewFiles()">
-                        <div id="file-previews" class="mt-3"></div>
+                            onchange="previewFiles(this)">
+                        <div id="preview-container" class="mt-3"></div>
                     </div>
 
                     <div class="form-group">
