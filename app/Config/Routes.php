@@ -217,6 +217,7 @@ $routes->group('patient', ['namespace' => 'App\Modules\patients\Controllers'], f
     $routes->post('store', 'Patients::store');
     $routes->post('update', 'Patients::update');
     $routes->post('update/(:any)', 'Patients::update/$1');
+    $routes->post('update_files', 'Patients::update_files');
 
     // Delete/Hapus
     $routes->post('destroy/(:any)', 'Patients::destroy/$1');

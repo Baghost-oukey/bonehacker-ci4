@@ -1,7 +1,7 @@
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h4 class="mb-0">Biodata</h4>
-        <button type="submit" class="btn btn-success">Simpan Perubahan</button>
+        <!-- <button type="submit" class="btn btn-success">Simpan Perubahan</button> -->
     </div>
     <div class="card-body">
 

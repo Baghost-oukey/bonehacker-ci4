@@ -33,30 +33,66 @@ class Auth extends BaseController
 
     public function authValidate(): RedirectResponse
     {
-        $username = $this->request->getPost('username');
-        $password = $this->request->getPost('password');
+        // Lama
+        // $username = $this->request->getPost('username');
+        // $password = $this->request->getPost('password');
 
-        $user = $this->authModel->verifyLogin((string) $username, (string)$password);
+        $username = (string)$this->request->getPost('username');
+        $password = (string)$this->request->getPost('password');
 
+        // Lama
+        // $user = $this->authModel->verifyLogin((string) $username, (string)$password);
+        $user = $this->authModel->where('username', $username)->first();
+
+        // Lama
+        // if ($user) {
+        //     $sessionData = [
+        //         'isLogin'         => true,
+        //         'userId'          => $user->id,
+        //         'realname'        => $user->realname,
+        //         'role'            => $user->role,
+        //         'regions_patient' => $user->regions_patient,
+        //     ];
+        //     session()->set($sessionData);
+
+        //     session()->regenerate();
+
+        //     return redirect()->to(base_url('beranda_views'));
+        // } else {
+        //     $params = ['1', 'error', 'Nama pengguna dan kata sandi tidak sesuai', ''];
+        //     session()->setFlashdata('pesan', $params);
+
+        //     return redirect()->to(base_url('auth'));
+        // }
         if ($user) {
-            $sessionData = [
-                'isLogin'         => true,
-                'userId'          => $user->id,
-                'realname'        => $user->realname,
-                'role'            => $user->role,
-                'regions_patient' => $user->regions_patient,
-            ];
-            session()->set($sessionData);
+            $isPasswordCorrect = false;
+            if (password_verify($password, $user->password)) {
+                $isPasswordCorrect = true;
+            } elseif (strlen($user->password) === 32 && md5($password) === $user->password) {
+                $isPasswordCorrect = true;
 
-            session()->regenerate();
+                $newHash = password_hash($password, PASSWORD_DEFAULT);
+                $this->authModel->update($user->id, ['password' => $newHash]);
+            }
 
-            return redirect()->to(base_url('beranda_views'));
-        } else {
-            $params = ['1', 'error', 'Nama pengguna dan kata sandi tidak sesuai', ''];
-            session()->setFlashdata('pesan', $params);
+            if ($isPasswordCorrect) {
+                $sessionData = [
+                    'isLogin'         => true,
+                    'userId'          => $user->id,
+                    'realname'        => $user->realname,
+                    'role'            => $user->role,
+                    'regions_patient' => $user->regions_patient,
+                ];
+                session()->set($sessionData);
+                session()->regenerate();
 
-            return redirect()->to(base_url('auth'));
+                return redirect()->to(base_url('beranda_views'));
+            }
         }
+
+        $params = ['1', 'error', 'Nama pengguna dan kata sandi tidak sesuai', ''];
+        session()->setFlashdata('pesan', $params);
+        return redirect()->to(base_url('auth'));
     }
 
     public function destroy(): RedirectResponse

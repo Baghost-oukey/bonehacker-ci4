@@ -391,7 +391,8 @@ class Patients extends BaseController
                         $newName = $file->getRandomName();
 
                         if ($file->move(FCPATH . 'patient_file', $newName)) {
-                            $new_file_urls[] = base_url('patient_file/' . $newName);
+                            $new_file_urls[] = $newName;
+                            // $new_file_urls[] = 'patient_file/' . $newName;
                         }
                     }
                 }
@@ -405,7 +406,8 @@ class Patients extends BaseController
             'updated_by' => session()->get('userId'),
             'phone'      => (!empty($patient['phone'])) ? $patient['phone'] : "-"
         ];
-        dd($updateData);
+        // dd($updateData);
+       
         $update = $this->patientModel->update($id, $updateData);
 
         // Logging (Opsional)

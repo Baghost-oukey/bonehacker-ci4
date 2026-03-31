@@ -218,14 +218,9 @@
             $('#uploadAlert').hide().removeClass('alert-success alert-danger').text('');
         });
 
-        // Handle form submission
         $('#uploadForm').on('submit', function(e) {
             e.preventDefault(); // Prevent default form submission
-
-            // Clear previous alerts
             $('#uploadAlert').hide().removeClass('alert-success alert-danger').text('');
-
-            // Get the files from the file input
             var files = $('#modalFileInput')[0].files;
 
             if (files.length === 0) {
@@ -237,7 +232,6 @@
             var maxSize = 2048 * 1024; // 2048 KB = 2MB
             var validFormats = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
 
-            // Check if any file exceeds the size limit or has an invalid format
             for (var i = 0; i < files.length; i++) {
                 if (!validFormats.includes(files[i].type)) {
                     $('#uploadAlert').addClass('alert-danger').text('Format file "' + files[i].name +
@@ -252,7 +246,6 @@
                 }
             }
 
-            // Create a FormData object to hold the form data
             var formData = new FormData(this);
 
             $.ajax({
