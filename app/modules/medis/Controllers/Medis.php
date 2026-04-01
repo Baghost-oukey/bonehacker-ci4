@@ -67,11 +67,12 @@ class Medis extends BaseController
 
     public function get_tags()
     {
-        $tags = $this->model_medis->get_all_tags();
+        $query = $this->request->getGet('query');
+        $tags = $this->model_medis->get_all_tags($query);
 
         $formatted_tags = array_map(function ($tag) {
             return [
-                'value' => $tag->name, // Menggunakan objek karena returnType di model adalah object
+                'value' => $tag->name, 
                 'id'    => $tag->id
             ];
         }, $tags);

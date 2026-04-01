@@ -344,6 +344,21 @@ class Patients extends BaseController
         return view('App\modules\patients\Views\show', $data);
     }
 
+
+    // fungsi pake Tagify 
+    // public function get_tags()
+    // {
+    //     if(!$this->request->isAJAX()){
+    //         return $this->response->setStatusCode(403);
+    //     }
+
+    //     $query = $this->request->getGet('query');
+    //     $data = $this->patientModel->get_autoComplete($query);
+
+    //     return $this->response->setJSON($data);
+    // }
+
+    
     public function update_files()
     {
         $id = $this->request->getPost('id');

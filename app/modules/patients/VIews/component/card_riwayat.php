@@ -9,6 +9,7 @@
                 </button>
             </div>
             <form action="" method="post" class="needs-validation" novalidate="">
+                <?= csrf_field() ?>
                 <input type="hidden" name="id">
                 <input type="hidden" name="patient_id" value="<?= $patient_id ?>">
                 <input type="hidden" name="queue_id" value="<?= $queue_id ?>">
@@ -1061,6 +1062,8 @@
         $('#exampleModal form')[0].reset();
         $('input[type="checkbox"]').prop('checked', false);
         $('input[type="radio"]').prop('checked', false);
+
+
 
 
         $.ajax({
@@ -2159,6 +2162,117 @@
         });
     }
 
+    $(document).on('submit', '#exampleModal form', function(e) {
+        e.preventDefault();
+
+        var form = $(this);
+        var url = form.attr('action'); // Ini bakal otomatis ambil dari history/store atau history/update
+        var btn = $('#save-button');
+
+        // Pakai FormData biar semua data (termasuk CSRF & Tagify) keangkut semua
+        var formData = new FormData(this);
+
+        $.ajax({
+            url: url,
+            type: "POST",
+            data: formData,
+            contentType: false,
+            processData: false,
+            dataType: "JSON",
+            beforeSend: function() {
+                btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Memproses...');
+            },
+            success: function(response) {
+                if (response.status) {
+                    $('#exampleModal').modal('hide');
+                    // Pakai SweetAlert biar cakep kayak yang lu pake di fungsi lain
+                    Swal.fire('Berhasil!', response.message, 'success').then(() => {
+                        // Reload tabel atau halaman
+                        if ($.fn.DataTable.isDataTable('#table-2')) {
+                            $('#table-2').DataTable().ajax.reload();
+                        } else {
+                            location.reload();
+                        }
+                    });
+                } else {
+                    Swal.fire('Gagal!', response.message || 'Cek inputan lu, Nyet!', 'error');
+                    btn.prop('disabled', false).text('Simpan');
+                }
+            },
+            error: function(xhr) {
+                console.error(xhr.responseText);
+                // Kalau muncul 403 di sini, berarti CSRF lu masih bermasalah
+                Swal.fire('Error', 'Terjadi kesalahan sistem. Cek Console (F12)!', 'error');
+                btn.prop('disabled', false).text('Simpan');
+            }
+        });
+    });
+
+
+    $(document).on('click', '#save-button', function(e) {
+        e.preventDefault();
+
+        // 1. Jemput Form-nya langsung pake selector yang paling kuat
+        var formElement = document.querySelector('#exampleModal form');
+
+        // 2. CEK: Kalo formElement gak ketemu, kita cari pake cara lain
+        if (!formElement) {
+            formElement = $('#exampleModal').find('form')[0];
+        }
+
+        // 3. Masukin ke FormData
+        var formData = new FormData(formElement);
+
+        // 4. Manual Update untuk Tagify (PENTING!)
+        // Karena Tagify sering telat sinkron ke textarea asli
+        if (typeof complaintTagify !== 'undefined') formData.set('complaint', complaintTagify.value.map(t => t.value).join(','));
+        if (typeof medhisTagify !== 'undefined') formData.set('medhis', medhisTagify.value.map(t => t.value).join(','));
+        if (typeof resultTagify !== 'undefined') formData.set('result', resultTagify.value.map(t => t.value).join(','));
+
+        var url = $(formElement).attr('action');
+        var btn = $(this);
+
+        $.ajax({
+            url: url,
+            type: "POST",
+            data: formData,
+            contentType: false,
+            processData: false,
+            dataType: "JSON",
+            headers: {
+                'X-CSRF-TOKEN': $('input[name="<?= csrf_token() ?>"]').val()
+            },
+            beforeSend: function() {
+                btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Memproses...');
+            },
+            success: function(response) {
+                if (response.status) {
+                    $('#exampleModal').modal('hide');
+                    Swal.fire('Berhasil!', response.message, 'success').then(() => {
+                        if ($.fn.DataTable.isDataTable('#table-2')) {
+                            $('#table-2').DataTable().ajax.reload(null, false);
+                        } else {
+                            location.reload();
+                        }
+                    });
+                } else {
+                    Swal.fire('Gagal!', response.message || 'Cek inputan', 'error');
+                    btn.prop('disabled', false).text('Simpan');
+                }
+            },
+            error: function(xhr) {
+                // LIHAT NETWORK LAGI: Kalo Content-Length udah gede (misal 500+), 
+                // tapi tetep 403, berarti tokennya yang salah.
+                // Kalo tetep 44, berarti Form-nya emang gak ketangkep.
+                console.error(xhr.responseText);
+                Swal.fire('Error', 'Gagal simpan data. Cek Console!', 'error');
+                btn.prop('disabled', false).text('Simpan');
+            }
+        });
+    });
+
+
+
     var deleteId = null;
 
     function destroy(id) {
@@ -2222,7 +2336,9 @@
         var tagify = new Tagify(complaintTextarea, {
             whitelist: []
         });
-        var controller; // Untuk mengontrol fetch call dan bisa membatalkannya
+        var controller;
+        var debounceTimer;
+
 
         tagify.on('input', onInput);
 
@@ -2230,36 +2346,41 @@
             var value = e.detail.value; // Nilai input dari Tagify
             tagify.whitelist = null; // Reset whitelist
 
-            // Membatalkan fetch sebelumnya jika ada
-            if (controller) controller.abort();
-            controller = new AbortController();
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                if (controller) controller.abort();
+                controller = new AbortController();
 
-            tagify.loading(true);
+                tagify.loading(true);
+
+                fetch("<?= site_url('complaint/get_tags') ?>?query=" + encodeURIComponent(value), {
+                        signal: controller.signal
+                    })
+                    .then(response => {
+                        // console.log('Raw response:', response);
+                        return response.json();
+                    })
+                    .then(function(newWhitelist) {
+                        // console.log('Fetched tags:', newWhitelist);
+                        tagify.whitelist = newWhitelist;
+
+                        if (newWhitelist.length > 0) {
+                            tagify.loading(false).dropdown.show(value);
+                        } else {
+                            tagify.loading(false);
+                        }
+                    })
+                    .catch(function(error) {
+                        tagify.loading(false); // Pastikan loading dihentikan jika ada error
+                        if (error.name !== 'AbortError') {
+                            // console.error("Error fetching tags:", error);
+                        }
+                    });
+
+            }, 500)
 
             // Mengambil suggestions dari server menggunakan fetch
-            fetch("<?= site_url('complaint/get_tags') ?>?query=" + encodeURIComponent(value), {
-                    signal: controller.signal
-                })
-                .then(response => {
-                    console.log('Raw response:', response);
-                    return response.json();
-                })
-                .then(function(newWhitelist) {
-                    console.log('Fetched tags:', newWhitelist);
-                    tagify.whitelist = newWhitelist;
 
-                    if (newWhitelist.length > 0) {
-                        tagify.loading(false).dropdown.show(value);
-                    } else {
-                        tagify.loading(false);
-                    }
-                })
-                .catch(function(error) {
-                    tagify.loading(false); // Pastikan loading dihentikan jika ada error
-                    if (error.name !== 'AbortError') {
-                        console.error("Error fetching tags:", error);
-                    }
-                });
         }
     });
 
@@ -2269,6 +2390,7 @@
             whitelist: []
         });
         var controller; // Untuk mengontrol fetch call dan bisa membatalkannya
+        var debonceTimer;
 
         tagify.on('input', onInput);
 
@@ -2276,90 +2398,52 @@
             var value = e.detail.value; // Nilai input dari Tagify
             tagify.whitelist = null; // Reset whitelist
 
-            // Membatalkan fetch sebelumnya jika ada
-            if (controller) controller.abort();
-            controller = new AbortController();
+            clearTimeout(debonceTimer);
+            debonceTimer = setTimeout(() => {
+                if (controller) controller.abort();
+                controller = new AbortController();
+                tagify.loading(true);
 
-            tagify.loading(true);
+                fetch("<?= site_url('medis/get_tags') ?>?query=" + encodeURIComponent(value), {
+                        signal: controller.signal
+                    })
+                    .then(response => {
+                        // Debug response
+                        // console.log('Raw response:', response);
+                        return response.json();
+                    })
+                    .then(function(newWhitelist) {
+                        // Debug response
+                        // console.log('Fetched tags:', newWhitelist);
+                        tagify.whitelist = newWhitelist;
 
-            // Mengambil suggestions dari server menggunakan fetch
-            fetch("<?= site_url('medis/get_tags') ?>?query=" + encodeURIComponent(value), {
-                    signal: controller.signal
-                })
-                .then(response => {
-                    console.log('Raw response:', response);
-                    return response.json();
-                })
-                .then(function(newWhitelist) {
-                    console.log('Fetched tags:', newWhitelist);
-                    tagify.whitelist = newWhitelist;
+                        if (newWhitelist.length > 0) {
+                            tagify.loading(false).dropdown.show(value);
+                        } else {
+                            tagify.loading(false);
+                        }
+                    })
+                    .catch(function(error) {
+                        tagify.loading(false); // Pastikan loading dihentikan jika ada error
+                        if (error.name !== 'AbortError') {
+                            console.error("Error fetching tags:", error);
+                        }
+                    });
 
-                    if (newWhitelist.length > 0) {
-                        tagify.loading(false).dropdown.show(value);
-                    } else {
-                        tagify.loading(false);
-                    }
-                })
-                .catch(function(error) {
-                    tagify.loading(false); // Pastikan loading dihentikan jika ada error
-                    if (error.name !== 'AbortError') {
-                        console.error("Error fetching tags:", error);
-                    }
-                });
-        }
-    });
-    document.addEventListener('DOMContentLoaded', function() {
-        var resultTextarea = document.querySelector('textarea[name="result"]');
-        var tagify = new Tagify(resultTextarea, {
-            whitelist: []
-        });
-        var controller; // Untuk mengontrol fetch call dan bisa membatalkannya
-
-        tagify.on('input', onInput);
-
-        function onInput(e) {
-            var value = e.detail.value; // Nilai input dari Tagify
-            tagify.whitelist = null; // Reset whitelist
-
-            // Membatalkan fetch sebelumnya jika ada
-            if (controller) controller.abort();
-            controller = new AbortController();
-
-            tagify.loading(true);
-
-            // Mengambil suggestions dari server menggunakan fetch
-            fetch("<?= site_url('result/get_tags') ?>?query=" + encodeURIComponent(value), {
-                    signal: controller.signal
-                })
-                .then(response => {
-                    console.log('Raw response:', response);
-                    return response.json();
-                })
-                .then(function(newWhitelist) {
-                    console.log('Fetched tags:', newWhitelist);
-                    tagify.whitelist = newWhitelist;
-
-                    if (newWhitelist.length > 0) {
-                        tagify.loading(false).dropdown.show(value);
-                    } else {
-                        tagify.loading(false);
-                    }
-                })
-                .catch(function(error) {
-                    tagify.loading(false); // Pastikan loading dihentikan jika ada error
-                    if (error.name !== 'AbortError') {
-                        console.error("Error fetching tags:", error);
-                    }
-                });
+            }, 400)
         }
     });
 
     document.addEventListener('DOMContentLoaded', function() {
         var resultTextarea = document.querySelector('textarea[name="result"]');
         var tagify = new Tagify(resultTextarea, {
-            whitelist: []
+            whitelist: [],
+            dropdown: {
+                enabled: 1
+            }
         });
         var controller; // Untuk mengontrol fetch call dan bisa membatalkannya
+        var debounceTimer;
 
         tagify.on('input', onInput);
 
@@ -2367,38 +2451,47 @@
             var value = e.detail.value; // Nilai input dari Tagify
             tagify.whitelist = null; // Reset whitelist
 
-            // Membatalkan fetch sebelumnya jika ada
-            if (controller) controller.abort();
-            controller = new AbortController();
+            if (!value) {
+                if (controller) controller.abort();
+                tagify.loading(false);
+                return;
+            }
 
-            tagify.loading(true);
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
 
-            // Mengambil suggestions dari server menggunakan fetch
-            fetch("<?= site_url('result/get_tags') ?>?query=" + encodeURIComponent(value), {
-                    signal: controller.signal
-                })
-                .then(response => {
-                    console.log('Raw response:', response);
-                    return response.json();
-                })
-                .then(function(newWhitelist) {
-                    console.log('Fetched tags:', newWhitelist);
-                    tagify.whitelist = newWhitelist;
+                if (controller) controller.abort();
+                controller = new AbortController();
+                tagify.loading(true);
 
-                    if (newWhitelist.length > 0) {
-                        tagify.loading(false).dropdown.show(value);
-                    } else {
-                        tagify.loading(false);
-                    }
-                })
-                .catch(function(error) {
-                    tagify.loading(false); // Pastikan loading dihentikan jika ada error
-                    if (error.name !== 'AbortError') {
-                        console.error("Error fetching tags:", error);
-                    }
-                });
+                fetch("<?= site_url('result/get_tags') ?>?query=" + encodeURIComponent(value), {
+                        signal: controller.signal
+                    })
+                    .then(response => {
+                        // console.log('Raw response:', response);
+                        return response.json();
+                    })
+                    .then(function(newWhitelist) {
+                        // console.log('Fetched tags:', newWhitelist);
+                        tagify.whitelist = newWhitelist;
+
+                        if (newWhitelist.length > 0) {
+                            tagify.loading(false).dropdown.show(value);
+                        } else {
+                            tagify.loading(false);
+                        }
+                    })
+                    .catch(function(error) {
+                        tagify.loading(false); // Pastikan loading dihentikan jika ada error
+                        if (error.name !== 'AbortError') {
+                            // console.error("Error fetching tags:", error);
+                        }
+                    });
+
+            }, 500)
         }
     });
+
 
     function checkGender() {
         var gender = document.getElementById('gender').value;

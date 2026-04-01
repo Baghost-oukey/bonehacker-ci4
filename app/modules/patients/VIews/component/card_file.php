@@ -8,7 +8,6 @@
     <div class="card-body">
         <div id="filePreview" class="mt-3 mb-3"></div>
         <form action="<?= site_url('patient/update_files') ?>" method="POST">
-            <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
             <?= csrf_field() ?>
             <input type="hidden" name="id" value="<?= esc($patient_id) ?>">
             <?php if (!empty($file_urls)) : ?>
@@ -134,7 +133,7 @@
         // $('#fileUploadModal').appendTo('body').modal('show'); // Show the modal
         // $('#fileUploadContent').html(''); // Clear any existing content in the modal
 
-         $('#mauupload').modal('hide');
+        $('#mauupload').modal('hide');
         var modalPreview = $('#fileUploadModal');
         modalPreview.appendTo('body');
         $('#fileUploadContent').html('<div class="text-center p-3"><i class="fas fa-spinner fa-spin"></i> Loading...</div>');
@@ -146,8 +145,14 @@
 
         if (fileUrls[id]) {
             var fileUrl = fileUrls[id];
+
             if (!fileUrl.startsWith('http')) {
-                fileUrl = '<?= base_url() ?>' + fileUrl;
+                var baseURL = '<?= base_url() ?>';
+                if (!baseURL.endsWith('/') && !fileUrl.startsWith('/')) {
+                    baseURL += '/';
+                }
+                fileUrl = baseURL + 'patient_file/' + fileUrl;
+                console.log("Mencoba buka file di: ", fileUrl);
             }
             var fileExtension = fileUrl.split('.').pop().toLowerCase();
             var fileContent = '';

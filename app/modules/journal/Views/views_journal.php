@@ -103,7 +103,7 @@
                         });
 
                         var exportUrl = "<?= base_url('journal/export_excell') ?>?" + params;
-                        window.location.href = url;
+                        window.location.href = exportUrl;
                     }
                 }
             ],

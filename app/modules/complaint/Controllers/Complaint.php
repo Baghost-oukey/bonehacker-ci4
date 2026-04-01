@@ -44,22 +44,43 @@ class Complaint extends BaseController
 
         $datatables->only(['nama', 'deskripsi']);
 
+
         $start = (int)$this->request->getPost('start');
 
         $datatables->addColumn('no', function ($row, $index = null) use ($start) {
-        return ($index + 1) + $start;
+            return ($index + 1) + $start;
         });
 
-        $datatables->addColumn('jumlah', function($row){
+        $datatables->addColumn('jumlah', function ($row) {
             return $row->jumlah ?? 0;
         });
-        
+
         $datatables->addColumn('action', function ($row, $index = null) {
             return '<button data-name="' . esc($row->nama) . '" data-description="' . esc($row->deskripsi) . '" data-id="' . $row->id . '" data-href="' . site_url('complaint/update/' . $row->id) . '" class="btn btn-primary btn-action mr-1 btn_edit"><i class="fas fa-edit"></i></button>' .
                 '<button type="button" data-href="' . site_url("complaint/destroy/" . $row->id) . '" class="btn btn-danger btn-action btn_delete"><i class="fas fa-trash"></i></button>';
         });
         $datatables->asObject();
         return $datatables->generate();
+    }
+
+    public function get_tags()
+    {
+        $query = $this->request->getGet('query');
+        $tags = $this->model_complaint->get_all_tags($query);
+        $formatted_tags = array_map(function ($tag) {
+            if (is_object($tag)) {
+                return [
+                    'value' => $tag->name,
+                    'id'    => $tag->id
+                ];
+            } else {
+                return [
+                    'value' => $tag['name'],
+                    'id'    => $tag['id']
+                ];
+            }
+        }, $tags);
+        return $this->response->setJSON($formatted_tags);
     }
 
     public function check_name_exists()
@@ -71,23 +92,24 @@ class Complaint extends BaseController
         return $this->response->setJSON(['exists' => $exists]);
     }
 
-    // public function store()
-    // {
-    //     $data = [
-    //         'name'        => $this->request->getPost('name'),
-    //         'description' => $this->request->getPost('description'),
-    //         'created_at'  => date('Y-m-d H:i:s'),
-    //         'updated_at'  => date('Y-m-d H:i:s')
-    //     ];
+    public function store()
+    {
+        $data = [
+            'name'        => $this->request->getPost('name'),
+            'description' => $this->request->getPost('description'),
+            // Jangan di pakai
+            // 'created_at'  => date('Y-m-d H:i:s'),
+            // 'updated_at'  => date('Y-m-d H:i:s')
+        ];
 
-    //     if ($this->model_complaint->store($data)) {
-    //         $this->session->setFlashdata('message', ['success', 'Tag keluhan berhasil ditambahkan']);
-    //     } else {
-    //         $this->session->setFlashdata('message', ['danger', 'Tag keluhan gagal ditambahkan']);
-    //     }
+        if ($this->model_complaint->store($data)) {
+            $this->session->setFlashdata('message', ['success', 'Tag keluhan berhasil ditambahkan']);
+        } else {
+            $this->session->setFlashdata('message', ['danger', 'Tag keluhan gagal ditambahkan']);
+        }
 
-    //     return redirect()->to('complaint');
-    // }
+        return redirect()->to('complaint');
+    }
 
     public function update($id)
     {

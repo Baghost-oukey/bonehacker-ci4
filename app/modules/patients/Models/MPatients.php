@@ -194,4 +194,10 @@ class MPatients extends Model
         }
         return $data;
     }
+
+    // Untuk Fungsi mengambil data Agar tidak semua pake tagify
+    // public function get_autoComplete($query)
+    // {
+    // return $this->select('id, name as value')->like('name', $query)->where('is_delete', 0)->limit(10)->findAll();
+    // }
 }

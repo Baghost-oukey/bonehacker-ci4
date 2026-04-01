@@ -46,6 +46,7 @@
                 </button>
             </div>
             <form id="addComplaintForm" action="<?= base_url('complaint/store') ?>" method="post">
+                <?= csrf_field() ?>
                 <div class="modal-body">
                     <div class="form-group">
                         <label>Nama Tag Keluhan</label>
@@ -76,6 +77,7 @@
                 </button>
             </div>
             <form id="editComplaintForm" action="" method="post">
+                <?= csrf_field() ?>
                 <div class="modal-body">
                     <div class="form-group">
                         <label>Nama Tag Keluhan</label>
@@ -106,6 +108,7 @@
                 </button>
             </div>
             <form action="" method="post">
+                <?= csrf_field() ?>
                 <div class="modal-body">
                     <p>Yakin menghapus data ini? Tag ini akan dihapus dari semua riwayat histori terkait.</p>
                 </div>
@@ -131,8 +134,8 @@
             "ajax": {
                 "url": "<?= site_url('complaint/fetch') ?>",
                 "type": "POST",
-                "data": function(d){
-                 d["<?= csrf_token() ?>"] = $('meta[name="csrf-token-hash"]').attr('content');
+                "data": function(d) {
+                    d["<?= csrf_token() ?>"] = $('meta[name="csrf-token-hash"]').attr('content');
                 }
             },
             "columns": [{
@@ -143,23 +146,27 @@
                 },
                 {
                     "data": "nama",
-                    "width": "25%"
+                    "width": "25%",
+                    "searchable": true
                 },
                 {
                     "data": "deskripsi",
-                    "width": "40%"
+                    "width": "40%",
+                    "searchable": false
                 },
                 {
                     "data": "jumlah",
                     "width": "15%",
                     "class": "text-center",
-                    "sortable": false
+                    "sortable": false,
+                    "searchable": false
                 },
                 {
                     "data": "action",
                     "width": "15%",
                     "class": "text-right",
-                    "sortable": false
+                    "sortable": false,
+                    "searchable": false
                 }
             ]
         });
@@ -257,7 +264,6 @@
             $(btnId).prop('disabled', !enable);
         }
 
-        // Reset Form Tambah saat dibuka
         $('#complaintModal').on('show.bs.modal', function() {
             $('#addComplaintForm')[0].reset();
             setValid('#add_name', '#add_nameError', '#add_submitBtn', false);

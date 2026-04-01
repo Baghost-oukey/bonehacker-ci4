@@ -62,9 +62,21 @@ class MMedis extends Model
             ->select("$subQuery as jumlah", false);
     }
 
+    // public function get_all_tags()
+    // {
+    //     return $this->select('id, name')->findAll();
+    // }
+
+    // Limit ambil medhis nya
     public function get_all_tags()
     {
-        return $this->select('id, name')->findAll();
+        $builder =  $this->select('id, name');
+
+        if (!empty($query)) {
+            $builder->like('name', $query);
+        }
+
+        return $builder->limit(15)->findAll();
     }
 
     public function store($data)

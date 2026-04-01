@@ -47,6 +47,8 @@
                 </button>
             </div>
             <form id="addMedhisForm" action="<?= base_url('medis/store') ?>" method="post">
+                <?= csrf_field() ?>
+
                 <div class="modal-body">
                     <div class="form-group">
                         <label>Nama Tag Riwayat Medis</label>
@@ -77,6 +79,7 @@
                 </button>
             </div>
             <form id="editMedhisForm" action="<?= base_url('medis/update') ?>" method="post">
+                <?= csrf_field() ?>
                 <div class="modal-body">
                     <div class="form-group">
                         <label>Nama Tag Riwayat Medis</label>
@@ -107,6 +110,7 @@
                 </button>
             </div>
             <form action="" method="post">
+                <?= csrf_field() ?>
                 <div class="modal-body">
                     <p>Yakin menghapus data ini ?</p>
                 </div>

@@ -132,7 +132,7 @@ class Journal extends BaseController
         $start_date = $this->request->getGet('start_date');
         $end_date   = $this->request->getGet('end_date');
 
-        $data = $this->model_journal->get_data_journal($region_id, $start_date, $end_date, true);
+        $data = $this->model_journal->get_query_for_Journal($region_id, $start_date, $end_date, true);
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
@@ -143,7 +143,7 @@ class Journal extends BaseController
 
         $rowNum = 2;
         foreach ($data as $index => $item) {
-            $status = $this->model_journal->getPatientStatus($item->id);
+            $status = $this->model_journal->getPatients($item->patient_id);
             $sheet->setCellValue('A' . $rowNum, $index + 1);
             $sheet->setCellValue('B' . $rowNum, $item->tanggal);
             $sheet->setCellValue('C' . $rowNum, $item->nama);
