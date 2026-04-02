@@ -996,7 +996,15 @@
         var targetForm = $('#exampleModal form');
         if (targetForm.length > 0) {
             targetForm[0].reset();
+            $('input[name="patient_id"]').val('<?= $patient->id ?>');
+            $('input[name="queue_id"]').val('<?= $queue_id ?>');
         }
+        // --- PAKSA TOMBOL SIMPAN AKTIF ---
+        var btn = $('#save-button');
+        btn.show(); // Munculkan kembali
+        btn.prop('disabled', false); // Aktifkan klik
+        btn.text('Simpan'); // Reset teks dari "Memproses..."
+
         document.getElementById("terapi-kejantanan").style.display = "block";
         document.getElementById("kejantanan").checked = false;
 
@@ -2161,118 +2169,70 @@
             }
         });
     }
-
-    $(document).on('submit', '#exampleModal form', function(e) {
-        e.preventDefault();
-
-        var form = $(this);
-        var url = form.attr('action'); // Ini bakal otomatis ambil dari history/store atau history/update
-        var btn = $('#save-button');
-
-        // Pakai FormData biar semua data (termasuk CSRF & Tagify) keangkut semua
-        var formData = new FormData(this);
-
-        $.ajax({
-            url: url,
-            type: "POST",
-            data: formData,
-            contentType: false,
-            processData: false,
-            dataType: "JSON",
-            beforeSend: function() {
-                btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Memproses...');
-            },
-            success: function(response) {
-                if (response.status) {
-                    $('#exampleModal').modal('hide');
-                    // Pakai SweetAlert biar cakep kayak yang lu pake di fungsi lain
-                    Swal.fire('Berhasil!', response.message, 'success').then(() => {
-                        // Reload tabel atau halaman
-                        if ($.fn.DataTable.isDataTable('#table-2')) {
-                            $('#table-2').DataTable().ajax.reload();
-                        } else {
-                            location.reload();
-                        }
-                    });
-                } else {
-                    Swal.fire('Gagal!', response.message || 'Cek inputan lu, Nyet!', 'error');
-                    btn.prop('disabled', false).text('Simpan');
-                }
-            },
-            error: function(xhr) {
-                console.error(xhr.responseText);
-                // Kalau muncul 403 di sini, berarti CSRF lu masih bermasalah
-                Swal.fire('Error', 'Terjadi kesalahan sistem. Cek Console (F12)!', 'error');
-                btn.prop('disabled', false).text('Simpan');
-            }
-        });
-    });
-
-
     $(document).on('click', '#save-button', function(e) {
         e.preventDefault();
+        var btn = $(this);
+        var modal = $('#exampleModal');
+        var form = modal.find('form');
 
-        // 1. Jemput Form-nya langsung pake selector yang paling kuat
-        var formElement = document.querySelector('#exampleModal form');
+        // 1. Ambil data secara aman
+        var dataObj = {};
+        $.map(form.serializeArray(), function(n) {
+            dataObj[n['name']] = n['value'];
+        });
 
-        // 2. CEK: Kalo formElement gak ketemu, kita cari pake cara lain
-        if (!formElement) {
-            formElement = $('#exampleModal').find('form')[0];
+        // 2. PAKSA URL (Jangan pake attr action kalau sering nyasar)
+        // Cek: Kalau ada 'id', berarti UPDATE. Kalau kosong, berarti STORE.
+        var isUpdate = (dataObj['id'] && dataObj['id'] !== "");
+        var targetUrl = isUpdate ? "<?= site_url('history/update') ?>" : "<?= site_url('history/store') ?>";
+
+        // 3. Validasi ID Pasien (Biar gak NULL lagi)
+        if (!dataObj['patient_id'] || dataObj['patient_id'] === "") {
+            dataObj['patient_id'] = '<?= $patient->id ?>'; // Ambil langsung dari PHP
         }
 
-        // 3. Masukin ke FormData
-        var formData = new FormData(formElement);
-
-        // 4. Manual Update untuk Tagify (PENTING!)
-        // Karena Tagify sering telat sinkron ke textarea asli
-        if (typeof complaintTagify !== 'undefined') formData.set('complaint', complaintTagify.value.map(t => t.value).join(','));
-        if (typeof medhisTagify !== 'undefined') formData.set('medhis', medhisTagify.value.map(t => t.value).join(','));
-        if (typeof resultTagify !== 'undefined') formData.set('result', resultTagify.value.map(t => t.value).join(','));
-
-        var url = $(formElement).attr('action');
-        var btn = $(this);
+        // 4. Sinkronisasi Tagify
+        if (typeof complaintTagify !== 'undefined') dataObj['complaint'] = complaintTagify.value.map(t => t.value).join(',');
+        if (typeof medhisTagify !== 'undefined') dataObj['medhis'] = medhisTagify.value.map(t => t.value).join(',');
+        if (typeof resultTagify !== 'undefined') dataObj['results'] = resultTagify.value.map(t => t.value).join(',');
 
         $.ajax({
-            url: url,
+            url: targetUrl,
             type: "POST",
-            data: formData,
-            contentType: false,
-            processData: false,
-            dataType: "JSON",
+            data: dataObj,
+            dataType: "text", // Kita set 'text' dulu buat nge-debug kalau ada HTML nyasar
             headers: {
-                'X-CSRF-TOKEN': $('input[name="<?= csrf_token() ?>"]').val()
+                'X-CSRF-TOKEN': $('input[name="csrf_test_name"]').val() // Pakai name sesuai HTML lu
             },
             beforeSend: function() {
                 btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Memproses...');
             },
-            success: function(response) {
-                if (response.status) {
-                    $('#exampleModal').modal('hide');
-                    Swal.fire('Berhasil!', response.message, 'success').then(() => {
-                        if ($.fn.DataTable.isDataTable('#table-2')) {
-                            $('#table-2').DataTable().ajax.reload(null, false);
-                        } else {
+            success: function(rawResponse) {
+                try {
+                    var response = JSON.parse(rawResponse); // Coba ubah ke JSON
+                    if (response.status) {
+                        modal.modal('hide');
+                        Swal.fire('Berhasil!', response.message, 'success').then(() => {
                             location.reload();
-                        }
-                    });
-                } else {
-                    Swal.fire('Gagal!', response.message || 'Cek inputan', 'error');
+                        });
+                    } else {
+                        Swal.fire('Gagal!', response.message || 'Cek input', 'error');
+                        btn.prop('disabled', false).text('Simpan');
+                    }
+                } catch (e) {
+                    // KALO MASUK KE SINI, BERARTI SERVER NGIRIM HTML (Error 500 tersembunyi)
+                    console.error("Server ngirim HTML, bukan JSON:", rawResponse);
+                    Swal.fire('Error Sistem', 'Server ngirim format salah. Cek Console!', 'error');
                     btn.prop('disabled', false).text('Simpan');
                 }
             },
             error: function(xhr) {
-                // LIHAT NETWORK LAGI: Kalo Content-Length udah gede (misal 500+), 
-                // tapi tetep 403, berarti tokennya yang salah.
-                // Kalo tetep 44, berarti Form-nya emang gak ketangkep.
-                console.error(xhr.responseText);
-                Swal.fire('Error', 'Gagal simpan data. Cek Console!', 'error');
+                console.error("Fatal Error:", xhr.responseText);
+                Swal.fire('Error 500', 'Database Error. Cek Payload!', 'error');
                 btn.prop('disabled', false).text('Simpan');
             }
         });
     });
-
-
-
     var deleteId = null;
 
     function destroy(id) {
