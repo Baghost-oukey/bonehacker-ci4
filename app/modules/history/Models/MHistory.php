@@ -199,14 +199,17 @@ class MHistory extends Model
     }
 
     // Fungsi Transaksi Kejantanan (Gaya CI4)
-    public function updateKejantanan($id_history, $data, $kejantanan_data)
+    public function updateKejantanan($id_history, $kejantanan_data, $status_kejantanan = 'tidak')
     {
         $this->db->transStart();
 
-        $this->update($id_history, $data);
+        // HAPUS BARIS $this->update($id_history, $data); 
+        // Kita gak mau ganggu data history yang udah bener di-insert tadi.
 
         $dbKejantanan = $this->db->table('kejantanan');
-        if (isset($data['kejantanan']) && $data['kejantanan'] === 'ya') {
+
+        // Cek status kejantanan dari parameter atau data post
+        if ($status_kejantanan === 'ya') {
             $existing = $dbKejantanan->where('id_history', $id_history)->get()->getRow();
 
             if ($existing) {
@@ -216,10 +219,35 @@ class MHistory extends Model
                 $dbKejantanan->insert($kejantanan_data);
             }
         } else {
+            // Kalau statusnya 'tidak', hapus record-nya di tabel kejantanan biar gak nyampah
             $dbKejantanan->where('id_history', $id_history)->delete();
         }
 
         $this->db->transComplete();
         return $this->db->transStatus();
     }
+    // Fungsi Lama
+    // public function updateKejantanan($id_history, $data, $kejantanan_data)
+    // {
+    //     $this->db->transStart();
+
+    //     $this->update($id_history, $data);
+
+    //     $dbKejantanan = $this->db->table('kejantanan');
+    //     if (isset($data['kejantanan']) && $data['kejantanan'] === 'ya') {
+    //         $existing = $dbKejantanan->where('id_history', $id_history)->get()->getRow();
+
+    //         if ($existing) {
+    //             $dbKejantanan->where('id_history', $id_history)->update($kejantanan_data);
+    //         } else {
+    //             $kejantanan_data['id_history'] = $id_history;
+    //             $dbKejantanan->insert($kejantanan_data);
+    //         }
+    //     } else {
+    //         $dbKejantanan->where('id_history', $id_history)->delete();
+    //     }
+
+    //     $this->db->transComplete();
+    //     return $this->db->transStatus();
+    // }
 }

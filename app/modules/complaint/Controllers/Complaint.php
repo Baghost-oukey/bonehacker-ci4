@@ -56,6 +56,26 @@ class Complaint extends BaseController
         return $datatables->generate();
     }
 
+     public function get_tags()
+    {
+        $query = $this->request->getGet('query');
+        $tags = $this->model_complaint->get_all_tags($query);
+        $formatted_tags = array_map(function ($tag) {
+            if (is_object($tag)) {
+                return [
+                    'value' => $tag->name,
+                    'id'    => $tag->id
+                ];
+            } else {
+                return [
+                    'value' => $tag['name'],
+                    'id'    => $tag['id']
+                ];
+            }
+        }, $tags);
+        return $this->response->setJSON($formatted_tags);
+    }
+
     public function check_name_exists()
     {
         $name = $this->request->getPost('name');
@@ -111,4 +131,6 @@ class Complaint extends BaseController
         }
         return redirect()->to('complaint');
     }
+
+    
 }

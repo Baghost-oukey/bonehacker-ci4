@@ -54,7 +54,7 @@
                             <?php endforeach; ?>
                         </tbody>
                     </table>
-                    <button type="submit" id="batchDeleteBtn" class="btn btn-danger mt-3 d-none" onclick="return confirm('Yakin ingin menghapus file yang dipilih?')">
+                    <button type="submit" id="batchDeleteBtn" class="btn btn-danger mt-3 d-none">
                         <i class="fas fa-trash-alt"></i> Hapus File Dipilih
                     </button>
 
@@ -134,30 +134,34 @@
         // $('#fileUploadModal').appendTo('body').modal('show'); // Show the modal
         // $('#fileUploadContent').html(''); // Clear any existing content in the modal
 
-         $('#mauupload').modal('hide');
+        $('#mauupload').modal('hide');
         var modalPreview = $('#fileUploadModal');
         modalPreview.appendTo('body');
         $('#fileUploadContent').html('<div class="text-center p-3"><i class="fas fa-spinner fa-spin"></i> Loading...</div>');
 
         // Assuming `file_urls` is available as a global variable or accessible via AJAX
-        var fileUrls = <?= json_encode($file_urls) ?>; // Encode the PHP array into a JSON array
+        var fileUrls = <?= is_array($file_urls) ? json_encode($file_urls) : $file_urls ?>; // Encode the PHP array into a JSON array
         // console.log("Membuka preview untuk index:", id);
         // console.log("Daftar URL:", fileUrls);
 
         if (fileUrls[id]) {
             var fileUrl = fileUrls[id];
+            var fileName = "";
+
             if (!fileUrl.startsWith('http')) {
-                fileUrl = '<?= base_url() ?>' + fileUrl;
+                fileName = '<?= base_url("patient_file") ?>/' + fileUrl;
+            } else {
+                fileName = fileUrl;
             }
             var fileExtension = fileUrl.split('.').pop().toLowerCase();
             var fileContent = '';
 
             if (fileExtension === 'pdf') {
-                fileContent = '<embed src="' + fileUrl + '" type="application/pdf" width="100%" height="500px" />';
+                fileContent = '<embed src="' + fileName + '" type="application/pdf" width="100%" height="500px" />';
             } else if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExtension)) {
-                fileContent = '<img src="' + fileUrl + '" class="img-fluid" style="max-width: 100%; height: auto;" />';
+                fileContent = '<img src="' + fileName + '" class="img-fluid" style="max-width: 100%; height: auto;" />';
             } else {
-                fileContent = '<a href="' + fileUrl + '" target="_blank">' + fileUrl.split('/').pop() + '</a>';
+                fileContent = '<a href="' + fileName + '" target="_blank">' + fileName.split('/').pop() + '</a>';
             }
 
             $('#fileUploadContent').html(fileContent);
@@ -208,8 +212,40 @@
                 $('#batchDeleteBtn').addClass('d-none');
 
             }
-        })
-    })
+        });
+        $('#batchDeleteBtn').on('click', function(e) {
+            e.preventDefault(); // Stop form biar gak langsung submit
+
+            var form = $(this).closest('form'); // Ambil form terdekat
+
+            Swal.fire({
+                title: 'Hapus File Terpilih?',
+                text: "File yang dihapus tidak bisa dikembalikan!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal',
+                reverseButtons: true // Biar tombol 'Batal' di kiri, 'Hapus' di kanan
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Tampilkan loading sebentar biar keren
+                    Swal.fire({
+                        title: 'Memproses...',
+                        text: 'Sedang menghapus file',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading()
+                        }
+                    });
+
+                    // Kirim form-nya!
+                    form.submit();
+                }
+            });
+        });
+    });
 
     $(document).ready(function() {
 

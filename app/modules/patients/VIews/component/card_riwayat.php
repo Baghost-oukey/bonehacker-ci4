@@ -8,10 +8,10 @@
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <form action="" method="post" class="needs-validation" novalidate="">
-                <input type="hidden" name="id">
-                <input type="hidden" name="patient_id" value="<?= $patient_id ?>">
-                <input type="hidden" name="queue_id" value="<?= $queue_id ?>">
+            <form id="save_data" action="<?= site_url('history/store') ?>" method="post" class="needs-validation" novalidate="">
+                <input type="hidden" name="id" id="history_id">
+                <input type="hidden" name="patient_id" id="patient_id" value="<?= $patient_id ?>">
+                <input type="hidden" name="queue_id" id="queue_id" value="<?= $queue_id ?>">
                 <div class="modal-body">
                     <!-- Header -->
                     <div class="row mb-2">
@@ -386,7 +386,7 @@
                     <div class="row mb-2">
                         <div class="col-12 mb-3">
                             <label>Hasil Pemeriksaan :</label><br>
-                            <textarea class="w-100 h-100" name="result" rows="3" id="resultTags" autofocus></textarea>
+                            <textarea class="w-100 h-100" name="results" rows="3" id="resultTags" autofocus></textarea>
                         </div>
                     </div>
                     <br>
@@ -984,62 +984,222 @@
 
     var activeTerapis = <?= json_encode($terapis) ?>;
 
+
     function add() {
-        $('#exampleModal').appendTo('body');
-        $('#exampleModal').modal('show');
-        $('#exampleModal .modal-title').text('Tambah Riwayat Pasien');
-        // $('#exampleModal form').attr('action', '{{ site_url('history/store') }}');
-        $('#exampleModal form').attr('action', '<?= site_url('history/store') ?>');
-        $('#exampleModal form')[0].reset();
-        document.getElementById("terapi-kejantanan").style.display = "block";
-        document.getElementById("kejantanan").checked = false;
+        var modal = $('#exampleModal');
+        var form = $('#save_data'); // Pakai ID form lu yang spesifik
 
-        if (typeof complaintTagify !== 'undefined') complaintTagify.removeAllTags();
-        if (typeof medhisTagify !== 'undefined') medhisTagify.removeAllTags();
-        if (typeof resultTagify !== 'undefined') resultTagify.removeAllTags();
+        modal.appendTo('body').modal('show');
+        modal.find('.modal-title').text('Tambah Riwayat Pasien');
 
+        // 2. Reset Form & Set Action (Anti-Error Reset)
+        if (form.length > 0) {
+            form.attr('action', '<?= site_url('history/store') ?>');
+            form[0].reset();
 
+            // Isi ID tersembunyi
+            form.find('input[name="patient_id"]').val('<?= $patient->id ?? "" ?>');
+            form.find('input[name="queue_id"]').val('<?= $queue_id ?? "" ?>');
+
+            // Reset element manual
+            form.find(':input').prop('readonly', false);
+            form.find(':checkbox').prop('disabled', false);
+        }
+
+        // 3. Reset Tagify (Hanya jika variabelnya ada)
+        const tagifyLists = [{
+                obj: typeof complaintTagify !== 'undefined' ? complaintTagify : null
+            },
+            {
+                obj: typeof medhisTagify !== 'undefined' ? medhisTagify : null
+            },
+            {
+                obj: typeof resultTagify !== 'undefined' ? resultTagify : null
+            }
+        ];
+
+        tagifyLists.forEach(item => {
+            if (item.obj) {
+                item.obj.removeAllTags();
+                item.obj.setReadonly(false);
+            }
+        });
+
+        // 4. UI Reset
+        $('#terapi-kejantanan').show();
+        $('#kejantanan').prop('checked', false);
         $('#history-info').hide();
-
         $('#notif-wa').show();
-
-        var today = formatDate(new Date());
-        $('#date').val(formatDateForInput(new Date()));
         $('#date_modified_group').addClass('d-none');
-        $('#exampleModal form :input').prop('readonly', false);
-        $('#exampleModal form :checkbox').prop('disabled', false);
         $('#region_history').prop('disabled', false);
 
-        complaintTagify.removeAllTags();
-        medhisTagify.removeAllTags();
-        resultTagify.removeAllTags();
+        // Set Tanggal Hari Ini
+        if (typeof formatDateForInput === 'function') {
+            $('#date').val(formatDateForInput(new Date()));
+        }
 
-        complaintTagify.setReadonly(false);
-        medhisTagify.setReadonly(false);
-        resultTagify.setReadonly(false);
+        // 5. Reset Select2 Terapis
+        var terapisSelect = $('.terapis');
+        terapisSelect.prop('disabled', false);
+        terapisSelect.empty();
 
-        $('.terapis').prop('disabled', false);
-        $('.terapis').select2({
+        // Pastikan activeTerapis ada isinya
+        if (typeof activeTerapis !== 'undefined') {
+            activeTerapis.forEach(function(t) {
+                terapisSelect.append(new Option(t.nama, t.id));
+            });
+        }
+
+        terapisSelect.select2({
             placeholder: "-- Pilih Terapis --",
             allowClear: true,
-            minimumResultsForSearch: Infinity
-        });
+            dropdownParent: modal // Penting biar Select2 gak macet di dalem modal
+        }).val([]).trigger('change');
 
-        $('.terapis').empty();
-
-        activeTerapis.forEach(function(t) {
-            let option = $('<option>', {
-                value: t.id,
-                text: t.nama
-            });
-            $('.terapis').append(option);
-        });
-
-        $('.terapis').val([]).trigger('change');
-
-        $('#exampleModal #save-button').show();
+        $('#save-button').show();
     }
+    // function add() {
+    //     $('#exampleModal').appendTo('body');
+    //     $('#exampleModal').modal('show');
+    //     $('#exampleModal .modal-title').text('Tambah Riwayat Pasien');
+    //     // $('#exampleModal form').attr('action', '{{ site_url('history/store') }}');
+    //     $('#exampleModal form').attr('action', '<?= site_url('history/store') ?>');
+    //     $('#exampleModal form')[0].reset();
 
+    //     $('#exampleModal form').find('input[name="patient_id"]').val('<?= $patient->id ?>');
+    //     $('#exampleModal form').find('input[name="queue_id"]').val('<?= $queue_id ?>');
+    //     document.getElementById("terapi-kejantanan").style.display = "block";
+    //     document.getElementById("kejantanan").checked = false;
+
+    //     if (typeof complaintTagify !== 'undefined') {
+    //         complaintTagify.removeAllTags();
+    //         complaintTagify.setReadonly(false);
+    //     }
+
+    //     if (typeof medhisTagify !== 'undefined') {
+    //         medhisTagify.removeAllTags();
+    //         medhisTagify.setReadonly(false);
+    //     }
+
+    //     if (typeof resultTagify !== 'undefined') {
+    //         resultTagify.removeAllTags();
+    //         resultTagify.setReadonly(false);
+    //     }
+
+
+    //     $('#history-info').hide();
+
+    //     $('#notif-wa').show();
+
+    //     var today = formatDate(new Date());
+    //     $('#date').val(formatDateForInput(new Date()));
+    //     $('#date_modified_group').addClass('d-none');
+    //     $('#exampleModal form :input').prop('readonly', false);
+    //     $('#exampleModal form :checkbox').prop('disabled', false);
+    //     $('#region_history').prop('disabled', false);
+
+    //     // complaintTagify.removeAllTags();
+    //     // medhisTagify.removeAllTags();
+    //     // resultTagify.removeAllTags();
+
+    //     complaintTagify.setReadonly(false);
+    //     medhisTagify.setReadonly(false);
+    //     resultTagify.setReadonly(false);
+
+    //     $('.terapis').prop('disabled', false);
+    //     $('.terapis').select2({
+    //         placeholder: "-- Pilih Terapis --",
+    //         allowClear: true,
+    //         minimumResultsForSearch: Infinity
+    //     });
+
+    //     $('.terapis').empty();
+
+    //     activeTerapis.forEach(function(t) {
+    //         let option = $('<option>', {
+    //             value: t.id,
+    //             text: t.nama
+    //         });
+    //         $('.terapis').append(option);
+    //     });
+
+    //     $('.terapis').val([]).trigger('change');
+
+    //     $('#exampleModal #save-button').show();
+    // }
+
+
+    $(document).on('click', '#save-button', function(e) {
+        e.preventDefault();
+        const btn = $(this);
+
+        let formData = new FormData();
+        $('.modal.show').find('input[name], textarea[name], select[name]').each(function() {
+            let input = $(this);
+            let name = input.attr('name');
+            let value = input.val();
+
+            if (['complaint', 'medhis', 'results', 'result'].includes(name)) return;
+
+            if (input.is(':checkbox')) {
+                if (input.is(':checked')) {
+                    formData.append(name, value);
+                }
+            } else if (input.is(':radio')) {
+                if (input.is(':checked')) {
+                    formData.set(name, value);
+                }
+            } else {
+                formData.set(name, value);
+            }
+        });
+
+        if (typeof complaintTagify !== 'undefined') {
+            formData.set('complaint', JSON.stringify(complaintTagify.value || []));
+        }
+
+        if (typeof medhisTagify !== 'undefined') {
+            formData.set('medhis', JSON.stringify(medhisTagify.value || []));
+        }
+
+        if (typeof resultTagify !== 'undefined') {
+            // Gunakan 'results' (pakai S) sesuai atribut name di HTML lu
+            formData.set('results', JSON.stringify(resultTagify.value || []));
+        }
+
+        // console.log("=== SCANNING COMPLETED ===");
+        // for (let [key, val] of formData.entries()) {
+        //     console.log(key + ": " + val);
+        // }
+
+        $.ajax({
+            url: "<?= site_url('history/store') ?>",
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token-hash"]').attr('content')
+            },
+            beforeSend: function() {
+                btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+            },
+            success: function(response) {
+                if (response.status) {
+                    $('.modal.show').modal('hide');
+                    Swal.fire('Berhasil!', response.message, 'success').then(() => location.reload());
+                } else {
+                    Swal.fire('Gagal!', response.message, 'error');
+                    console.log("Server Error Detail:", response);
+                    btn.prop('disabled', false).text('Simpan');
+                }
+            },
+            error: function(xhr) {
+                console.error("Fatal Error:", xhr.responseText);
+                btn.prop('disabled', false).text('Simpan');
+            }
+        });
+    });
 
     function updateHistoryInfo(data) {
         $('#created_by').text(data.history_created_by);
@@ -1053,7 +1213,13 @@
 
 
     function show(id) {
-        $('#exampleModal form')[0].reset();
+
+        var form = $('#save_data');
+        if (form.length > 0) {
+            form[0].reset();
+        }
+
+        // $('#exampleModal form')[0].reset();
         $('input[type="checkbox"]').prop('checked', false);
         $('input[type="radio"]').prop('checked', false);
 
@@ -1087,24 +1253,6 @@
                 if (data.porno) {
                     $(`input[name="nonton_porno"][value="${data.porno}"]`).prop('checked', true);
                 }
-
-                // Kalo mau pakai Tag
-
-                // complaintTagify.removeAllTags();
-                // if (data.complaint && data.complaint !== '-') {
-                //     complaintTagify.addTags(data.complaint.split(', '));
-                // }
-
-                // medhisTagify.removeAllTags();
-                // if (data.medhis && data.medhis !== '-') {
-                //     medhisTagify.addTags(data.medhis.split(', '));
-                // }
-
-                // resultTagify.removeAllTags();
-                // if (data.results && data.results !== '-') {
-                //     resultTagify.addTags(data.results.split(', '));
-                // }
-
                 $('textarea[name="complaint"]').val(data.complaint && data.complaint !== '-' ? data.complaint : '');
                 $('textarea[name="medhis"]').val(data.medhis && data.medhis !== '-' ? data.medhis : '');
 
@@ -1592,7 +1740,7 @@
                     var recordDate = new Date(data.date_modified);
                     var timeDifference = Math.abs(currentDate - recordDate);
                     var dayDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
-                    console.log('testt:' + data.type);
+                    // console.log('testt:' + data.type);
 
 
                     if (dayDifference > 1 && data.type !== 'draft') {
@@ -1600,9 +1748,9 @@
                         $('#exampleModal form :checkbox').prop('disabled', true);
                         $('#exampleModal form :radio').prop('disabled', true);
 
-                        complaintTagify.setReadonly(true);
-                        medhisTagify.setReadonly(true);
-                        resultTagify.setReadonly(true);
+                        if (typeof complaintTagify !== 'undefined') complaintTagify.setReadonly(true);
+                        if (typeof medhisTagify !== 'undefined') medhisTagify.setReadonly(true);
+                        if (typeof resultTagify !== 'undefined') resultTagify.setReadonly(true);
 
                         $('.terapis').prop('disabled', true);
                         $('.terapis').select2();
@@ -1614,9 +1762,9 @@
                         $('#exampleModal form :input').prop('readonly', false);
                         $('#exampleModal form :checkbox').prop('disabled', false);
 
-                        complaintTagify.setReadonly(false);
-                        medhisTagify.setReadonly(false);
-                        resultTagify.setReadonly(false);
+                        if (typeof complaintTagify !== 'undefined') complaintTagify.setReadonly(false);
+                        if (typeof medhisTagify !== 'undefined') medhisTagify.setReadonly(false);
+                        if (typeof resultTagify !== 'undefined') resultTagify.setReadonly(false);
 
                         $('.terapis').prop('disabled', false);
                         $('.terapis').select2();
@@ -1636,11 +1784,19 @@
     }
 
     function duplicate(id) {
-        $('#exampleModal form')[0].reset();
+        // $('#exampleModal form')[0].reset();
+        var form = $('#save_data');
+        if (form.length > 0) {
+            form[0].reset();
+        }
+
+
 
         // complaintTagify = new Tagify($('textarea[name="complaint"]')[0]);
         // medhisTagify = new Tagify($('textarea[name="medhis"]')[0]);
         // resultTagify = new Tagify($('textarea[name="result"]')[0]);
+        $('input[type="checkbox"]').prop('checked', false);
+        $('input[type="radio"]').prop('checked', false);
         $('#region_history').prop('disabled', false);
 
 
@@ -1649,36 +1805,52 @@
             type: "GET",
             dataType: "JSON",
             success: function(data) {
-                console.log("Data received from server:", data);
+                // console.log("Data received from server:", data);
+                var modal = $('#exampleModal');
+                var form = $('#save_data');
+
+                $('.modal-backdrop').remove();
                 $('#exampleModal').modal('show');
+                $('#exampleModal').on('shown.bs.modal', function() {
+                    $(this).css('z-index', '1060');
+                    $('.modal-backdrop').css('z-index', '1050');
+                });
+
                 $('#exampleModal form').attr('action', '<?= site_url('history/copy') ?>');
                 $('#exampleModal .modal-title').text('Detil Riwayat Pasien');
 
                 // Hide the WhatsApp notification section
                 $('#notif-wa').show();
+                $('#history-info').hide();
 
-                complaintTagify.removeAllTags();
-                if (data.complaint && data.complaint !== '-') {
-                    complaintTagify.addTags(data.complaint.split(', '));
+                if (typeof complaintTagify !== 'undefined') {
+                    complaintTagify.removeAllTags();
+                    if (data.complaint && data.complaint !== '-') {
+                        complaintTagify.addTags(data.complaint.split(', '));
+                    }
                 }
 
-                medhisTagify.removeAllTags();
-                if (data.medhis && data.medhis !== '-') {
-                    medhisTagify.addTags(data.medhis.split(', '));
+                if (typeof medhisTagify !== 'undefined') {
+                    medhisTagify.removeAllTags();
+                    if (data.medhis && data.medhis !== '-') {
+                        medhisTagify.addTags(data.medhis.split(', '));
+                    }
                 }
 
-                resultTagify.removeAllTags(); // 
-                if (data.results && data.results !== '-') {
-                    resultTagify.addTags(data.results.split(', '));
+                if (typeof resultTagify !== 'undefined') {
+                    resultTagify.removeAllTags();
+                    if (data.results && data.results !== '-') {
+                        resultTagify.addTags(data.results.split(', '));
+                    }
                 }
 
                 if (data.history_region) {
                     $('#region_history').val(data.history_region).trigger('change');
                 } else {
-                    $('#region_history').val('');
+                    $('#region_history').val('').trigger('change');
                 }
 
-                $('#history-info').hide();
+                // $('#history-info').hide();
 
                 $('.terapis').empty();
 
@@ -2138,9 +2310,15 @@
                 $('#exampleModal form :input').prop('readonly', false);
                 $('#exampleModal form :checkbox').prop('disabled', false);
 
-                complaintTagify.setReadonly(false);
-                medhisTagify.setReadonly(false);
-                resultTagify.setReadonly(false);
+                if (typeof complaintTagify !== 'undefined') {
+                    complaintTagify.setReadonly(false);
+                }
+                if (typeof medhisTagify !== 'undefined') {
+                    medhisTagify.setReadonly(false);
+                }
+                if (typeof resultTagify !== 'undefined') {
+                    resultTagify.setReadonly(false);
+                }
 
                 $('.terapis').prop('disabled', false);
 
@@ -2167,7 +2345,7 @@
 
             if (deleteId !== null) {
                 $.ajax({
-                    url: '<?= site_url('patient/destroy') ?>/' + deleteId, // Adjust URL as needed
+                    url: '<?= site_url('history/destroy') ?>/' + deleteId,
                     type: 'POST',
                     dataType: 'json',
                     data: {
@@ -2190,7 +2368,7 @@
 
                         } else {
                             // Handle failure
-                           alert('Data gagal dihapus: ' + (response.message || 'Error server'));
+                            alert('Data gagal dihapus: ' + (response.message || 'Error server'));
                         }
                     },
                     error: function() {
@@ -2210,189 +2388,97 @@
 
     })
 
-
-
+    var complaintTagify, medhisTagify, resultTagify;
     document.addEventListener('DOMContentLoaded', function() {
         var complaintTextarea = document.querySelector('textarea[name="complaint"]');
-        var tagify = new Tagify(complaintTextarea, {
-            whitelist: []
-        });
-        var controller; // Untuk mengontrol fetch call dan bisa membatalkannya
+        if (complaintTextarea) {
+            complaintTagify = new Tagify(complaintTextarea, {
+                whitelist: []
+            });
+            var controllerC; // Untuk mengontrol fetch call dan bisa membatalkannya
 
-        tagify.on('input', onInput);
-
-        function onInput(e) {
-            var value = e.detail.value; // Nilai input dari Tagify
-            tagify.whitelist = null; // Reset whitelist
-
-            // Membatalkan fetch sebelumnya jika ada
-            if (controller) controller.abort();
-            controller = new AbortController();
-
-            tagify.loading(true);
-
-            // Mengambil suggestions dari server menggunakan fetch
-            fetch("<?= site_url('complaint/get_tags') ?>?query=" + encodeURIComponent(value), {
-                    signal: controller.signal
-                })
-                .then(response => {
-                    console.log('Raw response:', response);
-                    return response.json();
-                })
-                .then(function(newWhitelist) {
-                    console.log('Fetched tags:', newWhitelist);
-                    tagify.whitelist = newWhitelist;
-
-                    if (newWhitelist.length > 0) {
-                        tagify.loading(false).dropdown.show(value);
-                    } else {
-                        tagify.loading(false);
-                    }
-                })
-                .catch(function(error) {
-                    tagify.loading(false); // Pastikan loading dihentikan jika ada error
-                    if (error.name !== 'AbortError') {
-                        console.error("Error fetching tags:", error);
-                    }
-                });
+            complaintTagify.on('input', function(e) {
+                var value = e.detail.value; // Nilai input dari Tagify
+                complaintTagify.whitelist = null; // Reset whitelist
+                if (controllerC) controllerC.abort();
+                controllerC = new AbortController();
+                complaintTagify.loading(true);
+                fetch("<?= site_url('complaint/get_tags') ?>?query=" + encodeURIComponent(value), {
+                        signal: controllerC.signal
+                    })
+                    .then(res => res.json())
+                    .then(function(list) {
+                        complaintTagify.whitelist = list;
+                        complaintTagify.loading(false).dropdown.show(value);
+                    }).catch(err => complaintTagify.loading(false));
+            });
         }
+
+
     });
 
     document.addEventListener('DOMContentLoaded', function() {
         var medhisTextarea = document.querySelector('textarea[name="medhis"]');
-        var tagify = new Tagify(medhisTextarea, {
-            whitelist: []
-        });
-        var controller; // Untuk mengontrol fetch call dan bisa membatalkannya
+        if (medhisTextarea) {
+            medhisTagify = new Tagify(medhisTextarea, {
+                whitelist: []
+            });
 
-        tagify.on('input', onInput);
+            var controllerM; // Untuk mengontrol fetch call dan bisa membatalkannya
 
-        function onInput(e) {
-            var value = e.detail.value; // Nilai input dari Tagify
-            tagify.whitelist = null; // Reset whitelist
+            medhisTagify.on('input', onInput);
 
-            // Membatalkan fetch sebelumnya jika ada
-            if (controller) controller.abort();
-            controller = new AbortController();
-
-            tagify.loading(true);
-
-            // Mengambil suggestions dari server menggunakan fetch
-            fetch("<?= site_url('medis/get_tags') ?>?query=" + encodeURIComponent(value), {
-                    signal: controller.signal
-                })
-                .then(response => {
-                    console.log('Raw response:', response);
-                    return response.json();
-                })
-                .then(function(newWhitelist) {
-                    console.log('Fetched tags:', newWhitelist);
-                    tagify.whitelist = newWhitelist;
-
-                    if (newWhitelist.length > 0) {
-                        tagify.loading(false).dropdown.show(value);
-                    } else {
-                        tagify.loading(false);
-                    }
-                })
-                .catch(function(error) {
-                    tagify.loading(false); // Pastikan loading dihentikan jika ada error
-                    if (error.name !== 'AbortError') {
-                        console.error("Error fetching tags:", error);
-                    }
-                });
+            function onInput(e) {
+                var value = e.detail.value; // Nilai input dari Tagify
+                medhisTagify.whitelist = null; // Reset whitelist
+                if (controllerM) controllerM.abort();
+                controllerM = new AbortController();
+                medhisTagify.loading(true);
+                fetch("<?= site_url('medis/get_tags') ?>?query=" + encodeURIComponent(value), {
+                        signal: controllerM.signal
+                    })
+                    .then(res => res.json())
+                    .then(function(list) {
+                        medhisTagify.whitelist = list;
+                        medhisTagify.loading(false).dropdown.show(value);
+                    }).catch(err => medhisTagify.loading(false));
+            }
         }
+
+
     });
     document.addEventListener('DOMContentLoaded', function() {
         var resultTextarea = document.querySelector('textarea[name="result"]');
-        var tagify = new Tagify(resultTextarea, {
-            whitelist: []
-        });
-        var controller; // Untuk mengontrol fetch call dan bisa membatalkannya
+        if (resultTextarea) {
+            resultTagify = new Tagify(resultTextarea, {
+                whitelist: []
+            });
+            var controllerR; // Untuk mengontrol fetch call dan bisa membatalkannya
 
-        tagify.on('input', onInput);
+            resultTagify.on('input', onInput);
 
-        function onInput(e) {
-            var value = e.detail.value; // Nilai input dari Tagify
-            tagify.whitelist = null; // Reset whitelist
+            function onInput(e) {
+                var value = e.detail.value; // Nilai input dari Tagify
+                resultTagify.whitelist = null; // Reset whitelist
 
-            // Membatalkan fetch sebelumnya jika ada
-            if (controller) controller.abort();
-            controller = new AbortController();
+                // Membatalkan fetch sebelumnya jika ada
+                if (controllerR) controllerR.abort();
+                controllerR = new AbortController();
 
-            tagify.loading(true);
+                resultTagify.loading(true);
 
-            // Mengambil suggestions dari server menggunakan fetch
-            fetch("<?= site_url('result/get_tags') ?>?query=" + encodeURIComponent(value), {
-                    signal: controller.signal
-                })
-                .then(response => {
-                    console.log('Raw response:', response);
-                    return response.json();
-                })
-                .then(function(newWhitelist) {
-                    console.log('Fetched tags:', newWhitelist);
-                    tagify.whitelist = newWhitelist;
-
-                    if (newWhitelist.length > 0) {
-                        tagify.loading(false).dropdown.show(value);
-                    } else {
-                        tagify.loading(false);
-                    }
-                })
-                .catch(function(error) {
-                    tagify.loading(false); // Pastikan loading dihentikan jika ada error
-                    if (error.name !== 'AbortError') {
-                        console.error("Error fetching tags:", error);
-                    }
-                });
+                // Mengambil suggestions dari server menggunakan fetch
+                fetch("<?= site_url('result/get_tags') ?>?query=" + encodeURIComponent(value), {
+                        signal: controllerR.signal
+                    })
+                    .then(res => res.json())
+                    .then(function(list) {
+                        resultTagify.whitelist = list;
+                        resultTagify.loading(false).dropdown.show(value);
+                    }).catch(err => resultTagify.loading(false));
+            }
         }
-    });
 
-    document.addEventListener('DOMContentLoaded', function() {
-        var resultTextarea = document.querySelector('textarea[name="result"]');
-        var tagify = new Tagify(resultTextarea, {
-            whitelist: []
-        });
-        var controller; // Untuk mengontrol fetch call dan bisa membatalkannya
-
-        tagify.on('input', onInput);
-
-        function onInput(e) {
-            var value = e.detail.value; // Nilai input dari Tagify
-            tagify.whitelist = null; // Reset whitelist
-
-            // Membatalkan fetch sebelumnya jika ada
-            if (controller) controller.abort();
-            controller = new AbortController();
-
-            tagify.loading(true);
-
-            // Mengambil suggestions dari server menggunakan fetch
-            fetch("<?= site_url('result/get_tags') ?>?query=" + encodeURIComponent(value), {
-                    signal: controller.signal
-                })
-                .then(response => {
-                    console.log('Raw response:', response);
-                    return response.json();
-                })
-                .then(function(newWhitelist) {
-                    console.log('Fetched tags:', newWhitelist);
-                    tagify.whitelist = newWhitelist;
-
-                    if (newWhitelist.length > 0) {
-                        tagify.loading(false).dropdown.show(value);
-                    } else {
-                        tagify.loading(false);
-                    }
-                })
-                .catch(function(error) {
-                    tagify.loading(false); // Pastikan loading dihentikan jika ada error
-                    if (error.name !== 'AbortError') {
-                        console.error("Error fetching tags:", error);
-                    }
-                });
-        }
     });
 
     function checkGender() {
@@ -2446,14 +2532,16 @@
         }
     }
 
-    function toggleLainnyaTextbox(textboxId, show) {
+    function toggleLainnyaTextbox(textboxId, show, retainValue = false) {
         const textbox = document.getElementById(textboxId);
-        if (show) {
-            textbox.style.display = 'block';
-        } else {
-            textbox.style.display = 'none';
-            if (!retainValue) {
-                textbox.value = '';
+        if (textbox) {
+            if (show) {
+                textbox.style.display = 'block';
+            } else {
+                textbox.style.display = 'none';
+                if (!retainValue) {
+                    textbox.value = '';
+                }
             }
         }
     }

@@ -53,8 +53,8 @@ class Patients extends BaseController
             'age'                 => $this->request->getPost('age') ?: 0,
             'country_id'          => $this->request->getPost('country_id'),
             'address'             => $this->request->getPost('address') ?: "",
-            // 'phone'               => $this->request->getPost('phone') ?: "",
-            'phone' => (string) ($this->request->getPost('phone') ?? ""),
+            // 'phone'            => $this->request->getPost('phone') ?: "",
+            'phone'               => (string) ($this->request->getPost('phone') ?? ""),
             'region_id'           => $this->request->getPost('region_id'),
             'is_suspective'       => $this->request->getPost('is_suspective') === 'on' ? 1 : 0,
             'domestic'            => $domestic,
@@ -414,9 +414,9 @@ class Patients extends BaseController
         log_message('info', "Update file pasien ID $id. Data POST: " . json_encode($this->request->getPost()));
 
         if ($update) {
-            return redirect()->to('patient/show/' . $id)->with('message', [1, 'success', 'File pasien berhasil diperbarui']);
+           return redirect()->to('patient/show/' . $id)->with('success', 'File pasien berhasil diperbarui');
         } else {
-            return redirect()->back()->with('message', [0, 'danger', 'File pasien gagal diperbarui']);
+            return redirect()->back()->with('error', 'File pasien gagal diperbarui');
         }
     }
 

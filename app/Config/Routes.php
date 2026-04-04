@@ -110,6 +110,7 @@ $routes->group('complaint', ['namespace' => 'App\modules\complaint\Controllers']
     $routes->post('update/(:num)', 'Complaint::update/$1');
     $routes->post('destroy/(:num)', 'Complaint::destroy/$1');
     $routes->post('check_name_exists', 'Complaint::check_name_exists');
+    $routes->get('get_tags', 'Complaint::get_tags');
 });
 
 // Tag - Rekam Medis

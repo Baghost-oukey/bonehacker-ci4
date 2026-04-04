@@ -33,7 +33,8 @@ class MPatients extends Model
         'is_delete'
     ];
 
-    protected bool $allowEmptyInserts = false;
+    protected bool $allowEmptyInserts = true;
+    // protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;
 
     protected array $casts = [];
