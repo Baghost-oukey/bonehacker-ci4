@@ -100,4 +100,11 @@ class Auth extends BaseController
         session()->destroy();
         return redirect()->to(base_url('auth'));
     }
+
+    public function get_csrf()
+    {
+        return $this->response->setJSON([
+            'hash' => csrf_hash(),
+        ]);
+    }
 }

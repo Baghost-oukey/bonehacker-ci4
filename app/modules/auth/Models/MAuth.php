@@ -44,28 +44,28 @@ class MAuth extends Model
     protected $beforeDelete   = [];
     protected $afterDelete    = [];
 
-    public function verifyLogin(string $username, string $password): ?object
-    {
-        $username = trim($username);
-        $password = trim($password);
+    // public function verifyLogin(string $username, string $password): ?object
+    // {
+    //     $username = trim($username);
+    //     $password = trim($password);
 
-        $user = $this->where('username', $username)->first();
+    //     $user = $this->where('username', $username)->first();
 
-        if ($user) {
-            $dbpassword = trim($user->password);
+    //     if ($user) {
+    //         $dbpassword = trim($user->password);
 
-            if (password_verify($password, $dbpassword)) {
-                return $user;
-            }
+    //         if (password_verify($password, $dbpassword)) {
+    //             return $user;
+    //         }
 
-            if(md5($password) === $dbpassword){
-                $newHash = password_hash($password, PASSWORD_BCRYPT);
+    //         if(md5($password) === $dbpassword){
+    //             $newHash = password_hash($password, PASSWORD_BCRYPT);
 
-                $this->update($user->id, ['password' => $newHash]);
+    //             $this->update($user->id, ['password' => $newHash]);
 
-                return $this->find($user->id);
-            }
-        }
-        return null;
-    }
+    //             return $this->find($user->id);
+    //         }
+    //     }
+    //     return null;
+    // }
 }

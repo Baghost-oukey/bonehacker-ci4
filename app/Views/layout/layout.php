@@ -21,7 +21,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css">
     <!-- Buat Aktifkan Lib notif yang modern -->
     <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/css/iziToast.min.css"> -->
-     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
     <style>
         .dataTables_wrapper .dataTables_filter {
@@ -75,33 +75,69 @@
 
     <script>
         (function() {
-            var metaName = document.querySelector('meta[name="csrf-token-name"]');
-            var metaHash = document.querySelector('meta[name="csrf-token-hash"]');
-            var csrfName = metaName ? metaName.getAttribute('content') : null;
-            var csrfHash = metaHash ? metaHash.getAttribute('content') : null;
+            // var metaName = document.querySelector('meta[name="csrf-token-name"]');
+            // var metaHash = document.querySelector('meta[name="csrf-token-hash"]');
+            // var csrfName = metaName ? metaName.getAttribute('content') : null;
+            var csrfName = $('meta[name="csrf-token-name"]').attr('content');
+            // var csrfHash = metaHash ? metaHash.getAttribute('content') : null;
 
-            function updateAjaxSetup(newHash) {
-                if (window.jQuery && csrfName && newHash) {
+            function refreshCsrfToken() {
+                $.get('<?= site_url('auth/get_csrf'); ?>', function(data) {
+                    $('meta[name="csrf-token-hash"]').attr('content', data.token);
+                    // 2. Update semua input hidden yang dibuat pake csrf_field()
+                    $('input[name="' + csrfName + '"]').val(data.token);
+                    // 3. Update settingan global JQuery AJAX
                     $.ajaxSetup({
                         data: {
-                            [csrfName]: newHash
+                            [csrfName]: data.token
                         }
                     });
-                    var hashField = document.querySelector('meta[name="csrf-token-hash"]');
-                    if (hashField) hashField.setAttribute('content', newHash);
-                }
+                    console.log('CSRF token Berhasil Diperbarui');
+                });
             }
 
-            // Tunggu dokumen siap untuk perintah jQuery
-            document.addEventListener('DOMContentLoaded', function() {
-                if (window.jQuery) {
-                    updateAjaxSetup(csrfHash);
-                    $(document).ajaxComplete(function(event, xhr, settings) {
-                        var newHash = xhr.getResponseHeader('X-CSRF-TOKEN');
-                        if (newHash) updateAjaxSetup(newHash);
+            $(document).ready(function() {
+                // Set up awal pas halaman load
+                var initialHash = $('meta[name="csrf-token-hash"]').attr('content');
+                if (csrfName && initialHash) {
+                    $.ajaxSetup({
+                        data: {
+                            [csrfName]: initialHash
+                        }
                     });
                 }
+
+
+                // Jurus Anti-Macet: Setiap request POST selesai, kita minta token baru
+                $(document).ajaxComplete(function(event, xhr, settings) {
+                    if (settings.type === 'POST' || settings.type === 'post') {
+                        refreshCsrfToken();
+                    }
+                });
             });
+
+            // function updateAjaxSetup(newHash) {
+            //     if (window.jQuery && csrfName && newHash) {
+            //         $.ajaxSetup({
+            //             data: {
+            //                 [csrfName]: newHash
+            //             }
+            //         });
+            //         var hashField = document.querySelector('meta[name="csrf-token-hash"]');
+            //         if (hashField) hashField.setAttribute('content', newHash);
+            //     }
+            // }
+
+            // // Tunggu dokumen siap untuk perintah jQuery
+            // document.addEventListener('DOMContentLoaded', function() {
+            //     if (window.jQuery) {
+            //         updateAjaxSetup(csrfHash);
+            //         $(document).ajaxComplete(function(event, xhr, settings) {
+            //             var newHash = xhr.getResponseHeader('X-CSRF-TOKEN');
+            //             if (newHash) updateAjaxSetup(newHash);
+            //         });
+            //     }
+            // });
         })();
     </script>
 
