@@ -297,9 +297,21 @@ Bonehacker CI4 menyediakan berbagai fitur komprehensif untuk manajemen kesehatan
 ### 13. Fitur Tambahan
 - **Greeting System**: Sistem salam otomatis
 - **QR Code Generation**: Pembuatan kode QR untuk berbagai keperluan
-- **PDF Generation**: Ekspor dokumen ke format PDF
+- **PDF Generation**: Pembuatan kode QR untuk berbagai keperluan
 - **Spreadsheet Export**: Ekspor data ke Excel
 - **DataTables Integration**: Tampilan tabel interaktif dengan fitur pencarian dan pagination
+
+## Dokumentasi SSO (Single Sign-On)
+
+Proyek ini mencakup dokumentasi lengkap untuk implementasi SSO (Single Sign-On) Nexia Enterprise dan integrasi dengan SmartSociety:
+
+- **[Ringkasan Implementasi SSO](docs/sso/OAUTH_SSO_COMPLETE.md)**: Gambaran umum status implementasi OAuth 2.0 yang sudah selesai.
+- **[Panduan Integrasi API SSO](docs/sso/API_SSO_DOCUMENTATION.md)**: Detail endpoint API, kontrak respons, dan environment minimum.
+- **[Langkah Implementasi OAuth 2.0](docs/sso/OAUTH_IMPLEMENTATION_STEPS.md)**: Panduan step-by-step konfigurasi Laravel Passport dan OAuth routes.
+- **[Implementasi Login SSO SmartSociety](docs/sso/IMPLEMENTASI_LOGIN_SSO_SMARTSOCIETY.md)**: Alur autentikasi menggunakan provider Authentik dan Socialite.
+- **[Konfigurasi Logout SSO Authentik](docs/sso/KONFIGURASI_LOGOUT_SSO_AUTHENTIK.md)**: Panduan menangani masalah auto-login dan konfigurasi logout global.
+- **[Panduan Integrasi Gembala](docs/sso/GEMBALA_INTEGRATION_GUIDE.md)**: Instruksi khusus untuk integrasi aplikasi client (Gembala) dengan Nexia.
+- **[Diagram Alur SSO](docs/sso/SSO_FLOW_DIAGRAM.md)**: Visualisasi journey user dan alur teknis (Sequence Diagram).
 
 ## Teknologi yang Digunakan
 
