@@ -259,7 +259,7 @@
                 text: '<i class="fas fa-file-pdf"></i> PDF',
                 action: function(e, dt, node, config) {
                     var regionId = $('#region_id').val() || ''; // Pastikan ID selector benar
-                    window.open('<?= site_url('patient/print_pdf') ?>?region_id=' + regionId, '_blank');
+                    window.open('<?= site_url('antrean/print_pdf_antrean') ?>?region_id=' + regionId, '_blank');
                 }
             });
 
@@ -269,7 +269,9 @@
                 text: '<i class="fas fa-file-excel"></i> Export Excel',
                 action: function(e, dt, node, config) {
                     var regionId = $('#region_id').val() || '';
-                    window.location.href = '<?= site_url('patient/export') ?>?region_id=' + regionId;
+                    var start = $('#startDate').val() || '';
+                    var end = $('#endDate').val() || '';
+                    window.location.href = '<?= site_url('antrean/export_excell_antrean') ?>?region_id=' + regionId;
                 }
             });
         <?php endif; ?>

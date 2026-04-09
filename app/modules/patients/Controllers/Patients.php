@@ -37,14 +37,20 @@ class Patients extends BaseController
             foreach ($files as $file) {
                 if ($file->isValid() && !$file->hasMoved()) {
                     $newName = $file->getRandomName();
-                    $file->move(ROOTPATH . 'public/patient_file/', $newName);
-                    $file_urls[] = base_url('patient_file/' . $newName);
+
+                    if ($file->move(FCPATH . 'patient_file', $newName)) {
+                        $file_urls[] = $newName;
+                    }
                 }
             }
         }
 
         $domestic = ($this->request->getPost('domestic') === 'dalam_negeri') ? 1 : 0;
-        $userId   = $this->session->get('userId');
+        $userId   = $this->session->get('userId') ?? $this->session->get('id');
+
+        if (!$userId) {
+            return redirect()->back()->with('message', ['error', 'Sesi login habis. Silakan login kembali.']);
+        }
 
         // Data Pasien
         $patientData = [
@@ -62,6 +68,7 @@ class Patients extends BaseController
             'created_by'          => $userId,
             'patient_information' => $this->request->getPost('patient_information') ?: "",
             'ket_suspect'         => $this->request->getPost('ket_rentan') ?: "",
+            'created_at'          => date('Y-m-d H:i:s'),
         ];
 
         $visitDate = $this->request->getPost('visit_date');
@@ -72,30 +79,49 @@ class Patients extends BaseController
             $patientData['created_at'] = date('Y-m-d H:i:s');
         }
 
-        if ($this->patientModel->insert($patientData)) {
-            $patientId = $this->patientModel->getInsertID();
-            $addressModel = new MAddress();
-            $addressData = [
-                'patient_id'     => $patientId,
-                'desa_id'        => $this->request->getPost('desa_id'),
-                'desa_nama'      => $this->request->getPost('desa_nama'),
-                'kecamatan_id'   => $this->request->getPost('kecamatan_id'),
-                'kecamatan_nama' => $this->request->getPost('kecamatan_nama'),
-                'kabupaten_id'   => $this->request->getPost('kabupaten_id'),
-                'kabupaten_nama' => $this->request->getPost('kabupaten_nama'),
-                'provinsi_id'    => $this->request->getPost('provinsi_id'),
-                'provinsi_nama'  => $this->request->getPost('provinsi_nama'),
-            ];
+        try {
 
-            $addressModel->insert($addressData);
+            if ($this->patientModel->insert($patientData)) {
+                $patientId = $this->patientModel->getInsertID();
+                $addressModel = new MAddress();
+                $addressData = [
+                    'patient_id'     => $patientId,
+                    'desa_id'        => $this->request->getPost('desa_id'),
+                    'desa_nama'      => $this->request->getPost('desa_nama'),
+                    'kecamatan_id'   => $this->request->getPost('kecamatan_id'),
+                    'kecamatan_nama' => $this->request->getPost('kecamatan_nama'),
+                    'kabupaten_id'   => $this->request->getPost('kabupaten_id'),
+                    'kabupaten_nama' => $this->request->getPost('kabupaten_nama'),
+                    'provinsi_id'    => $this->request->getPost('provinsi_id'),
+                    'provinsi_nama'  => $this->request->getPost('provinsi_nama'),
+                    'date_created'   => date('Y-m-d H:i:s'),
+                ];
 
-            session()->setFlashdata('message', ['success', 'Data Berhasil Disimpan']);
-        } else {
-            // Jika insert pasien gagal
-            session()->setFlashdata('message', ['error', 'Gagal menyimpan data pasien']);
+                $addressModel->insert($addressData);
+
+                return $this->response->setJSON([
+                    'status'    => 'success',
+                    'message'   => 'Data Pasien ' . $patientData['name'] . ' Berhasil Disimpan',
+                    'new_token' => csrf_hash()
+                ]);
+                // session()->setFlashdata('message', ['success', 'Data Berhasil Disimpan']);
+                // return redirect()->to(site_url('dashboard'));
+            } else {
+                $errors = implode(', ', $this->patientModel->errors());
+                return $this->response->setJSON([
+                    'status'    => 'error',
+                    'message'   => 'Gagal validasi: ' . $errors,
+                    'new_token' => csrf_hash()
+                ]);
+                // return redirect()->back()->with('message', ['error', 'Gagal: ' . $errors]);
+            }
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'status'    => 'error',
+                'message'   => 'Database Error: ' . $e->getMessage(),
+                'new_token' => csrf_hash()
+            ]);
         }
-
-        return redirect()->to(site_url('dashboard'));
     }
 
     public function fetch()
@@ -183,22 +209,19 @@ class Patients extends BaseController
 
         $builder = $db->table('patients p')
             ->select('
-            p.*, 
-            r.name as name_region, 
-            pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama, pa.provinsi_nama,
-            (
-                SELECT MAX(date) 
-                FROM histories h 
-                WHERE h.patient_id = p.id AND h.is_delete = 0
-            ) AS date,
-            (
-                SELECT COUNT(h.id)
-                FROM histories h 
-                WHERE h.patient_id = p.id AND h.is_delete = 0
-            ) AS visit_count
+          p.id, p.name, p.phone, p.address, p.is_delete, p.region_id,
+        ANY_VALUE(r.name) as name_region, 
+        ANY_VALUE(pa.desa_nama) as desa_nama, 
+        ANY_VALUE(pa.kecamatan_nama) as kecamatan_nama, 
+        ANY_VALUE(pa.kabupaten_nama) as kabupaten_nama, 
+        ANY_VALUE(pa.provinsi_nama) as provinsi_nama,
+        COUNT(h.id) AS visit_count,
+        MAX(h.date) AS last_visit_date
         ')
             ->join('regions r', 'r.id = p.region_id', 'left')
-            ->join('patient_address pa', 'pa.patient_id = p.id', 'left');
+            ->join('patient_address pa', 'pa.patient_id = p.id', 'left')
+            ->join('histories h', 'h.patient_id = p.id AND h.is_delete = 0', 'left');
+            // ->where('p.is_delete', 0);
         // ->limit($limit, $start);
 
         if (!empty($region)) {
@@ -211,9 +234,14 @@ class Patients extends BaseController
                 ->orLike('p.id', $search)
                 ->groupEnd();
         }
-        $totalFiltered = $builder->countAllResults(false);
+
+        $builder->groupBy('p.id');
+        // $totalFiltered = $builder->countAllResults(false);
+        $totalFiltered = $db->table('(' . $builder->getCompiledSelect(false) . ') AS temp_table')->countAllResults();
+
         $data = $builder->limit($limit, $start)->get()->getResult();
-        $totalData = $db->table('patients')->countAllResults();
+
+        $totalData = $db->table('patients')->where('is_delete', 0)->countAllResults();
 
         // $data = $builder->get()->getResult();
         $output = [];
@@ -234,7 +262,7 @@ class Patients extends BaseController
                 "name"        => $row->name . ' (' . $row->phone . ')',
                 "name_region" => $row->name_region ?? '-',
                 "address"     => $fullAddress,
-                "date"        => !empty($row->date) ? date('d-m-Y', strtotime($row->date)) : '-', // format_tanggal manual
+                "date"        => !empty($row->last_visit_date) ? date('d-m-Y', strtotime($row->last_visit_date)) : '-',
                 "visit_count" => $row->visit_count ?? 0,
                 "action"      => '
                 <a href="' . site_url('patient/show/' . $row->id) . '" class="btn btn-primary btn-sm mr-1"><i class="fas fa-eye"></i></a>
@@ -282,7 +310,6 @@ class Patients extends BaseController
             ->get()
             ->getRowArray() ?? [];
 
-        // Jika data alamat tidak ditemukan, inisialisasi dengan string kosong agar view tidak error
         if (!$addressData) {
             $addressData = [
                 'desa_id'        => '',
@@ -407,14 +434,14 @@ class Patients extends BaseController
             'phone'      => (!empty($patient['phone'])) ? $patient['phone'] : "-"
         ];
         // dd($updateData);
-       
+
         $update = $this->patientModel->update($id, $updateData);
 
         // Logging (Opsional)
         log_message('info', "Update file pasien ID $id. Data POST: " . json_encode($this->request->getPost()));
 
         if ($update) {
-           return redirect()->to('patient/show/' . $id)->with('success', 'File pasien berhasil diperbarui');
+            return redirect()->to('patient/show/' . $id)->with('success', 'File pasien berhasil diperbarui');
         } else {
             return redirect()->back()->with('error', 'File pasien gagal diperbarui');
         }
@@ -425,7 +452,7 @@ class Patients extends BaseController
     {
         if ($this->patientModel->destroy($id)) {
             $this->session->setFlashdata('message', ['success', 'Data Berhasil dihapus']);
-    
+
             return $this->response->setJSON(['status' => true]);
         }
 
@@ -449,15 +476,28 @@ class Patients extends BaseController
 
         return $this->response->setJSON([
             'exists'   => !empty($patients),
-            'patients' => $patients
+            'patients' => $patients,
+            'new_token' => csrf_hash(),
         ]);
     }
 
     public function print_pdf()
     {
+        set_time_limit(0);
+        ini_set('memory_limit', '512M');
         // 1. Ambil Data (Eager Loaded dari Model)
         $region_id = $this->request->getGet('region_id');
-        $patients = $this->patientModel->getAllData($region_id);
+        $dateRange = $this->request->getGet('date_range');
+        $start_date = null;
+        $end_date = null;
+
+        if (!empty($dateRange) && strpos($dateRange, ' - ') !== false) {
+            $dates = explode(' - ', $dateRange);
+            $start_date = date('Y-m-d', strtotime(trim($dates[0])));
+            $end_date   = date('Y-m-d', strtotime(trim($dates[1])));
+        }
+
+        $patients = $this->patientModel->getAllData($region_id, null, 0, $start_date, $end_date);
         $jenisKelamin = $this->jenisKelamin;
 
         // 2. Inisialisasi TCPDF (Ubah ke Landscape 'L' agar muat banyak kolom)
@@ -482,30 +522,34 @@ class Patients extends BaseController
         $pdf->SetFont('times', '', 8);
         $no = 1;
 
-        foreach ($patients as $patient) {
-            $row = (object) $patient;
-            if ($pdf->GetY() > 180) {
+        while ($row = $patients->getUnbufferedRow()) {
+
+            // Cek Page Break (Landscape A4 batasnya sekitar 180mm)
+            if ($pdf->GetY() > 175) {
                 $pdf->AddPage();
                 $this->drawHeader($pdf);
+                $pdf->SetFont('times', '', 8);
             }
 
             // Ambil data yang sudah dihitung di model (total_history)
             $jumlahRM = $row->total_history ?? 0;
-            $gender   = $jenisKelamin[$row->gender] ?? $row->gender;
+            // $gender   = $jenisKelamin[$row->gender] ?? $row->gender;
+            $gender = ($row->gender == 'Man') ? 'L' : 'P';
+            $alamat = trim(($row->desa_nama ?? '') . ' ' . ($row->kecamatan_nama ?? '') . ' ' . ($row->kabupaten_nama ?? ''));
+            if (empty($alamat)) $alamat = $row->address ?? '-';
+            $pdf->SetFont('times', '', 8);
 
             // Render Row
             $pdf->MultiCell(10, 7, $no++, 1, 'C', 0, 0);
-            $pdf->MultiCell(12, 7, $row->id, 1, 'C', 0, 0);
-            $pdf->MultiCell(35, 7, $row->name, 1, 'L', 0, 0);
-            $pdf->MultiCell(20, 7, $gender, 1, 'C', 0, 0);
-            $pdf->MultiCell(10, 7, $row->age, 1, 'C', 0, 0);
-            $pdf->MultiCell(25, 7, $row->name_region ?? '-', 1, 'L', 0, 0);
-            $pdf->MultiCell(25, 7, $row->phone, 1, 'L', 0, 0);
-            $pdf->MultiCell(30, 7, $row->desa_nama ?? '-', 1, 'L', 0, 0);
-            $pdf->MultiCell(30, 7, $row->kecamatan_nama ?? '-', 1, 'L', 0, 0);
-            $pdf->MultiCell(30, 7, $row->kabupaten_nama ?? '-', 1, 'L', 0, 0);
-            $pdf->MultiCell(15, 7, ($row->is_suspective ? 'Ya' : 'Tdk'), 1, 'C', 0, 0);
-            $pdf->MultiCell(15, 7, $jumlahRM, 1, 'C', 0, 1);
+            $pdf->MultiCell(15, 7, $row->id, 1, 'C', 0, 0);
+            $pdf->MultiCell(45, 7, $row->name, 1, 'L', 0, 0); // Nama rata kiri (L)
+            $pdf->MultiCell(15, 7, $gender, 1, 'C', 0, 0);
+            $pdf->MultiCell(12, 7, $row->age, 1, 'C', 0, 0);
+            $pdf->MultiCell(30, 7, $row->name_region ?? '-', 1, 'L', 0, 0);
+            $pdf->MultiCell(30, 7, $row->phone, 1, 'L', 0, 0);
+            $pdf->MultiCell(55, 7, $row->address, 1, 'L', 0, 0); // Alamat rata kiri
+            $pdf->MultiCell(30, 7, $row->last_visit ?? '-', 1, 'C', 0, 0);
+            $pdf->MultiCell(15, 7, $row->total_history ?? 0, 1, 'C', 0, 1);
         }
 
         // 6. Output
@@ -520,18 +564,15 @@ class Patients extends BaseController
         $pdf->SetFont('times', 'B', 8);
         $pdf->SetFillColor(230, 230, 230);
         $pdf->MultiCell(10, 8, 'NO', 1, 'C', 1, 0);
-        $pdf->MultiCell(12, 8, 'ID', 1, 'C', 1, 0);
-        $pdf->MultiCell(35, 8, 'Nama', 1, 'C', 1, 0);
-        $pdf->MultiCell(20, 8, 'Gender', 1, 'C', 1, 0);
-        $pdf->MultiCell(10, 8, 'Usia', 1, 'C', 1, 0);
-        $pdf->MultiCell(25, 8, 'Wilayah', 1, 'C', 1, 0);
-        $pdf->MultiCell(25, 8, 'No. Telp', 1, 'C', 1, 0);
-        $pdf->MultiCell(30, 8, 'Desa', 1, 'C', 1, 0);
-        $pdf->MultiCell(30, 8, 'Kecamatan', 1, 'C', 1, 0);
-        $pdf->MultiCell(30, 8, 'Kabupaten', 1, 'C', 1, 0);
-        $pdf->MultiCell(15, 8, 'Rentan', 1, 'C', 1, 0);
+        $pdf->MultiCell(15, 8, 'ID', 1, 'C', 1, 0);
+        $pdf->MultiCell(45, 8, 'Nama Pasien', 1, 'C', 1, 0);
+        $pdf->MultiCell(15, 8, 'L/P', 1, 'C', 1, 0);
+        $pdf->MultiCell(12, 8, 'Usia', 1, 'C', 1, 0);
+        $pdf->MultiCell(30, 8, 'Wilayah', 1, 'C', 1, 0);
+        $pdf->MultiCell(30, 8, 'No. Telp', 1, 'C', 1, 0);
+        $pdf->MultiCell(55, 8, 'Alamat (Desa/Kec/Kab)', 1, 'C', 1, 0);
+        $pdf->MultiCell(30, 8, 'Visit Terakhir', 1, 'C', 1, 0);
         $pdf->MultiCell(15, 8, 'RM', 1, 'C', 1, 1);
-
         $pdf->SetFont('times', '', 8);
     }
 
@@ -657,7 +698,7 @@ class Patients extends BaseController
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
-        $headers = ['No', 'ID Pasien', 'Name', 'Gender', 'Age', 'Address', 'Phone', 'Rentan', 'Region', 'Desa', 'Kecamatan', 'Kabupaten', 'Date', 'Total RM'];
+        $headers = ['No', 'ID Pasien', 'Name', 'Gender', 'Age', 'Address', 'Phone', 'Rentan', 'Region', 'Date', 'Total RM'];
         $sheet->fromArray($headers, NULL, 'A1');
 
         $headerStyle = [
@@ -665,11 +706,11 @@ class Patients extends BaseController
             'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => '2E7D32']],
             'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER]
         ];
-        $sheet->getStyle('A1:N1')->applyFromArray($headerStyle);
+        $sheet->getStyle('A1:K1')->applyFromArray($headerStyle);
 
         $row = 2;
         $no = 1;
-        foreach ($data as $item) {
+        while ($item = $data->getUnbufferedRow()) {
             $sheet->setCellValue('A' . $row, $no);
             $sheet->setCellValue('B' . $row, $item->id);
             $sheet->setCellValue('C' . $row, $item->name);
@@ -679,16 +720,16 @@ class Patients extends BaseController
             $sheet->setCellValue('G' . $row, $item->phone);
             $sheet->setCellValue('H' . $row, $item->is_suspective ? 'Ya' : 'Tidak');
             $sheet->setCellValue('I' . $row, $item->name_region);
-            $sheet->setCellValue('J' . $row, $item->desa_nama);
-            $sheet->setCellValue('K' . $row, $item->kecamatan_nama);
-            $sheet->setCellValue('L' . $row, $item->kabupaten_nama);
-            $sheet->setCellValue('M' . $row, $item->last_visit);
-            $sheet->setCellValue('N' . $row, $item->total_history);
+            // $sheet->setCellValue('J' . $row, $item->desa_nama);
+            // $sheet->setCellValue('K' . $row, $item->kecamatan_nama);
+            // $sheet->setCellValue('L' . $row, $item->kabupaten_nama);
+            $sheet->setCellValue('J' . $row, $item->last_visit);
+            $sheet->setCellValue('K' . $row, $item->total_history);
 
             if (isset($item->is_delete) && $item->is_delete == 1) {
                 $sheet->getStyle('A' . $row . ':N' . $row)->getFill()
                     ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-                    ->getStartColor()->setARGB('FFFFCCCC'); // Merah sangat muda agar tetap terbaca
+                    ->getStartColor()->setARGB('FFFFCCCC');
             }
 
             $row++;
@@ -709,5 +750,29 @@ class Patients extends BaseController
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
         $writer->save('php://output');
         exit();
+    }
+
+    public function export_data()
+    {
+        $type      = $this->request->getGet('type');
+        $region_id = $this->request->getGet('region_id');
+        $dateRange = $this->request->getGet('date_range');
+
+        $start_date = null;
+        $end_date   = null;
+
+        if (!empty($dateRange) && strpos($dateRange, ' - ') !== false) {
+            $dates = explode(' - ', $dateRange);
+            $start_date = date('Y-m-d', strtotime($dates[0]));
+            $end_date   = date('Y-m-d', strtotime($dates[1]));
+        }
+
+        $data = $this->patientModel->getAllData($region_id, null, 0, $start_date, $end_date);
+
+        if ($type === 'pdf') {
+            return $this->print_pdf($data);
+        } else {
+            return $this->export($data);
+        }
     }
 }

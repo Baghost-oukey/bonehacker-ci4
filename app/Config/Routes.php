@@ -12,7 +12,9 @@ $routes->group('auth', ['namespace' => 'App\modules\auth\Controllers'], function
     $routes->get('/', 'Auth::index');
     $routes->post('validate', 'Auth::authValidate');
     $routes->get('destroy', 'Auth::destroy');
+    $routes->get('get_csrf', 'Auth::get_csrf');
 });
+
 
 // Beranda Patients
 $routes->get('beranda_views', '\App\modules\beranda\Controllers\Beranda::index');
@@ -24,21 +26,21 @@ $routes->post('patients/fetch2', '\App\modules\patients\Controllers\Patients::fe
 // Save Data - Rekam Medis
 $routes->post('patient/store', '\App\modules\patients\Controllers\Patients::store');
 $routes->post('patient/check_phone', '\App\modules\patients\Controllers\Patients::check_phone');
+$routes->get('patient/export_data', '\App\modules\patients\Controllers\Patients::export_data');
 
 // Antrean
 $routes->group('antrean', ['namespace' => 'App\modules\antrean\Controllers'], function ($routes) {
     $routes->get('/', 'Antrean::index');
-    // Ambil Data
     $routes->get('fetchJson', 'Antrean::fetchJson');
     $routes->post('fetchDataTable', 'Antrean::fetchDataTable');
-    // Ambil Data Untuk Pasien
     $routes->post('fetchPatientDataTables', 'Antrean::fetchPatientDataTables');
-    // Menambahkan ke Antrian
     $routes->get('addToQueue/(:num)', 'Antrean::addToQueue/$1');
     $routes->post('destroy/(:num)', 'Antrean::destroy/$1');
     $routes->get('daftarAntrean', 'Antrean::daftarAntrean');
     $routes->get('procesToQueue/(:num)', 'Antrean::procesToQueue/$1');
     $routes->get('finishQueue/(:num)', 'Antrean::finishQueue/$1');
+    $routes->get('export_excell_antrean', 'Antrean::export_excell_antrean');
+    $routes->get('print_pdf_antrean', 'Antrean::print_pdf_antrean');
 });
 
 // Wilayah

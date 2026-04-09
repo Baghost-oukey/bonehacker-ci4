@@ -270,7 +270,210 @@ class Antrean extends BaseController
         $time = Time::parse($startDate, 'Asia/Jakarta', 'id_ID');
         $data['currentDate'] = $time->toLocalizedString('EEEE, dd/MM/yyyy');
 
-        // Load View standar (Bukan Blade)
         return view('App\modules\antrean\Views\views_daftar_antrean', $data);
+    }
+
+    public function export_excell_antrean()
+    {
+        $startDate = $this->request->getGet('start_date') ?: date('Y-m-d');
+        $endDate   = $this->request->getGet('end_date') ?: date('Y-m-d');
+        $regionId  = $this->request->getGet('region');
+
+
+        $builder = $this->db->table('patient_queues pq')
+            ->select('pq.queue_date, 
+        p.name as patient_name, 
+        p.phone, 
+        p.address, 
+        pa.desa_nama, 
+        pa.kecamatan_nama,  
+        pa.kabupaten_nama,
+        h.process_at, 
+        h.finish_at,
+        t.nama as therapist_name,
+        (CASE 
+            WHEN h.finish_at IS NOT NULL THEN "Selesai"
+            WHEN h.process_at IS NOT NULL THEN "Diproses"
+            ELSE "Menunggu"
+        END) as status_label')
+            ->join('patients p', 'p.id = pq.patient_id', 'left')
+            ->join('patient_address pa', 'pa.patient_id = p.id', 'left')
+            ->join('histories h', 'h.patient_queue_id = pq.id', 'left')
+            ->join('terapis t', 't.terapis_id = h.terapis_id', 'left')
+            ->where('DATE(pq.queue_date) >=', $startDate)
+            ->where('DATE(pq.queue_date) <=', $endDate);
+        if (!empty($regionId)) {
+            $builder->where('pq.region_id', $regionId);
+        }
+
+        $query = $builder->get();
+
+        //    Buat Excel
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Header
+        $headers = ['No', 'Tgl Antrean', 'Nama Pasien', 'No WA', 'Alamat Lengkap', 'Status', 'Terapis', 'Mulai', 'Selesai', 'Durasi'];
+        $sheet->fromArray($headers, NULL, 'A1');
+        $headerStyle = [
+            'font' => [
+                'bold' => true,
+                'color' => ['rgb' => 'FFFFFF'],
+            ],
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'startColor' => ['rgb' => '2E7D32'],
+            ],
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                ],
+            ],
+        ];
+
+        $sheet->getStyle('A1:J1')->applyFromArray($headerStyle);
+        $sheet->getRowDimension('1')->setRowHeight(25);
+
+        $rowNum = 2;
+        $no = 1;
+
+        // Column $ Isi
+        while ($row = $query->getUnbufferedRow()) {
+            $fullAddress = implode(', ', array_filter([$row->address, $row->desa_nama, $row->kecamatan_nama, $row->kabupaten_nama]));
+
+            $durasi = '-';
+            if ($row->process_at && $row->finish_at) {
+                $start = new \DateTime($row->process_at);
+                $end = new \DateTime($row->finish_at);
+                $interval = $start->diff($end);
+                $durasi = $interval->format('%i Menit');
+            }
+            $sheet->setCellValue('A' . $rowNum, $no++);
+            $sheet->setCellValue('B' . $rowNum, date('d-m-Y', strtotime($row->queue_date)));
+            // $sheet->setCellValue('C' . $rowNum, $row->patient_id);
+            $sheet->setCellValue('C' . $rowNum, $row->patient_name);
+            $sheet->setCellValue('D' . $rowNum, $row->phone);
+            $sheet->setCellValue('E' . $rowNum, $fullAddress);
+            $sheet->setCellValue('F' . $rowNum, $row->status_label);
+            $sheet->setCellValue('G' . $rowNum, $row->therapist_name ?: '-');
+            $sheet->setCellValue('H' . $rowNum, $row->process_at ? date('H:i', strtotime($row->process_at)) : '-');
+            $sheet->setCellValue('I' . $rowNum, $row->finish_at ? date('H:i', strtotime($row->finish_at)) : '-');
+            $sheet->setCellValue('J' . $rowNum, $durasi);
+            $rowNum++;
+        }
+
+        $filename = 'Antrean_' . $startDate . '_to_' . $endDate . '.xlsx';
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        // Output 
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit();
+    }
+
+    public function print_pdf_antrean()
+    {
+        $startDate = $this->request->getGet('start_date') ?: date('Y-m-d');
+        $endDate = $this->request->getGet('end_date') ?: date('Y-m-d');
+        $region = $this->request->getGet('region');
+
+        $builder = $this->db->table('patient_queues pq')
+            ->select('pq.queue_date, p.name as patient_name, p.phone, p.address, 
+            pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama,
+            h.process_at, h.finish_at, t.nama as therapist_name,
+            (CASE 
+                WHEN h.finish_at IS NOT NULL THEN "Selesai"
+                WHEN h.process_at IS NOT NULL THEN "Diproses"
+                ELSE "Menunggu"
+            END) as status_label')
+            ->join('patients p', 'p.id = pq.patient_id', 'left')
+            ->join('patient_address pa', 'pa.patient_id = p.id', 'left')
+            ->join('histories h', 'h.patient_queue_id = pq.id', 'left')
+            ->join('terapis t', 't.terapis_id = h.terapis_id', 'left')
+            ->where('DATE(pq.queue_date) >=', $startDate)
+            ->where('DATE(pq.queue_date) <=', $endDate);
+
+        if (!empty($region)) $builder->where('pq.region_id', $region);
+        $query = $builder->get();
+
+
+        // Buat PDF
+        $pdf = new \TCPDF('L', 'mm', 'A4', true, 'UTF-8', false);
+        $pdf->SetCreator(PDF_CREATOR);
+        $pdf->SetTitle('Laporan Antrean Pasien');
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
+        $pdf->SetMargins(10, 10, 10);
+        $pdf->AddPage();
+
+        // Header
+        $pdf->SetFont('helvetica', 'B', 14);
+        $pdf->Cell(0, 10, 'LAPORAN ANTREAN PASIEN', 0, 1, 'C');
+        $pdf->SetFont('helvetica', '', 10);
+        $pdf->Cell(0, 7, 'Periode: ' . date('d/m/Y', strtotime($startDate)) . ' s/d ' . date('d/m/Y', strtotime($endDate)), 0, 1, 'C');
+        $pdf->Ln(5);
+
+        $pdf->SetFillColor(46, 125, 50);
+        $pdf->SetTextColor(255, 255, 255);
+        $pdf->SetFont('helvetica', 'B', 8);
+
+        // Column 
+        $pdf->Cell(8, 8, 'No', 1, 0, 'C', 1);
+        $pdf->Cell(22, 8, 'Tgl Antrean', 1, 0, 'C', 1);
+        $pdf->Cell(35, 8, 'Nama Pasien', 1, 0, 'C', 1);
+        $pdf->Cell(25, 8, 'No WA', 1, 0, 'C', 1);
+        $pdf->Cell(55, 8, 'Alamat Lengkap', 1, 0, 'C', 1);
+        $pdf->Cell(20, 8, 'Status', 1, 0, 'C', 1);
+        $pdf->Cell(35, 8, 'Terapis', 1, 0, 'C', 1);
+        $pdf->Cell(17, 8, 'Mulai', 1, 0, 'C', 1);
+        $pdf->Cell(17, 8, 'Selesai', 1, 0, 'C', 1);
+        $pdf->Cell(43, 8, 'Durasi', 1, 1, 'C', 1);
+
+        // Isi Table
+        $pdf->SetTextColor(0, 0, 0);
+        $pdf->SetFont('helvetica', '', 8);
+        $no = 1;
+
+        while ($row = $query->getUnbufferedRow()) {
+
+            $durasi = '-';
+            if ($row->process_at && $row->finish_at) {
+                $start = new \DateTime($row->process_at);
+                $end = new \DateTime($row->finish_at);
+                $durasi = $start->diff($end)->format('%i Menit');
+            }
+            $alamat = implode(', ', array_filter([$row->address, $row->desa_nama, $row->kecamatan_nama, $row->kabupaten_nama]));
+            $jamMulai = $row->process_at ? date('H:i', strtotime($row->process_at)) : '-';
+            $jamSelesai = $row->finish_at ? date('H:i', strtotime($row->finish_at)) : '-';
+
+            $startY = $pdf->GetY();
+
+            $pdf->Cell(8, 7, $no++, 1, 0, 'C');
+            $pdf->Cell(22, 7, date('d-m-Y', strtotime($row->queue_date)), 1, 0, 'C');
+            $pdf->Cell(35, 7, $row->patient_name, 1, 0, 'L');
+            $pdf->Cell(25, 7, $row->phone, 1, 0, 'L');
+
+            // MultiCell untuk Alamat (agar bisa wrap text)
+            $pdf->MultiCell(55, 7, $alamat, 1, 'L', 0, 0);
+            $pdf->SetXY($pdf->GetX(), $startY);
+            $pdf->SetX(10 + 8 + 22 + 35 + 25 + 55);
+
+            $pdf->Cell(20, 7, $row->status_label, 1, 0, 'C');
+            $pdf->Cell(35, 7, $row->therapist_name ?: '-', 1, 0, 'L');
+            $pdf->Cell(17, 7, $jamMulai, 1, 0, 'C');
+            $pdf->Cell(17, 7, $jamSelesai, 1, 0, 'C');
+            $pdf->Cell(43, 7, $durasi, 1, 1, 'C');
+        }
+
+        // Output
+        $this->response->setHeader('Content-Type', 'application/pdf');
+        $pdf->Output('Laporan_Antrean_' . date('Ymd') . '.pdf', 'I');
+        exit();
     }
 }

@@ -77,10 +77,10 @@ class MBeranda extends Model
                 $builder->where('MONTH(created_at)', date('m', strtotime('-1 month')))
                     ->where('YEAR(created_at)', date('Y', strtotime('-1 month')));
                 break;
-            case 'this_year':
+            case 'thisyear':
                 $builder->where('YEAR(created_at)', date('Y'));
                 break;
-            case 'last_year':
+            case 'lastyear':
                 $builder->where('YEAR(created_at)', date('Y', strtotime('-1 year')));
                 break;
         }
@@ -89,34 +89,38 @@ class MBeranda extends Model
 
     public function getVisitCount($type, $role, $region_patients)
     {
-        $builder = $this->db->table('patient_queues');
+        $builder = $this->db->table('histories');
 
-        $this->applyRegionFilter($builder, $role, $region_patients);
+        if ($role === 'user' && !empty($region_patients)) {
+            $builder->join('patients', 'patients.id = histories.patient_id');
+            $this->applyRegionFilter($builder, $role, $region_patients, true);
+        }
+        // $this->applyRegionFilter($builder, $role, $region_patients);
+        $builder->where('histories.is_delete', 0);
 
         switch ($type) {
             case 'today':
-                $builder->where('DATE(queue_date)', date('Y-m-d'));
+                $builder->where('DATE(histories.date)', date('Y-m-d'));
                 break;
             case 'yesterday':
-                $builder->where('DATE(queue_date)', date('Y-m-d', strtotime('-1 day')));
+                $builder->where('DATE(histories.date)', date('Y-m-d', strtotime('-1 day')));
                 break;
-            case 'this_month':
-                $builder->where('MONTH(queue_date)', date('m'))
-                    ->where('YEAR(queue_date)', date('Y'));
+            case 'thismonth':
+                $builder->where('MONTH(histories.date)', date('m'))
+                    ->where('YEAR(histories.date)', date('Y'));
                 break;
-            case 'last_month':
+            case 'lastmonth':
                 $lastMonth = date('Y-m-d', strtotime('first day of last month'));
-                $builder->where('MONTH(queue_date)', date('m', strtotime($lastMonth)))
-                    ->where('YEAR(queue_date)', date('Y', strtotime($lastMonth)));
+                $builder->where('MONTH(histories.date)', date('m', strtotime($lastMonth)))
+                    ->where('YEAR(histories.date)', date('Y', strtotime($lastMonth)));
                 break;
-            case 'this_year':
-                $builder->where('YEAR(queue_date)', date('Y'));
+            case 'thisyear':
+                $builder->where('YEAR(histories.date)', date('Y'));
                 break;
-            case 'last_year':
-                $builder->where('YEAR(queue_date)', date('Y', strtotime('-1 year')));
+            case 'lastyear':
+                $builder->where('YEAR(histories.date)', date('Y', strtotime('-1 year')));
                 break;
             case 'all':
-                // Tidak ada filter tanggal untuk semua data
                 break;
         }
 

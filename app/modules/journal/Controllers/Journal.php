@@ -88,7 +88,15 @@ class Journal extends BaseController
             return '<a href="' . site_url('patient/show/' . $row->patient_id) . '" target="_blank" class="btn btn-primary btn-sm"><i class="fas fa-eye"></i></a>';
         });
 
-        return $datatables->asObject()->generate();
+        $response = $datatables->asObject()->generate();
+        if (is_object($response)) {
+            $data = json_decode($response->getBody(), true);
+        } else {
+            $data = ['data' => []];
+        }
+        $data['new_token'] = csrf_hash();
+
+        return $this->response->setJSON($data);
     }
 
     public function export_pdf()

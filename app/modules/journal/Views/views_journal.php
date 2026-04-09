@@ -74,6 +74,14 @@
                     d.region = $('#region').val();
                     d.start_date = $('#start_date').val();
                     d.end_date = $('#end_date').val();
+                    d.<?= csrf_token() ?> = $('input[name=<?= csrf_token() ?>]').val() || "<?= csrf_hash() ?>";
+                },
+                "dataSrc": function(json) {
+                    if (json.new_token) {
+                        CodeIgniter.csrfHash = json.new_token;
+                        $('input[name=<?= csrf_token() ?>]').val(json.new_token);
+                    }
+                    return json.data;
                 }
             },
             "dom": '<"top"lBf>rt<"bottom"ip><"clear">',

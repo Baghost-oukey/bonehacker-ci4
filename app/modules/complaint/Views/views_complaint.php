@@ -46,6 +46,7 @@
                 </button>
             </div>
             <form id="addComplaintForm" action="<?= base_url('complaint/store') ?>" method="post">
+                <?= csrf_field() ?>
                 <div class="modal-body">
                     <div class="form-group">
                         <label>Nama Tag Keluhan</label>
@@ -76,6 +77,8 @@
                 </button>
             </div>
             <form id="editComplaintForm" action="" method="post">
+                <?= csrf_field() ?>
+
                 <div class="modal-body">
                     <div class="form-group">
                         <label>Nama Tag Keluhan</label>
@@ -106,6 +109,8 @@
                 </button>
             </div>
             <form action="" method="post">
+                <?= csrf_field() ?>
+
                 <div class="modal-body">
                     <p>Yakin menghapus data ini? Tag ini akan dihapus dari semua riwayat histori terkait.</p>
                 </div>
@@ -131,7 +136,7 @@
             "ajax": {
                 "url": "<?= site_url('complaint/fetch') ?>",
                 "type": "POST",
-                "data": function(d){
+                "data": function(d) {
                     d.<?= csrf_token() ?> = "<?= csrf_hash() ?>";
                 }
             },
@@ -164,6 +169,55 @@
             ]
         });
 
+        // 1. Simpan Button 
+        $(document).on('submit', '#addComplaintForm, #editComplaintForm', function(e) {
+            e.preventDefault();
+            const form = $(this);
+            const btnSubmit = form.find('button[type="submit"]');
+            const url = form.attr('action');
+
+            $.ajax({
+                url: url,
+                type: "POST",
+                data: form.serialize(),
+                dataType: "JSON",
+                beforeSend: function() {
+                    btnSubmit.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...');
+                },
+                success: function(response) {
+
+                    if (response.csrf_hash) {
+                        $('input[name="<?= csrf_token() ?>"]').val(response.csrf_hash);
+                    }
+
+                    if (response.status || response.success) {
+                        $('.modal').modal('hide');
+                        table.ajax.reload(null, false);
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: response.message || 'Data berhasil disimpan!',
+                            showConfirmButton: false,
+                            timer: 2000 
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal Simpan',
+                            text: response.message || 'Terjadi kesalahan sistem.',
+                            confirmButtonText: 'Tutup',
+                            confirmButtonColor: '#d33'
+                        });
+                        btnSubmit.prop('disabled', false).text('Simpan');
+                    }
+                },
+                error: function(xhr) {
+                    alert('Error: Token CSRF mungkin kadaluarsa atau koneksi terputus. Silakan refresh halaman.');
+                    btnSubmit.prop('disabled', false).text('Simpan');
+                }
+            });
+        });
+
         // 2. Event Button Edit
         $(document).on('click', '.btn_edit', function() {
             const href = $(this).data('href');
@@ -181,7 +235,7 @@
 
             // Inisialisasi ulang validasi untuk Edit
             validateInput('#edit_name', '#edit_submitBtn', '#edit_nameError', name, id, '#edit_description', description);
-        });
+        })
 
         // 3. Event Button Delete
         $(document).on('click', '.btn_delete', function() {
@@ -223,11 +277,17 @@
                             url: '<?= base_url('complaint/check_name_exists') ?>',
                             type: 'POST',
                             data: {
+                                '<?= csrf_token() ?>': '<?= csrf_hash() ?>',
                                 name: currentName,
                                 id: originalId
                             },
                             dataType: 'json',
                             success: function(response) {
+
+                                if (response.csrf_hash) {
+                                    $('input[name="<?= csrf_token() ?>"]').val(response.csrf_hash);
+                                }
+
                                 if (response.exists) {
                                     isNameInvalid = true;
                                     setInvalid(inputId, nameErrorId, submitBtnId, 'Nama tag sudah digunakan.');

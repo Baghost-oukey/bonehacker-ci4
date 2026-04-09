@@ -55,9 +55,11 @@ class MPatients extends Model
 
     // Callbacks
     protected $allowCallbacks = true;
-    protected $beforeInsert   = ['fixPhonevalue'];
+    protected $beforeInsert   = [];
+    // protected $beforeInsert   = ['fixPhonevalue'];
     protected $afterInsert    = [];
-    protected $beforeUpdate   = ['fixPhonevalue'];
+    // protected $beforeUpdate   = ['fixPhonevalue'];
+    protected $beforeUpdate   = [];
     protected $afterUpdate    = [];
     protected $beforeFind     = [];
     protected $afterFind      = [];
@@ -105,34 +107,77 @@ class MPatients extends Model
             ->getResult();
     }
 
-    public function getAllData($region = null)
+    public function getAllData($region = null, ?int $limit = null, int $offset = 0, $start_date = null, $end_date = null)
     {
         $builder = $this->builder();
 
         $builder->select('
-       patients.id, patients.name, patients.gender, patients.age, 
-        patients.address, patients.phone, patients.is_suspective,
+      patients.id, 
+        patients.name, 
+        patients.gender, 
+        patients.age, 
+        patients.address, 
+        patients.phone, 
+        patients.is_suspective,
         r.name AS name_region,
-        a.desa_nama, a.kecamatan_nama, a.kabupaten_nama,
-        /* Subquery: Hitung jumlah RM & Tanggal terakhir dalam satu jalan */
-        (SELECT COUNT(h.id) FROM histories h WHERE h.patient_id = patients.id AND h.is_delete = 0) AS total_history,
-        (SELECT MAX(date) FROM histories h WHERE h.patient_id = patients.id AND h.is_delete = 0) AS last_visit
+        a.desa_nama, 
+        a.kecamatan_nama, 
+        a.kabupaten_nama,
+        patients.is_delete,
+        COUNT(h.id) AS total_history, 
+        MAX(h.date) AS last_visit
     ');
 
         // Join tabel regions dan patient_address
         $builder->join('regions r', 'r.id = patients.region_id', 'left');
         $builder->join('patient_address a', 'a.patient_id = patients.id', 'left');
 
+        $builder->join('histories h', 'h.patient_id = patients.id AND h.is_delete = 0', 'left');
+
         // Filter berdasarkan region jika ada
         if (!empty($region)) {
             $builder->where('patients.region_id', $region);
         }
+        if ($start_date && $end_date) {
+            // $builder->where('patients.created_at >=', $start_date . ' 00:00:00');
+            // $builder->where('patients.created_at <=', $end_date . ' 23:59:59');
+            if ($start_date && $end_date) {
+                $builder->groupStart()
+                    ->where('DATE(patients.created_at) >=', $start_date)
+                    ->where('DATE(patients.created_at) <=', $end_date)
+                    ->groupEnd();
+            }
+        }
 
-        // Biasanya kita hanya ingin data yang belum dihapus (soft delete)
-        $builder->where('patients.is_delete', 0);
+        // $builder->where('patients.is_delete', 0);
+        $builder->groupBy('patients.id');
+        $builder->orderBy('patients.created_at', 'DESC');
 
-        // Mengembalikan hasil sebagai array of objects (stdClass)
-        return $builder->get()->getResult();
+        // $builder->groupBy('patients.id');
+        $builder->groupBy(
+            [
+                'patients.id',
+                'patients.name',
+                'patients.gender',
+                'patients.age',
+                'patients.address',
+                'patients.phone',
+                'patients.is_suspective',
+                'patients.is_delete',
+                'r.name',
+                'a.desa_nama',
+                'a.kecamatan_nama',
+                'a.kabupaten_nama'
+            ]
+        );
+
+        // Limit Data
+        if ($limit !== null && $limit !== -1) {
+            return $builder->get($limit, $offset);
+        }
+
+        // return $builder->get($limit, $offset)->getResult();
+        return $builder->get();
     }
 
     public function getTotalData(string $search = '')
@@ -190,8 +235,11 @@ class MPatients extends Model
 
     public function fixPhonevalue(array $data)
     {
-        if (!isset($data['data']['phone']) || empty($data['data']['phone'])) {
-            $data['data']['phone'] = '-';
+        if (!isset($data['data'])) {
+
+            if (!isset($data['data']['phone']) || empty($data['data']['phone'])) {
+                $data['data']['phone'] = '-';
+            }
         }
         return $data;
     }

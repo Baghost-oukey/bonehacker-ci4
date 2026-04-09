@@ -250,6 +250,53 @@
         </div>
     </div>
 </div>
+
+
+<!-- Export Modal -->
+<div class="modal fade" id="modalExport" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-md" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Export Laporan Pasien</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <form action="<?= site_url('patient/export_data') ?>" method="GET" target="_blank">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Pilih Rentang Tanggal</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <div class="input-group-text"><i class="fas fa-calendar"></i></div>
+                            </div>
+                            <input type="text" name="date_range" id="export_date" class="form-control" placeholder="Pilih Periode Laporan">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Pilih Wilayah</label>
+                        <select name="region_id" class="form-control select2" style="width: 100%;">
+                            <option value="">Semua Wilayah</option>
+                            <?php foreach ($regions_patient as $r): ?>
+                                <option value="<?= $r->id ?>"><?= $r->name ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Format Laporan</label>
+                        <select name="type" class="form-control">
+                            <option value="excel">Export ke Microsoft Excel (.xlsx)</option>
+                            <option value="pdf">Export ke PDF (.pdf)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer bg-whitesmoke br">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">Unduh Sekarang</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
@@ -332,21 +379,28 @@
         var buttonsConfig = [];
 
         <?php if (isset($role) && $role == 'superadmin'): ?>
-            buttonsConfig.push({
-                className: 'btn btn-danger btn-sm mr-1',
-                text: '<i class="fas fa-file-pdf"></i> PDF',
-                action: function(e, dt, node, config) {
-                    var regionId = $('#region').val();
-                    window.open('<?= site_url('patient/print_pdf') ?>?region_id=' + regionId, '_blank');
+            $('#export_date').daterangepicker({
+                locale: {
+                    format: 'YYYY-MM-DD'
+                },
+                ranges: {
+                    'Hari Ini': [moment(), moment()],
+                    'Bulan Ini': [moment().startOf('month'), moment().endOf('month')],
+                    'Tahun Ini': [moment().startOf('year'), moment().endOf('year')]
                 }
             });
+
+            $('#export_date').on('apply.daterangepicker', function(ev, picker) {
+                $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
+            });
+            
             buttonsConfig.push({
-                className: 'btn btn-success btn-sm',
-                text: '<i class="fas fa-file-excel"></i> Excel',
+                className: 'btn btn-primary btn-sm mr-1',
+                text: '<i class="fas fa-file-pdf"></i> Download Data Pasien',
                 action: function(e, dt, node, config) {
-                    var regionId = $('#region').val() || '';
-                    var url = '<?= site_url('patient/export') ?>?region_id=' + regionId;
-                    window.open(url, '_blank');
+                    var regionId = $('#region').val();
+                    $('#modalExport').modal('show');
+
                 }
             });
         <?php endif; ?>
@@ -409,45 +463,141 @@
             table.ajax.reload();
         });
 
+
+        function updateCRSF(newToken) {
+            if (newToken) {
+                $('meta[name="csrf-token"]').attr('content', newToken);
+                $('input[name="<?= csrf_token() ?>"]').val(newToken);
+                // console.log("Security Token Synchronized.");
+            }
+        }
+
         $('#submitBtn').on('click', function(e) {
             e.preventDefault();
-            var btn = $(this)
-            var form = btn.closest('form')[0];
-            if (!form.checkValidity()) {
-                form.classList.add('was-validated');
+            e.stopPropagation();
+
+            var btn = $(this);
+            var $form = btn.closest('form');
+            var formElement = $form[0];
+
+            // 1. Validasi
+            if (!formElement.checkValidity()) {
+                $form.addClass('was-validated');
                 return;
             }
 
 
-            var phone = $('#phone').val();
-            $.ajax({
-                url: '<?= site_url('patient/check_phone') ?>',
-                type: 'POST',
-                data: {
-                    phone: phone,
-                    "<?= csrf_token() ?>": "<?= csrf_hash() ?>"
-                },
-                dataType: 'json',
-                success: function(response) {
-                    if (response.exists) {
-                        var message = "<p>Nomor HP sudah terdaftar:</p><ul>";
-                        response.patients.forEach(function(p) {
-                            message += `<li><strong>${p.name}</strong> (${p.address})</li>`;
-                        });
-                        message += "</ul><p>Tetap simpan data baru?</p>";
+            function simpanPasien() {
+                var formData = new FormData(formElement);
+                var csrfHeader = $('meta[name="csrf-header"]').attr('content');
+                var csrfHash = $('meta[name="csrf-token"]').attr('content');
+                formData.append(csrfHeader, csrfHash);
 
-                        $('#modalBodyContent').html(message);
-                        $('#modalConfirm').modal('show');
+                // console.log("Mengirim Simpan dengan Token: " + csrfHash);
+                $.ajax({
+                    url: $form.attr('action'),
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    dataType: 'json',
+                    headers: {
+                        [csrfHeader]: csrfHash
+                    },
+                    beforeSend: function() {
+                        btn.prop('disabled', true).addClass('btn-progress').text('Proses Simpan...');
+                    },
+                    success: function(res) {
+                        updateCRSF(res.new_token);
 
-                        $('#confirmSave').off('click').on('click', function() {
-                            $('#modalConfirm').modal('hide');
-                            form.submit();
+                        if (res.new_token) {
+                            $('meta[name="csrf-token"]').attr('content', res.new_token);
+                        }
+                        if (res.status === 'success') {
+                            $('#exampleModal').modal('hide');
+                            $form[0].reset();
+                            $form.removeClass('was-validated');
+
+                            if ($.fn.DataTable.isDataTable('#table-1')) {
+                                $('#table-1').DataTable().ajax.reload(null, false);
+                            }
+                            swal.fire({
+                                title: 'Berhasil',
+                                text: res.message,
+                                icon: 'success',
+                                confirmButtonText: 'OK',
+                                allowOutsideClick: false
+                            }).then((results) => {
+                                if (result.isConfirmed) {
+                                    window.location.href = "<?= site_url('dashboard') ?>";
+                                }
+                            })
+
+                        } else {
+                            Swal.fire({
+                                title: 'Gagal!',
+                                text: res.message,
+                                icon: 'error',
+                                confirmButtonText: 'Oke'
+                            });
+                            btn.prop('disabled', false).removeClass('btn-progress').text('Simpan');
+                        }
+                    },
+                    error: function(xhr) {
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Terjadi Kegagalan sistem',
+                            icon: 'error',
+                            // confirmButtonText: 'Perbaiki'
                         });
-                    } else {
-                        form.submit();
+                        btn.prop('disabled', false).removeClass('btn-progress').text('Simpan');
                     }
-                }
-            });
+                });
+            }
+
+            var phone = $('#phone').val();
+
+            // 2. Cek Duplikasi Telepon
+            if (!phone) {
+                simpanPasien();
+            } else {
+                var currentToken = $('meta[name="csrf-token"]').attr('content');
+                $.ajax({
+                    url: '<?= site_url('patient/check_phone') ?>',
+                    type: 'POST',
+                    data: {
+                        phone: phone,
+                        "<?= csrf_token() ?>": currentToken
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        updateCRSF(response.new_token);
+                        if (response.exists) {
+                            btn.prop('disabled', false).removeClass('btn-progress');
+
+                            // Isi modal konfirmasi
+                            var message = "<p>Nomor HP sudah terdaftar:</p><ul>";
+                            response.patients.forEach(function(p) {
+                                message += `<li><strong>${p.name}</strong> (${p.address})</li>`;
+                            });
+                            message += "</ul><p>Tetap simpan data baru?</p>";
+
+                            $('#modalBodyContent').html(message);
+                            $('#modalConfirm').modal('show');
+
+                            // Jika user klik "Ya, Simpan" di modal konfirmasi
+                            $('#confirmSave').off('click').on('click', function() {
+                                $('#modalConfirm').modal('hide');
+                                formElement.submit();
+                                simpanPasien();
+                            });
+                        } else {
+                            simpanPasien();
+                            formElement.submit();
+                        }
+                    }
+                });
+            }
         });
 
         window.destroy = function(id) {

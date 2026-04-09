@@ -17,7 +17,7 @@ class Dashboard extends BaseController
         $mCountries = model('App\modules\countries\Models\MCountries');
         $mPatient   = model('App\modules\patients\Models\MPatients');
 
-        $regions_patient = session()->get('regions_patient');
+        $regions_patient = $mRegion->findAll();
 
         $data = [
             'realname'        => session()->get('realname'),
