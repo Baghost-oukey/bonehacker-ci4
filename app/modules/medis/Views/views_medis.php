@@ -47,6 +47,7 @@
                 </button>
             </div>
             <form id="addMedhisForm" action="<?= base_url('medis/store') ?>" method="post">
+                <?= csrf_field() ?>
                 <div class="modal-body">
                     <div class="form-group">
                         <label>Nama Tag Riwayat Medis</label>
@@ -77,6 +78,7 @@
                 </button>
             </div>
             <form id="editMedhisForm" action="<?= base_url('medis/update') ?>" method="post">
+                <?= csrf_field() ?>
                 <div class="modal-body">
                     <div class="form-group">
                         <label>Nama Tag Riwayat Medis</label>
@@ -107,6 +109,7 @@
                 </button>
             </div>
             <form action="" method="post">
+                <?= csrf_field() ?>
                 <div class="modal-body">
                     <p>Yakin menghapus data ini ?</p>
                 </div>
@@ -214,8 +217,8 @@
         let ajaxRequest;
         let isNameInvalid = false;
 
-       // TAMBAHKAN window. DI DEPANNYA:
-window.validateInput = function(inputId, submitBtnId, nameErrorId, originalValue, originalId, descriptionInputId, originalDescription) {
+        // TAMBAHKAN window. DI DEPANNYA:
+        window.validateInput = function(inputId, submitBtnId, nameErrorId, originalValue, originalId, descriptionInputId, originalDescription) {
             let debounceTimer;
 
             $(inputId).on('input', function() {
@@ -243,7 +246,8 @@ window.validateInput = function(inputId, submitBtnId, nameErrorId, originalValue
                         type: 'POST',
                         data: {
                             name: name,
-                            id: originalId
+                            id: originalId,
+                            "<?= csrf_token() ?>": "<?= csrf_hash() ?>"
                         },
                         dataType: 'json',
                         success: function(response) {

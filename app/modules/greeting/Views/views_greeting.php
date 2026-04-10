@@ -77,7 +77,7 @@
     function editGreeting(index, text) {
         document.getElementById('greetings_input').value = text;
         document.getElementById('greeting_index').value = index;
-        document.getElementById('form-title').innerText = "Edit Salam (Index: " + index + ")";
+        document.getElementById('form-title').innerText = "Edit Salam";
         document.getElementById('btn-cancel').style.display = "inline-block";
 
         // Scroll otomatis ke form agar user tahu sedang mengedit

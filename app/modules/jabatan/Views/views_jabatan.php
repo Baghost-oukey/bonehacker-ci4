@@ -126,14 +126,23 @@
 <script>
     $(document).ready(function() {
 
-        <?php if (session()->getFlashdata('message')) : ?>
+        <?php if (session()->getFlashdata('success')) : ?>
             <?php $flash = session()->getFlashdata('message'); ?>
             Swal.fire({
-                icon: '<?= $flash[0] ?>',
-                title: '<?= ($flash[0] == 'success') ? 'Mantap!' : 'Oops!' ?>',
-                text: '<?= $flash[1] ?>',
+                icon: 'success',
+                title: 'Mantap !',
+                text: '<?= session()->getFlashdata('success') ?>',
                 timer: 2500,
                 showConfirmButton: false
+            });
+        <?php endif; ?>
+
+        <?php if (session()->getFlashdata('error')) : ?>
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops!',
+                text: '<?= session()->getFlashdata('error') ?>',
+                confirmButtonText: 'Oke'
             });
         <?php endif; ?>
 

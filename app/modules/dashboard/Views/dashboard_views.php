@@ -396,7 +396,7 @@
             
             buttonsConfig.push({
                 className: 'btn btn-primary btn-sm mr-1',
-                text: '<i class="fas fa-file-pdf"></i> Download Data Pasien',
+                text: '<i class="fas fa-file-export"></i> Download Data Pasien',
                 action: function(e, dt, node, config) {
                     var regionId = $('#region').val();
                     $('#modalExport').modal('show');

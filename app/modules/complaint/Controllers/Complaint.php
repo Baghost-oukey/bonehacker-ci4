@@ -97,13 +97,13 @@ class Complaint extends BaseController
         if ($this->model_complaint->store($data)) {
             return $this->response->setJSON([
                 'status'    => true,
-                'message'   => 'Tag keluhan berhasil ditambahkan',
+                // 'message'   => 'Tag keluhan berhasil ditambahkan',
                 'csrf_hash' => csrf_hash() 
             ]);
         } else {
             return $this->response->setJSON([
                 'status'    => true,
-                'message'   => 'Tag keluhan berhasil ditambahkan',
+                // 'message'   => 'Tag keluhan berhasil ditambahkan',
                 'csrf_hash' => csrf_hash() 
             ]);
         }

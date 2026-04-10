@@ -35,11 +35,11 @@ class Region extends BaseController
     {
         $requestData = $this->request->getPost();
         $order = $this->request->getPost('order');
-        $column = $this->request->getPost('column');
+        $column = $this->request->getPost('columns');
 
-        $option = [];
-        $option['order'] = !empty($order) && !empty($column) ? $column[$order[0]['column']]['data'] : 'name';
-        $option['mode'] = !empty($order) ? $order[0]['dir'] : 'asc';
+        $options = [];
+        $options['order'] = !empty($order) && !empty($column) ? $column[$order[0]['column']]['data'] : 'r.id';
+        $options['mode'] = !empty($order) ? $order[0]['dir'] : 'ASC';
 
         $start = $this->request->getPost('start');
         $length            = $this->request->getPost('length');
@@ -89,6 +89,8 @@ class Region extends BaseController
         $data = [
             'name' => $this->request->getPost('name')
         ];
+
+        // $result = $this->model_regions->insert($data);
 
         if ($this->model_regions->insert($data)) {
             session()->setFlashdata('message', ['success', 'Data Berhasil diSimpan']);

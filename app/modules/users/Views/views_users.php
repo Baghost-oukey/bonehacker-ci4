@@ -154,8 +154,8 @@
                 url: "<?= base_url('users/fetch'); ?>",
                 type: "POST",
                 data: function(d) {
+                    d.<?= csrf_token() ?> = '<?= csrf_hash() ?>';
                     d.search_value = d.search.value;
-                    d.<?= csrf_token() ?> = $('meta[name="csrf-token-hash"]').attr('content');
                 },
 
                 dataSrc: function(json) {
@@ -210,6 +210,11 @@
             }
         });
 
+        $('.select2').select2({
+            width: '100%',
+            placeholder: "-- Pilih Wilayah --"
+        });
+
         // Edit Button Handler
         $(document).on('click', '.btn_edit', function() {
             const d = $(this).data();
@@ -250,15 +255,15 @@
             if (username.length < 3) return;
 
             if (username === '') {
-                $input.removeClass('is-invalid is-valid'); 
-                $errorLabel.text('').hide(); 
-                $('#submitBtnAdd').prop('disabled', false); 
-                return; 
+                $input.removeClass('is-invalid is-valid');
+                $errorLabel.text('').hide();
+                $('#submitBtnAdd').prop('disabled', false);
+                return;
             }
 
             $.post("<?= base_url('users/check_username_exists') ?>", {
                 username: username,
-                "<?= csrf_token() ?>": typeof currentToken !== 'undefined' ? currentToken : "<?= csrf_hash() ?>"
+                <?= csrf_token() ?>: '<?= csrf_hash() ?>'
             }, function(res) {
                 const errorLabel = $('#usernameError');
                 const inputField = $('#username_add');

@@ -12,7 +12,7 @@ class MWhatsapp extends Model
     protected $returnType       = 'object';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['message', 'instance_id', 'token', 'created_at', 'updated_at'];
+    protected $allowedFields    = ['url_api', 'message', 'instance_id', 'token', 'created_at', 'updated_at'];
 
     protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;

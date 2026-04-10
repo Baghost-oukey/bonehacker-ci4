@@ -59,6 +59,7 @@ $routes->group('journal', function ($routes) {
     $routes->post('fetch', '\App\Modules\Journal\Controllers\Journal::fetch');
     $routes->get('export_excell', '\App\Modules\Journal\Controllers\Journal::export_excell');
     $routes->get('export_pdf', '\App\Modules\Journal\Controllers\Journal::export_pdf');
+    $routes->get('export_file_journal', '\App\Modules\Journal\Controllers\Journal::export_file_journal');
 });
 
 // Statistik

@@ -42,7 +42,7 @@ class Jabatan extends BaseController
         $queryBuilder = $this->model_jabatan->getJabatan();
         $datatables = new \Ngekoding\CodeIgniterDataTables\DataTables($queryBuilder, '4');
         $datatables->addColumn('no', function ($row) {
-            static $no = 0; 
+            static $no = 0;
             return ++$no;
         });
 
@@ -77,9 +77,9 @@ class Jabatan extends BaseController
         ];
 
         if ($this->model_jabatan->store($data)) {
-            $this->session->setFlashdata('message', ['success', 'Data jabatan berhasil ditambahkan']);
+            return redirect()->to(base_url('jabatan'))->with('success', 'Data jabatan berhasil ditambahkan');
         } else {
-            $this->session->setFlashdata('message', ['danger', 'Data jabatan gagal ditambahkan']);
+            return redirect()->back()->withInput()->with('error', 'Data jabatan gagal ditambahkan');
         }
 
         return redirect()->to('jabatan');
@@ -102,20 +102,20 @@ class Jabatan extends BaseController
         return redirect()->to('jabatan');
     }
 
-   public function destroy($id)
-{
-    if ($this->model_jabatan->delete($id)) {
-        return $this->response->setJSON([
-            'status'  => 'success',
-            'message' => 'Data jabatan berhasil dihapus!'
-        ]);
-    } else {
-        return $this->response->setJSON([
-            'status'  => 'error',
-            'message' => 'Gagal menghapus data jabatan.'
-        ]);
-    }
+    public function destroy($id)
+    {
+        if ($this->model_jabatan->delete($id)) {
+            return $this->response->setJSON([
+                'status'  => 'success',
+                'message' => 'Data jabatan berhasil dihapus!'
+            ]);
+        } else {
+            return $this->response->setJSON([
+                'status'  => 'error',
+                'message' => 'Gagal menghapus data jabatan.'
+            ]);
+        }
 
-    return redirect()->to('jabatan');
-}
+        return redirect()->to('jabatan');
+    }
 }

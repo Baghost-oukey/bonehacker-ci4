@@ -396,7 +396,7 @@ class Users extends BaseController
     {
         $username = $this->request->getPost('username');
         $exists = $this->model_users->where('username', $username)->countAllResults() > 0;
-        return $this->response->setJSON(['exists' => $exists]);
+        return $this->response->setJSON(['exists' => $exists, 'csrfHash' => csrf_hash()]);
     }
 
     public function check_username_exists_edit()

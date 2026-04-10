@@ -23,6 +23,7 @@
                                     <input type="date" id="end_date" class="form-control">
                                 </div>
                             </div>
+
                             <div class="col-md-4">
                                 <label>Wilayah:</label>
                                 <select id="region" class="form-control select2">
@@ -32,31 +33,102 @@
                                     <?php endforeach; ?>
                                 </select>
                             </div>
+
+                            <div>
+                                <label class="d-block">&nbsp;</label>
+                                <button type="button" id="btn-reset" class="btn btn-danger btn-block">
+                                    <i class="fas fa-undo"></i> Reset Filter
+                                </button>
+                            </div>
+
                         </div>
 
-                        <div class="table-responsive">
-                            <table id="table-journal" class="table table-striped w-100">
-                                <thead>
-                                    <tr>
-                                        <th>No</th>
-                                        <th>Tanggal</th>
-                                        <th>Nama</th>
-                                        <th>Status</th>
-                                        <th>Alamat</th>
-                                        <th>Hasil Pemeriksaan</th>
-                                        <th>Tindakan</th>
-                                        <th>Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody></tbody>
-                            </table>
-                        </div>
+
+                    </div>
+
+                    <div class="table-responsive">
+                        <table id="table-journal" class="table table-striped w-100">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Tanggal</th>
+                                    <th>Nama</th>
+                                    <th>Status</th>
+                                    <th>Alamat</th>
+                                    <th>Hasil Pemeriksaan</th>
+                                    <th>Tindakan</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    </div>
 </section>
+
+<!-- Export Modal -->
+<div class="modal fade" id="modalExportJournal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-md" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Unduh Data Pasien</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <form action="<?= site_url('journal/export_file_journal') ?>" method="GET" target="_blank">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Periode Laporan</label>
+                        <select id="period_picker" class="form-control mb-2">
+                            <option value="all">Seluruh Data</option>
+                            <option value="yesterday">Kemarin</option>
+                            <option value="last_month">Bulan Lalu</option>
+                            <option value="last_year">Tahun Lalu</option>
+                            <option value="custom">Custom Range (Pilih Sendiri)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="custom_date_container" style="display: none;">
+                        <label>Rentang Tanggal</label>
+                        <div class="row">
+                            <div class="col-6">
+                                <input type="date" name="start_date" id="exp_start_date" class="form-control">
+                            </div>
+                            <div class="col-6">
+                                <input type="date" name="end_date" id="exp_end_date" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Pilih Wilayah</label>
+                        <select name="region_id" id="export_region" class="form-control select2" style="width: 100%;">
+                            <option value="">Semua Wilayah</option>
+                            <?php foreach ($wilayah as $r): ?>
+                                <option value="<?= $r->id ?>"><?= esc($r->name) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Format Laporan</label>
+                        <select name="format_type" class="form-control">
+                            <option value="excel">Microsoft Excel (.xlsx)</option>
+                            <option value="pdf">PDF Document (.pdf)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer bg-whitesmoke br">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">Unduh Sekarang</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
@@ -86,35 +158,13 @@
             },
             "dom": '<"top"lBf>rt<"bottom"ip><"clear">',
             "buttons": [{
-                    text: '<i class="fas fa-file-pdf"></i> PDF',
-                    className: 'btn btn-danger btn-sm mr-2',
-                    action: function(e, dt, button, config) {
-
-                        var params = $.param({
-                            region_id: $('#region').val(),
-                            start_date: $('#start_date').val(),
-                            end_date: $('#end_date').val()
-                        });
-                        var exportUrl = "<?= base_url('journal/export_pdf') ?>?" + params;
-
-                        window.open(exportUrl, '_blank');
-                    }
-                },
-                {
-                    text: '<i class="fas fa-file-excel"></i> Excel',
-                    className: 'btn btn-success btn-sm',
-                    action: function(e, dt, button, config) {
-                        var params = $.param({
-                            region: $('#region').val(),
-                            start_date: $('#start_date').val(),
-                            end_date: $('#end_date').val()
-                        });
-
-                        var exportUrl = "<?= base_url('journal/export_excell') ?>?" + params;
-                        window.location.href = url;
-                    }
+                text: '<i class="fas fa-file-export"></i> Download Data Pasien',
+                className: 'btn btn-primary btn-sm',
+                action: function(e, dt, button, config) {
+                    $('#export_region').val($('#region').val()).trigger('change');
+                    $('#modalExportJournal').modal('show');
                 }
-            ],
+            }, ],
             "columns": [{
                     "data": "no",
                     "width": "5%",
@@ -164,6 +214,53 @@
         // Reload tabel otomatis saat filter diubah
         $('#region, #start_date, #end_date').on('change', function() {
             table.ajax.reload();
+        });
+
+        // Custom Range Tanggal 
+        $('#period_picker').on('change', function() {
+            const period = $(this).val();
+            const today = new Date();
+            let start = new Date();
+            let end = new Date();
+
+            // Logika perhitungan tanggal
+            if (period === 'yesterday') {
+                start.setDate(today.getDate() - 1);
+                end.setDate(today.getDate() - 1);
+            } else if (period === 'last_month') {
+                start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                end = new Date(today.getFullYear(), today.getMonth(), 0);
+            } else if (period === 'last_year') {
+                start = new Date(today.getFullYear() - 1, 0, 1);
+                end = new Date(today.getFullYear() - 1, 11, 31);
+            } else if (period === 'all') {
+                start = new Date(2000, 0, 1);
+                end = today;
+            }
+
+            // LOGIKA SHOW/HIDE FIELD TANGGAL
+            if (period === 'custom') {
+                // Jika pilih custom, tampilkan field tanggal
+                $('#custom_date_container').slideDown();
+                // Hapus nilai agar user memilih sendiri atau set ke hari ini
+                $('#exp_start_date').val('').prop('required', true);
+                $('#exp_end_date').val('').prop('required', true);
+            } else {
+                // Jika pilih periode instan, sembunyikan field dan isi otomatis
+                $('#custom_date_container').slideUp();
+
+                const startDateString = start.toISOString().split('T')[0];
+                const endDateString = end.toISOString().split('T')[0];
+
+                $('#exp_start_date').val(startDateString).prop('required', false);
+                $('#exp_end_date').val(endDateString).prop('required', false);
+            }
+        });
+
+        $('#btn-reset').on('click', function() {
+            $('#start_date').val('');
+            $('#end_date').val('');
+            $('#region').val('').trigger('change');
         });
     });
 </script>

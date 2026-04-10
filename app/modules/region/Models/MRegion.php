@@ -21,7 +21,7 @@ class MRegion extends Model
     protected array $castHandlers = [];
 
     // Dates
-    protected $useTimestamps = false;
+    protected $useTimestamps = true;
     protected $dateFormat    = 'datetime';
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
@@ -47,9 +47,13 @@ class MRegion extends Model
 
     public function querySql()
     {
+        // return "SELECT r.id, r.name, r.created_at, r.updated_at, 
+        //     (SELECT COUNT(id) FROM patients WHERE region_id = r.id) as jumlah 
+        //     FROM " . $this->table . " as r ";
         return "SELECT r.id, r.name, r.created_at, r.updated_at, 
-            (SELECT COUNT(id) FROM patients WHERE region_id = r.id) as jumlah 
-            FROM " . $this->table . " as r ";
+            COUNT(p.id) as jumlah 
+            FROM " . $this->table . " as r 
+            LEFT JOIN patients as p ON p.region_id = r.id ";
     }
 
     public function getData(array $column = null)
@@ -66,16 +70,18 @@ class MRegion extends Model
 
         $limit      = $options['limit'] ?? 10;
         $offset     = $options['offset'] ?? 0;
-        $order      = $options['order'] ?? 'id';
+        $order      = $options['order'] ?? 'r.id';
         $mode       = $options['mode'] ?? 'ASC';
-        $sql = $this->querySql() . " WHERE 1 = 1";
+        $sql = $this->querySql();
+        $where = " WHERE 1 = 1";
 
         if (!empty($options['where_like'])) {
             foreach ($options['where_like'] as $like) {
-                $sql .= " AND " . $like;
+                $where .= " AND " . $like;
             }
         }
 
+        $sql .= $where;
         $sql .= " GROUP BY r.id";
         $sql .= " ORDER BY $order $mode";
         $sql .= " LIMIT $offset, $limit";
@@ -85,15 +91,25 @@ class MRegion extends Model
 
     public function getTotalData($options = [])
     {
-        $where_like = "";
+        $builder = $this->db->table($this->table);
+        
+        // $where_like = "";
+        // if (!empty($options['where_like'])) {
+        //     $where_like = ' AND (' . implode(' AND ', $options['where_like']) . ')';
+        // }
+
         if (!empty($options['where_like'])) {
-            $where_like = ' AND (' . implode(' AND ', $options['where_like']) . ')';
+        foreach ($options['where_like'] as $like) {
+            // Kita gunakan Query Builder agar lebih aman dan cepat
+            $builder->where($like);
         }
-        $sql = "SELECT COUNT(DISTINCT id) AS total FROM ( ";
-        $sql .= $this->querySql();
-        $sql .= ") AS temp_table WHERE 1 = 1 " . $where_like;
-        $query = $this->db->query($sql)->getRow();
-        return $query ? (int)$query->total : 0;
+    }
+        // $sql = "SELECT COUNT(DISTINCT id) AS total FROM ( ";
+        // $sql .= $this->querySql();
+        // $sql .= ") AS temp_table WHERE 1 = 1 " . $where_like;
+        // $query = $this->db->query($sql)->getRow();
+        // return $query ? (int)$query->total : 0;
+        return $builder->countAllResults();
     }
 
     public function getTotal()

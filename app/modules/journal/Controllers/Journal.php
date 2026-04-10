@@ -140,7 +140,7 @@ class Journal extends BaseController
         $start_date = $this->request->getGet('start_date');
         $end_date   = $this->request->getGet('end_date');
 
-        $data = $this->model_journal->get_data_journal($region_id, $start_date, $end_date, true);
+        $data = $this->model_journal->get_query_for_Journal($region_id, $start_date, $end_date, true);
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
@@ -151,11 +151,11 @@ class Journal extends BaseController
 
         $rowNum = 2;
         foreach ($data as $index => $item) {
-            $status = $this->model_journal->getPatientStatus($item->id);
+            // $status = $this->model_journal->getPatientStatus($item->id);
             $sheet->setCellValue('A' . $rowNum, $index + 1);
             $sheet->setCellValue('B' . $rowNum, $item->tanggal);
             $sheet->setCellValue('C' . $rowNum, $item->nama);
-            $sheet->setCellValue('D' . $rowNum, $status);
+            $sheet->setCellValue('D' . $rowNum, $item->status);
             $sheet->setCellValue('E' . $rowNum, $item->alamat);
             $sheet->setCellValue('F' . $rowNum, $item->result_names);
             $sheet->setCellValue('G' . $rowNum, $item->measures);
@@ -163,6 +163,22 @@ class Journal extends BaseController
             $rowNum++;
         }
 
+        $lastRow = $rowNum - 1;
+        $range   = 'A1:H' . $lastRow;
+        $sheet->getStyle('A1:H1')->applyFromArray([
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+            'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => '2C3E50']],
+            'alignment' => ['horizontal' => 'center']
+        ]);
+        $sheet->getStyle($range)->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+        $sheet->getStyle('A2:B' . $lastRow)->getAlignment()->setHorizontal('center'); // No & Tanggal
+        $sheet->getStyle('D2:D' . $lastRow)->getAlignment()->setHorizontal('center'); // Status
+        foreach (range('A', 'H') as $columnID) {
+            $sheet->getColumnDimension($columnID)->setAutoSize(true);
+        }
+        $sheet->getColumnDimension('E')->setAutoSize(false)->setWidth(30);
+        $sheet->getColumnDimension('G')->setAutoSize(false)->setWidth(30);
+        $sheet->getStyle('E2:G' . $lastRow)->getAlignment()->setWrapText(true);
         $filename = 'Journal_' . date('Ymd') . '.xlsx';
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -172,5 +188,15 @@ class Journal extends BaseController
         $writer = new Xlsx($spreadsheet);
         $writer->save('php://output');
         exit;
+    }
+
+    public function export_file_journal()
+    {
+        $format = $this->request->getGet('format_type');
+        if ($format === 'pdf') {
+            return $this->export_pdf();
+        } else {
+            return $this->export_excell();
+        }
     }
 }
