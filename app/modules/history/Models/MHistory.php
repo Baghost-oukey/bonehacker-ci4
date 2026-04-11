@@ -168,7 +168,7 @@ class MHistory extends Model
     public function getKejantananById($id_history)
     {
         return $this->db->table('kejantanan')
-            ->where('id_history', $id_history)
+            ->where('history_id', $id_history)
             ->get()->getRow();
     }
 

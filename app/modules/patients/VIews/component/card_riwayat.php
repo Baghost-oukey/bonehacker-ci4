@@ -2605,15 +2605,18 @@
     $(document).ready(function() {
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('openModalRiwayat') === 'true') {
+            const hId = urlParams.get('history_id');
 
-            setTimeout(function() {
-                show(<?= $history_id ?>);
+            if (hId && hId !== 'undefined' && hId !== '') {
+                setTimeout(function() {
+                    show(hId); 
 
-                $('.modal-backdrop').not(':last').remove();
-                $('.modal').appendTo("body");
-            }, 500)
-
-
+                    $('.modal-backdrop').not(':last').remove();
+                    $('.modal').appendTo("body");
+                }, 500);
+            } else {
+                console.warn("History ID tidak ditemukan di URL. Modal tidak otomatis dibuka.");
+            }
         }
     });
 </script>

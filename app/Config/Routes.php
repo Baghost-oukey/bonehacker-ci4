@@ -179,8 +179,8 @@ $routes->group('terapis', ['namespace' => 'App\modules\terapis\Controllers'], fu
     $routes->get('/', 'Terapis::index');
     $routes->get('detail_terapis/(:any)', 'Terapis::detail_terapis/$1');
     $routes->post('fetch', 'Terapis::fetch'); // Untuk narik data tabel
-    $routes->get('active/(:num)', 'Terapis::active/$1');
-    $routes->get('nonActive/(:num)', 'Terapis::nonActive/$1');
+    $routes->post('active/(:num)', 'Terapis::active/$1');
+    $routes->post('nonActive/(:num)', 'Terapis::nonActive/$1');
     $routes->post('checkId', 'Terapis::checkId');
     $routes->post('store', 'Terapis::store');
     $routes->post('update', 'Terapis::update');

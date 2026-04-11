@@ -62,9 +62,9 @@ class Terapis extends BaseController
 
         $datatables = new \Ngekoding\CodeIgniterDataTables\DataTables($queryBuilder, '4');
 
-        $datatables->addColumn('no', function ($row) {
-            static $no = 0;
-            return ++$no;
+        $start = $this->request->getPost('start') ?? 0;
+        $datatables->addColumn('no', function ($row) use (&$start) {
+            return ++$start;
         });
 
         $datatables->addColumn('jml_tindakan', function ($row) {
@@ -81,7 +81,6 @@ class Terapis extends BaseController
 
         $datatables->addColumn('is_active', function ($row) {
             $row = (object) $row;
-            // Kita sesuaikan dengan style CI3 kamu pakai badge
             if ($row->is_active == 1) {
                 return '<span class="badge badge-success">Aktif</span>';
             } else {
@@ -91,9 +90,10 @@ class Terapis extends BaseController
 
         $datatables->addColumn('action', function ($row) {
             $row = (object) $row;
+            $type = ($row->is_active == 1) ? 'delete' : 'active';
             $btn_status = ($row->is_active == 1)
-                ? '<a href="' . base_url("terapis/nonActive/" . $row->id) . '" class="btn btn-danger"><i class="fas fa-window-close"></i></a>'
-                : '<a href="' . base_url("terapis/active/" . $row->id) . '" class="btn btn-primary btn mr-1"><i class="fas fa-check-square"></i></a>';
+                ? '<a href="javascript:void(0)" data-href="' . base_url("terapis/nonActive/" . $row->id) . '" data-type="delete" class="btn btn-danger btn_status"><i class="fas fa-window-close"></i></a>'
+                : '<a href="javascript:void(0)" data-href="' . base_url("terapis/active/" . $row->id) . '" data-type="active" class="btn btn-primary btn_status mr-1"><i class="fas fa-check-square"></i></a>';
 
             return '
             <a href="' . base_url('terapis/detail_terapis/' . $row->terapis_id) . '" class="btn btn-primary"><i class="fas fa-eye"></i></a>' . $btn_status;
@@ -133,7 +133,7 @@ class Terapis extends BaseController
         $result = $writer->write($qrCode);
 
         $data['qr_code_base64'] = $result->getDataUri();
-        
+
         return view('App\modules\terapis\Views\views_detail', $data);
     }
 
@@ -141,7 +141,7 @@ class Terapis extends BaseController
     {
         $id = $this->request->getPost('terapis_id');
         $currentId = $this->request->getPost('currentId');
-        $builder = $this->model_terapis; // Asumsi model sudah di-load di __construct
+        $builder = $this->model_terapis; 
         if (!empty($currentId)) {
             $builder->where('terapis_id !=', $currentId);
         }
@@ -252,17 +252,44 @@ class Terapis extends BaseController
 
     public function active($id)
     {
-        if ($this->model_terapis->update($id, ['is_active' => 1])) {
-            $this->session->setFlashdata('message', ['success', 'Terapis berhasil diaktifkan']);
+        if ($this->request->isAJAX()) {
+            if ($this->model_terapis->update($id, ['is_active' => 1])) {
+                return $this->response->setJSON([
+                    'status'   => 'success',
+                    'message'  => 'Terapis berhasil diaktifkan',
+                    'csrfHash' => csrf_hash() // Penting untuk update token di sisi JS
+                ]);
+            }
+
+            return $this->response->setJSON([
+                'status'  => 'error',
+                'message' => 'Gagal mengaktifkan terapis'
+            ]);
         }
+
+        // Fallback jika diakses manual tanpa AJAX (opsional)
+        $this->model_terapis->update($id, ['is_active' => 1]);
         return redirect()->to('terapis');
     }
 
     public function nonActive($id)
     {
-        if ($this->model_terapis->update($id, ['is_active' => 0])) {
-            $this->session->setFlashdata('message', ['success', 'Terapis berhasil dinonaktifkan']);
+        if ($this->request->isAJAX()) {
+            if ($this->model_terapis->update($id, ['is_active' => 0])) {
+                return $this->response->setJSON([
+                    'status'   => 'success',
+                    'message'  => 'Terapis berhasil dinonaktifkan',
+                    'csrfHash' => csrf_hash()
+                ]);
+            }
+
+            return $this->response->setJSON([
+                'status'  => 'error',
+                'message' => 'Gagal menonaktifkan terapis'
+            ]);
         }
+
+        $this->model_terapis->update($id, ['is_active' => 0]);
         return redirect()->to('terapis');
     }
 }

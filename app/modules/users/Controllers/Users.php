@@ -301,10 +301,20 @@ class Users extends BaseController
 
         if (!in_array($patient->region_id, $user_regions)) {
             if ($this->model_users->append_patient_to_user($user_id, $patient_id)) {
-                $this->session->setFlashdata('message', ['success', 'Pasien luar berhasil ditambahkan']);
+                // $this->session->setFlashdata('message', ['success', 'Pasien luar berhasil ditambahkan']);
+                return $this->response->setJSON([
+                    'status'   => 'success',
+                    'message'  => 'Pasien luar berhasil ditambahkan',
+                    'csrfHash' => csrf_hash()
+                ]);
             }
         } else {
-            $this->session->setFlashdata('message', ['danger', 'Pasien sudah masuk wilayah user']);
+            // $this->session->setFlashdata('message', ['danger', 'Pasien sudah masuk wilayah user']);
+            return $this->response->setJSON([
+                'status'   => 'error',
+                'message'  => 'Pasien sudah masuk wilayah user atau terjadi kesalahan',
+                'csrfHash' => csrf_hash()
+            ]);
         }
 
         return redirect()->to('users/view_patient/' . $user_id);
@@ -378,7 +388,7 @@ class Users extends BaseController
         $other_patients = json_decode($user->other_patient, true) ?: [];
         if (($key = array_search($patient_id, $other_patients)) !== false) {
             unset($other_patients[$key]);
-            $other_patients = array_values($other_patients); 
+            $other_patients = array_values($other_patients);
             $updated = $this->model_users->update($user_id, [
                 'other_patient' => json_encode($other_patients)
             ]);

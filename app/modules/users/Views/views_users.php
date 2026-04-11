@@ -198,7 +198,6 @@
             ]
         });
 
-        // Toggle Region Field based on Role
         $(document).on('change', '.role-select', function() {
             const target = $(this).data('target');
             if ($(this).val() === 'user') {

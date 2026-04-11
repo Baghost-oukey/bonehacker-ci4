@@ -92,7 +92,7 @@
                             [csrfName]: data.token
                         }
                     });
-                    console.log('CSRF token Berhasil Diperbarui');
+                    // console.log('CSRF token Berhasil Diperbarui');
                 });
             }
 

@@ -179,7 +179,7 @@
                 "url": "<?= base_url('terapis/fetch') ?>",
                 "type": "POST",
                 "data": function(d) {
-                    d.<?= csrf_token() ?> = '<?= csrf_hash() ?>'; // CSRF CI4
+                    d.<?= csrf_token() ?> = $('meta[name="csrf-token-hash"]').attr('content') || '<?= csrf_hash() ?>';
                     d.region = $('#region_filter').val();
                 },
                 "dataSrc": function(json) {
@@ -267,22 +267,70 @@
             }, 'json');
         });
 
-        // Handle Status Change (Deactivate/Activate)
-        $(document).on('click', '.btn_status', function() {
-            var href = $(this).data('href');
-            var type = $(this).data('type'); // 'active' or 'delete'
-            var modal = $('#modal_status_terapis');
+        $(document).on('click', '.btn_status', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
 
-            modal.find('form').attr('action', href);
-            if (type === 'delete') {
-                modal.find('.confirm-text').text('Yakin ingin menonaktifkan terapis ini?');
-                modal.find('.btn-confirm-submit').removeClass('btn-primary').addClass('btn-danger');
-            } else {
-                modal.find('.confirm-text').text('Yakin ingin mengaktifkan kembali terapis ini?');
-                modal.find('.btn-confirm-submit').removeClass('btn-danger').addClass('btn-primary');
-            }
-            modal.modal('show');
+
+            const btn = $(this);
+            const href = btn.data('href');
+            const type = btn.data('type');
+
+            const isDelete = (type === 'delete');
+            const config = {
+                title: isDelete ? 'Nonaktifkan Terapis?' : 'Aktifkan Terapis?',
+                text: isDelete ? 'Terapis ini tidak akan muncul dalam daftar tindakan.' : 'Terapis akan kembali aktif di sistem.',
+                icon: 'warning',
+                confirmBtn: isDelete ? 'Ya, Nonaktifkan' : 'Ya, Aktifkan',
+                confirmColor: isDelete ? '#e74c3c' : '#3498db'
+            };
+
+            Swal.fire({
+                title: config.title,
+                text: config.text,
+                icon: config.icon,
+                showCancelButton: true,
+                confirmButtonColor: config.confirmColor,
+                cancelButtonColor: '#bdc3c7',
+                confirmButtonText: config.confirmBtn,
+                cancelButtonText: 'Batal',
+                showLoaderOnConfirm: true,
+                preConfirm: () => {
+                    return $.ajax({
+                        url: href,
+                        type: 'POST',
+                        data: {
+                          [$('meta[name="csrf-header"]').attr('content')]: $('meta[name="csrf-token"]').attr('content')
+                        },
+                        dataType: 'json'
+                    }).fail((xhr) => {
+                        Swal.showValidationMessage(`Request failed: ${xhr.statusText}`);
+                    });
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const res = result.value;
+                   if (res && res.csrfHash) {
+                        $('meta[name="csrf-token-hash"]').attr('content', res.csrfHash);
+                    }
+
+                    if (res && res.status === 'success') {
+                      $('#table-terapis').DataTable().ajax.reload(null, false);
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil',
+                            text: res.message,
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                    } else {
+                        Swal.fire('Gagal', res.message, 'error');
+                    }
+                }
+            });
         });
+        // Handler Detail Terapis
         $(document).on('click', '.btn_detail_terapis', function() {
             window.location.href = "<?= base_url('terapis/detail/') ?>/" + $(this).data('userid');
         });

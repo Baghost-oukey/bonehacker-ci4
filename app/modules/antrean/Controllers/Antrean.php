@@ -51,7 +51,7 @@ class Antrean extends BaseController
         $endDate   = $request->getPost('end_date');
 
         $builder = $this->db->table('patient_queues pq')
-            ->select('pq.id as queue_id, pq.queue_date, p.id as patient_id, p.name as patient_name, p.age as patient_age, p.phone, p.address, pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama, h.process_at, h.finish_at')
+            ->select('pq.id as queue_id, pq.queue_date, p.id as patient_id, p.name as patient_name, p.age as patient_age, p.phone, p.address, pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama, h.id as history_id, h.process_at, h.finish_at')
             ->select('(SELECT COUNT(h2.id) FROM histories h2 WHERE h2.patient_id = p.id AND h2.is_delete = 0) AS visit_count')
             ->join('patients p', 'p.id = pq.patient_id', 'left')
             ->join('patient_address pa', 'pa.patient_id = p.id', 'left')
@@ -105,6 +105,9 @@ class Antrean extends BaseController
             ->add('action', function ($row) {
                 $btn = '<div class="btn-group d-flex justify-content-between align-items-center" style="gap: 5px;">';
                 $role = session()->get('role');
+
+                $historyId = $row->history_id ?? '';
+
                 if ($role === 'superadmin') {
                     if ($row->process_at !== null) {
                         $btn .= '<a href="' . site_url('antrean/finishQueue/' . $row->queue_id) . '" class="btn btn-warning btn-md w-100">Selesai</a>';
@@ -117,7 +120,14 @@ class Antrean extends BaseController
                     }
                     return '<span class="badge badge-warning">Menunggu Konfirmasi</span>';
                 }
-                $btn .= '<a href="' . site_url('patient/show/' . $row->patient_id) . '?openModalRiwayat=true&queue_id=' . $row->queue_id . '" class="btn btn-info btn-md"><i class="fas fa-file-medical"></i> Rekam Medis</a>';
+
+                $urlHistory = site_url('patient/show/' . $row->patient_id) . '?openModalRiwayat=true';
+                if (!empty($historyId)) {
+                    $urlHistory .= '&history_id=' . $historyId;
+                }
+                $urlHistory .= '&queue_id=' . $row->queue_id;
+
+                $btn .= '<a href="' . $urlHistory . '" class="btn btn-info btn-md"><i class="fas fa-file-medical"></i> Rekam Medis</a>';
                 $btn .= '</div>';
                 return $btn;
             })
