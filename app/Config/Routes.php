@@ -54,18 +54,19 @@ $routes->group('region', ['namespace' => 'App\modules\region\Controllers'], func
 // app/Config/Routes.php
 
 // Journal
-$routes->group('journal', function ($routes) {
-    $routes->get('/', '\App\Modules\Journal\Controllers\Journal::index');
-    $routes->post('fetch', '\App\Modules\Journal\Controllers\Journal::fetch');
-    $routes->get('export_excell', '\App\Modules\Journal\Controllers\Journal::export_excell');
-    $routes->get('export_pdf', '\App\Modules\Journal\Controllers\Journal::export_pdf');
-    $routes->get('export_file_journal', '\App\Modules\Journal\Controllers\Journal::export_file_journal');
+$routes->group('journal', ['namespace' => 'App\modules\journal\Controllers'], function ($routes) {
+    $routes->get('/', 'Journal::index');
+    $routes->post('fetch', 'Journal::fetch');
+    $routes->get('export_excell', 'Journal::export_excell');
+    $routes->get('export_pdf', 'Journal::export_pdf');
+    $routes->get('export_file_journal', 'Journal::export_file_journal');
 });
 
 // Statistik
 $routes->group('statistik',  ['namespace' => 'App\modules\statisktik\Controllers'], function ($routes) {
     $routes->get('/', 'Statistik::index');
     $routes->get('fetch_statistics', 'Statistik::fetch_statistics');
+    $routes->get('fetch_analysis', 'Statistik::fetch_analysis');
 });
 
 // Statistik - Tag
@@ -93,6 +94,12 @@ $routes->group('statistikdaerah', ['namespace' => 'App\modules\statistikdaerah\C
     $routes->get('fetch_kabupaten', 'Statistikdaerah::fetch_kabupaten');
     $routes->get('fetch_kecamatan', 'Statistikdaerah::fetch_kecamatan');
     $routes->get('fetch_desa', 'Statistikdaerah::fetch_desa');
+});
+
+// Statistik Sosial Media 
+$routes->group('statistikresource', ['namespace' => 'App\modules\statistikrecource\Controllers'], function($routes) {
+    $routes->get('/', 'statistikrecource::index');
+    $routes->get('get_marketing_data', 'statistikrecource::get_marketing_data');
 });
 
 // Jabatan

@@ -24,7 +24,7 @@ class Region extends BaseController
             'role'            => session()->get('role'),
             'base_url'        => base_url(),
             'current_segment' => $this->request->getUri()->getSegment(1),
-            'title'           => 'Wilayah',
+            'title'           => 'Cabang',
             'msg'             => session()->getFlashdata('message')
         ];
 
@@ -47,7 +47,7 @@ class Region extends BaseController
         $options['limit']  = empty($length) ? 10 : $length;
         if (!empty($requestData['search']['value'])) {
             $options['where_like'] = [
-                "name LIKE '%" . $requestData['search']['value'] . "%'"
+                "r.name LIKE '%" . $requestData['search']['value'] . "%'"
             ];
         }
 
@@ -106,9 +106,9 @@ class Region extends BaseController
         $data = ['name' => $this->request->getPost('name')];
 
         if ($this->model_regions->update($id, $data)) {
-            session()->setFlashdata('message', ['success', 'Data wilayah berhasil diubah']);
+            session()->setFlashdata('message', ['success', 'Data Cabang berhasil diubah']);
         } else {
-            session()->setFlashdata('message', ['error', 'Data wilayah gagal diubah']);
+            session()->setFlashdata('message', ['error', 'Data Cabang gagal diubah']);
         }
 
         return redirect()->to(base_url('region'));
@@ -120,14 +120,14 @@ class Region extends BaseController
         $countPatient = $db->table('patients')->where("region_id", $id)->countAllResults();
 
         if ($countPatient > 0) {
-            session()->setFlashdata('message', ['error', 'Data wilayah masih digunakan']);
+            session()->setFlashdata('message', ['error', 'Data Cabang masih digunakan']);
             return redirect()->to(base_url('region'));
         }
 
         if ($this->model_regions->delete($id)) {
-            session()->setFlashdata('message', ['success', 'Data wilayah berhasil dihapus']);
+            session()->setFlashdata('message', ['success', 'Data Cabang berhasil dihapus']);
         } else {
-            session()->setFlashdata('message', ['error', 'Data wilayah gagal dihapus']);
+            session()->setFlashdata('message', ['error', 'Data Cabang gagal dihapus']);
         }
 
         return redirect()->to(base_url('region'));

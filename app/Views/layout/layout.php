@@ -67,6 +67,8 @@
     <script src="<?= base_url('assets/js/scripts.js') ?>"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <!-- ini juga kalo mau pakai notif yang modern -->
     <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/js/iziToast.min.js"></script> -->
     <!-- Kalo mau pakai tag diaktifkan -->

@@ -41,7 +41,7 @@ $url = base_url() . '/';
                 <li class="<?= $current_segment == 'region' ? 'active' : '' ?>">
                     <a class="nav-link" href="<?= $url ?>region">
                         <i class="fas fa-map"></i>
-                        <span>Wilayah</span>
+                        <span>Cabang</span>
                     </a>
                 </li>
             <?php endif; ?>
@@ -53,7 +53,7 @@ $url = base_url() . '/';
                 </a>
             </li>
 
-            <li class="nav-item dropdown <?= in_array($current_segment, ['statistiktag', 'statistik', 'statresult', 'statistikgender', 'statsdaerah']) ? 'active' : '' ?>">
+            <li class="nav-item dropdown <?= in_array($current_segment, ['statistiktag', 'statistik', 'statistikrecource' ,'statresult', 'statistikgender', 'statsdaerah']) ? 'active' : '' ?>">
                 <a href="#" class="nav-link has-dropdown" data-toggle="dropdown">
                     <i class="fas fa-chart-line"></i>
                     <span>Statistik</span>
@@ -61,6 +61,7 @@ $url = base_url() . '/';
                 <ul class="dropdown-menu">
                     <li class="<?= $current_segment == 'statistiktag' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>statistiktag"><i class="fas fa-file-medical-alt"></i><span>Keluhan & Medis</span></a></li>
                     <li class="<?= $current_segment == 'statistik' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>statistik"><i class="fas fa-chart-bar"></i><span>Riwayat Pasien</span></a></li>
+                    <li class="<?= $current_segment == 'statistikresource' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>statistikresource"><i class="fas fa-globe"></i><span>Sosial Media</span></a></li>
                     <li class="<?= $current_segment == 'statistikresult' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>statistikresult"><i class="fas fa-stethoscope"></i><span>Hasil Pemeriksaan</span></a></li>
                     <li class="<?= $current_segment == 'statistikgender' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>statistikgender"><i class="fas fa-venus-mars"></i><span>Jenis Kelamin</span></a></li>
                     <li class="<?= $current_segment == 'statistikdaerah' ? 'active' : '' ?>"><a class="nav-link" href="<?= $url ?>statistikdaerah"><i class="fas fa-map-marked-alt"></i><span>Daerah</span></a></li>

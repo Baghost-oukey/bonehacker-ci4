@@ -91,7 +91,7 @@ class MRegion extends Model
 
     public function getTotalData($options = [])
     {
-        $builder = $this->db->table($this->table);
+        $builder = $this->db->table('regions as r');
         
         // $where_like = "";
         // if (!empty($options['where_like'])) {

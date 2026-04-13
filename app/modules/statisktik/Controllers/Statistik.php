@@ -39,14 +39,45 @@ class Statistik extends BaseController
         return view('App\modules\statisktik\Views\views_statistik', $data);
     }
 
-    public function fetch_statistics()
+    // public function fetch_statistics()
+    // {
+    //     $startDate = $this->request->getGet('start_date');
+    //     $endDate   = $this->request->getGet('end_date');
+    //     $filter    = $this->request->getGet('filter') ?? 'daily';
+    //     $regid     = $this->request->getGet('region_id');
+    //     $data = $this->model_statistik->get_statistics($startDate, $endDate, $regid, $filter);
+
+    //     return $this->response->setJSON($data);
+    // }
+    public function fetch_analysis()
     {
         $startDate = $this->request->getGet('start_date');
         $endDate   = $this->request->getGet('end_date');
-        $filter    = $this->request->getGet('filter') ?? 'daily';
-        $regid     = $this->request->getGet('region_id');
-        $data = $this->model_statistik->get_statistics($startDate, $endDate, $regid, $filter);
 
-        return $this->response->setJSON($data);
+        $result = $this->model_statistik->get_analisis($startDate, $endDate);
+        $summary = [
+            'total' => 0,
+            'baru'  => 0,
+            'lama'  => 0,
+            'avg_per_day' => 0
+        ];
+
+        foreach ($result as $row) {
+            $summary['total'] += (int)$row->total_pasien;
+            $summary['baru']  += (int)$row->pasien_baru;
+            $summary['lama']  += (int)$row->pasien_lama;
+        }
+
+        $diff = (strtotime($endDate) - strtotime($startDate)) / (60 * 60 * 24) + 1;
+        $summary['avg_per_day'] = $diff > 0 ? round($summary['total'] / $diff, 1) : 0;
+
+        // $filter    = $this->request->getGet('filter') ?? 'daily';
+        // $regid     = $this->request->getGet('region_id');
+        // $data = $this->model_statistik->get_statistics($startDate, $endDate, $regid, $filter);
+
+        return $this->response->setJSON([
+            'summary' => $summary,
+            'details' => $result
+        ]);
     }
 }

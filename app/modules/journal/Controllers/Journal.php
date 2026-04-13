@@ -29,10 +29,15 @@ class Journal extends BaseController
     public function index()
     {
         //
+        $session = session();
+        // dd(session()->get()); 
         $data = [
             'title' => 'Journal Patients',
             'role'  => session()->get('role'),
             'wilayah' =>  $this->model_regions->findAll(),
+            'current_segment' => 'journal',
+            'realname'        => $session->get('realname'),
+            // 'realname' => session()->get('nama')
         ];
 
         return view('App\modules\journal\Views\views_journal', $data);

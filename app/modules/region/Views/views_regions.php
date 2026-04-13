@@ -9,7 +9,7 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h4>Daftar Wilayah</h4>
+                        <h4>Daftar Cabang</h4>
                         <div class="card-header-action">
                             <a href="#" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">Tambah Data</a>
                         </div>
@@ -20,7 +20,7 @@
                                 <thead>
                                     <tr>
                                         <th>ID</th>
-                                        <th>Nama</th>
+                                        <th>Cabang</th>
                                         <th>Waktu Buat</th>
                                         <th>Terakhir Diperbarui</th>
                                         <th class="text-right">Aksi</th>
@@ -40,7 +40,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Tambah Data Wilayah</h5>
+                <h5 class="modal-title">Tambah Data Cabang</h5>
                 <button type="button" class="close" data-dismiss="modal">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -48,9 +48,9 @@
             <form action="<?= site_url('region/store'); ?>" method="post" class="needs-validation" novalidate="">
                 <?= csrf_field() ?> <div class="modal-body">
                     <div class="form-group">
-                        <label>Nama Wilayah</label>
+                        <label>Nama Cabang</label>
                         <input type="text" class="form-control" name="name" required autofocus>
-                        <div class="invalid-feedback">Nama wilayah tidak boleh kosong</div>
+                        <div class="invalid-feedback">Nama Cabang tidak boleh kosong</div>
                     </div>
                 </div>
                 <div class="modal-footer bg-whitesmoke br">
@@ -103,7 +103,7 @@
             <form id="form_delete_region" action="" method="post">
                 <?= csrf_field() ?>
                 <div class="modal-body">
-                    <p>Apakah Anda yakin ingin menghapus data wilayah ini? Tindakan ini tidak dapat dibatalkan.</p>
+                    <p>Apakah Anda yakin ingin menghapus data Cabang ini? Tindakan ini tidak dapat dibatalkan.</p>
                 </div>
                 <div class="modal-footer bg-whitesmoke br">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
