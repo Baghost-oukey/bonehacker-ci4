@@ -67,6 +67,7 @@
                         <label>Role *</label>
                         <select class="form-control role-select" name="role" data-target="#regionFieldAdd" required>
                             <option value="">-- Pilih Role --</option>
+                            <option value="owner">Owner</option>
                             <option value="superadmin">Super Admin</option>
                             <option value="user">User</option>
                         </select>
@@ -118,6 +119,7 @@
                         <label>Role *</label>
                         <select class="form-control role-select" id="edit_role" name="role" data-target="#regionFieldEdit" required>
                             <option value="superadmin">Super Admin</option>
+                            <option value="owner">Owner</option>
                             <option value="user">User</option>
                         </select>
                     </div>
@@ -285,4 +287,5 @@
         });
     });
 </script>
+
 <?= $this->endSection() ?>

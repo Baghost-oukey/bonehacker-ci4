@@ -76,12 +76,18 @@ class Auth extends BaseController
             }
 
             if ($isPasswordCorrect) {
+                $db = \Config\Database::connect();
+                $get_region = $db->table('regions')->select('id, name')->get()->getResultArray();
                 $sessionData = [
                     'isLogin'         => true,
                     'userId'          => $user->id,
                     'realname'        => $user->realname,
                     'role'            => $user->role,
                     'regions_patient' => $user->regions_patient,
+                    'list_regions_global' => $get_region, // Untuk isi dropdown
+                    'active_region'       => 'all',        // Default awal saat login
+                    'active_region_name'  => 'Semua Wilayah'
+
                 ];
                 session()->set($sessionData);
                 session()->regenerate();
@@ -94,6 +100,31 @@ class Auth extends BaseController
         session()->setFlashdata('pesan', $params);
         return redirect()->to(base_url('auth'));
     }
+
+ public function switch_region()
+{
+    // Cek Role: Hanya Owner dan Superadmin yang boleh switch
+    $role = session()->get('role');
+    if ($role !== 'owner') {
+        return $this->response->setJSON([
+            'status' => 'error', 
+            'message' => 'Akses ditolak!'
+        ], 403);
+    }
+
+    $regionId   = $this->request->getPost('region_id');
+    $regionName = $this->request->getPost('region_name');
+
+    if ($regionId) {
+        session()->set('active_region', $regionId);
+        $displayName = ($regionId === 'all') ? 'Semua Wilayah' : $regionName;
+        session()->set('active_region_name', $displayName);
+
+        return $this->response->setJSON(['status' => 'success']);
+    }
+
+    return $this->response->setJSON(['status' => 'error'], 400);
+}
 
     public function destroy(): RedirectResponse
     {

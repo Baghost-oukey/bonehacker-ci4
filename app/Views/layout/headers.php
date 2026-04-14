@@ -1,3 +1,20 @@
+ <style>
+        /* CSS agar dropdown rapi dan bisa di-scroll */
+        .dropdown-list-content.dropdown-list-icons {
+            max-height: 350px !important; /* Batasi tinggi agar muncul scroll */
+            overflow-y: auto !important;  /* Aktifkan scroll vertikal */
+            scrollbar-width: thin;        /* Styling scrollbar untuk browser modern */
+        }
+        .dropdown-item-active {
+            background-color: #f8f9fa !important;
+            border-left: 4px solid #6777ef !important; /* Memberi tanda warna primer pada cabang aktif */
+        }
+        .dropdown-item-desc b {
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+    </style>
+
 <header class="navbar navbar-expand-lg bg-primary">
     <form class="form-inline mr-auto">
         <ul class="navbar-nav mr-3">
@@ -5,6 +22,54 @@
         </ul>
     </form>
     <ul class="navbar-nav navbar-right">
+        <?php if (session()->get('role') === 'owner' || session()->get('role') === 'superadmin'): ?>
+
+            <li class="dropdown dropdown-list-toggle">
+                <a href="#" data-toggle="dropdown" class="nav-link dropdown-toggle nav-link-lg" title="Pindah Cabang">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span class="d-none d-lg-inline-block ml-1" style="font-size: 13px; font-weight: 600;">
+                        <?= (session()->get('active_region') == 'all') ? 'Global View' : 'Cabang: ' . (session()->get('active_region_name') ?? 'Terpilih') ?>
+                    </span>
+                </a>
+
+                <div class="dropdown-menu dropdown-list dropdown-menu-right" style="width: 280px;">
+                    <div class="dropdown-header">Pilih Cabang Pantauan</div>
+                    <div class="dropdown-list-content dropdown-list-icons">
+
+                        <a href="javascript:void(0)"
+                            class="dropdown-item switch-region <?= (session()->get('active_region') == 'all') ? 'dropdown-item-active' : '' ?>"
+                            data-id="all"
+                            data-name="Semua Wilayah">
+                            <div class="dropdown-item-icon bg-primary text-white">
+                                <i class="fas fa-globe"></i>
+                            </div>
+                            <div class="dropdown-item-desc">
+                                <b>Semua Cabang</b>
+                                <div class="time">MODE GLOBAL</div>
+                            </div>
+                        </a>
+
+                        <?php
+                        $all_regions = session()->get('list_regions_global') ?? [];
+                        foreach ($all_regions as $rg):
+                        ?>
+                            <a href="javascript:void(0)"
+                                class="dropdown-item switch-region <?= (session()->get('active_region') == $rg['id']) ? 'dropdown-item-active' : '' ?>"
+                                data-id="<?= $rg['id'] ?>"
+                                data-name="<?= $rg['name'] ?>">
+                                <div class="dropdown-item-icon bg-info text-white">
+                                    <i class="fas fa-building"></i>
+                                </div>
+                                <div class="dropdown-item-desc">
+                                    <b><?= $rg['name'] ?></b>
+                                    <div class="time">MODE CABANG</div>
+                                </div>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </li>
+        <?php endif; ?>
         <li class="dropdown">
             <a href="javascript:void(0)" data-toggle="dropdown" class="nav-link dropdown-toggle nav-link-lg nav-link-user">
                 <img src="<?= base_url('assets/img/avatar/default.png') ?>" class="rounded-circle mr-1">
@@ -67,7 +132,7 @@
 
             $.ajax({
                 // Perbaikan site_url ke sintaks PHP
-                url: '<?= site_url("users/edit_account") ?>', 
+                url: '<?= site_url("users/edit_account") ?>',
                 type: 'GET',
                 dataType: 'json',
                 success: function(response) {
@@ -90,7 +155,7 @@
 
             $.ajax({
                 // Perbaikan site_url ke sintaks PHP
-                url: '<?= site_url("users/update_account") ?>', 
+                url: '<?= site_url("users/update_account") ?>',
                 type: 'POST',
                 data: formData,
                 dataType: 'json',
@@ -117,5 +182,38 @@
             $('#editAccountForm')[0].reset();
             $('#accountAlert').hide();
         });
+
+            // Handle Klik Switch Region
+            $(document).on('click', '.switch-region', function(e) {
+                e.preventDefault();
+
+                const id = $(this).data('id');
+                const name = $(this).data('name');
+                const $this = $(this);
+
+                // Tambahkan efek loading visual biar pro
+                $this.css('opacity', '0.5');
+
+                $.ajax({
+                    url: '<?= site_url("auth/switch_region") ?>',
+                    type: 'POST',
+                    data: {
+                        region_id: id,
+                        region_name: name,
+                        <?= csrf_token() ?>: '<?= csrf_hash() ?>'
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            // Refresh halaman agar session baru terbaca di header & konten
+                            window.location.reload();
+                        }
+                    },
+                    error: function() {
+                        alert('Gagal berpindah wilayah. Silakan coba lagi.');
+                        $this.css('opacity', '1');
+                    }
+                });
+            });
     });
 </script>

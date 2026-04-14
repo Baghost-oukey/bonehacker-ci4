@@ -72,38 +72,46 @@ class MRegion extends Model
         $offset     = $options['offset'] ?? 0;
         $order      = $options['order'] ?? 'r.id';
         $mode       = $options['mode'] ?? 'ASC';
-        $sql = $this->querySql();
-        $where = " WHERE 1 = 1";
+
+        $builder    = $this->db->table('regions as r');
+        $builder->select('r.id, r.name, r.created_at, r.updated_at, COUNT(p.id) as jumlah');
+        $builder->join('patients as p', 'p.region_id = r.id', 'left');
+
+        // $sql = $this->querySql();
+        // $where = " WHERE 1 = 1";
 
         if (!empty($options['where_like'])) {
             foreach ($options['where_like'] as $like) {
-                $where .= " AND " . $like;
+               $builder->where($like);
             }
         }
 
-        $sql .= $where;
-        $sql .= " GROUP BY r.id";
-        $sql .= " ORDER BY $order $mode";
-        $sql .= " LIMIT $offset, $limit";
+        // $sql .= $where;
+        // $sql .= " GROUP BY r.id";
+        // $sql .= " ORDER BY $order $mode";
+        // $sql .= " LIMIT $offset, $limit";
+        $builder->groupBy('r.id');
+        $builder->orderBy($order, $mode);
 
-        return $this->db->query($sql)->getResult();
+        // return $this->db->query($sql)->getResult();
+        return $builder->get($limit, $offset)->getResult();
     }
 
     public function getTotalData($options = [])
     {
         $builder = $this->db->table('regions as r');
-        
+
         // $where_like = "";
         // if (!empty($options['where_like'])) {
         //     $where_like = ' AND (' . implode(' AND ', $options['where_like']) . ')';
         // }
 
         if (!empty($options['where_like'])) {
-        foreach ($options['where_like'] as $like) {
-            // Kita gunakan Query Builder agar lebih aman dan cepat
-            $builder->where($like);
+            foreach ($options['where_like'] as $like) {
+                // Kita gunakan Query Builder agar lebih aman dan cepat
+                $builder->where($like);
+            }
         }
-    }
         // $sql = "SELECT COUNT(DISTINCT id) AS total FROM ( ";
         // $sql .= $this->querySql();
         // $sql .= ") AS temp_table WHERE 1 = 1 " . $where_like;

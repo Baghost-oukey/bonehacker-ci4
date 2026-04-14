@@ -68,7 +68,7 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Ubah Data Wilayah</h5>
+                <h5 class="modal-title">Ubah Data Cabang</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -76,9 +76,9 @@
             <form id="form_edit_region" action="" method="post" class="needs-validation" novalidate="">
                 <?= csrf_field() ?> <div class="modal-body">
                     <div class="form-group">
-                        <label>Nama Wilayah</label>
+                        <label>Nama Cabang</label>
                         <input type="text" class="form-control" id="edit_name" name="name" required autofocus>
-                        <div class="invalid-feedback">Nama wilayah tidak boleh kosong</div>
+                        <div class="invalid-feedback">Nama Cabang tidak boleh kosong</div>
                     </div>
                 </div>
                 <div class="modal-footer bg-whitesmoke br">

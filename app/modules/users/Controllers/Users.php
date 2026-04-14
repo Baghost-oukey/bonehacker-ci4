@@ -69,7 +69,7 @@ class Users extends BaseController
             $value->username = esc($value->username);
             $value->role     = esc($value->role);
 
-            if ($value->role === 'superadmin') {
+            if ($value->role === 'superadmin'  || $value->role === 'owner') {
                 $value->region_name = 'Semua Wilayah';
                 $regions_patient_ids = [];
             } else {
@@ -114,7 +114,7 @@ class Users extends BaseController
             'other_patient' => json_encode([])
         ];
 
-        if ($post['role'] === 'superadmin') {
+        if ($post['role'] === 'superadmin' || $post['role'] === 'owner') {
             $data['regions_patient'] = json_encode([]);
         } else {
             $regions = $this->request->getPost('regions_patient') ?: [];
@@ -150,7 +150,7 @@ class Users extends BaseController
 
         $existing = $this->model_users->find($id);
 
-        if ($post['role'] === 'superadmin') {
+        if ($post['role'] === 'superadmin' || $post['role'] === 'owner' ) {
             $data['regions_patient'] = json_encode([]);
             $data['other_patient'] = json_encode([]);
         } else {

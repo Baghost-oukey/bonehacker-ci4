@@ -97,7 +97,7 @@ $routes->group('statistikdaerah', ['namespace' => 'App\modules\statistikdaerah\C
 });
 
 // Statistik Sosial Media 
-$routes->group('statistikresource', ['namespace' => 'App\modules\statistikrecource\Controllers'], function($routes) {
+$routes->group('statistikresource', ['namespace' => 'App\modules\statistikrecource\Controllers'], function ($routes) {
     $routes->get('/', 'statistikrecource::index');
     $routes->get('get_marketing_data', 'statistikrecource::get_marketing_data');
 });
@@ -110,6 +110,13 @@ $routes->group('jabatan', ['namespace' => 'App\modules\jabatan\Controllers'], fu
     $routes->post('update/(:num)', 'Jabatan::update/$1');
     $routes->post('destroy/(:num)', 'Jabatan::destroy/$1');
     $routes->post('check_name_exists', 'Jabatan::check_name_exists');
+});
+
+$routes->group('transaksi', ['namespace' => 'App\modules\transaksi\Controllers', 'filter' => 'auth'], function ($routes) {
+    $routes->get('/', 'Transaksi::index');
+    $routes->post('fetch', 'Transaksi::fetch');   
+    $routes->post('store', 'Transaksi::store');  
+    $routes->post('delete', 'Transaksi::delete'); 
 });
 
 // Tag - Keluhan

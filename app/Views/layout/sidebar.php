@@ -1,8 +1,10 @@
 <?php
 $uri = service('request')->getUri();
-// Mengambil segment pertama, jika kosong (home) maka default ke string kosong
 $current_segment = $uri->getTotalSegments() > 0 ? $uri->getSegment(1) : '';
 $url = base_url() . '/';
+
+// AMBIL ROLE DARI SESSION AGAR TIDAK ERROR UNDEFINED
+$role = session()->get('role');
 ?>
 
 <aside class="main-sidebar sidebar-style-2 elevation-4">
@@ -37,7 +39,7 @@ $url = base_url() . '/';
                 </a>
             </li>
 
-            <?php if (isset($role) && $role == 'superadmin'): ?>
+            <?php if ($role === 'superadmin' || $role === 'owner'): ?>
                 <li class="<?= $current_segment == 'region' ? 'active' : '' ?>">
                     <a class="nav-link" href="<?= $url ?>region">
                         <i class="fas fa-map"></i>
@@ -53,7 +55,7 @@ $url = base_url() . '/';
                 </a>
             </li>
 
-            <li class="nav-item dropdown <?= in_array($current_segment, ['statistiktag', 'statistik', 'statistikrecource' ,'statresult', 'statistikgender', 'statsdaerah']) ? 'active' : '' ?>">
+            <li class="nav-item dropdown <?= in_array($current_segment, ['statistiktag', 'statistik', 'statistikresource', 'statistikresult', 'statistikgender', 'statistikdaerah']) ? 'active' : '' ?>">
                 <a href="#" class="nav-link has-dropdown" data-toggle="dropdown">
                     <i class="fas fa-chart-line"></i>
                     <span>Statistik</span>
@@ -68,9 +70,14 @@ $url = base_url() . '/';
                 </ul>
             </li>
 
-            <?php if (isset($role) && $role == 'superadmin'): ?>
-                <li class="menu-header">Administrator</li>
+            <li class="<?= $current_segment == 'transaksi' ? 'active' : '' ?>">
+                <a class="nav-link" href="<?= $url ?>transaksi">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Transaksi</span>
+                </a>
+            </li>
 
+            <?php if ($role === 'superadmin' || $role === 'owner'): ?>
                 <li class="nav-item dropdown <?= in_array($current_segment, ['complaint', 'medis', 'result']) ? 'active' : '' ?>">
                     <a href="#" class="nav-link has-dropdown" data-toggle="dropdown"><i class="fas fa-tags"></i> <span>Tags</span></a>
                     <ul class="dropdown-menu">
@@ -94,6 +101,7 @@ $url = base_url() . '/';
                 <li class="<?= $current_segment == 'users' ? 'active' : '' ?>">
                     <a class="nav-link" href="<?= $url ?>users"><i class="fas fa-users"></i> <span>Users</span></a>
                 </li>
+                
                 <li class="<?= $current_segment == 'terapis' ? 'active' : '' ?>">
                     <a class="nav-link" href="<?= $url ?>terapis"><i class="fas fa-user-md"></i> <span>Terapis</span></a>
                 </li>

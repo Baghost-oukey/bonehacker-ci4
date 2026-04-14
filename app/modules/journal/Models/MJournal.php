@@ -90,19 +90,6 @@ class MJournal extends Model
                 ->where("h.date <=", $end_date . " 23:59:59");
         }
 
-        // $builder->groupBy([
-        //     'h.id',
-        //     'p.id',
-        //     'p.name',
-        //     'p.phone',
-        //     'h.date',
-        //     'h.measure',
-        //     'p.address',
-        //     'pa.desa_nama',
-        //     'pa.kecamatan_nama',
-        //     'pa.kabupaten_nama'
-        // ]);
-
        $builder->groupBy(['h.id', 'p.id', 'pa.id']);
         $builder->orderBy('h.date', 'DESC');
 
