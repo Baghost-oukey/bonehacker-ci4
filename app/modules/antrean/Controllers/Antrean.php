@@ -59,10 +59,15 @@ class Antrean extends BaseController
             ->where('h.finish_at', null);
 
         $regions_session = json_decode(session()->get('regions_patient'), true);
+        $aktif_region = session()->get('active_region');
+
         if (session()->get('role') === 'user' && !empty($regions_session)) {
             $builder->whereIn('pq.region_id', is_array($regions_session) ? $regions_session : [$regions_session]);
+        } else {
+            if ($aktif_region !== 'all' && !empty($aktif_region)) {
+                $builder->where('pq.region_id', $aktif_region);
+            }
         }
-
         if (!empty($region)) $builder->where('p.region_id', $region);
         if (!empty($startDate) && !empty($endDate)) {
             $formatStart = date('Y-m-d', strtotime($startDate));
@@ -137,6 +142,7 @@ class Antrean extends BaseController
     public function fetchPatientDataTables()
     {
         $request = service('request');
+        $active_region = session()->get('active_region');
         $region = $request->getPost('region');
 
         $builder = $this->db->table('patients p')
@@ -145,6 +151,15 @@ class Antrean extends BaseController
             ->select('COALESCE((SELECT COUNT(h2.id) FROM histories h2 WHERE h2.patient_id = p.id AND h2.is_delete = 0), 0) AS visit_count')
             ->join('regions r', 'r.id = p.region_id', 'left')
             ->join('patient_address pa', 'pa.patient_id = p.id', 'left');
+
+        if (session()->get('role') === 'user') {
+            $region_id = session()->get('myRegionId');
+            $builder->where('p.region_id', $region_id);
+        } else {
+            if ($active_region !== 'all' && !empty($active_region)) {
+                $builder->where('p.region_id', $active_region);
+            }
+        }
 
         if (!empty($region)) {
             $builder->where('p.region_id', $region);
@@ -223,7 +238,8 @@ class Antrean extends BaseController
     public function daftarAntrean()
     {
         $db = \Config\Database::connect();
-        $regionId  = $this->request->getGet('region');
+        $active_region = session()->get('active_region');
+        $regionId  = $this->request->getGet('region') ?: ($active_region !== 'all' ? $active_region : null);
         $startDate = $this->request->getGet('start_date') ?: date('Y-m-d');
         $endDate   = $this->request->getGet('end_date') ?: date('Y-m-d');
         $builder = $db->table('patient_queues pq')

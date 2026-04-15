@@ -11,6 +11,7 @@ $routes->get('/', '\App\modules\auth\Controllers\Auth::index');
 $routes->group('auth', ['namespace' => 'App\modules\auth\Controllers'], function ($routes) {
     $routes->get('/', 'Auth::index');
     $routes->post('validate', 'Auth::authValidate');
+    $routes->post('switch_region', 'Auth::switch_region');
     $routes->get('destroy', 'Auth::destroy');
     $routes->get('get_csrf', 'Auth::get_csrf');
 });

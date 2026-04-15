@@ -50,7 +50,7 @@
     </div>
 
     <script src="<?= base_url('assets/modules/jquery.min.js') ?>"></script>
-    <script src="<?= base_url('assets/modules/popper.js') ?>"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="<?= base_url('assets/modules/bootstrap/js/bootstrap.min.js') ?>"></script>
     <script src="<?= base_url('assets/js/stisla.js') ?>"></script>
     <script src="<?= base_url('assets/modules/toastr/js/toastr.min.js') ?>"></script>

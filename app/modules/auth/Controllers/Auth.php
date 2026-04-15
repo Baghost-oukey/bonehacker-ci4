@@ -77,12 +77,23 @@ class Auth extends BaseController
 
             if ($isPasswordCorrect) {
                 $db = \Config\Database::connect();
+                // Mengambil data berdasarkan berdasarkan superadmin
                 $get_region = $db->table('regions')->select('id, name')->get()->getResultArray();
+                // Mengambil Data region berdasarkan user
+                $user_region = $user->regions_patient;
+                $current_region_Id = str_contains($user_region, '[')
+                    ? (json_decode($user_region, true)[0] ?? null)
+                    : $user_region;
+
+                $regionDetail = $db->table('regions')->where('id', $current_region_Id)->get()->getRow();
                 $sessionData = [
                     'isLogin'         => true,
                     'userId'          => $user->id,
                     'realname'        => $user->realname,
                     'role'            => $user->role,
+                    // Untuk Data Pasien
+                    'region_id'       => $current_region_Id,
+                    'region_name'     => $regionDetail ? $regionDetail->name : 'Cabang Tidak Terdeteksi',
                     'regions_patient' => $user->regions_patient,
                     'list_regions_global' => $get_region, // Untuk isi dropdown
                     'active_region'       => 'all',        // Default awal saat login
@@ -101,30 +112,40 @@ class Auth extends BaseController
         return redirect()->to(base_url('auth'));
     }
 
- public function switch_region()
-{
-    // Cek Role: Hanya Owner dan Superadmin yang boleh switch
-    $role = session()->get('role');
-    if ($role !== 'owner') {
+    public function switch_region()
+    {
+        $currentRole = session()->get('role');
+        $allowedRoles = ['owner', 'superadmin'];
+
+        if (!in_array($currentRole, $allowedRoles)) {
+            return $this->response->setJSON([
+                'status'  => 'error',
+                'message' => 'Anda tidak memiliki otoritas untuk berpindah wilayah!'
+            ], 403);
+        }
+
+        // 2. Ambil data dari POST
+        $targetId   = $this->request->getPost('region_id');
+        $targetName = $this->request->getPost('region_name');
+
+        if ($targetId) {
+            // Simpan ke session untuk kacamata filter aplikasi
+            session()->set('active_region', $targetId);
+
+            $displayName = ($targetId === 'all') ? 'Semua Wilayah' : $targetName;
+            session()->set('active_region_name', $displayName);
+
+            return $this->response->setJSON([
+                'status'  => 'success',
+                'message' => 'Sekarang menampilkan data: ' . $displayName
+            ]);
+        }
+
         return $this->response->setJSON([
-            'status' => 'error', 
-            'message' => 'Akses ditolak!'
-        ], 403);
+            'status'  => 'error',
+            'message' => 'ID Wilayah tidak valid!'
+        ], 400);
     }
-
-    $regionId   = $this->request->getPost('region_id');
-    $regionName = $this->request->getPost('region_name');
-
-    if ($regionId) {
-        session()->set('active_region', $regionId);
-        $displayName = ($regionId === 'all') ? 'Semua Wilayah' : $regionName;
-        session()->set('active_region_name', $displayName);
-
-        return $this->response->setJSON(['status' => 'success']);
-    }
-
-    return $this->response->setJSON(['status' => 'error'], 400);
-}
 
     public function destroy(): RedirectResponse
     {
