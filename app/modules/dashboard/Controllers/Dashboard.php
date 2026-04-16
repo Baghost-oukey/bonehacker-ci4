@@ -16,21 +16,37 @@ class Dashboard extends BaseController
         $mRegion    = model('App\modules\region\Models\MRegion');
         $mCountries = model('App\modules\countries\Models\MCountries');
         $mPatient   = model('App\modules\patients\Models\MPatients');
-        $activeRegion = session()->get('active_region');
 
-        $regions_patient = $mRegion->findAll();
+        $role = session()->get('role');
+        $activeRegion = session()->get('active_region');
+        $regionProfile = session()->get('region_patient');
+
+               // Tentukan filter wilayah (Logika yang sama dengan Beranda)
+        if ($role === 'owner' || $role === 'superadmin') {
+            $filter = ($activeRegion && $activeRegion !== 'all') ? $activeRegion : 'all';
+        } else {
+            $filter = $regionProfile;
+        }
+
+   
+        $patient_query = $mPatient->getAllData($filter);
+        $patients = $patient_query->getResult();
+
+      
 
         $data = [
             'realname'        => session()->get('realname'),
             'role'            => session()->get('role'),
-            'regions_patient' => $regions_patient,
+            // 'regions_patient' => $regions_patient,
             'current_segment' => $this->request->getUri()->getSegment(1),
             'title'           => 'Rekam Medis',
             'msg'             => session()->getFlashdata('message'),
-            'wilayah'         => $mRegion->getData() ?? [], 
+            'wilayah'         => $mRegion->getData() ?? [],
             'resources'       => $mPatient->get_resources() ?? [],
             'negara'          => $mCountries->getData() ?? [],
-            'patient_information' => null, 
+            'patients'        => $patients,
+            'resources'       => $mPatient->get_resources() ?? [],
+            'patient_information' => null,
 
         ];
 

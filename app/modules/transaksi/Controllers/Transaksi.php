@@ -16,11 +16,48 @@ class Transaksi extends BaseController
     }
     public function index()
     {
-        $data = [
-            'title' => 'Kelola Transaksi',
-            'realname' => session()->get('realname')
-        ];
+        $db = \Config\Database::connect();
+        $role = session()->get('role');
+        $active_region = session()->get('active_region');
+        $region_session = session()->get('region_id');
+        $list_regions = $db->table('regions')->select('id, name')->get()->getResultArray();
 
+
+        if ($role === 'superadmin' || $role === 'owner') {
+            $filter_region = ($active_region !== 'all') ? $active_region : null;
+        } else {
+            $filter_region = $region_session;
+        }
+
+
+        // --- 1. Saldo Hari Ini (Reset Tiap Hari) ---
+        $todayBuilder = $db->table('transaksi')->selectSum('nominal');
+        $todayBuilder->where('DATE(created_at)', date('Y-m-d'));
+        if ($filter_region) $todayBuilder->where('region_id', $filter_region);
+        $today_balance = $todayBuilder->get()->getRow()->nominal ?? 0;
+
+        // --- 2. Total Income (Akumulasi Selamanya) ---
+        $incomeBuilder = $db->table('transaksi')->selectSum('nominal');
+        if ($filter_region) $incomeBuilder->where('region_id', $filter_region);
+        $total_income = $incomeBuilder->get()->getRow()->nominal ?? 0;
+
+        // --- 3. Total Expense (Global - Hanya Owner/Superadmin) ---
+        $total_expense = 0;
+        if ($role === 'superadmin' || $role === 'owner') {
+            // Contoh: Ambil dari tabel pengeluaran jika ada, atau filter type='expense'
+            $total_expense = $db->table('transaksi')->selectSum('nominal')->where('type', 'expense')->get()->getRow()->nominal ?? 0;
+        }
+
+        $data = [
+            'title'          => 'Dashboard Keuangan',
+            'realname'       => session()->get('realname'),
+            'role'           => $role,
+            'today_balance'  => $today_balance,
+            'total_income'   => $total_income,
+            'total_expense'  => $total_expense,
+            'active_region'  => $active_region,
+            'list_regions'   => $list_regions
+        ];
         return view('\App\modules\transaksi\Views\views_transaksi', $data);
     }
 
@@ -95,6 +132,8 @@ class Transaksi extends BaseController
         $data = [
             'region_id'         => $region_id,
             'nominal'           => $this->request->getPost('nominal'),
+            'type'              => $this->request->getPost('type') ?? 'income',
+            'keterangan'        => $this->request->getPost('keterangan'),
             'metode_pembayaran' => $this->request->getPost('metode_pembayaran'),
             'rentang_usia'      => $this->request->getPost('rentang_usia'),
             'created_at'        => date('Y-m-d H:i:s'),

@@ -48,8 +48,8 @@
                                         <th>Alamat</th>
                                         <th>No WA</th>
                                         <th>Status</th>
-                                        <?php if(session()->get('role') === 'superadmin') :?>
-                                        <th>Proses</th>
+                                        <?php if (session()->get('role') === 'superadmin') : ?>
+                                            <th>Proses</th>
                                         <?php else :  ?>
                                             <th>Keterangan</th>
                                         <?php endif;  ?>
@@ -192,24 +192,31 @@
 
                     <div class="form-group" id="region-group">
                         <label>Wilayah</label>
-                        <select class="form-control" name="region_id" id="region_id">
-                            <option value="">PILIH</option>
-                            <?php foreach ($wilayah as $v): ?>
-                                <?php
-                                $selected = '';
-                                if (isset($regions_patient) && !empty($regions_patient)) {
-                                    if (is_array($regions_patient)) {
-                                        $selected = in_array($v->id, $regions_patient) ? 'selected' : '';
-                                    } else {
-                                        $selected = ($v->id == $regions_patient) ? 'selected' : '';
-                                    }
-                                }
-                                ?>
-                                <option value="<?= $v->id ?>" <?= $selected ?>><?= $v->name ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
+                        <?php
+                        $role = session()->get('role');
+                        $sess_region_name = session()->get('region_name');
+                        $sess_region_id = session()->get('region_patient');
+                        $active_region = session()->get('active_region');
+                        ?>
 
+                        <?php if ($role === 'user'): ?>
+                            <input type="text" class="form-control" value="<?= $sess_region_name ?>" readonly>
+                            <input type="hidden" name="region_id" value="<?= is_array($sess_region_id) ? $sess_region_id[0] : $sess_region_id ?>">
+                        <?php else: ?>
+                            <select class="form-control" name="region_id" id="region_id">
+                                <option value="">PILIH</option>
+                                <?php foreach ($wilayah as $v): ?>
+                                    <?php
+                                    $selected = '';
+                                    if (!empty($active_region) && $active_region !== 'all') {
+                                        $selected = ($v->id == $active_region) ? 'selected' : '';
+                                    }
+                                    ?>
+                                    <option value="<?= $v->id ?>" <?= $selected ?>><?= $v->name ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        <?php endif; ?>
+                    </div>
                     <div class="row">
                         <div class="col-6">
                             <div class="form-group">
@@ -369,8 +376,8 @@
         $('#addPatientQueueModal').on('shown.bs.modal', function() {
             if (!$.fn.DataTable.isDataTable('#table-2')) {
                 table2 = $('#table-2').DataTable({
-                    dom: '<"top"lBf>rt<"bottom"ip><"clear">', 
-                    buttons: buttonsConfig, 
+                    dom: '<"top"lBf>rt<"bottom"ip><"clear">',
+                    buttons: buttonsConfig,
                     language: {
                         searchPlaceholder: 'ID Pasien/No.Telp/ Nama',
                         processing: '<div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div>'

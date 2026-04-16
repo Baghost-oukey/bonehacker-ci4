@@ -58,23 +58,31 @@ class Antrean extends BaseController
             ->join('histories h', 'h.patient_queue_id = pq.id', 'left')
             ->where('h.finish_at', null);
 
-        $regions_session = json_decode(session()->get('regions_patient'), true);
-        $aktif_region = session()->get('active_region');
 
-        if (session()->get('role') === 'user' && !empty($regions_session)) {
-            $builder->whereIn('pq.region_id', is_array($regions_session) ? $regions_session : [$regions_session]);
+        $role = session()->get('role');
+        $active_region = session()->get('active_region');
+        $region_session = session()->get('region_patient');
+
+
+        // $regions_session = json_decode(session()->get('regions_patient'), true);
+
+        if ($role === 'owner' || $role === 'superadmin') {
+            $filter = ($region && $region !== 'all') ? $region : ($active_region !== 'all' ? $active_region : 'all');
         } else {
-            if ($aktif_region !== 'all' && !empty($aktif_region)) {
-                $builder->where('pq.region_id', $aktif_region);
+            $filter = $region_session;
+        }
+
+        if ($filter !== 'all' && !empty($filter)) {
+            if (is_array($filter)) {
+                $builder->whereIn('pq.region_id', $filter);
+            } else {
+                $builder->where('pq.region_id', $filter);
             }
         }
-        if (!empty($region)) $builder->where('p.region_id', $region);
+        // if (!empty($region)) $builder->where('p.region_id', $region);
         if (!empty($startDate) && !empty($endDate)) {
-            $formatStart = date('Y-m-d', strtotime($startDate));
-            $formatEnd   = date('Y-m-d', strtotime($endDate));
-
-            $builder->where('DATE(pq.queue_date) >=', $formatStart)
-                ->where('DATE(pq.queue_date) <=', $formatEnd);
+            $builder->where('DATE(pq.queue_date) >=', date('Y-m-d', strtotime($startDate)))
+                ->where('DATE(pq.queue_date) <=', date('Y-m-d', strtotime($endDate)));
         }
 
 
@@ -109,22 +117,16 @@ class Antrean extends BaseController
             })
             ->add('action', function ($row) {
                 $btn = '<div class="btn-group d-flex justify-content-between align-items-center" style="gap: 5px;">';
-                $role = session()->get('role');
+                // $role = session()->get('role');
 
                 $historyId = $row->history_id ?? '';
 
-                if ($role === 'superadmin') {
-                    if ($row->process_at !== null) {
-                        $btn .= '<a href="' . site_url('antrean/finishQueue/' . $row->queue_id) . '" class="btn btn-warning btn-md w-100">Selesai</a>';
-                    } else {
-                        $btn .= '<a href="' . site_url('antrean/procesToQueue/' . $row->queue_id) . '" class="btn btn-success btn-md w-100"> Proses Pasien </a>';
-                    }
+                if ($row->process_at !== null) {
+                    $btn .= '<a href="' . site_url('antrean/finishQueue/' . $row->queue_id) . '" class="btn btn-warning btn-md w-100">Selesai</a>';
                 } else {
-                    if ($row->process_at !== null) {
-                        return '<span class="badge badge-primary">Pasien Dalam Terapi</span>';
-                    }
-                    return '<span class="badge badge-warning">Menunggu Konfirmasi</span>';
+                    $btn .= '<a href="' . site_url('antrean/procesToQueue/' . $row->queue_id) . '" class="btn btn-success btn-md w-100"> Proses Pasien </a>';
                 }
+
 
                 $urlHistory = site_url('patient/show/' . $row->patient_id) . '?openModalRiwayat=true';
                 if (!empty($historyId)) {
@@ -142,7 +144,7 @@ class Antrean extends BaseController
     public function fetchPatientDataTables()
     {
         $request = service('request');
-        $active_region = session()->get('active_region');
+        // $active_region = session()->get('active_region');
         $region = $request->getPost('region');
 
         $builder = $this->db->table('patients p')
@@ -152,17 +154,21 @@ class Antrean extends BaseController
             ->join('regions r', 'r.id = p.region_id', 'left')
             ->join('patient_address pa', 'pa.patient_id = p.id', 'left');
 
-        if (session()->get('role') === 'user') {
-            $region_id = session()->get('myRegionId');
-            $builder->where('p.region_id', $region_id);
-        } else {
-            if ($active_region !== 'all' && !empty($active_region)) {
-                $builder->where('p.region_id', $active_region);
-            }
-        }
+        $role = session()->get('role');
+        $active_region = session()->get('active_region');
+        $region_session = session()->get('region_patient');
 
-        if (!empty($region)) {
-            $builder->where('p.region_id', $region);
+        if ($role === 'user') {
+            $filter = $region_session;
+        } else {
+            $filter = ($region && $region !== 'all') ? $region : ($active_region !== 'all' ? $active_region : 'all');
+        }
+        if ($filter !== 'all' && !empty($filter)) {
+            if (is_array($filter)) {
+                $builder->whereIn('p.region_id', $filter);
+            } else {
+                $builder->where('p.region_id', $filter);
+            }
         }
 
         return \Hermawan\DataTables\DataTable::of($builder)

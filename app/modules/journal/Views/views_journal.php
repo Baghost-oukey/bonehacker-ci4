@@ -26,12 +26,18 @@
 
                             <div class="col-md-4">
                                 <label>Wilayah:</label>
-                                <select id="region" class="form-control select2">
-                                    <option value="">Semua Wilayah</option>
-                                    <?php foreach ($wilayah as $value): ?>
-                                        <option value="<?= $value->id ?>"><?= esc($value->name) ?></option>
-                                    <?php endforeach; ?>
-                                </select>
+                                <?php if (session()->get('role') === 'user'): ?>
+                                    <input type="text" class="form-control" value="<?= session()->get('region_name') ?>" readonly>
+                                    <input type="hidden" id="region" value="<?= is_array(session()->get('region_patient')) ? session()->get('region_patient')[0] : session()->get('region_patient') ?>">
+                                <?php else: ?>
+                                    <select id="region" class="form-control select2">
+                                        <option value="">Semua Wilayah</option>
+                                        <?php foreach ($wilayah as $value): ?>
+                                            <?php $selected = (session()->get('active_region') == $value->id) ? 'selected' : ''; ?>
+                                            <option value="<?= $value->id ?>" <?= $selected ?>><?= esc($value->name) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                <?php endif; ?>
                             </div>
 
                             <div>
@@ -105,12 +111,18 @@
 
                     <div class="form-group">
                         <label>Pilih Wilayah</label>
-                        <select name="region_id" id="export_region" class="form-control select2" style="width: 100%;">
-                            <option value="">Semua Wilayah</option>
-                            <?php foreach ($wilayah as $r): ?>
-                                <option value="<?= $r->id ?>"><?= esc($r->name) ?></option>
-                            <?php endforeach; ?>
-                        </select>
+                        <?php if (session()->get('role') === 'user'): ?>
+                            <input type="text" class="form-control" value="<?= session()->get('region_name') ?>" readonly>
+                            <input type="hidden" name="region_id" value="<?= is_array(session()->get('region_patient')) ? session()->get('region_patient')[0] : session()->get('region_patient') ?>">
+                        <?php else: ?>
+                            <select name="region_id" id="export_region" class="form-control select2" style="width: 100%;">
+                                <option value="">Semua Wilayah</option>
+                                <?php foreach ($wilayah as $r): ?>
+                                    <?php $selected = (session()->get('active_region') == $r->id) ? 'selected' : ''; ?>
+                                    <option value="<?= $r->id ?>" <?= $selected ?>><?= esc($r->name) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        <?php endif; ?>
                     </div>
 
                     <div class="form-group">

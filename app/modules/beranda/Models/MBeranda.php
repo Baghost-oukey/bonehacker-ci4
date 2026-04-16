@@ -20,20 +20,17 @@ class MBeranda extends Model
     protected array $casts = [];
     protected array $castHandlers = [];
 
-    // Dates
     protected $useTimestamps = false;
     protected $dateFormat    = 'datetime';
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
     protected $deletedField  = 'deleted_at';
 
-    // Validation
     protected $validationRules      = [];
     protected $validationMessages   = [];
     protected $skipValidation       = false;
     protected $cleanValidationRules = true;
 
-    // Callbacks
     protected $allowCallbacks = true;
     protected $beforeInsert   = [];
     protected $afterInsert    = [];
@@ -46,8 +43,8 @@ class MBeranda extends Model
 
     public function applyRegionFilter($builder, $role, $region_patients, $history = false)
     {
-        if ($role === 'user' && !empty($region_patients)) {
-            $column = $history ? 'patients.region_id' : 'region_id';
+        if (!empty($region_patients) && $region_patients !== 'all') {
+            $column = $history ? 'history_region' : 'region_id';
 
             if (is_array($region_patients)) {
                 $builder->whereIn($column, $region_patients);
@@ -90,13 +87,16 @@ class MBeranda extends Model
     public function getVisitCount($type, $role, $region_patients)
     {
         $builder = $this->db->table('histories');
+        $builder->where('is_delete', 0);
 
-        if ($role === 'user' && !empty($region_patients)) {
-            $builder->join('patients', 'patients.id = histories.patient_id');
-            $this->applyRegionFilter($builder, $role, $region_patients, true);
-        }
-        // $this->applyRegionFilter($builder, $role, $region_patients);
-        $builder->where('histories.is_delete', 0);
+        $this->applyRegionFilter($builder, $role, $region_patients, true);
+
+        // if (!empty($region_patients) && $region_patients !== 'all') {
+        //     $builder->join('patients', 'patients.id = histories.patient_id');
+        //     $this->applyRegionFilter($builder, $role, $region_patients, true);
+        // }
+        // // $this->applyRegionFilter($builder, $role, $region_patients);
+        // $builder->where('histories.is_delete', 0);
 
         switch ($type) {
             case 'today':

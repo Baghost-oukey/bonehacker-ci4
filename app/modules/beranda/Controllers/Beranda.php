@@ -50,8 +50,12 @@ class Beranda extends BaseController
             ->where('pq.queue_date >=', $start)
             ->where('pq.queue_date <=', $end);
 
-        if ($role === 'user' && !empty($region_patients)) {
-            $builder->whereIn('pq.region_id', (array)$region_patients);
+        if (!empty($region_patients) && $region_patients !== 'all') {
+            if (is_array($region_patients)) {
+                $builder->whereIn('pq.region_id', $region_patients);
+            } else {
+                $builder->where('pq.region_id', $region_patients);
+            }
         }
 
         $results = $builder->groupBy('pq.queue_date')->get()->getResultArray();
@@ -83,14 +87,21 @@ class Beranda extends BaseController
     {
         //
         $session = session();
+        // dd($session->get('region_patient'));
         $role = $session->get('role');
-
+        $active_region = $session->get('active_region');
         $region_patients = $session->get('region_patient');
+
+        if ($role === 'owner' || $role === 'superadmin') {
+            $filter_region = ($active_region) ? $active_region : 'all';
+        } else {
+            $filter_region = $region_patients;
+        }
 
         $data = [
             'realname'        => $session->get('realname'),
             'role'            => $role,
-            'regions_patient' => $region_patients,
+            'region_patient' => $filter_region,
             'base_url'        => base_url(),
             'current_segment' => $this->request->getUri()->getSegment(1),
             'title'           => 'Beranda',
@@ -104,12 +115,12 @@ class Beranda extends BaseController
         // Statistik Pasien
         $stats = ['today', 'yesterday', 'thismonth', 'lastmonth', 'thisyear', 'lastyear', 'all'];
         foreach ($stats as $type) {
-            $data["pasien_$type"]    = $this->model_beranda->getPatientCount($type, $role, $region_patients);
-            $data["kunjungan_$type"] = $this->model_beranda->getVisitCount($type, $role, $region_patients);
+            $data["pasien_$type"]    = $this->model_beranda->getPatientCount($type, $role, $filter_region);
+            $data["kunjungan_$type"] = $this->model_beranda->getVisitCount($type, $role, $filter_region);
         }
 
         // Kalender Antrian
-        $calendarData = $this->_get_calender_data($role, $region_patients);
+        $calendarData = $this->_get_calender_data($role, $filter_region);
         $data = array_merge($data, $calendarData);
 
         return view('App\modules\beranda\Views\beranda_views', $data);

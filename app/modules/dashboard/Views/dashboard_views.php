@@ -23,28 +23,29 @@
                                         <th>ID Pasien</th>
                                         <th>Nama</th>
                                         <th>
-                                            <select id="region" class="form-control">
-                                                <option value="">Semua Wilayah</option>
-                                                <?php if (!empty($regions_patient) && is_array($regions_patient)): ?>
-                                                    <?php foreach ($wilayah as $value): ?>
-                                                        <?php
-                                                        $selected = (in_array($value->id, $regions_patient)) ? 'selected' : '';
-                                                        ?>
-                                                        <option value="<?= $value->id ?>" <?= $selected ?>>
-                                                            <?= $value->name ?>
-                                                        </option>
-                                                    <?php endforeach; ?>
-                                                <?php else: ?>
-                                                    <?php foreach ($wilayah as $value): ?>
-                                                        <?php
-                                                        $selected = (isset($_GET['region']) && $_GET['region'] == $value->id) ? 'selected' : '';
-                                                        ?>
-                                                        <option value="<?= $value->id ?>" <?= $selected ?>>
-                                                            <?= $value->name ?>
-                                                        </option>
-                                                    <?php endforeach; ?>
-                                                <?php endif; ?>
-                                            </select>
+                                            <?php
+                                            $sess_role = session()->get('role');
+                                            $sess_active_id = session()->get('active_region');
+                                            $sess_active_name = session()->get('active_region_name');
+                                            $sess_region_name = session()->get('region_name');
+                                            $sess_patient_id = session()->get('region_patient');
+
+                                            // ID Wilayah untuk filter DataTable (input hidden)
+                                            $val_id = 'all';
+                                            if ($sess_role === 'user') {
+                                                $val_id = is_array($sess_patient_id) ? $sess_patient_id[0] : $sess_patient_id;
+                                            } else {
+                                                $val_id = ($sess_active_id) ? $sess_active_id : 'all';
+                                            }
+                                            ?>
+
+                                            <?php if ($sess_role === 'user'): ?>
+                                                Wilayah: <?= $sess_region_name ?>
+                                            <?php else: ?>
+                                                Wilayah: <?= ($sess_active_id === 'all' || !$sess_active_id) ? 'Semua' : $sess_active_name ?>
+                                            <?php endif; ?>
+
+                                            <input type="hidden" id="region" value="<?= $val_id ?>">
                                         </th>
                                         <th>Alamat</th>
                                         <th>Kunjungan Terakhir</th>
@@ -169,20 +170,27 @@
 
                     <div class="form-group" id="region-group">
                         <label>Wilayah</label>
-                        <select class="form-control" name="region_id" id="region_id">
-                            <option value="">PILIH</option>
-                            <?php foreach ($wilayah as $value): ?>
-                                <?php
-                                $isSelected = false;
-                                if (isset($regions_patient[0])) {
-                                    $isSelected = is_array($regions_patient[0]) ? in_array($value->id, $regions_patient[0]) : ($value->id == $regions_patient[0]);
-                                }
-                                ?>
-                                <option value="<?= $value->id ?>" <?= $isSelected ? 'selected' : '' ?>>
-                                    <?= $value->name ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
+                        <?php
+                        $sess_role = session()->get('role');
+                        $sess_region_id = session()->get('region_id'); // ID Tunggal (misal: 5)
+                        $sess_region_name = session()->get('region_name');
+                        ?>
+
+                        <?php if ($sess_role === 'user'): ?>
+                            <input type="text" class="form-control" value="<?= $sess_region_name ?>" readonly>
+                            <input type="hidden" name="region_id" value="<?= $sess_region_id ?>">
+                        <?php else: ?>
+                            <select class="form-control" name="region_id" id="region_id" required>
+                                <option value="">PILIH</option>
+                                <?php foreach ($wilayah as $value): ?>
+                                    <?php
+                                    $active_id = session()->get('active_region');
+                                    $selected = ($value->id == $active_id) ? 'selected' : '';
+                                    ?>
+                                    <option value="<?= $value->id ?>" <?= $selected ?>><?= $value->name ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        <?php endif; ?>
                     </div>
 
                     <div class="row">
@@ -275,9 +283,11 @@
                         <label>Pilih Wilayah</label>
                         <select name="region_id" class="form-control select2" style="width: 100%;">
                             <option value="">Semua Wilayah</option>
-                            <?php foreach ($regions_patient as $r): ?>
-                                <option value="<?= $r->id ?>"><?= $r->name ?></option>
-                            <?php endforeach; ?>
+                            <?php if (!empty($wilayah)): ?>
+                                <?php foreach ($wilayah as $r): ?>
+                                    <option value="<?= $r->id ?>"><?= $r->name ?></option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </select>
                     </div>
                     <div class="form-group">
@@ -393,7 +403,7 @@
             $('#export_date').on('apply.daterangepicker', function(ev, picker) {
                 $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
             });
-            
+
             buttonsConfig.push({
                 className: 'btn btn-primary btn-sm mr-1',
                 text: '<i class="fas fa-file-export"></i> Download Data Pasien',
@@ -426,7 +436,7 @@
                     data: "name",
                 },
                 {
-                    data: "name_region"
+                    data: "name_region",
                 },
                 {
                     data: "address"

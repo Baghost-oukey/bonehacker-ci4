@@ -80,12 +80,40 @@ class Auth extends BaseController
                 // Mengambil data berdasarkan berdasarkan superadmin
                 $get_region = $db->table('regions')->select('id, name')->get()->getResultArray();
                 // Mengambil Data region berdasarkan user
-                $user_region = $user->regions_patient;
-                $current_region_Id = str_contains($user_region, '[')
-                    ? (json_decode($user_region, true)[0] ?? null)
-                    : $user_region;
 
-                $regionDetail = $db->table('regions')->where('id', $current_region_Id)->get()->getRow();
+                $user_region = $user->regions_patient;
+                $final_region_for_session = null;
+                $current_region_Id = null;
+
+                // $current_region_Id = str_contains($user_region, '[')
+                //     ? (json_decode($user_region, true)[0] ?? null)
+                //     : $user_region;
+
+                if (!empty($user_region)) {
+                    // Cek apakah isinya format JSON (misal: ["5"])
+                    $decoded = json_decode($user_region, true);
+
+                    if (is_array($decoded) && !empty($decoded)) {
+                        // Jika dia array ["5"], ambil angka 5-nya saja untuk pencarian detail
+                        $current_region_Id = $decoded[0];
+                        $final_region_for_session = $decoded; // Simpan tetap sebagai array untuk whereIn
+                    } else {
+                        // Jika string biasa (misal: 5), ambil langsung
+                        $current_region_Id = $user_region;
+                        $final_region_for_session = $user_region;
+                    }
+                }
+
+                // $regionDetail = $db->table('regions')->where('id', $current_region_Id)->get()->getRow();
+                $regionDetail = null;
+                if ($current_region_Id) {
+                    $regionDetail = $db->table('regions')->where('id', $current_region_Id)->get()->getRow();
+                }
+
+                $defaultActive = ($user->role === 'owner' || $user->role === 'superadmin') ? 'all' : $current_region_Id;
+                $defaultName   = ($user->role === 'owner' || $user->role === 'superadmin') ? 'Semua Wilayah' : ($regionDetail ? $regionDetail->name : 'Cabang');
+
+
                 $sessionData = [
                     'isLogin'         => true,
                     'userId'          => $user->id,
@@ -94,10 +122,10 @@ class Auth extends BaseController
                     // Untuk Data Pasien
                     'region_id'       => $current_region_Id,
                     'region_name'     => $regionDetail ? $regionDetail->name : 'Cabang Tidak Terdeteksi',
-                    'regions_patient' => $user->regions_patient,
+                    'region_patient' => $final_region_for_session,
                     'list_regions_global' => $get_region, // Untuk isi dropdown
-                    'active_region'       => 'all',        // Default awal saat login
-                    'active_region_name'  => 'Semua Wilayah'
+                    'active_region'       => $defaultActive,        // Default awal saat login
+                    'active_region_name'  => $defaultName
 
                 ];
                 session()->set($sessionData);
@@ -134,6 +162,12 @@ class Auth extends BaseController
 
             $displayName = ($targetId === 'all') ? 'Semua Wilayah' : $targetName;
             session()->set('active_region_name', $displayName);
+
+            if ($targetId === 'all') {
+                session()->set('region_patient', 'all');
+            } else {
+                session()->set('region_patient', [(int)$targetId]); 
+            }
 
             return $this->response->setJSON([
                 'status'  => 'success',

@@ -45,13 +45,24 @@ class Journal extends BaseController
 
     public function fetch()
     {
-        $region = $this->request->getPost('region');
+        $session = session();
+        $role = $session->get('role');
+        $active_region = $session->get('active_region');
+        $region_session = $session->get('region_patient');
+        $region_post = $this->request->getPost('region');
+
+
+        if ($role === 'owner' || $role === 'superadmin') {
+            $region = ($region_post && $region_post !== 'all') ? $region_post : ($active_region !== 'all' ? $active_region : null);
+        } else {
+            $region = $region_session;
+        }
+
         $start_date = $this->request->getPost('start_date');
         $end_date   = $this->request->getPost('end_date');
 
         $queryBuilder = $this->model_journal->get_query_for_Journal($region, $start_date, $end_date);
         $datatables = new DataTables($queryBuilder);
-
 
 
         $start = (int)($this->request->getPost('start') ?? 0);

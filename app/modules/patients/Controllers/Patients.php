@@ -198,34 +198,36 @@ class Patients extends BaseController
     public function fetch2()
     {
         $db = db_connect();
-
         $request = \Config\Services::request();
 
         $limit = $this->request->getPost('length') ?? 10;
         $start = $this->request->getPost('start') ?? 0;
         $search = $request->getPost('search')['value'] ?? '';
-
         $region = $this->request->getPost('region');
 
         $builder = $db->table('patients p')
             ->select('
-          p.id, p.name, p.phone, p.address, p.is_delete, p.region_id,
-        ANY_VALUE(r.name) as name_region, 
-        ANY_VALUE(pa.desa_nama) as desa_nama, 
-        ANY_VALUE(pa.kecamatan_nama) as kecamatan_nama, 
-        ANY_VALUE(pa.kabupaten_nama) as kabupaten_nama, 
-        ANY_VALUE(pa.provinsi_nama) as provinsi_nama,
-        COUNT(h.id) AS visit_count,
-        MAX(h.date) AS last_visit_date
+            p.id, p.name, p.phone, p.address, p.is_delete, p.region_id,
+            r.name as name_region, 
+            pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama, pa.provinsi_nama,
+            COUNT(h.id) AS visit_count,
+            MAX(h.date) AS last_visit_date
         ')
             ->join('regions r', 'r.id = p.region_id', 'left')
             ->join('patient_address pa', 'pa.patient_id = p.id', 'left')
             ->join('histories h', 'h.patient_id = p.id AND h.is_delete = 0', 'left');
-            // ->where('p.is_delete', 0);
+        // ->where('p.is_delete', 0);
         // ->limit($limit, $start);
 
-        if (!empty($region)) {
-            $builder->where('p.region_id', $region);
+        // if (!empty($region)) {
+        //     $builder->where('p.region_id', $region);
+        // }
+        if (!empty($region) && $region !== 'all') {
+            if (is_array($region)) {
+                $builder->whereIn('p.region_id', $region);
+            } else {
+                $builder->where('p.region_id', $region);
+            }
         }
 
         if (!empty($search)) {
@@ -235,13 +237,28 @@ class Patients extends BaseController
                 ->groupEnd();
         }
 
-        $builder->groupBy('p.id');
+        $builder->groupBy([
+            'p.id',
+            'p.name',
+            'p.phone',
+            'p.address',
+            'p.is_delete',
+            'p.region_id',
+            'r.name',
+            'pa.desa_nama',
+            'pa.kecamatan_nama',
+            'pa.kabupaten_nama',
+            'pa.provinsi_nama'
+        ]);
         // $totalFiltered = $builder->countAllResults(false);
-        $totalFiltered = $db->table('(' . $builder->getCompiledSelect(false) . ') AS temp_table')->countAllResults();
+        $tempBuilder = clone $builder;
+        $totalFiltered = $db->table('(' . $tempBuilder->getCompiledSelect() . ') AS temp_table')->countAllResults();
 
-        $data = $builder->limit($limit, $start)->get()->getResult();
-
-        $totalData = $db->table('patients')->where('is_delete', 0)->countAllResults();
+        $data = $builder->orderBy('p.id', 'ASC') // Pastikan urut dari yang terbaru
+            ->limit($limit, $start)
+            ->get()
+            ->getResult();
+        $totalData = $db->table('patients')->countAllResults();
 
         // $data = $builder->get()->getResult();
         $output = [];

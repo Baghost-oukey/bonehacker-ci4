@@ -55,7 +55,8 @@ class MJournal extends Model
         //     ->getCompiledSelect();
 
 
-        $builder = $this->db->table('patients p');
+        $builder = $this->db->table('histories h');
+        $builder->distinct();
         $builder->select([
             'p.id as patient_id',
             'p.name as nama',
@@ -64,33 +65,50 @@ class MJournal extends Model
             'h.date as tanggal',
             'h.measure AS measures',
             "'-' as result_names",
-           
+
             // '(SELECT IF(COUNT(h2.id) > 1, "Pasien Lama", "Pasien Baru") FROM histories h2 WHERE h2.patient_id = p.id AND h2.is_delete = 0) as status',
-         '(SELECT IF(COUNT(id) > 1, "Pasien Lama", "Pasien Baru") FROM histories WHERE patient_id = p.id AND is_delete = 0) as status',
+            '(SELECT IF(COUNT(h2.id) > 1, "Pasien Lama", "Pasien Baru") 
+          FROM histories h2 
+          WHERE h2.patient_id = p.id AND h2.is_delete = 0 AND h2.date <= h.date) as status',
             'CONCAT_WS(", ", p.address, pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama) as alamat'
         ]);
 
+        $builder->join('patients p', 'p.id = h.patient_id', 'inner');
         $builder->join('patient_address pa', 'pa.patient_id = p.id', 'left');
-        $builder->join('regions r', 'r.id = p.region_id', 'left');
-        $builder->join('histories h', 'h.patient_id = p.id', 'inner');
+        // $builder->join('regions r', 'r.id = p.region_id', 'left');
+        // $builder->join('histories h', 'h.patient_id = p.id', 'inner');
         // $builder->join("($subQuery) sq", 'sq.history_id = h.id', 'left');
         // $builder->join('histories h_all', 'h_all.patient_id = p.id AND h_all.is_delete = 0', 'left');
 
         // $builder->where('p.is_delete', false);
         // $builder->where('h.is_delete', false);
-        $builder->where('p.is_delete', 0);
         $builder->where('h.is_delete', 0);
+        $builder->where('p.is_delete', 0);
 
-        if (!empty($region)) {
-            $builder->where('h.history_region', $region);
+        if (!empty($region) && $region !== 'all') {
+            if (is_array($region)) {
+                $builder->whereIn('h.history_region', $region);
+            } else {
+                $builder->where('h.history_region', $region);
+            }
         }
-
         if (!empty($start_date) && !empty($end_date)) {
             $builder->where("h.date >=", $start_date . " 00:00:00")
                 ->where("h.date <=", $end_date . " 23:59:59");
         }
 
-       $builder->groupBy(['h.id', 'p.id', 'pa.id']);
+        $builder->groupBy([
+            'h.id',
+            'p.id',
+            'p.name',
+            'p.phone',
+            'h.date',
+            'h.measure',
+            'p.address',
+            'pa.desa_nama',
+            'pa.kecamatan_nama',
+            'pa.kabupaten_nama'
+        ]);
         $builder->orderBy('h.date', 'DESC');
 
 
@@ -115,8 +133,16 @@ class MJournal extends Model
         $builder->where('h.is_delete', 0);
         $builder->where('p.is_delete', 0);
 
-        if (!empty($region)) {
-            $builder->where('h.history_region', $region);
+        // if (!empty($region)) {
+        //     $builder->where('h.history_region', $region);
+        // }
+
+        if (!empty($region) && $region !== 'all') {
+            if (is_array($region)) {
+                $builder->whereIn('h.history_region', $region);
+            } else {
+                $builder->where('h.history_region', $region);
+            }
         }
 
         if (!empty($start_date) && !empty($end_date)) {
