@@ -1,8 +1,6 @@
-<footer class="navbar navbar-expand-lg" style="display: flex; justify-content: space-between; align-items: center; min-height: 60px; padding: 10px 20px; background-color: #f8f9fa; border-top: 1px solid #dee2e6;">
-    <div class="navbar-left" style="flex: 1;">
-        <p style="margin: 0;">© <?= date('Y') ?> Bonehacker. All rights reserved.</p>
-    </div>
-    <div class="navbar-right" style="flex: 1; text-align: right; margin-right: 16px;">
-        <p style="margin: 0;">Version 1.0.0</p>
+<footer class="border-t border-slate-200 bg-white px-4 py-4 text-sm text-slate-500 md:px-6">
+    <div class="mx-auto flex max-w-screen-2xl flex-col gap-2 text-center md:flex-row md:items-center md:justify-between md:text-left">
+        <p class="m-0">© <?= date('Y') ?> Bonehacker. All rights reserved.</p>
+        <p class="m-0 font-medium text-slate-400">Version 1.0.0</p>
     </div>
 </footer>

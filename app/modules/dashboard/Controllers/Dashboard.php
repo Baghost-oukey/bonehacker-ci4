@@ -45,7 +45,6 @@ class Dashboard extends BaseController
             'resources'       => $mPatient->get_resources() ?? [],
             'negara'          => $mCountries->getData() ?? [],
             'patients'        => $patients,
-            'resources'       => $mPatient->get_resources() ?? [],
             'patient_information' => null,
 
         ];

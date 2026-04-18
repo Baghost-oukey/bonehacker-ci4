@@ -124,3 +124,29 @@ _modules/*
 
 /results/
 /phpunit*.xml
+
+#-------------------------
+# Frontend / Node / Vite
+#-------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Vite build output (generated)
+public/build/
+
+# Frontend test / coverage outputs
+coverage/
+*.lcov
+
+#-------------------------
+# Local Tool Caches
+#-------------------------
+.cache/
+.vite/
+.eslintcache
+
+# PHP unit runtime cache
+.phpunit.result.cache

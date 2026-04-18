@@ -107,7 +107,7 @@ class Beranda extends BaseController
             'title'           => 'Beranda',
             'msg'             => $session->getFlashdata('message'),
             'wilayah'         => $this->model_region->getData(),
-            'negara'          => $this->model_country->getData()
+            'negara'          => $this->model_country->getData(),
         ];
 
         $data['greeting'] = $this->_get_random_greeting();
@@ -123,6 +123,6 @@ class Beranda extends BaseController
         $calendarData = $this->_get_calender_data($role, $filter_region);
         $data = array_merge($data, $calendarData);
 
-        return view('App\modules\beranda\Views\beranda_views', $data);
+        return view('App\modules\beranda\Views\beranda', $data);
     }
 }
