@@ -399,7 +399,6 @@
                     </div>
                 <?php endforeach; else: ?>
                     <div class="flex flex-col items-center justify-center py-16 text-slate-400 dark:text-cyan-400/50">
-                        <div class="text-5xl mb-3">🎉</div>
                         <div class="text-lg font-semibold">Belum ada yang selesai</div>
                         <div class="text-sm">Tunggu pasien menyelesaikan terapi</div>
                     </div>

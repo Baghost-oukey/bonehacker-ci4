@@ -222,21 +222,21 @@
                      <div id="accountAlert" class="alert" style="display: none;"></div>
                      <div class="form-group">
                          <label for="realname">Nama Lengkap</label>
-                         <input type="text" class="form-control" id="realname" name="realname" required>
+                         <input type="text" class="form-control" id="realname" name="realname" value="<?= session()->get('realname') ?>" required>
                      </div>
                      <div class="form-group">
                          <label for="username">Username</label>
-                         <input type="text" class="form-control" id="username" name="username" required>
+                         <input type="text" class="form-control" id="username" name="username" value="<?= session()->get('username') ?>" required>
                      </div>
                      <div class="form-group">
                          <label for="password">Password (Kosongkan jika tidak ingin mengganti)</label>
                          <input type="password" class="form-control" id="password" name="password">
                      </div>
-                     <input type="hidden" id="user_id" name="user_id">
+                     <input type="hidden" id="user_id" name="user_id" value="<?= session()->get('userId') ?>">
                  </div>
                  <div class="modal-footer">
                      <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                     <button type="submit" class="btn btn-primary">Simpan</button>
+                     <button type="button" onclick="update_profile()" id="btn-save-akun" class="btn btn-primary">Simpan</button>
                  </div>
              </form>
          </div>
@@ -244,6 +244,88 @@
  </div>
 
  <script>
+    // Update Akun Saya
+     function update_profile() {
+         const btn = $('#btn-save-akun');
+         const form = $('#editAccountForm');
+
+         const csrfToken = $('meta[name="csrf-token"]').attr('content');
+         const csrfHeader = $('meta[name="csrf-header"]').attr('content');
+         var formData = form.serialize();
+
+         Swal.fire({
+             title: 'Simpan Perubahan?',
+             text: "Data profil Anda akan diperbarui.",
+             icon: 'question',
+             showCancelButton: true,
+             confirmButtonColor: '#6777ef', 
+             cancelButtonColor: '#d33',
+             confirmButtonText: 'Ya, Simpan!',
+             cancelButtonText: 'Batal'
+         }).then((result) => {
+             if (result.isConfirmed) {
+                 $.ajax({
+                     url: '<?= site_url("users/update_acount_users") ?>',
+                     type: 'POST',
+                     headers: {
+                         [csrfHeader]: csrfToken
+                     },
+                     data: formData,
+                     dataType: 'json',
+                     beforeSend: function() {
+                         btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Loading...');
+                         Swal.fire({
+                             title: 'Memproses...',
+                             text: 'Mohon tunggu sebentar',
+                             allowOutsideClick: false,
+                             didOpen: () => {
+                                 Swal.showLoading()
+                             }
+                         });
+                     },
+                     success: function(response) {
+                         if (response.status === 'success') {
+                             $('.nav-link-user .d-lg-inline-block').text('Hi, ' + response.realname);
+
+                             Swal.fire({
+                                 icon: 'success',
+                                 title: 'Berhasil!',
+                                 text: response.message,
+                                 showConfirmButton: false,
+                                 timer: 1500
+                             }).then(() => {
+                                 $('#editAccountModal').modal('hide');
+                                 location.reload();
+                             });
+                         } else {
+                             Swal.fire({
+                                 icon: 'error',
+                                 title: 'Gagal!',
+                                 text: response.message
+                             });
+
+                             btn.prop('disabled', false).text('Simpan');
+
+                             if (response.csrfHash) {
+                                 $('meta[name="csrf-token"]').attr('content', response.csrfHash);
+                             }
+                         }
+                     },
+                     error: function(xhr) {
+                         console.error("DEBUG: Error AJAX: ", xhr.responseText);
+                         Swal.fire({
+                             icon: 'error',
+                             title: 'Oops...',
+                             text: 'Terjadi kesalahan sistem atau sesi Anda telah berakhir.'
+                         });
+                         btn.prop('disabled', false).text('Simpan');
+                     }
+                 });
+             }
+         });
+     }
+
+    //  Fungsi Switch Region Cabang Untuk Super admin dan owner
      function switchRegion(el, e) {
          e.preventDefault();
          e.stopPropagation();
@@ -260,11 +342,8 @@
          const $this = $(el);
          const id = $this.attr('data-id');
          const name = $this.attr('data-name');
-
          const csrfToken = $('#csrf-token').attr('content');
          const csrfHeader = $('#csrf-header').attr('content');
-
-        //  console.log("JALUR ONCLICK: Mencoba pindah ke:", name);
 
          if (!csrfToken || !csrfHeader) {
              console.error('CSRF tokens not found!');
@@ -286,135 +365,66 @@
                  if (response.status === 'success') {
                      window.location.reload();
                  } else {
-                     alert('⚠️ Gagal: ' + response.message);
+                     alert('Gagal: ' + response.message);
                      $this.css('opacity', '1').prop('disabled', false);
                  }
              },
              error: function(xhr) {
                  console.error('Error:', xhr.responseText);
-                 // Jika error (mungkin token expired), paksa reload saja
                  window.location.reload();
              }
          });
      }
 
-     $(document).ready(function() {
-         $('#editAccountBtn').on('click', function() {
-             $('#accountAlert').removeClass('alert-success alert-danger').hide();
-             $('#editAccountModal').modal('show');
+    //  Nggak Kepake
+    //  $(document).ready(function() {
+        
+    //      $('#editAccountForm').on('submit', function(event) {
+    //          event.preventDefault();
+    //          event.stopPropagation(); 
 
-             $.ajax({
-                 url: '<?= site_url("users/edit_account") ?>',
-                 type: 'GET',
-                 dataType: 'json',
-                 success: function(response) {
-                     $('#realname').val(response.realname);
-                     $('#username').val(response.username);
-                     $('#user_id').val(response.userId);
-                 },
-                 error: function(xhr, status, error) {
-                     console.error('Error fetching user data:', error);
-                 }
-             });
-         });
+    //          console.log("Tombol simpan ditekan!");
+    //          $('#accountAlert').removeClass('alert-success alert-danger').hide();
 
-         // 2. Handle submit form via AJAX
-         $('#editAccountForm').on('submit', function(event) {
-             event.preventDefault();
-             $('#accountAlert').removeClass('alert-success alert-danger').hide();
+    //          var formData = $(this).serialize();
+    //          const csrfToken = $('meta[name="csrf-token"]').attr('content');
+    //          const csrfHeader = $('meta[name="csrf-header"]').attr('content');
 
-             var formData = $(this).serialize();
-             const csrfToken = $('meta[name="csrf-token"]').attr('content');
-             const csrfHeader = $('meta[name="csrf-header"]').attr('content');
+    //          let headers = {};
+    //          if (csrfHeader && csrfToken) {
+    //              headers[csrfHeader] = csrfToken;
+    //          }
 
-             let headers = {};
-             if (csrfHeader && csrfToken) {
-                 headers[csrfHeader] = csrfToken;
-             }
+    //          $.ajax({
+    //              url:
+    //              type: 'POST',
+    //              headers: headers,
+    //              data: formData,
+    //              dataType: 'json',
+    //              success: function(response) {
+    //                  if (response.status === 'success') {
+    //                      $('#accountAlert').addClass('alert-success').text(response.message).show();
+    //                      $('.nav-link-user .d-lg-inline-block').text('Hi, ' + response.realname);
 
-             $.ajax({
-                 url: '<?= site_url("users/update_account") ?>',
-                 type: 'POST',
-                 headers: headers,
-                 data: formData,
-                 dataType: 'json',
-                 success: function(response) {
-                     if (response.status === 'success') {
-                         $('#accountAlert').addClass('alert-success').text(response.message).show();
-                         $('.nav-link-user .d-lg-inline-block').text('Hi, ' + response.realname);
+    //                      setTimeout(function() {
+    //                          $('#editAccountModal').modal('hide');
+    //                          location.reload();
+    //                      }, 1000);
+    //                  } else {
+    //                      $('#accountAlert').addClass('alert-danger').text(response.message).show();
+    //                  }
+    //              },
+    //              error: function(xhr, status, error) {
+    //                  $('#accountAlert').addClass('alert-danger').text('Gagal memperbarui akun.').show();
+    //              }
+    //          });
+    //      });
 
-                         setTimeout(function() {
-                             $('#editAccountModal').modal('hide');
-                             location.reload();
-                         }, 1000);
-                     } else {
-                         $('#accountAlert').addClass('alert-danger').text(response.message).show();
-                     }
-                 },
-                 error: function(xhr, status, error) {
-                     $('#accountAlert').addClass('alert-danger').text('Gagal memperbarui akun.').show();
-                 }
-             });
-         });
-
-         $('#editAccountModal').on('hidden.bs.modal', function() {
-             $('#editAccountForm')[0].reset();
-             $('#accountAlert').hide();
-         });
-
-         // Handle Klik Switch Region
-         //  $(document).on('click', '.btn-switch-region', function(e) {
-         //      e.preventDefault();
-         //      e.stopPropagation();
-
-         //      const $this = $(this);
-         //      const id = $this.attr('data-id');
-         //      const name = $this.attr('data-name');
-         //      const csrfToken = $('meta[name="csrf-token"]').attr('content');
-         //      const csrfHeader = $('meta[name="csrf-header"]').attr('content');
-
-         //      console.log("Mencoba pindah ke:", name, "dengan token:", csrfToken);
-
-         //      // Validate CSRF tokens exist
-         //      if (!csrfToken || !csrfHeader) {
-         //          console.error('CSRF tokens not found in meta tags');
-         //          return false;
-         //      }
-
-         //      // Show loading state
-         //      $this.css('opacity', '0.5').prop('disabled', true);
-
-         //      // Prepare CSRF headers
-         //      let headers = {};
-         //      headers[csrfHeader] = csrfToken;
-
-         //      $.ajax({
-         //          url: '<?= site_url("auth/switch_region") ?>',
-         //          type: 'POST',
-         //          headers: headers,
-         //          data: {
-         //              region_id: id,
-         //              region_name: name,
-         //              [csrfHeader]: csrfToken
-         //          },
-         //          dataType: 'json',
-         //          success: function(response) {
-         //              if (response.status === 'success') {
-         //                  // Refresh halaman agar session baru terbaca di header & konten
-         //                  window.location.reload();
-         //              } else {
-         //                  alert('⚠️ Gagal: ' + response.message);
-         //                  $this.css('opacity', '1').prop('disabled', false);
-         //              }
-         //          },
-         //          error: function(xhr) {
-         //              console.error('Error switching region:', xhr);
-         //              alert('❌ Gagal berpindah wilayah. Silakan coba lagi.');
-         //              $this.css('opacity', '1').prop('disabled', false);
-         //          }
-         //      });
-         //  });
+    //      $('#editAccountModal').on('hidden.bs.modal', function() {
+    //          $('#editAccountForm')[0].reset();
+    //          $('#accountAlert').hide();
+    //      });
 
 
-     });
+    //  });
  </script>

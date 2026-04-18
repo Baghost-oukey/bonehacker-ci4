@@ -9,6 +9,7 @@
                 </button>
             </div>
             <form id="save_data" action="<?= site_url('history/store') ?>" method="post" class="needs-validation" novalidate="">
+                <?= csrf_field() ?>
                 <input type="hidden" name="id" id="history_id">
                 <input type="hidden" name="patient_id" id="patient_id" value="<?= $patient_id ?>">
                 <input type="hidden" name="queue_id" id="queue_id" value="<?= $queue_id ?>">
@@ -1061,15 +1062,7 @@
     // function add() {
     //     $('#exampleModal').appendTo('body');
     //     $('#exampleModal').modal('show');
-    //     $('#exampleModal .modal-title').text('Tambah Riwayat Pasien');
-    //     // $('#exampleModal form').attr('action', '{{ site_url('history/store') }}');
-    //     $('#exampleModal form').attr('action', '<?= site_url('history/store') ?>');
-    //     $('#exampleModal form')[0].reset();
 
-    //     $('#exampleModal form').find('input[name="patient_id"]').val('<?= $patient->id ?>');
-    //     $('#exampleModal form').find('input[name="queue_id"]').val('<?= $queue_id ?>');
-    //     document.getElementById("terapi-kejantanan").style.display = "block";
-    //     document.getElementById("kejantanan").checked = false;
 
     //     if (typeof complaintTagify !== 'undefined') {
     //         complaintTagify.removeAllTags();
@@ -1134,6 +1127,10 @@
         const btn = $(this);
 
         let formData = new FormData();
+        let csrfName = '<?= csrf_token() ?>';
+        let csrfHash = $('meta[name="csrf-token"]').attr('content');
+        formData.append(csrfName, csrfHash);
+
         $('.modal.show').find('input[name], textarea[name], select[name]').each(function() {
             let input = $(this);
             let name = input.attr('name');
@@ -1179,12 +1176,17 @@
             processData: false,
             contentType: false,
             headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token-hash"]').attr('content')
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             },
+
+
             beforeSend: function() {
                 btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
             },
             success: function(response) {
+                if (response.csrfHash) {
+                    $('meta[name="csrf-token"]').attr('content', response.csrfHash);
+                }
                 if (response.status) {
                     $('.modal.show').modal('hide');
                     Swal.fire('Berhasil!', response.message, 'success').then(() => location.reload());
@@ -1195,10 +1197,16 @@
                 }
             },
             error: function(xhr) {
-                console.error("Fatal Error:", xhr.responseText);
+                let json = xhr.responseJSON;
+                if (json && json.csrfHash) {
+                    $('meta[name="csrf-token"]').attr('content', json.csrfHash);
+                }
+                Swal.fire('Error!', 'Sesi keamanan habis atau terjadi kesalahan sistem.', 'error');
                 btn.prop('disabled', false).text('Simpan');
             }
         });
+
+
     });
 
     function updateHistoryInfo(data) {
@@ -2609,7 +2617,7 @@
 
             if (hId && hId !== 'undefined' && hId !== '') {
                 setTimeout(function() {
-                    show(hId); 
+                    show(hId);
 
                     $('.modal-backdrop').not(':last').remove();
                     $('.modal').appendTo("body");

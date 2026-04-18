@@ -7,12 +7,12 @@ use CodeIgniter\Model;
 class MTransaksi extends Model
 {
     protected $table            = 'transaksi';
-    protected $primaryKey       = 'id';
+    protected $primaryKey       = 'id_transaksi';
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['region_id', 'nominal', 'metode_pembayaran', 'rentang_usia', 'created_at', 'created_by'];
+    protected $allowedFields    = ['region_id', 'nominal','type', 'keterangan', 'metode_pembayaran', 'rentang_usia', 'created_at', 'created_by', 'status', 'cancel_reason', 'cancelled_by'];
 
     protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;
@@ -47,17 +47,22 @@ class MTransaksi extends Model
     public function get_list_data($options)
     {
         $builder = $this->db->table('transaksi t')
-            ->select('t.id_transaksi, t.created_at, t.nominal, t.metode_pembayaran, t.rentang_usia, r.name as region_name')
-            ->join('regions r', 'r.id = t.region_id', 'left');
+            ->select('t.id_transaksi, t.created_at, t.nominal, t.type, t.metode_pembayaran, t.rentang_usia, r.name as region_name, t.status, t.cancel_reason, u.realname as cancelled_by_name')
+            ->join('regions r', 'r.id = t.region_id', 'left')
+            ->join('users u', 'u.id = t.cancelled_by', 'left');
+
+        if (!empty($options['where'])) {
+            foreach ($options['where'] as $key => $value) {
+                $builder->where($key, $value);
+            }
+        }
 
         $role = session()->get('role');
         $aktif_region = session()->get('active_region');
 
-        // PROTEKSI: Jika bukan owner/superadmin, WAJIB filter berdasarkan region user
         if ($role !== 'superadmin' && $role !== 'owner') {
             $builder->where('t.region_id', session()->get('region_id'));
         } else {
-            // Jika owner/superadmin, baru boleh pakai filter Global Switch
             if ($aktif_region && $aktif_region !== 'all') {
                 $builder->where('t.region_id', $aktif_region);
             }

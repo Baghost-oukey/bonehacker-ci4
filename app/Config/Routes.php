@@ -115,9 +115,12 @@ $routes->group('jabatan', ['namespace' => 'App\modules\jabatan\Controllers'], fu
 
 $routes->group('transaksi', ['namespace' => 'App\modules\transaksi\Controllers', 'filter' => 'auth'], function ($routes) {
     $routes->get('/', 'Transaksi::index');
-    $routes->post('fetch', 'Transaksi::fetch');   
-    $routes->post('store', 'Transaksi::store');  
-    $routes->post('delete', 'Transaksi::delete'); 
+    $routes->post('fetch', 'Transaksi::fetch');
+    $routes->post('store', 'Transaksi::store');
+    $routes->post('delete', 'Transaksi::delete');
+    $routes->get('export_data', 'Transaksi::export_data');
+    $routes->get('export_excell', 'Transaksi::export_excell');
+    $routes->get('export_pdf', 'Transaksi::export_pdf');
 });
 
 // Tag - Keluhan
@@ -223,6 +226,7 @@ $routes->group('users', ['namespace' => 'App\Modules\users\Controllers'], functi
     $routes->post('delete_outside_patient', 'Users::delete_outside_patient');
     $routes->post('send_notif_patients/(:num)', 'Users::send_notif_patients/$1');
     $routes->post('check_username_exists', 'Users::check_username_exists');
+    $routes->post('update_acount_users', 'Users::update_acount_users');
 });
 
 // Patients - Routes

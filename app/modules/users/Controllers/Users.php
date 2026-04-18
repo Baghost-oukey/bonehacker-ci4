@@ -54,7 +54,6 @@ class Users extends BaseController
             $options['where_like'] = [
                 "u.realname LIKE '%$search_value%'",
                 "u.username LIKE '%$search_value%'"
-                // Kalau mau role gak ikut terfilter 'pe', u.role jangan dimasukin di sini
             ];
         }
 
@@ -150,7 +149,7 @@ class Users extends BaseController
 
         $existing = $this->model_users->find($id);
 
-        if ($post['role'] === 'superadmin' || $post['role'] === 'owner' ) {
+        if ($post['role'] === 'superadmin' || $post['role'] === 'owner') {
             $data['regions_patient'] = json_encode([]);
             $data['other_patient'] = json_encode([]);
         } else {
@@ -198,7 +197,6 @@ class Users extends BaseController
             'user_id'         => $user_id,
             'user_role'   => is_object($user) ? $user->role : $user['role'],
             'region_name' => (!empty($region_names)) ? implode(', ', $region_names) : '-',
-            // CI4 style: kita kirim data awal kalau perlu
             'patients_luar'   => $this->model_users->get_other_patients($user_id)
         ];
 
@@ -213,9 +211,6 @@ class Users extends BaseController
         $queryBuilder = $this->model_users->get_patients_by_user_region($user_id);
         $datatables = new \Ngekoding\CodeIgniterDataTables\DataTables($queryBuilder, '4');
         $start = $this->request->getPost('start', FILTER_SANITIZE_NUMBER_INT) ?: 0;
-
-        // $datatables->only(['name', 'address']);
-
         $datatables->addColumn('no', function ($row) use (&$start) {
             return ++$start;
         });
@@ -301,7 +296,6 @@ class Users extends BaseController
 
         if (!in_array($patient->region_id, $user_regions)) {
             if ($this->model_users->append_patient_to_user($user_id, $patient_id)) {
-                // $this->session->setFlashdata('message', ['success', 'Pasien luar berhasil ditambahkan']);
                 return $this->response->setJSON([
                     'status'   => 'success',
                     'message'  => 'Pasien luar berhasil ditambahkan',
@@ -309,7 +303,6 @@ class Users extends BaseController
                 ]);
             }
         } else {
-            // $this->session->setFlashdata('message', ['danger', 'Pasien sudah masuk wilayah user']);
             return $this->response->setJSON([
                 'status'   => 'error',
                 'message'  => 'Pasien sudah masuk wilayah user atau terjadi kesalahan',
@@ -438,5 +431,40 @@ class Users extends BaseController
             'message'  => $is_sent ? 'Notifikasi berhasil dikirim ke ' . esc($patient->nama) : 'Gagal mengirim.',
             'csrfHash' => csrf_hash()
         ]);
+    }
+
+    public function update_acount_users()
+    {
+        $userId = session()->get('userId');
+        $post = $this->request->getPost();
+
+        if ($this->model_users->username_exists_edit($post['username'], $userId)) {
+            return $this->response->setJSON([
+                'status'  => 'error',
+                'message' => 'Username sudah digunakan oleh orang lain.'
+            ]);
+        }
+
+        $data = [
+            'realname' => $post['realname'],
+            'username' => $post['username'],
+        ];
+
+        if (!empty($post['password'])) {
+            $data['password'] = password_hash($post['password'], PASSWORD_BCRYPT);
+        }
+
+        if ($this->model_users->update($userId, $data)) {
+
+            session()->set('realname', $post['realname']);
+            session()->set('username', $post['username']);
+
+            return $this->response->setJSON([
+                'status'   => 'success',
+                'realname' => $post['realname'],
+                'csrfHash' => csrf_hash()
+            ]);
+        }
+        return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal memperbarui Data.']);
     }
 }
