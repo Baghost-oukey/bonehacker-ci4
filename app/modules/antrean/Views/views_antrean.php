@@ -1,597 +1,389 @@
 <?= $this->extend('layout/layout') ?>
 <?= $this->section('content') ?>
-<section class="section">
-    <div class="section-header">
-        <h1><?= $title ?></h1>
+
+<section id="antreanPage" class="w-full space-y-6 p-4 md:p-6">
+    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+            <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">
+                <?= esc($title) ?>
+            </h1>
+            <p class="text-sm text-slate-500">
+                Kelola data pasien dan antrean secara efisien
+            </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+            <?php
+            $regionQuery = '';
+            if (isset($regions_patient) && !empty($regions_patient)) {
+                $val = is_array($regions_patient) ? implode(',', $regions_patient) : $regions_patient;
+                $regionQuery = '?region=' . $val;
+            }
+            ?>
+            <a href="<?= site_url('antrean/daftar-antrean') . $regionQuery ?>"
+                class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
+                <i class="fas fa-sync-alt text-slate-500"></i>
+                Lihat Antrean
+            </a>
+
+            <button type="button" data-modal-open="exampleModal"
+                class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-700">
+                <i class="fas fa-plus-circle text-white"></i>
+                Tambah Pasien
+            </button>
+        </div>
     </div>
-    <div class="section-body">
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h4>Daftar Antrean
-                            <?php
-                            $regionQuery = '';
-                            if (isset($regions_patient) && !empty($regions_patient)) {
-                                $val = is_array($regions_patient) ? implode(',', $regions_patient) : $regions_patient;
-                                $regionQuery = '?region=' . $val;
-                            }
-                            ?>
-                            <a href="<?= site_url('antrean/daftarAntrean') . $regionQuery ?>" class="btn btn-info">Lihat Antrian</a>
-                        </h4>
-                        <div class="card-header-action">
-                            <div class="date-filter mb-3">
-                                <label for="startDate">Start Date:</label>
-                                <input type="date" id="startDate" class="form-control"
-                                    style="display: inline-block; width: auto; margin-right: 10px;"
-                                    value="<?= date('Y-m-d') ?>">
 
-                                <label for="endDate">End Date:</label>
-                                <input type="date" id="endDate" class="form-control"
-                                    style="display: inline-block; width: auto;"
-                                    value="<?= date('Y-m-d') ?>">
-                            </div>
+    <div class="rounded-2xl bg-white shadow-sm border border-slate-200/50 overflow-hidden">
+        <!-- HEADER -->
+        <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4">
+            <!-- TITLE SECTION -->
+            <div class="mb-4">
+                <h3 class="text-lg font-semibold text-slate-800">
+                    Data Antrean
+                </h3>
+                <p class="text-sm text-slate-500">
+                    Monitoring dan pengelolaan antrean pasien secara real-time
+                </p>
+            </div>
 
-                            <a href="#" class="btn btn-primary" data-toggle="modal"
-                                data-target="#addPatientQueueModal">Tambah Data</a>
-                        </div>
+            <!-- FILTERS & ACTIONS ROW -->
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <!-- LEFT: SEARCH & DATE RANGE -->
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+                    <!-- SEARCH -->
+                    <div class="flex-1 sm:flex-none sm:w-72">
+                        <input type="text" id="searchInput" placeholder="Cari pasien..."
+                            class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15">
                     </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table id="table-1" class="table table-striped w-100">
-                                <thead>
-                                    <tr>
-                                        <th>ID Pasien</th>
-                                        <th>Tanggal</th>
-                                        <th>Nama</th>
-                                        <th>Usia</th>
-                                        <th>Alamat</th>
-                                        <th>No WA</th>
-                                        <th>Status</th>
-                                        <?php if (session()->get('role') === 'superadmin') : ?>
-                                            <th>Proses</th>
-                                        <?php else :  ?>
-                                            <th>Keterangan</th>
-                                        <?php endif;  ?>
-                                    </tr>
-                                </thead>
-                                <tbody></tbody>
-                            </table>
+
+                    <!-- DATE RANGE -->
+                    <div class="flex items-center gap-2 text-sm">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-calendar-alt text-slate-400 text-base"></i>
+                            <input type="date" id="startDate"
+                                class="rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-600 transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15"
+                                value="<?= date('Y-m-d') ?>">
+                        </div>
+                        <span class="text-slate-300">-</span>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-calendar-check text-slate-400 text-base"></i>
+                            <input type="date" id="endDate"
+                                class="rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-600 transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15"
+                                value="<?= date('Y-m-d') ?>">
                         </div>
                     </div>
                 </div>
+
+                <!-- RIGHT: ACTION BUTTONS -->
+                <div class="flex items-center gap-2">
+                    <?php if (session()->get('role') === 'superadmin'): ?>
+                        <button id="btnPdf"
+                            class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-medium text-red-600 transition hover:bg-red-50 hover:border-red-300">
+                            <i class="fas fa-file-pdf text-sm"></i>
+                            <span class="hidden sm:inline">PDF</span>
+                        </button>
+
+                        <button id="btnExcel"
+                            class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-xs font-medium text-emerald-600 transition hover:bg-emerald-50 hover:border-emerald-300">
+                            <i class="fas fa-file-excel text-sm"></i>
+                            <span class="hidden sm:inline">Excel</span>
+                        </button>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
+
+        <!-- TABLE -->
+        <div class="overflow-x-auto">
+            <table id="table-1" class="w-full text-sm">
+
+                <!-- HEAD -->
+                <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
+                    <tr>
+                        <th class="px-6 py-3.5 text-left font-semibold">ID</th>
+                        <th class="px-6 py-3.5 text-left font-semibold">Tanggal</th>
+                        <th class="px-6 py-3.5 text-left font-semibold">Nama</th>
+                        <th class="px-6 py-3.5 text-left font-semibold">Usia</th>
+                        <th class="px-6 py-3.5 text-left font-semibold">Alamat</th>
+                        <th class="px-6 py-3.5 text-left font-semibold">No. WA</th>
+                        <th class="px-6 py-3.5 text-center font-semibold">Status</th>
+                        <th class="px-6 py-3.5 text-right font-semibold">
+                            <?= session()->get('role') === 'superadmin' ? 'Aksi' : 'Keterangan' ?>
+                        </th>
+                    </tr>
+                </thead>
+
+                <!-- BODY -->
+                <tbody class="divide-y divide-slate-100 text-slate-700">
+                    <tr class="hover:bg-slate-50 transition">
+                        <td colspan="8" class="px-6 py-12 text-center text-slate-400 italic text-sm">
+                            <i class="fas fa-spinner fa-spin mr-2 text-slate-300"></i>
+                            Memuat data antrean...
+                        </td>
+                    </tr>
+                </tbody>
+
+            </table>
+        </div>
+
+        <!-- PAGINATION & INFO -->
+        <div class="border-t border-slate-100 bg-slate-50/50 px-6 py-4">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <!-- LEFT: SHOW ENTRIES & INFO -->
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+                    <!-- SHOW ENTRIES -->
+                    <div class="flex items-center gap-2">
+                        <label class="text-xs font-medium text-slate-600">Tampilkan</label>
+                        <select id="paginationLength"
+                            class="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15">
+                            <option value="10">10</option>
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span class="text-xs font-medium text-slate-600">data per halaman</span>
+                    </div>
+
+                    <!-- INFO TEXT -->
+                    <div class="text-xs font-medium text-slate-600 sm:ml-auto">
+                        <span id="paginationInfo">Menampilkan 0 sampai 0 dari 0 data</span>
+                    </div>
+                </div>
+
+                <!-- RIGHT: PAGINATION BUTTONS -->
+                <div class="flex items-center justify-center gap-1.5 sm:justify-end">
+                    <button id="paginationPrev"
+                        class="inline-flex h-8 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:border-slate-400 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-slate-300">
+                        <i class="fas fa-chevron-left text-xs mr-1"></i>
+                        <span class="hidden sm:inline">Sebelumnya</span>
+                    </button>
+                    <div id="paginationNumbers" class="flex items-center gap-1">
+                        <!-- pages will be generated here -->
+                    </div>
+                    <button id="paginationNext"
+                        class="inline-flex h-8 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:border-slate-400 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-slate-300">
+                        <span class="hidden sm:inline">Berikutnya</span>
+                        <i class="fas fa-chevron-right text-xs ml-1"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="border-t border-slate-100 bg-slate-50/30 px-6 py-3 text-xs text-slate-400">
+            Data ditampilkan berdasarkan filter tanggal dan wilayah pengguna
+        </div>
+
     </div>
 </section>
 
-<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Konfirmasi Hapus</h5>
-                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
-            </div>
-            <div class="modal-body">Anda yakin ingin menghapus data ini?</div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                <button type="button" class="btn btn-danger" id="confirmDelete">Hapus</button>
-            </div>
+<div id="modalDelete" class="modal-wrapper hidden fixed inset-0 z-50 items-center justify-center bg-black/40 p-4">
+    <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-6 space-y-4">
+        <h3 class="text-lg font-semibold text-slate-800">Konfirmasi Hapus</h3>
+        <p class="text-sm text-slate-500">Yakin ingin menghapus data ini?</p>
+
+        <div class="flex justify-end gap-2">
+            <button type="button" data-modal-close class="px-4 py-2 text-sm border rounded-lg">Batal</button>
+            <button id="confirmDelete" class="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700">
+                Hapus
+            </button>
         </div>
     </div>
 </div>
 
-<div id="addPatientQueueModal" class="modal fade">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="row">
-                <div class="col-20">
-                    <div class="card">
-                        <div class="card-header">
-                            <h4>Daftar Pasien</h4>
-                            <div class="card-header-action">
-                                <a href="#" class="btn btn-primary" data-toggle="modal"
-                                    data-target="#exampleModal">Tambah Data</a>
-                            </div>
+<div id="modalPatient" class="modal-wrapper hidden fixed inset-0 z-50 items-center justify-center bg-black/40 p-4">
+    <div class="bg-white rounded-xl shadow-lg w-full max-w-5xl p-6">
+
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold">Daftar Pasien</h3>
+            <button type="button" data-modal-close class="text-slate-500 hover:text-black">✕</button>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table id="table-2" class="w-full text-sm">
+                <thead class="bg-slate-50 text-xs uppercase text-slate-500">
+                    <tr>
+                        <th>ID</th>
+                        <th>Nama</th>
+                        <th>Alamat</th>
+                        <th>Status</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+<div id="exampleModal" class="modal-wrapper hidden fixed inset-0 z-50 items-center justify-center bg-black/40 p-4">
+    <div class="w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-xl">
+        <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+            <h5 class="text-lg font-semibold text-slate-800">Tambah Data Pasien</h5>
+            <button type="button" data-modal-close
+                class="rounded-md p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800">&times;</button>
+        </div>
+        <form action="<?= site_url('patient/store') ?>" method="post" enctype="multipart/form-data"
+            class="space-y-4 p-5" novalidate="">
+            <?= csrf_field() ?>
+            <div class="max-h-[70vh] space-y-4 overflow-y-auto pr-1">
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-slate-700">Nama Lengkap</label>
+                    <input type="text"
+                        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                        name="name" required autofocus>
+                </div>
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div class="space-y-1">
+                        <label class="text-sm font-medium text-slate-700">Jenis Kelamin</label>
+                        <select
+                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                            name="gender" required>
+                            <option value="">-- Pilih --</option>
+                            <option value="Man">Laki-laki</option>
+                            <option value="Woman">Perempuan</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="text-sm font-medium text-slate-700">Pasien Rentan</div>
+                        <label class="mt-2 inline-flex items-center gap-2 text-sm text-slate-700">
+                            <input type="checkbox" name="is_suspective" class="custom-switch-input"
+                                id="isSuspectiveCheckbox">
+                            <span class="custom-switch-indicator"></span>
+                            <span class="custom-switch-description">YA</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="keterangan_rentan" class="hidden space-y-1">
+                    <label class="text-sm font-medium text-slate-700">Keterangan Rentan</label>
+                    <textarea
+                        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                        name="ket_rentan" rows="3"></textarea>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-sm font-medium text-slate-700">Domestik</label>
+                    <div class="flex flex-wrap items-center gap-4">
+                        <div class="custom-control custom-radio custom-control-inline">
+                            <input type="radio" id="dom1" name="domestic" value="dalam_negeri"
+                                class="custom-control-input" checked>
+                            <label class="custom-control-label" for="dom1">Dalam Negeri</label>
                         </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table id="table-2" class="table table-striped w-100">
-                                    <thead>
-                                        <tr>
-                                            <th>ID Pasien</th>
-                                            <th>Nama</th>
-                                            <th>Alamat</th>
-                                            <th>Status</th>
-                                            <th>Tambahkan</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
-                            </div>
+                        <div class="custom-control custom-radio custom-control-inline">
+                            <input type="radio" id="dom2" name="domestic" value="luar_negeri"
+                                class="custom-control-input">
+                            <label class="custom-control-label" for="dom2">Luar Negeri</label>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
 
-<div id="exampleModal" class="modal fade">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Tambah Data Pasien</h5>
-                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
-            </div>
-            <form action="<?= site_url('patient/store') ?>" method="post" enctype="multipart/form-data" class="needs-validation" novalidate="">
-                <?= csrf_field() ?>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label>Nama Lengkap</label>
-                        <input type="text" class="form-control" name="name" required autofocus>
-                    </div>
-                    <div class="row">
-                        <div class="col-6">
-                            <div class="form-group">
-                                <label>Jenis Kelamin</label>
-                                <select class="form-control" name="gender" required>
-                                    <option value="">-- Pilih --</option>
-                                    <option value="Man">Laki-laki</option>
-                                    <option value="Woman">Perempuan</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="form-group">
-                                <div class="control-label">Pasien Rentan</div>
-                                <label class="custom-switch mt-2">
-                                    <input type="checkbox" name="is_suspective" class="custom-switch-input" id="isSuspectiveCheckbox">
-                                    <span class="custom-switch-indicator"></span>
-                                    <span class="custom-switch-description">YA</span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
+                <div class="hidden space-y-1" id="country-group">
+                    <label class="text-sm font-medium text-slate-700">Negara</label>
+                    <select
+                        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                        name="country_id">
+                        <option value="">PILIH</option>
+                        <?php foreach ($negara as $v): ?>
+                            <option value="<?= $v->id ?>"><?= $v->country ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
 
-                    <div id="keterangan_rentan" class="form-group" style="display: none;">
-                        <label>Keterangan Rentan</label>
-                        <textarea class="form-control" name="ket_rentan" rows="3"></textarea>
-                    </div>
+                <div class="space-y-1" id="desa-group">
+                    <label class="text-sm font-medium text-slate-700">Pencarian Desa</label>
+                    <select class="select2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" name="desa_id"
+                        id="desa_id" style="width: 100%;">
+                        <option value="">Temukan Desa</option>
+                    </select>
+                </div>
 
-                    <div class="form-group">
-                        <label>Domestik</label>
-                        <div class="d-block">
-                            <div class="custom-control custom-radio custom-control-inline">
-                                <input type="radio" id="dom1" name="domestic" value="dalam_negeri" class="custom-control-input" checked>
-                                <label class="custom-control-label" for="dom1">Dalam Negeri</label>
-                            </div>
-                            <div class="custom-control custom-radio custom-control-inline">
-                                <input type="radio" id="dom2" name="domestic" value="luar_negeri" class="custom-control-input">
-                                <label class="custom-control-label" for="dom2">Luar Negeri</label>
-                            </div>
-                        </div>
-                    </div>
+                <div class="space-y-1" id="region-group">
+                    <label class="text-sm font-medium text-slate-700">Wilayah</label>
+                    <?php
+                    $role = session()->get('role');
+                    $sess_region_name = session()->get('region_name');
+                    $sess_region_id = session()->get('region_patient');
+                    $active_region = session()->get('active_region');
+                    ?>
 
-                    <div class="form-group" id="country-group" style="display: none;">
-                        <label>Negara</label>
-                        <select class="form-control" name="country_id">
+                    <?php if ($role === 'user'): ?>
+                        <input type="text"
+                            class="w-full rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-600"
+                            value="<?= $sess_region_name ?>" readonly>
+                        <input type="hidden" name="region_id"
+                            value="<?= is_array($sess_region_id) ? $sess_region_id[0] : $sess_region_id ?>">
+                    <?php else: ?>
+                        <select
+                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                            name="region_id" id="region_id">
                             <option value="">PILIH</option>
-                            <?php foreach ($negara as $v): ?>
-                                <option value="<?= $v->id ?>"><?= $v->country ?></option>
+                            <?php foreach ($wilayah as $v): ?>
+                                <?php
+                                $selected = '';
+                                if (!empty($active_region) && $active_region !== 'all') {
+                                    $selected = $v->id == $active_region ? 'selected' : '';
+                                }
+                                ?>
+                                <option value="<?= $v->id ?>" <?= $selected ?>><?= $v->name ?></option>
                             <?php endforeach; ?>
                         </select>
+                    <?php endif; ?>
+                </div>
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div class="space-y-1">
+                        <label class="text-sm font-medium text-slate-700">Umur</label>
+                        <input type="number"
+                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                            name="age">
                     </div>
-
-                    <div class="form-group" id="desa-group">
-                        <label>Pencarian Desa</label>
-                        <select class="form-control select2" name="desa_id" id="desa_id" style="width: 100%;">
-                            <option value="">Temukan Desa</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group" id="region-group">
-                        <label>Wilayah</label>
-                        <?php
-                        $role = session()->get('role');
-                        $sess_region_name = session()->get('region_name');
-                        $sess_region_id = session()->get('region_patient');
-                        $active_region = session()->get('active_region');
-                        ?>
-
-                        <?php if ($role === 'user'): ?>
-                            <input type="text" class="form-control" value="<?= $sess_region_name ?>" readonly>
-                            <input type="hidden" name="region_id" value="<?= is_array($sess_region_id) ? $sess_region_id[0] : $sess_region_id ?>">
-                        <?php else: ?>
-                            <select class="form-control" name="region_id" id="region_id">
-                                <option value="">PILIH</option>
-                                <?php foreach ($wilayah as $v): ?>
-                                    <?php
-                                    $selected = '';
-                                    if (!empty($active_region) && $active_region !== 'all') {
-                                        $selected = ($v->id == $active_region) ? 'selected' : '';
-                                    }
-                                    ?>
-                                    <option value="<?= $v->id ?>" <?= $selected ?>><?= $v->name ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        <?php endif; ?>
-                    </div>
-                    <div class="row">
-                        <div class="col-6">
-                            <div class="form-group">
-                                <label>Umur</label>
-                                <input type="number" class="form-control" name="age">
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="form-group">
-                                <label>No. WhatsApp</label>
-                                <input type="number" id="phone" class="form-control" name="phone">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Alamat Jalan</label>
-                        <textarea class="form-control" name="address" rows="3"></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Tanggal Kedatangan</label>
-                        <input type="datetime-local" class="form-control" name="visit_date" required>
+                    <div class="space-y-1">
+                        <label class="text-sm font-medium text-slate-700">No. WhatsApp</label>
+                        <input type="number" id="phone"
+                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                            name="phone">
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                    <button type="submit" id="submitBtn" class="btn btn-primary">Simpan Pasien</button>
+
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-slate-700">Alamat Jalan</label>
+                    <textarea
+                        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                        name="address" rows="3"></textarea>
                 </div>
-            </form>
-        </div>
+
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-slate-700">Tanggal Kedatangan</label>
+                    <input type="datetime-local"
+                        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                        name="visit_date" required>
+                </div>
+            </div>
+            <div class="flex items-center justify-end gap-2 border-t border-slate-200 pt-4">
+                <button type="button" data-modal-close
+                    class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Batal</button>
+                <button type="submit" id="submitBtn"
+                    class="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700">Simpan
+                    Pasien</button>
+            </div>
+        </form>
     </div>
 </div>
 <?= $this->endSection() ?>
 
 
 <?= $this->section('scripts') ?>
+
 <script>
-    $(document).ready(function() {
-
-        var buttonsConfig = [];
-        <?php if (session()->get('role') === 'superadmin'): ?>
-
-            // Tombol PDF
-            buttonsConfig.push({
-                className: 'btn btn-danger',
-                text: '<i class="fas fa-file-pdf"></i> PDF',
-                action: function(e, dt, node, config) {
-                    var regionId = $('#region_id').val() || ''; // Pastikan ID selector benar
-                    window.open('<?= site_url('antrean/print_pdf_antrean') ?>?region_id=' + regionId, '_blank');
-                }
-            });
-
-            // Tombol Excel
-            buttonsConfig.push({
-                className: 'btn btn-success',
-                text: '<i class="fas fa-file-excel"></i> Export Excel',
-                action: function(e, dt, node, config) {
-                    var regionId = $('#region_id').val() || '';
-                    var start = $('#startDate').val() || '';
-                    var end = $('#endDate').val() || '';
-                    window.location.href = '<?= site_url('antrean/export_excell_antrean') ?>?region_id=' + regionId;
-                }
-            });
-        <?php endif; ?>
-
-        // Ambiil Token 
-        function getCsrfData() {
-            return {
-                "<?= csrf_token() ?>": "<?= csrf_hash() ?>"
-            };
-        }
-
-        $.ajaxSetup({
-            data: getCsrfData()
-        });
-
-        // Inisialisasi DataTables Antrean
-        var table1 = $('#table-1').DataTable({
-            dom: '<"top"lBf>rt<"bottom"ip><"clear">',
-            buttons: buttonsConfig,
-            language: {
-                searchPlaceholder: 'ID Pasien/No.Telp/ Nama'
-            },
-            processing: true,
-            serverSide: true,
-            ajax: {
-                url: "<?= site_url('antrean/fetchDataTable') ?>",
-                type: "POST",
-                data: function(d) {
-                    $.extend(d, getCsrfData());
-                    d.region = $('#region_id').val() || '';
-                    d.start_date = $('#startDate').val();
-                    d.end_date = $('#endDate').val();
-                },
-            },
-            columns: [{
-                    data: 'patient_id',
-                    class: "text-center",
-                    width: "7%",
-                    sortable: true,
-                    searchable: true
-                },
-                {
-                    data: 'date',
-                    class: "",
-                    width: "10%",
-                    sortable: false,
-                    searchable: false
-                },
-                {
-                    data: 'name',
-                    class: "",
-                    width: "10%",
-                    sortable: true,
-                    searchable: true
-                },
-                {
-                    data: 'age',
-                    class: "",
-                    width: "20%",
-                    sortable: true,
-                    searchable: false
-                },
-                {
-                    data: 'address',
-                    class: "",
-                    width: "20%",
-                    sortable: true,
-                    searchable: false
-                },
-                {
-                    data: 'phone',
-                    class: "",
-                    width: "10%",
-                    sortable: true,
-                },
-                {
-                    data: 'description',
-                    class: "",
-                    width: "10%",
-                    sortable: false,
-                    searchable: false
-                },
-                {
-                    data: 'action',
-                    orderable: false,
-                    searchable: false,
-                    className: 'text-center'
-                }
-            ],
-        });
-
-        // Inisialisasi DataTables Pasien
-        var table2;
-
-        $('#addPatientQueueModal').on('shown.bs.modal', function() {
-            if (!$.fn.DataTable.isDataTable('#table-2')) {
-                table2 = $('#table-2').DataTable({
-                    dom: '<"top"lBf>rt<"bottom"ip><"clear">',
-                    buttons: buttonsConfig,
-                    language: {
-                        searchPlaceholder: 'ID Pasien/No.Telp/ Nama',
-                        processing: '<div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div>'
-                    },
-                    processing: true,
-                    serverSide: true,
-                    autoWidth: false,
-                    ajax: {
-                        url: "<?= site_url('antrean/fetchPatientDataTables') ?>",
-                        type: "POST",
-                        data: function(d) {
-                            $.extend(d, getCsrfData());
-                            d.region = $('#region_id').val() || '';
-                        }
-                    },
-                    columns: [{
-                            data: 'patient_id',
-                            class: "text-center",
-                            width: "7%",
-                            sortable: true,
-                            searchable: true
-
-                        },
-                        {
-                            data: 'name',
-                            class: "",
-                            width: "30.5%",
-                            sortable: true,
-                            searchable: true
-                        },
-                        {
-                            data: 'address',
-                            class: "",
-                            width: "30.5%",
-                            sortable: false,
-                            searchable: false
-                        },
-
-                        {
-                            data: 'description',
-                        },
-                        {
-                            data: 'action',
-                            class: "text-center",
-                            width: "25%",
-                            sortable: false,
-                            searchable: false
-                        },
-
-                    ]
-                });
-            } else {
-                table2.ajax.reload(null, false);
-                table2.columns.adjust().draw();
-            }
-        });
-
-
-        $('#startDate, #endDate, #region_id').on('change', function() {
-            table1.ajax.reload();
-            table2.ajax.reload();
-        });
-
-        if ($('#search_patient').length > 0) {
-            $('#search_patient').select2({
-                placeholder: "Temukan Pasien",
-                ajax: {
-                    url: '<?= site_url('antrean/fetchJson') ?>',
-                    dataType: 'json',
-                    delay: 250,
-                    data: function(params) {
-                        return {
-                            search: params.term,
-                            page: params.page || 1,
-                            ...getCsrfData()
-                        };
-                    },
-                    processResults: function(data) {
-                        return {
-                            results: data.items.map(item => ({
-                                id: item.id,
-                                text: item.name
-                            })),
-                            pagination: {
-                                more: data.pagination.more
-                            }
-                        };
-                    }
-                },
-                minimumInputLength: 1
-            });
-        }
-
-        // Select2 Wilayah Desa
-        $('#desa_id').select2({
-            placeholder: "Temukan Desa",
-            dropdownParent: $("#exampleModal"),
-            ajax: {
-                url: 'https://wilayah.smartsociety.id/public/desa',
-                dataType: 'json',
-                delay: 250,
-                data: function(params) {
-                    return {
-                        search: params.term,
-                        page: params.page || 1
-                    };
-                },
-                processResults: function(data) {
-                    let options = [];
-                    if (data.data && data.data.data) {
-                        $.each(data.data.data, function(index, item) {
-                            let subText = item.kecamatan ? `Kec. ${item.kecamatan.kecNama}, ${item.kecamatan.kabupaten.kabNama}` : '';
-                            options.push({
-                                id: item.desIdDesa,
-                                text: `<strong>${item.desNama}</strong><br><small>${subText}</small>`,
-                                full_data: item
-                            });
-                        });
-                    }
-                    return {
-                        results: options,
-                        pagination: {
-                            more: data.data?.next_page_url ? true : false
-                        }
-                    };
-                }
-            },
-            minimumInputLength: 1,
-            escapeMarkup: m => m,
-            templateResult: i => i.text,
-            templateSelection: i => i.text ? i.text.replace(/<br\s*\/?>/gi, ' ').replace(/<\/?[^>]+(>|$)/g, "") : i.text
-        });
-
-        // Auto-fill dari Desa
-        $('#desa_id').on('select2:select', function(e) {
-            const d = e.params.data.full_data;
-            $('#desa_nama').val(d.desNama || '');
-            $('#kecamatan_id').val(d.kecamatan?.kecIdKecamatan || '');
-            $('#kecamatan_nama').val(d.kecamatan?.kecNama || '');
-            $('#kabupaten_id').val(d.kecamatan?.kabupaten?.kabIdKabupaten || '');
-            $('#kabupaten_nama').val(d.kecamatan?.kabupaten?.kabNama || '');
-            $('#provinsi_id').val(d.kecamatan?.kabupaten?.provinsi?.provIdProvinsi || '');
-            $('#provinsi_nama').val(d.kecamatan?.kabupaten?.provinsi?.provNama || '');
-        });
-
-        // Logika UI Toggle
-        $('#isSuspectiveCheckbox').on('change', function() {
-            $('#keterangan_rentan').css('display', this.checked ? 'block' : 'none');
-        });
-
-        $('input[name="domestic"]').on('change', function() {
-            const isLuarNegeri = (this.value === 'luar_negeri');
-            $('#country-group').toggle(isLuarNegeri);
-            $('#desa-group, #region-group').toggle(!isLuarNegeri);
-        });
-
-        if ($('input[name="domestic"]:checked').length > 0) {
-            $('input[name="domestic"]:checked').trigger('change');
-        }
-
-        // Hapus Data
-        let deleteId = null;
-        window.destroy = function(id) {
-            deleteId = id;
-            $('#deleteModal').modal('show');
-        };
-
-        $('#confirmDelete').on('click', function() {
-            if (!deleteId) return;
-            $.ajax({
-                url: "<?= site_url('antrean/destroy') ?>/" + deleteId,
-                type: "POST",
-                data: getCsrfData(),
-                dataType: "JSON",
-                success: function() {
-                    location.reload();
-                },
-                error: function() {
-                    alert('Terjadi kesalahan saat menghapus data');
-                }
-            });
-        });
-
-        // Pengecekan Nomor WA saat submit form
-        $('#submitBtn').on('click', function(e) {
-            e.preventDefault();
-            const $form = $(this).closest('form');
-            const phone = $('#phone').val();
-
-            $.ajax({
-                url: '<?= site_url('patient/check_phone') ?>',
-                type: 'POST',
-                data: {
-                    phone: phone,
-                    ...getCsrfData()
-                },
-                dataType: 'json',
-                success: function(response) {
-                    if (response.exists) {
-                        alert("Nomor HP sudah terdaftar di sistem.");
-                    } else {
-                        $form[0].submit();
-                    }
-                },
-                error: function() {
-                    alert('Gagal melakukan verifikasi nomor HP.');
-                }
-            });
-        });
-
-        // Cegah submit pada pencarian Select2 jika dienter
-        $(document).on('keypress', '.select2-search__field', function(e) {
-            if (e.which === 13) e.preventDefault();
-        });
-    });
+    window.antreanConfig = {
+        csrfName: "<?= csrf_token() ?>",
+        csrfHash: "<?= csrf_hash() ?>",
+        fetchUrl: "<?= site_url('antrean/fetchDataTable') ?>",
+        deleteBaseUrl: "<?= site_url('antrean/destroy') ?>",
+        pdfUrl: "<?= site_url('antrean/print_pdf_antrean') ?>",
+        excelUrl: "<?= site_url('antrean/export_excell_antrean') ?>"
+    };
 </script>
+
 <?= $this->endSection() ?>

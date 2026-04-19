@@ -7,16 +7,16 @@ $viteDevServer = rtrim((string) (env('vite.devServerUrl') ?? 'http://localhost:5
 $shouldUseViteDevServer = false;
 
 if ($isDevEnvironment) {
-    $viteHost = (string) parse_url($viteDevServer, PHP_URL_HOST);
-    $vitePort = (int) (parse_url($viteDevServer, PHP_URL_PORT) ?: 5173);
+  $viteHost = (string) parse_url($viteDevServer, PHP_URL_HOST);
+  $vitePort = (int) (parse_url($viteDevServer, PHP_URL_PORT) ?: 5173);
 
-    if ($viteHost !== '') {
-        $viteSocket = @fsockopen($viteHost, $vitePort, $errno, $errstr, 0.15);
-        if (is_resource($viteSocket)) {
-            $shouldUseViteDevServer = true;
-            fclose($viteSocket);
-        }
+  if ($viteHost !== '') {
+    $viteSocket = @fsockopen($viteHost, $vitePort, $errno, $errstr, 0.15);
+    if (is_resource($viteSocket)) {
+      $shouldUseViteDevServer = true;
+      fclose($viteSocket);
     }
+  }
 }
 ?>
 
@@ -31,7 +31,7 @@ if ($isDevEnvironment) {
     <link rel="stylesheet" href="<?= base_url('assets/modules/fontawesome/css/all.min.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/modules/datatables/datatables.min.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/modules/toastr/css/toastr.min.css') ?>">
-    
+
     <?php if ($shouldUseViteDevServer): ?>
         <link rel="stylesheet" href="<?= $viteDevServer ?>/resources/css/app.css">
     <?php else: ?>
@@ -39,15 +39,6 @@ if ($isDevEnvironment) {
     <?php endif; ?>
 
     <style>
-        .dataTables_wrapper .dataTables_filter {
-            float: right;
-        }
-
-        .dataTables_wrapper .dataTables_length {
-            display: inline-block;
-            margin-right: 20px;
-        }
-
         .export-hidden {
             display: none;
         }
@@ -63,11 +54,9 @@ if ($isDevEnvironment) {
         <div class="min-h-screen lg:ml-72">
             <?= $this->include('App\Views\layout\header') ?>
 
-            <main>
+            <main class="w-full">
                 <?= $this->renderSection('content') ?>
             </main>
-
-            <?= $this->include('App\Views\layout\footer') ?>
         </div>
     </div>
 
@@ -103,7 +92,7 @@ if ($isDevEnvironment) {
             // var csrfHash = metaHash ? metaHash.getAttribute('content') : null;
 
             function refreshCsrfToken() {
-                $.get('<?= site_url('auth/get_csrf'); ?>', function(data) {
+                $.get('<?= site_url('auth/get_csrf') ?>', function(data) {
                     $('meta[name="csrf-token-hash"]').attr('content', data.token);
                     // 2. Update semua input hidden yang dibuat pake csrf_field()
                     $('input[name="' + csrfName + '"]').val(data.token);

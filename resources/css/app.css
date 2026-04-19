@@ -11,3 +11,9 @@
 		font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
 	}
 }
+
+@layer components {
+	.dataTables_wrapper {
+		@apply p-0 text-sm text-slate-600;
+	}
+}

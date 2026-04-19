@@ -123,6 +123,31 @@ class Beranda extends BaseController
         $calendarData = $this->_get_calender_data($role, $filter_region);
         $data = array_merge($data, $calendarData);
 
-        return view('App\modules\beranda\Views\beranda', $data);
+        $db = \Config\Database::connect();
+        $todayDate = date('Y-m-d');
+
+        $queueTodayBuilder = $db->table('patient_queues')->where('DATE(queue_date)', $todayDate);
+        if (!empty($filter_region) && $filter_region !== 'all') {
+            if (is_array($filter_region)) {
+                $queueTodayBuilder->whereIn('region_id', $filter_region);
+            } else {
+                $queueTodayBuilder->where('region_id', $filter_region);
+            }
+        }
+        $data['queue_today'] = (int) $queueTodayBuilder->countAllResults();
+
+        $transactionTodayBuilder = $db->table('transaksi')->selectSum('nominal')->where('DATE(created_at)', $todayDate);
+        if (!empty($filter_region) && $filter_region !== 'all') {
+            if (is_array($filter_region)) {
+                $transactionTodayBuilder->whereIn('region_id', $filter_region);
+            } else {
+                $transactionTodayBuilder->where('region_id', $filter_region);
+            }
+        }
+        $transactionTodayRow = $transactionTodayBuilder->get()->getRow();
+        $data['transaction_today_total'] = (int) ($transactionTodayRow->nominal ?? 0);
+        $data['active_region_name'] = $session->get('active_region_name') ?? 'Cabang Tidak Terdeteksi';
+
+        return view('App\modules\beranda\Views\beranda_views', $data);
     }
 }

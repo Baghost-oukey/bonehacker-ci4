@@ -302,8 +302,7 @@ class Antrean extends BaseController
         $time = Time::parse($startDate, 'Asia/Jakarta', 'id_ID');
         $data['currentDate'] = $time->toLocalizedString('EEEE, dd/MM/yyyy');
 
-        return view('App\modules\antrean\Views\views_daftar_antrean_new', $data);
-        // return view('App\modules\antrean\Views\views_daftar_antrean', $data);
+        return view('App\modules\antrean\Views\views_daftar_antrean', $data);
     }
 
     public function export_excell_antrean()

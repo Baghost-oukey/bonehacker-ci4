@@ -22,34 +22,34 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                 <div class="space-y-1">
                     <p class="px-2 text-sm font-medium mb-2 text-slate-400">Dashboard</p>
 
-                    <a href="<?= base_url('beranda') ?>" class="flex h-9 items-center gap-3 rounded-lg px-3 text-sm font-medium transition <?= in_array($current_segment, ['beranda', '']) ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' ?>">
+                    <a href="<?= base_url('beranda') ?>" class="flex h-9 items-center gap-3 rounded-lg px-3 text-sm font-medium transition <?= in_array($current_segment, ['beranda', '']) ? 'bg-slate-100 text-slate-900' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' ?>">
                         <i class="fas fa-home w-4 text-center"></i>
                         <span>Beranda</span>
                     </a>
 
-                    <a href="<?= base_url('antrean') ?>" class="flex h-9 items-center gap-3 rounded-lg px-3 text-sm font-medium transition <?= $current_segment == 'antrean' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' ?>">
+                    <a href="<?= base_url('antrean') ?>" class="flex h-9 items-center gap-3 rounded-lg px-3 text-sm font-medium transition <?= $current_segment == 'antrean' ? 'bg-slate-100 text-slate-900' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' ?>">
                         <i class="fas fa-pencil-ruler w-4 text-center"></i>
                         <span>Antrean</span>
                     </a>
 
-                    <a href="<?= base_url('dashboard') ?>" class="flex h-9 items-center gap-3 rounded-lg px-3 text-sm font-medium transition <?= $current_segment == 'dashboard' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' ?>">
+                    <a href="<?= base_url('dashboard') ?>" class="flex h-9 items-center gap-3 rounded-lg px-3 text-sm font-medium transition <?= $current_segment == 'dashboard' ? 'bg-slate-100 text-slate-900' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' ?>">
                         <i class="fas fa-file-medical w-4 text-center"></i>
                         <span>Rekam Medis</span>
                     </a>
 
                     <?php if ($role === 'superadmin' || $role === 'owner'): ?>
-                        <a href="<?= base_url('region') ?>" class="flex h-9 items-center gap-3 rounded-lg px-3 text-sm font-medium transition <?= $current_segment == 'region' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' ?>">
+                        <a href="<?= base_url('region') ?>" class="flex h-9 items-center gap-3 rounded-lg px-3 text-sm font-medium transition <?= $current_segment == 'region' ? 'bg-slate-100 text-slate-900' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' ?>">
                             <i class="fas fa-map w-4 text-center"></i>
                             <span>Cabang</span>
                         </a>
                     <?php endif; ?>
 
-                    <a href="<?= base_url('journal') ?>" class="flex h-9 items-center gap-3 rounded-lg px-3 text-sm font-medium transition <?= $current_segment == 'journal' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' ?>">
+                    <a href="<?= base_url('journal') ?>" class="flex h-9 items-center gap-3 rounded-lg px-3 text-sm font-medium transition <?= $current_segment == 'journal' ? 'bg-slate-100 text-slate-900' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' ?>">
                         <i class="fas fa-book w-4 text-center"></i>
                         <span>Jurnal</span>
                     </a>
 
-                    <a href="<?= base_url('transaksi') ?>" class="flex h-9 items-center gap-3 rounded-lg px-3 text-sm font-medium transition <?= $current_segment == 'transaksi' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' ?>">
+                    <a href="<?= base_url('transaksi') ?>" class="flex h-9 items-center gap-3 rounded-lg px-3 text-sm font-medium transition <?= $current_segment == 'transaksi' ? 'bg-slate-100 text-slate-900' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' ?>">
                         <i class="fas fa-money-bill-wave w-4 text-center"></i>
                         <span>Transaksi</span>
                     </a>
@@ -112,12 +112,12 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                             </div>
                         </details>
 
-                        <a href="<?= base_url('users') ?>" class="flex h-9 items-center gap-3 rounded-lg px-3 text-sm font-medium transition <?= $current_segment == 'users' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' ?>">
+                        <a href="<?= base_url('users') ?>" class="flex h-9 items-center gap-3 rounded-lg px-3 text-sm font-medium transition <?= $current_segment == 'users' ? 'bg-slate-100 text-slate-900' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' ?>">
                             <i class="fas fa-users w-4 text-center"></i>
                             <span>Users</span>
                         </a>
 
-                        <a href="<?= base_url('terapis') ?>" class="flex h-9 items-center gap-3 rounded-lg px-3 text-sm font-medium transition <?= $current_segment == 'terapis' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' ?>">
+                        <a href="<?= base_url('terapis') ?>" class="flex h-9 items-center gap-3 rounded-lg px-3 text-sm font-medium transition <?= $current_segment == 'terapis' ? 'bg-slate-100 text-slate-900' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' ?>">
                             <i class="fas fa-user-md w-4 text-center"></i>
                             <span>Terapis</span>
                         </a>
@@ -125,5 +125,6 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                 <?php endif; ?>
             </nav>
         </div>
+                   <?= $this->include('App\Views\layout\footer') ?>
     </div>
 </aside>

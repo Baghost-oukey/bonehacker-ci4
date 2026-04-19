@@ -12,7 +12,7 @@ $listRegions = session()->get('list_regions_global') ?? [];
             <?= $this->include('App\Views\components\breadcrumbs') ?>
         
         <div class="flex items-center gap-3">
-            <?= $this->include('App\Views\components\notification') ?>
+            <?= $this->include('App\Views\components\clock') ?>
 
             <span class="mx-1 h-6 w-px shrink-0 bg-slate-300/90"></span>
 
