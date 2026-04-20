@@ -2,21 +2,21 @@
 <?= $this->section('content') ?>
 
 <?php $summary_cards = [
-  [
-    'label' => 'Antrean Hari Ini',
-    'value' => number_format($queue_today ?? 0),
-    'icon' => 'fa-user-clock',
-    'desc' => 'Total antrean pasien hari ini',
-  ],
-  [
-    'label' => 'Cabang Aktif',
-    'value' => esc($active_region_name ?? 'Semua Wilayah'),
-    'icon' => 'fa-map-marked-alt',
-    'desc' => 'Sumber data dashboard saat ini',
-    'isText' => true,
-  ],
-  ['label' => 'Transaksi Hari Ini', 'value' => 'Rp ' . number_format($transaction_today_total ?? 0, 0, ',', '.'), 'icon' => 'fa-wallet', 'desc' => 'Akumulasi nominal transaksi hari ini'],
-  ['label' => 'Kunjungan Hari Ini', 'value' => number_format($kunjungan_today ?? 0), 'icon' => 'fa-stethoscope', 'desc' => 'Jumlah kunjungan pasien hari ini'],
+    [
+        'label' => 'Antrean Hari Ini',
+        'value' => number_format($queue_today ?? 0),
+        'icon' => 'fa-user-clock',
+        'desc' => 'Total antrean pasien hari ini',
+    ],
+    [
+        'label' => 'Cabang Aktif',
+        'value' => esc($active_region_name ?? 'Semua Wilayah'),
+        'icon' => 'fa-map-marked-alt',
+        'desc' => 'Sumber data dashboard saat ini',
+        'isText' => true,
+    ],
+    ['label' => 'Transaksi Hari Ini', 'value' => 'Rp ' . number_format($transaction_today_total ?? 0, 0, ',', '.'), 'icon' => 'fa-wallet', 'desc' => 'Akumulasi nominal transaksi hari ini'],
+    ['label' => 'Kunjungan Hari Ini', 'value' => number_format($kunjungan_today ?? 0), 'icon' => 'fa-stethoscope', 'desc' => 'Jumlah kunjungan pasien hari ini'],
 ]; ?>
 
 <section class="w-full space-y-6 p-4 md:p-6">

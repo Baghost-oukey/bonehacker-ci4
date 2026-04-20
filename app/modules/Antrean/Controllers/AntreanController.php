@@ -1,16 +1,14 @@
 <?php
 
-namespace App\modules\antrean\Controllers;
+namespace App\Modules\Antrean\Controllers;
 
 use App\Controllers\BaseController;
 use App\modules\countries\Models\MCountries;
 use App\modules\patients\Models\MPatients;
 use App\modules\region\Models\MRegion;
-use CodeIgniter\HTTP\ResponseInterface;
-use Hermawan\DataTables\DataTable;
 use CodeIgniter\I18n\Time;
 
-class Antrean extends BaseController
+class AntreanController extends BaseController
 {
 
     protected $patientsModel;
@@ -31,24 +29,24 @@ class Antrean extends BaseController
         $region_patients = json_decode(session()->get('regions_patient'), true);
 
         $data = [
-            'title'           => 'Antrean',
-            'realname'        => session()->get('realname'),
-            'role'            => session()->get('role'),
+            'title' => 'Antrean',
+            'realname' => session()->get('realname'),
+            'role' => session()->get('role'),
             'regions_patient' => $region_patients,
-            'wilayah'         => $this->regionModel->findAll(),
-            'negara'          => $this->countryModel->findAll(),
-            'resources'       => $this->patientsModel->get_resources(),
+            'wilayah' => $this->regionModel->findAll(),
+            'negara' => $this->countryModel->findAll(),
+            'resources' => $this->patientsModel->get_resources(),
         ];
 
-        return view('App\modules\antrean\Views\views_antrean', $data);
+        return view('App\Modules\Antrean\Views\index', $data);
     }
 
     public function fetchDataTable()
     {
         $request = service('request');
-        $region    = $request->getPost('region');
+        $region = $request->getPost('region');
         $startDate = $request->getPost('start_date');
-        $endDate   = $request->getPost('end_date');
+        $endDate = $request->getPost('end_date');
 
         $builder = $this->db->table('patient_queues pq')
             ->select('pq.id as queue_id, pq.queue_date, p.id as patient_id, p.name as patient_name, p.age as patient_age, p.phone, p.address, pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama, h.id as history_id, h.process_at, h.finish_at')
@@ -118,7 +116,7 @@ class Antrean extends BaseController
             ->add('action', function ($row) {
                 $btn = '<div class="btn-group d-flex justify-content-between align-items-center" style="gap: 5px;">';
                 // $role = session()->get('role');
-
+    
                 $historyId = $row->history_id ?? '';
 
                 if ($row->process_at !== null) {
@@ -207,7 +205,7 @@ class Antrean extends BaseController
         }
 
         $this->db->table('patient_queues')->insert([
-            'region_id'  => $patient->region_id,
+            'region_id' => $patient->region_id,
             'patient_id' => $patientId,
             'queue_date' => date('Y-m-d'),
             'created_at' => date('Y-m-d H:i:s')
@@ -219,14 +217,15 @@ class Antrean extends BaseController
     public function procesToQueue($queueId)
     {
         $queue = $this->db->table('patient_queues')->where('id', $queueId)->get()->getRow();
-        if (!$queue) return redirect()->back()->with('message', ['error', 'Antrean tidak ditemukan.']);
+        if (!$queue)
+            return redirect()->back()->with('message', ['error', 'Antrean tidak ditemukan.']);
 
         $this->db->table('histories')->insert([
             'patient_queue_id' => $queueId,
-            'patient_id'       => $queue->patient_id,
-            'type'             => 'draft',
-            'process_at'       => date('Y-m-d H:i:s'),
-            'is_delete'        => 0
+            'patient_id' => $queue->patient_id,
+            'type' => 'draft',
+            'process_at' => date('Y-m-d H:i:s'),
+            'is_delete' => 0
         ]);
 
         return redirect()->to('antrean')->with('message', ['success', 'Terapi dimulai.']);
@@ -245,9 +244,9 @@ class Antrean extends BaseController
     {
         $db = \Config\Database::connect();
         $active_region = session()->get('active_region');
-        $regionId  = $this->request->getGet('region') ?: ($active_region !== 'all' ? $active_region : null);
+        $regionId = $this->request->getGet('region') ?: ($active_region !== 'all' ? $active_region : null);
         $startDate = $this->request->getGet('start_date') ?: date('Y-m-d');
-        $endDate   = $this->request->getGet('end_date') ?: date('Y-m-d');
+        $endDate = $this->request->getGet('end_date') ?: date('Y-m-d');
         $builder = $db->table('patient_queues pq')
             ->select('pq.*, h.process_at, h.finish_at, p.id as patient_id, p.name as patient_name, p.address, p.phone as patient_phone, p.age as patient_age, r.name as name_region, pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama, pa.provinsi_nama')
             ->select('(SELECT MAX(date) FROM histories h WHERE h.patient_id = p.id AND h.is_delete = 0) AS last_visit_date')
@@ -278,7 +277,8 @@ class Antrean extends BaseController
             ->where('DATE(pq.queue_date) >=', $startDate)
             ->where('DATE(pq.queue_date) <=', $endDate);
 
-        if (!empty($regionId)) $processedBuilder->where('p.region_id', $regionId);
+        if (!empty($regionId))
+            $processedBuilder->where('p.region_id', $regionId);
         $data['processed_queues'] = $processedBuilder->countAllResults();
 
         $finishedBuilder = $db->table('patient_queues pq')
@@ -288,7 +288,8 @@ class Antrean extends BaseController
             ->where('DATE(pq.queue_date) >=', $startDate)
             ->where('DATE(pq.queue_date) <=', $endDate);
 
-        if (!empty($regionId)) $finishedBuilder->where('p.region_id', $regionId);
+        if (!empty($regionId))
+            $finishedBuilder->where('p.region_id', $regionId);
         $data['finished_queues'] = $finishedBuilder->countAllResults();
         $data['waiting_queues'] = count($data['patient_queues']) - ($data['processed_queues'] + $data['finished_queues']);
 
@@ -302,14 +303,14 @@ class Antrean extends BaseController
         $time = Time::parse($startDate, 'Asia/Jakarta', 'id_ID');
         $data['currentDate'] = $time->toLocalizedString('EEEE, dd/MM/yyyy');
 
-        return view('App\modules\antrean\Views\views_daftar_antrean', $data);
+        return view('App\modules\antrean\Views\daftar-antrean\index', $data);
     }
 
     public function export_excell_antrean()
     {
         $startDate = $this->request->getGet('start_date') ?: date('Y-m-d');
-        $endDate   = $this->request->getGet('end_date') ?: date('Y-m-d');
-        $regionId  = $this->request->getGet('region');
+        $endDate = $this->request->getGet('end_date') ?: date('Y-m-d');
+        $regionId = $this->request->getGet('region');
 
 
         $builder = $this->db->table('patient_queues pq')
@@ -358,7 +359,7 @@ class Antrean extends BaseController
             ],
             'alignment' => [
                 'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
-                'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
             ],
             'borders' => [
                 'allBorders' => [
@@ -431,7 +432,8 @@ class Antrean extends BaseController
             ->where('DATE(pq.queue_date) >=', $startDate)
             ->where('DATE(pq.queue_date) <=', $endDate);
 
-        if (!empty($region)) $builder->where('pq.region_id', $region);
+        if (!empty($region))
+            $builder->where('pq.region_id', $region);
         $query = $builder->get();
 
 
