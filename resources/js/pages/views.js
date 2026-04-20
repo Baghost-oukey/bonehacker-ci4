@@ -1,281 +1,358 @@
-const MODAL_VISIBLE_CLASS = "flex";
-const MODAL_HIDDEN_CLASS = "hidden";
+// const MODAL_VISIBLE_CLASS = "flex";
+// const MODAL_HIDDEN_CLASS = "hidden";
 
-const getCsrfPayload = (config) => ({
-    [config.csrfName]: config.csrfHash,
-});
+// const getCsrfPayload = (config) => ({
+//     [config.csrfName]: config.csrfHash,
+// });
 
-const debounce = (fn, delay = 400) => {
-    let timerId;
+// const debounce = (fn, delay = 400) => {
+//     let timerId;
 
-    return (...args) => {
-        clearTimeout(timerId);
-        timerId = setTimeout(() => fn(...args), delay);
-    };
-};
+//     return (...args) => {
+//         clearTimeout(timerId);
+//         timerId = setTimeout(() => fn(...args), delay);
+//     };
+// };
 
-const openModal = (modal) => {
-    if (!modal) {
-        return;
-    }
+// const openModal = (modal) => {
+//     if (!modal) {
+//         return;
+//     }
 
-    modal.classList.remove(MODAL_HIDDEN_CLASS);
-    modal.classList.add(MODAL_VISIBLE_CLASS);
-};
+//     modal.classList.remove(MODAL_HIDDEN_CLASS);
+//     modal.classList.add(MODAL_VISIBLE_CLASS);
+// };
 
-const closeModal = (modal) => {
-    if (!modal) {
-        return;
-    }
+// const closeModal = (modal) => {
+//     if (!modal) {
+//         return;
+//     }
 
-    modal.classList.remove(MODAL_VISIBLE_CLASS);
-    modal.classList.add(MODAL_HIDDEN_CLASS);
-};
+//     modal.classList.remove(MODAL_VISIBLE_CLASS);
+//     modal.classList.add(MODAL_HIDDEN_CLASS);
+// };
 
-const setupAntreanPage = () => {
-    const config = window.antreanConfig;
-    const page = document.getElementById("antreanPage");
+// const setupAntreanPage = () => {
+//     const config = window.antreanConfig;
+//     const page = document.getElementById("antreanPage");
 
-    if (!config || !page || typeof window.$ === "undefined") {
-        return;
-    }
+//     if (!config || !page || typeof window.$ === "undefined") {
+//         return;
+//     }
 
-    const $ = window.$;
-    let searchValue = "";
-    let deleteId = null;
+//     const $ = window.$;
+//     let searchValue = "";
+//     let deleteId = null;
 
-    $.ajaxSetup({ data: getCsrfPayload(config) });
+//     $.ajaxSetup({ data: getCsrfPayload(config) });
 
-    let currentPage = 1;
-    let pageLength = 25;
-    let totalRecords = 0;
-    let filteredRecords = 0;
+//     let currentPage = 1;
+//     let pageLength = 25;
+//     let totalRecords = 0;
+//     let filteredRecords = 0;
 
-    const loadTableData = (page = 1) => {
-        $.ajax({
-            url: config.fetchUrl,
-            type: "POST",
-            data: {
-                ...getCsrfPayload(config),
-                draw: 1,
-                start: (page - 1) * pageLength,
-                length: pageLength,
-                region: $("#region_id").val() || "",
-                start_date: $("#startDate").val(),
-                end_date: $("#endDate").val(),
-                search: { value: searchValue },
-            },
-            success: (response) => {
-                currentPage = page;
-                totalRecords = response.recordsTotal;
-                filteredRecords = response.recordsFiltered;
+//     const loadTableData = (page = 1) => {
+//         const payloaddata = {
+//             ...getCsrfPayload(config),
+//             draw: 1,
+//             start: (page - 1) * pageLength,
+//             length: pageLength,
+//             region: $("#region_id").val() || "",
+//             start_date: $("#startDate").val(),
+//             end_date: $("#endDate").val(),
+//             // search: { value: searchValue },
+//             search: {
+//                 value: searchValue || "",
+//                 regex: false,
+//             },
 
-                const tbody = $("#table-1 tbody");
-                tbody.empty();
+//             columns: [
+//                 { data: 'queue_id', searchable: true, orderable: true },
+//                 { data: 'date', searchable: true, orderable: true },
+//                 { data: 'name', searchable: true, orderable: true },
+//                 { data: 'age', searchable: false, orderable: true },
+//                 { data: 'address', searchable: true, orderable: false },
+//                 { data: 'phone', searchable: true, orderable: false },
+//                 { data: 'description', searchable: false, orderable: false },
+//                 { data: 'action', searchable: false, orderable: false }
+//             ],
+//             order: [{ column: 0, dir: "asc" }]
+//         }
 
-                if (response.data && response.data.length > 0) {
-                    response.data.forEach((row) => {
-                        const tr = $(`<tr class="hover:bg-slate-50 transition border-b border-slate-100">`)
-                            .append(`<td class="px-6 py-3.5 text-center">${row.patient_id}</td>`)
-                            .append(`<td class="px-6 py-3.5">${row.date}</td>`)
-                            .append(`<td class="px-6 py-3.5">${row.name}</td>`)
-                            .append(`<td class="px-6 py-3.5">${row.age}</td>`)
-                            .append(`<td class="px-6 py-3.5">${row.address}</td>`)
-                            .append(`<td class="px-6 py-3.5">${row.phone}</td>`)
-                            .append(`<td class="px-6 py-3.5 text-center">${row.description}</td>`)
-                            .append(`<td class="px-6 py-3.5 text-right">${row.action}</td>`);
-                        tbody.append(tr);
-                    });
-                } else {
-                    tbody.html(
-                        '<tr class="hover:bg-slate-50 transition"><td colspan="8" class="px-6 py-12 text-center text-slate-400 italic text-sm"><i class="fas fa-inbox mr-2 text-slate-300"></i>Antrean saat ini masih kosong</td></tr>'
-                    );
-                }
+//         $.ajax({
+//             url: config.fetchUrl,
+//             type: "POST",
+//             dataType: "json",
+//             contentType: "application/json",
+//             // traditional: true,
+//             data: JSON.stringify(payloaddata),
+//             success: (response) => {
+//                 currentPage = page;
+//                 totalRecords = response.recordsTotal;
+//                 filteredRecords = response.recordsFiltered;
 
-                updatePaginationUI();
-                updatePaginationInfo();
-            },
-        });
-    };
+//                 const tbody = $("#table-1 tbody");
+//                 tbody.empty();
 
-    const updatePaginationUI = () => {
-        const totalPages = Math.ceil(filteredRecords / pageLength);
-        const container = $("#paginationNumbers");
-        container.empty();
+//                 if (response.data && response.data.length > 0) {
+//                     response.data.forEach((row) => {
+//                         const tr = $(`<tr class="hover:bg-slate-50 transition border-b border-slate-100">`)
+//                             .append(`<td class="px-6 py-3.5 text-center">${row.patient_id}</td>`)
+//                             .append(`<td class="px-6 py-3.5">${row.date}</td>`)
+//                             .append(`<td class="px-6 py-3.5">${row.name}</td>`)
+//                             .append(`<td class="px-6 py-3.5">${row.age}</td>`)
+//                             .append(`<td class="px-6 py-3.5">${row.address}</td>`)
+//                             .append(`<td class="px-6 py-3.5">${row.phone}</td>`)
+//                             .append(`<td class="px-6 py-3.5 text-center">${row.description}</td>`)
+//                             .append(`<td class="px-6 py-3.5 text-right">${row.action}</td>`);
+//                         tbody.append(tr);
+//                     });
+//                 } else {
+//                     tbody.html(
+//                         '<tr class="hover:bg-slate-50 transition"><td colspan="8" class="px-6 py-12 text-center text-slate-400 italic text-sm"><i class="fas fa-inbox mr-2 text-slate-300"></i>Antrean saat ini masih kosong</td></tr>'
+//                     );
+//                 }
 
-        const startPage = Math.max(1, currentPage - 2);
-        const endPage = Math.min(totalPages, currentPage + 2);
+//                 updatePaginationUI();
+//                 updatePaginationInfo();
+//             },
+//         });
+//     };
 
-        if (startPage > 1) {
-            container.append(
-                `<button class="pagination-btn inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:border-slate-400" data-page="1">1</button>`
-            );
-            if (startPage > 2) {
-                container.append(`<span class="px-1 text-slate-300">...</span>`);
-            }
-        }
+//     const loadPatientData = (searchQuery = "") => {
+//         const config = window.antreanConfig;
+//         const tbody = $("#table-2 tbody"); // Sesuai ID di modal rekam medis
 
-        for (let i = startPage; i <= endPage; i++) {
-            const isActive = i === currentPage;
-            container.append(
-                `<button class="pagination-btn inline-flex h-8 w-8 items-center justify-center rounded-lg ${
-                    isActive
-                        ? "bg-teal-600 border-teal-600 text-white font-semibold shadow-md shadow-teal-600/30"
-                        : "border border-slate-300 bg-white text-slate-700 font-semibold transition hover:bg-slate-100 hover:border-slate-400"
-                } text-xs" data-page="${i}">${i}</button>`
-            );
-        }
+//         // Tampilkan loading state yang cantik
+//         tbody.html(`
+//         <tr>
+//             <td colspan="5" class="px-6 py-12 text-center">
+//                 <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-indigo-500 border-t-transparent"></div>
+//                 <p class="mt-4 text-slate-500 font-medium">Mencari data rekam medis...</p>
+//             </td>
+//         </tr>
+//     `);
 
-        if (endPage < totalPages) {
-            if (endPage < totalPages - 1) {
-                container.append(`<span class="px-1 text-slate-300">...</span>`);
-            }
-            container.append(
-                `<button class="pagination-btn inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:border-slate-400" data-page="${totalPages}">${totalPages}</button>`
-            );
-        }
+//         const payload = {
+//             ...getCsrfPayload(config),
+//             draw: 1,
+//             start: 0,
+//             length: 50, 
+//             search: {
+//                 value: searchQuery,
+//                 regex: false,
+//             },
+//             columns: [
+//                 { data: 'patient_id' },
+//                 { data: 'name' },
+//                 { data: 'address' },
+//                 { data: 'description' },
+//                 { data: 'action' }
+//             ]
+//         };
 
-        $("#paginationPrev").prop("disabled", currentPage === 1);
-        $("#paginationNext").prop("disabled", currentPage === totalPages);
-    };
+//         $.ajax({
+//             url: config.fetchPatientUrl, // Pastikan ini ada di Config View nanti
+//             type: "POST",
+//             dataType: "json",
+//             contentType: "application/json",
+//             data: JSON.stringify(payload),
+//             success: (response) => {
+//                 tbody.empty();
+//                 if (response.data && response.data.length > 0) {
+//                     response.data.forEach((row) => {
+//                         const tr = $(`<tr class="hover:bg-slate-50 transition border-b border-slate-50">`)
+//                             .append(`<td class="px-8 py-4 font-mono text-xs font-bold text-indigo-600">${row.patient_id}</td>`)
+//                             .append(`<td class="px-8 py-4 font-bold text-slate-800">${row.name}</td>`)
+//                             .append(`<td class="px-8 py-4 text-xs text-slate-500">${row.address}</td>`)
+//                             .append(`<td class="px-8 py-4 text-center">${row.description}</td>`)
+//                             .append(`<td class="px-8 py-4 text-right">${row.action}</td>`);
+//                         tbody.append(tr);
+//                     });
+//                 } else {
+//                     tbody.html('<tr><td colspan="5" class="px-6 py-12 text-center text-slate-400 italic">Pasien tidak ditemukan.</td></tr>');
+//                 }
+//             }
+//         });
+//     };
 
-    const updatePaginationInfo = () => {
-        const start = (currentPage - 1) * pageLength + 1;
-        const end = Math.min(currentPage * pageLength, filteredRecords);
-        const info = `Menampilkan ${start} sampai ${end} dari ${filteredRecords} data`;
-        $("#paginationInfo").text(info);
-    };
+//     const updatePaginationUI = () => {
+//         const totalPages = Math.ceil(filteredRecords / pageLength);
+//         const container = $("#paginationNumbers");
+//         container.empty();
 
-    loadTableData(1);
+//         const startPage = Math.max(1, currentPage - 2);
+//         const endPage = Math.min(totalPages, currentPage + 2);
 
-    // Event: Pagination length change
-    $("#paginationLength").on("change", function () {
-        pageLength = parseInt($(this).val());
-        currentPage = 1;
-        loadTableData(1);
-    });
+//         if (startPage > 1) {
+//             container.append(
+//                 `<button class="pagination-btn inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:border-slate-400" data-page="1">1</button>`
+//             );
+//             if (startPage > 2) {
+//                 container.append(`<span class="px-1 text-slate-300">...</span>`);
+//             }
+//         }
 
-    // Event: Pagination button clicks
-    $(document).on("click", ".pagination-btn", function () {
-        const page = parseInt($(this).data("page"));
-        loadTableData(page);
-    });
+//         for (let i = startPage; i <= endPage; i++) {
+//             const isActive = i === currentPage;
+//             container.append(
+//                 `<button class="pagination-btn inline-flex h-8 w-8 items-center justify-center rounded-lg ${isActive
+//                     ? "bg-teal-600 border-teal-600 text-white font-semibold shadow-md shadow-teal-600/30"
+//                     : "border border-slate-300 bg-white text-slate-700 font-semibold transition hover:bg-slate-100 hover:border-slate-400"
+//                 } text-xs" data-page="${i}">${i}</button>`
+//             );
+//         }
 
-    // Event: Previous/Next buttons
-    $("#paginationPrev").on("click", function () {
-        if (currentPage > 1) {
-            loadTableData(currentPage - 1);
-        }
-    });
+//         if (endPage < totalPages) {
+//             if (endPage < totalPages - 1) {
+//                 container.append(`<span class="px-1 text-slate-300">...</span>`);
+//             }
+//             container.append(
+//                 `<button class="pagination-btn inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:border-slate-400" data-page="${totalPages}">${totalPages}</button>`
+//             );
+//         }
 
-    $("#paginationNext").on("click", function () {
-        const totalPages = Math.ceil(filteredRecords / pageLength);
-        if (currentPage < totalPages) {
-            loadTableData(currentPage + 1);
-        }
-    });
+//         $("#paginationPrev").prop("disabled", currentPage === 1);
+//         $("#paginationNext").prop("disabled", currentPage === totalPages);
+//     };
 
-    // Event: Search with debounce
-    const onSearch = debounce((value) => {
-        searchValue = value;
-        currentPage = 1;
-        loadTableData(1);
-    }, 400);
+//     const updatePaginationInfo = () => {
+//         const start = (currentPage - 1) * pageLength + 1;
+//         const end = Math.min(currentPage * pageLength, filteredRecords);
+//         const info = `Menampilkan ${start} sampai ${end} dari ${filteredRecords} data`;
+//         $("#paginationInfo").text(info);
+//     };
 
-    $("#searchInput").on("keyup", function () {
-        onSearch($(this).val());
-    });
+//     loadTableData(1);
 
-    // Event: Filter changes
-    $("#startDate, #endDate, #region_id").on("change", function () {
-        currentPage = 1;
-        loadTableData(1);
-    });
+//     // Event: Pagination length change
+//     $("#paginationLength").on("change", function () {
+//         pageLength = parseInt($(this).val());
+//         currentPage = 1;
+//         loadTableData(1);
+//     });
 
-    $("#btnPdf").on("click", function () {
-        const region = $("#region_id").val() || "";
-        window.open(`${config.pdfUrl}?region_id=${region}`, "_blank");
-    });
+//     // Event: Pagination button clicks
+//     $(document).on("click", ".pagination-btn", function () {
+//         const page = parseInt($(this).data("page"));
+//         loadTableData(page);
+//     });
 
-    $("#btnExcel").on("click", function () {
-        const region = $("#region_id").val() || "";
-        window.location.href = `${config.excelUrl}?region_id=${region}`;
-    });
+//     // Event: Previous/Next buttons
+//     $("#paginationPrev").on("click", function () {
+//         if (currentPage > 1) {
+//             loadTableData(currentPage - 1);
+//         }
+//     });
 
-    window.destroy = function (id) {
-        deleteId = id;
-        openModal(document.getElementById("modalDelete"));
-    };
+//     $("#paginationNext").on("click", function () {
+//         const totalPages = Math.ceil(filteredRecords / pageLength);
+//         if (currentPage < totalPages) {
+//             loadTableData(currentPage + 1);
+//         }
+//     });
 
-    $("#confirmDelete").on("click", function () {
-        if (!deleteId) {
-            return;
-        }
+//     // Event: Search with debounce
+//     const onSearch = debounce((value) => {
+//         searchValue = value;
+//         currentPage = 1;
+//         loadTableData(1);
+//     }, 400);
 
-        $.post(`${config.deleteBaseUrl}/${deleteId}`, getCsrfPayload(config))
-            .done(() => window.location.reload())
-            .fail(() => window.alert("Gagal menghapus data"));
-    });
+//     $("#searchInput").on("keyup", function () {
+//         onSearch($(this).val());
+//     });
 
-    document.addEventListener("click", (event) => {
-        const openTrigger = event.target.closest("[data-modal-open]");
-        if (openTrigger) {
-            const targetId = openTrigger.getAttribute("data-modal-open");
-            openModal(document.getElementById(targetId));
-            return;
-        }
+//     // Event: Filter changes
+//     $("#startDate, #endDate, #region_id").on("change", function () {
+//         currentPage = 1;
+//         loadTableData(1);
+//     });
 
-        const closeTrigger = event.target.closest("[data-modal-close]");
-        if (closeTrigger) {
-            closeModal(closeTrigger.closest(".modal-wrapper"));
-            return;
-        }
+//     $("#btnPdf").on("click", function () {
+//         const region = $("#region_id").val() || "";
+//         window.open(`${config.pdfUrl}?region_id=${region}`, "_blank");
+//     });
 
-        const clickedOverlay = event.target.classList.contains("modal-wrapper");
-        if (clickedOverlay) {
-            closeModal(event.target);
-        }
-    });
+//     $("#btnExcel").on("click", function () {
+//         const region = $("#region_id").val() || "";
+//         window.location.href = `${config.excelUrl}?region_id=${region}`;
+//     });
 
-    const toggleSuspectiveNote = () => {
-        const isSuspective = document.getElementById("isSuspectiveCheckbox");
-        const noteField = document.getElementById("keterangan_rentan");
+//     window.destroy = function (id) {
+//         deleteId = id;
+//         openModal(document.getElementById("modalDelete"));
+//     };
 
-        if (!isSuspective || !noteField) {
-            return;
-        }
+//     $("#confirmDelete").on("click", function () {
+//         if (!deleteId) {
+//             return;
+//         }
 
-        if (isSuspective.checked) {
-            noteField.classList.remove("hidden");
-        } else {
-            noteField.classList.add("hidden");
-        }
-    };
+//         $.post(`${config.deleteBaseUrl}/${deleteId}`, getCsrfPayload(config))
+//             .done(() => window.location.reload())
+//             .fail(() => window.alert("Gagal menghapus data"));
+//     });
 
-    const toggleCountryField = () => {
-        const domesticType = document.querySelector('input[name="domestic"]:checked');
-        const countryGroup = document.getElementById("country-group");
+//     document.addEventListener("click", (event) => {
+//         const openTrigger = event.target.closest("[data-modal-open]");
+//         if (openTrigger) {
+//             const targetId = openTrigger.getAttribute("data-modal-open");
+//             openModal(document.getElementById(targetId));
+//             return;
+//         }
 
-        if (!domesticType || !countryGroup) {
-            return;
-        }
+//         const closeTrigger = event.target.closest("[data-modal-close]");
+//         if (closeTrigger) {
+//             closeModal(closeTrigger.closest(".modal-wrapper"));
+//             return;
+//         }
 
-        if (domesticType.value === "luar_negeri") {
-            countryGroup.classList.remove("hidden");
-        } else {
-            countryGroup.classList.add("hidden");
-        }
-    };
+//         const clickedOverlay = event.target.classList.contains("modal-wrapper");
+//         if (clickedOverlay) {
+//             closeModal(event.target);
+//         }
+//     });
 
-    $("#isSuspectiveCheckbox").on("change", toggleSuspectiveNote);
-    $('input[name="domestic"]').on("change", toggleCountryField);
+//     const toggleSuspectiveNote = () => {
+//         const isSuspective = document.getElementById("isSuspectiveCheckbox");
+//         const noteField = document.getElementById("keterangan_rentan");
 
-    toggleSuspectiveNote();
-    toggleCountryField();
-};
+//         if (!isSuspective || !noteField) {
+//             return;
+//         }
 
-if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", setupAntreanPage);
-} else {
-    setupAntreanPage();
-}
+//         if (isSuspective.checked) {
+//             noteField.classList.remove("hidden");
+//         } else {
+//             noteField.classList.add("hidden");
+//         }
+//     };
+
+//     const toggleCountryField = () => {
+//         const domesticType = document.querySelector('input[name="domestic"]:checked');
+//         const countryGroup = document.getElementById("country-group");
+
+//         if (!domesticType || !countryGroup) {
+//             return;
+//         }
+
+//         if (domesticType.value === "luar_negeri") {
+//             countryGroup.classList.remove("hidden");
+//         } else {
+//             countryGroup.classList.add("hidden");
+//         }
+//     };
+
+//     $("#isSuspectiveCheckbox").on("change", toggleSuspectiveNote);
+//     $('input[name="domestic"]').on("change", toggleCountryField);
+
+//     toggleSuspectiveNote();
+//     toggleCountryField();
+// };
+
+// if (document.readyState === "loading") {
+//     document.addEventListener("DOMContentLoaded", setupAntreanPage);
+// } else {
+//     setupAntreanPage();
+// }

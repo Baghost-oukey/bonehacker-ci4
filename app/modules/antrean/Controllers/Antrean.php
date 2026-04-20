@@ -30,6 +30,7 @@ class Antrean extends BaseController
         //
         $region_patients = json_decode(session()->get('regions_patient'), true);
 
+
         $data = [
             'title'           => 'Antrean',
             'realname'        => session()->get('realname'),
@@ -116,25 +117,28 @@ class Antrean extends BaseController
                 return $row->visit_count > 0 ? 'Pasien Lama' : 'Pasien Baru';
             })
             ->add('action', function ($row) {
-                $btn = '<div class="btn-group d-flex justify-content-between align-items-center" style="gap: 5px;">';
-                // $role = session()->get('role');
-
                 $historyId = $row->history_id ?? '';
+                $urlHistory = site_url('patient/show/' . $row->patient_id) . '?openModalRiwayat=true' . ($historyId ? '&history_id=' . $historyId : '') . '&queue_id=' . $row->queue_id;
+
+                $btn = '<div class="flex items-center justify-end gap-2 min-w-220px">';
 
                 if ($row->process_at !== null) {
-                    $btn .= '<a href="' . site_url('antrean/finishQueue/' . $row->queue_id) . '" class="btn btn-warning btn-md w-100">Selesai</a>';
+                    $btn .= '<a href="' . site_url('antrean/finishQueue/' . $row->queue_id) . '" 
+                    class="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-[11px] font-bold text-white hover:bg-amber-600 transition active:scale-95 shadow-sm">
+                    <i class="fas fa-check-double"></i> Selesai
+                </a>';
                 } else {
-                    $btn .= '<a href="' . site_url('antrean/procesToQueue/' . $row->queue_id) . '" class="btn btn-success btn-md w-100"> Proses Pasien </a>';
+                    $btn .= '<a href="' . site_url('antrean/procesToQueue/' . $row->queue_id) . '" 
+                    class="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-[10px] font-bold text-white hover:bg-emerald-700 transition active:scale-95 shadow-sm">
+                    <i class="fas fa-stethoscope"></i> Proses Pasien
+                </a>';
                 }
 
+                $btn .= '<a href="' . $urlHistory . '" 
+                class="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-100 px-4 py-2 text-[11px] font-bold text-slate-600 hover:bg-slate-200 transition active:scale-95">
+                <i class="fas fa-file-medical text-indigo-500"></i> Rekam Medis
+            </a>';
 
-                $urlHistory = site_url('patient/show/' . $row->patient_id) . '?openModalRiwayat=true';
-                if (!empty($historyId)) {
-                    $urlHistory .= '&history_id=' . $historyId;
-                }
-                $urlHistory .= '&queue_id=' . $row->queue_id;
-
-                $btn .= '<a href="' . $urlHistory . '" class="btn btn-info btn-md"><i class="fas fa-file-medical"></i> Rekam Medis</a>';
                 $btn .= '</div>';
                 return $btn;
             })
@@ -144,9 +148,7 @@ class Antrean extends BaseController
     public function fetchPatientDataTables()
     {
         $request = service('request');
-        // $active_region = session()->get('active_region');
         $region = $request->getPost('region');
-
         $builder = $this->db->table('patients p')
             ->select('p.id AS patient_id, p.name, p.phone, p.address, p.age, r.name as name_region, pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama, pa.provinsi_nama')
             ->select('COALESCE((SELECT MAX(date) FROM histories h WHERE h.patient_id = p.id AND h.is_delete = 0), "-") AS last_visit_date')
@@ -163,6 +165,7 @@ class Antrean extends BaseController
         } else {
             $filter = ($region && $region !== 'all') ? $region : ($active_region !== 'all' ? $active_region : 'all');
         }
+
         if ($filter !== 'all' && !empty($filter)) {
             if (is_array($filter)) {
                 $builder->whereIn('p.region_id', $filter);
@@ -172,28 +175,37 @@ class Antrean extends BaseController
         }
 
         return \Hermawan\DataTables\DataTable::of($builder)
+            ->filter(function ($builder) use ($request) {
+                $search = $request->getPost('search')['value'] ?? null;
+                if ($search) {
+                    $builder->groupStart()
+                        ->like('p.name', $search, 'after')
+                        ->orLike('p.phone', $search, 'after')
+                        ->orLike('p.id', $search, 'after')
+                        ->groupEnd();
+                }
+            }, true)
             ->add('name', function ($row) {
-                return $row->name . ' (' . $row->phone . ')';
+                return '<div><div class="text-slate-800 font-bold">' . $row->name . '</div><div class="text-[10px] text-slate-400">' . $row->phone . '</div></div>';
             })
             ->add('address', function ($row) {
                 $addressFilter = array_filter([
                     $row->address,
                     $row->desa_nama,
                     $row->kecamatan_nama,
-                    $row->kabupaten_nama,
-                    $row->provinsi_nama
+                    $row->kabupaten_nama
                 ]);
-                return implode(', ', $addressFilter);
+                return '<span class="text-xs">' . implode(', ', $addressFilter) . '</span>';
             })
             ->add('description', function ($row) {
-                if ($row->visit_count > 0) {
-                    return '<span class="badge badge-danger">Pasien Lama</span>';
-                } else {
-                    return '<span class="badge badge-primary">Pasien Baru</span>';
-                }
+                // Pakai badge Tailwind yang cantik
+                return $row->visit_count > 0 ?
+                    '<span class="px-2 py-1 rounded bg-blue-50 text-blue-600 text-[10px] font-bold uppercase">Pasien Lama</span>' :
+                    '<span class="px-2 py-1 rounded bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase">Pasien Baru</span>';
             })
             ->add('action', function ($row) {
-                return '<a href="' . site_url('antrean/addToQueue/' . $row->patient_id) . '" class="btn btn-success btn-sm"><i class="fas fa-plus"></i> Add to Queue</a>';
+                // Tombol aksi yang mewah
+                return '<a href="' . site_url('antrean/addToQueue/' . $row->patient_id) . '" class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 text-white px-4 py-2 text-xs font-bold hover:bg-indigo-700 transition active:scale-95 shadow-sm"><i class="fas fa-plus"></i> Tambah</a>';
             })
             ->toJson(true);
     }
@@ -206,14 +218,24 @@ class Antrean extends BaseController
             return redirect()->back()->with('message', ['error', 'Data pasien atau wilayah tidak valid.']);
         }
 
-        $this->db->table('patient_queues')->insert([
+        $insert =  $this->db->table('patient_queues')->insert([
             'region_id'  => $patient->region_id,
             'patient_id' => $patientId,
             'queue_date' => date('Y-m-d'),
             'created_at' => date('Y-m-d H:i:s')
         ]);
 
-        return redirect()->to('antrean')->with('message', ['success', 'Pasien berhasil ditambahkan ke antrean.']);
+        if ($insert) {
+            return $this->response->setJSON([
+                'status'  => 'success',
+                'message' => 'Pasien ' . $patient->name . ' berhasil ditambahkan ke antrean.'
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'status'  => 'error',
+            'message' => 'Terjadi kesalahan sistem saat menambah antrean.'
+        ])->setStatusCode(500);
     }
 
     public function procesToQueue($queueId)

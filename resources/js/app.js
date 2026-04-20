@@ -6,4 +6,4 @@ import "./components/monitoring-branch.js";
 import "./components/profile.js";
 import "./components/clock.js";
 import "./pages/header.js";
-import "./pages/views.js";
+import "./pages/antrean-page.js";
