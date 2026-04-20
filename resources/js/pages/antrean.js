@@ -195,7 +195,7 @@ const setupAntreanPage = () => {
   };
 
   const renderEmptyState = (message) => {
-    const tbody = document.querySelector("#table-1 tbody");
+    const tbody = document.querySelector("#table-queue tbody");
     if (tbody) {
       tbody.innerHTML = `<tr class="hover:bg-slate-50 transition"><td colspan="8" class="px-6 py-12 text-center text-slate-400 italic text-sm"><i class="fas fa-inbox mr-2 text-slate-300"></i>${message}</td></tr>`;
     }
@@ -227,7 +227,7 @@ const setupAntreanPage = () => {
           totalRecords = Number(response.recordsTotal || 0);
           filteredRecords = Number(response.recordsFiltered || totalRecords);
 
-          const tbody = document.querySelector("#table-1 tbody");
+          const tbody = document.querySelector("#table-queue tbody");
           if (!tbody) {
             console.error("Table tbody not found");
             renderEmptyState("Terjadi kesalahan pada halaman");

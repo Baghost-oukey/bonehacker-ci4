@@ -104,7 +104,7 @@ const setupRekamMedisPage = () => {
   };
 
   const renderEmptyState = (message) => {
-    $("#table-1 tbody").html(`<tr class="hover:bg-slate-50 transition"><td colspan="7" class="px-6 py-12 text-center text-slate-400 italic text-sm"><i class="fas fa-inbox mr-2 text-slate-300"></i>${message}</td></tr>`);
+    $("#table-RekamMedis tbody").html(`<tr class="hover:bg-slate-50 transition"><td colspan="7" class="px-6 py-12 text-center text-slate-400 italic text-sm"><i class="fas fa-inbox mr-2 text-slate-300"></i>${message}</td></tr>`);
   };
 
   const loadTableData = (pageNumber = 1) => {
@@ -127,7 +127,7 @@ const setupRekamMedisPage = () => {
         totalRecords = Number(response.recordsTotal || 0);
         filteredRecords = Number(response.recordsFiltered || totalRecords);
 
-        const tbody = $("#table-1 tbody");
+        const tbody = $("#table-RekamMedis tbody");
         tbody.empty();
 
         if (!response.data || response.data.length === 0) {

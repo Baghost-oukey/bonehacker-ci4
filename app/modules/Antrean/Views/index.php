@@ -96,7 +96,7 @@
 
         <!-- TABLE -->
         <div class="overflow-x-auto">
-            <table id="table-1" class="w-full text-sm">
+            <table id="table-queue" class="w-full text-sm">
 
                 <!-- HEAD -->
                 <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">

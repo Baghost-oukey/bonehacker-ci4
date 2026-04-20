@@ -66,7 +66,7 @@
         </div>
 
         <div class="overflow-x-auto">
-            <table id="table-1" class="w-full text-sm">
+            <table id="table-RekamMedis" class="w-full text-sm">
                 <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
                     <tr>
                         <th class="px-6 py-3.5 text-left font-semibold">ID Pasien</th>

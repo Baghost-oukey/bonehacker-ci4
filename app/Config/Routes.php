@@ -45,12 +45,12 @@ $routes->get('patient/export_data', '\App\Modules\patients\Controllers\Patients:
 
 
 // Wilayah
-$routes->group('region', ['namespace' => 'App\Modules\region\Controllers'], function ($routes) {
-  $routes->get('', 'Region::index');
-  $routes->post('fetch', 'Region::fetch');
-  $routes->post('store', 'Region::store');
-  $routes->post('update/(:num)', 'Region::update/$1');
-  $routes->post('destroy/(:num)', 'Region::destroy/$1');
+$routes->group('region', ['namespace' => 'App\Modules\Region\Controllers'], function ($routes) {
+  $routes->get('', 'RegionController::index');
+  $routes->post('fetch', 'RegionController::fetch');
+  $routes->post('store', 'RegionController::store');
+  $routes->post('update/(:num)', 'RegionController::update/$1');
+  $routes->post('destroy/(:num)', 'RegionController::destroy/$1');
 });
 // app/Config/Routes.php
 
@@ -61,6 +61,14 @@ $routes->group('journal', ['namespace' => 'App\Modules\journal\Controllers'], fu
   $routes->get('export_excell', 'Journal::export_excell');
   $routes->get('export_pdf', 'Journal::export_pdf');
   $routes->get('export_file_journal', 'Journal::export_file_journal');
+});
+
+// Transaksi
+$routes->group('transaksi', ['namespace' => 'App\Modules\Transaksi\Controllers', 'filter' => 'auth'], function ($routes) {
+  $routes->get('', 'TransaksiController::index');
+  $routes->post('fetch', 'TransaksiController::fetch');
+  $routes->post('store', 'TransaksiController::store');
+  $routes->post('delete', 'TransaksiController::delete');
 });
 
 // Statistik
@@ -113,12 +121,7 @@ $routes->group('jabatan', ['namespace' => 'App\Modules\jabatan\Controllers'], fu
   $routes->post('check_name_exists', 'Jabatan::check_name_exists');
 });
 
-$routes->group('transaksi', ['namespace' => 'App\Modules\transaksi\Controllers', 'filter' => 'auth'], function ($routes) {
-  $routes->get('', 'Transaksi::index');
-  $routes->post('fetch', 'Transaksi::fetch');
-  $routes->post('store', 'Transaksi::store');
-  $routes->post('delete', 'Transaksi::delete');
-});
+
 
 // Tag - Keluhan
 $routes->group('complaint', ['namespace' => 'App\Modules\complaint\Controllers'], function ($routes) {
