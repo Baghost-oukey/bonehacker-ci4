@@ -116,11 +116,11 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                                 <a href="<?= base_url('complaint') ?>"
                                     class="block rounded-md px-3 py-2 text-sm transition <?= $current_segment == 'complaint' ? 'bg-slate-100 text-slate-900' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' ?>">Tag
                                     Keluhan</a>
-                                <a href="<?= base_url('medis') ?>"
-                                    class="block rounded-md px-3 py-2 text-sm transition <?= $current_segment == 'medis' ? 'bg-slate-100 text-slate-900' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' ?>">Tag
+                                <a href="<?= base_url('tag-rekam-medis') ?>"
+                                    class="block rounded-md px-3 py-2 text-sm transition <?= $current_segment == 'tag-rekam-medis' ? 'bg-slate-100 text-slate-900' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' ?>">Tag
                                     Rekam Medis</a>
-                                <a href="<?= base_url('result') ?>"
-                                    class="block rounded-md px-3 py-2 text-sm transition <?= $current_segment == 'result' ? 'bg-slate-100 text-slate-900' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' ?>">Tag
+                                <a href="<?= base_url('tag-pemeriksaan') ?>"
+                                    class="block rounded-md px-3 py-2 text-sm transition <?= $current_segment == 'tag-pemeriksaan' ? 'bg-slate-100 text-slate-900' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' ?>">Tag
                                     Pemeriksaan</a>
                             </div>
                         </details>

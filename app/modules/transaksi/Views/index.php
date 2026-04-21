@@ -110,7 +110,7 @@
         </p>
     </div>
 
-    
+
 </div>
 
     <!-- Table Section -->
@@ -252,7 +252,7 @@
 
         <form id="formTransaksi" class="space-y-4 p-5">
             <?= csrf_field() ?>
-            
+
             <!-- Type Toggle -->
             <div class="flex rounded-lg border border-slate-200 p-1">
                 <label class="flex-1 cursor-pointer rounded-md px-4 py-2 text-center text-sm font-medium transition" id="labelIncome">
@@ -269,12 +269,12 @@
             <?php if (in_array($role, ['superadmin', 'owner'])): ?>
                 <div class="space-y-1">
                     <label class="text-sm font-medium text-slate-700">Cabang</label>
-                    <select name="region_id" 
-                        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500" 
+                    <select name="region_id"
+                        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
                         required>
                         <option value="">-- Pilih Cabang --</option>
                         <?php foreach ($list_regions as $rg): ?>
-                            <option value="<?= $rg['id'] ?>" <?= (session()->get('active_region') == $rg['id']) ? 'selected' : '' ?>>
+                            <option value="<?= $rg['id'] ?>" <?= session()->get('active_region') == $rg['id'] ? 'selected' : '' ?>>
                                 <?= $rg['name'] ?>
                             </option>
                         <?php endforeach; ?>
@@ -287,16 +287,16 @@
             <!-- Nominal -->
             <div class="space-y-1">
                 <label class="text-sm font-medium text-slate-700">Nominal (Rp)</label>
-                <input type="number" name="nominal" 
-                    class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500" 
+                <input type="number" name="nominal"
+                    class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
                     placeholder="0" required>
             </div>
 
             <!-- Keterangan -->
             <div class="space-y-1">
                 <label class="text-sm font-medium text-slate-700">Keterangan</label>
-                <textarea name="keterangan" rows="2" 
-                    class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500" 
+                <textarea name="keterangan" rows="2"
+                    class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
                     placeholder="Contoh: Pembayaran Pasien A atau Biaya Listrik"></textarea>
             </div>
 
@@ -304,7 +304,7 @@
             <div class="grid grid-cols-2 gap-4">
                 <div class="space-y-1">
                     <label class="text-sm font-medium text-slate-700">Metode</label>
-                    <select name="metode_pembayaran" 
+                    <select name="metode_pembayaran"
                         class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
                         <option value="Cash">Cash</option>
                         <option value="Transfer">Transfer</option>
@@ -313,7 +313,7 @@
                 </div>
                 <div class="space-y-1">
                     <label class="text-sm font-medium text-slate-700">Usia</label>
-                    <select name="rentang_usia" 
+                    <select name="rentang_usia"
                         class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
                         <option value="Anak">Anak</option>
                         <option value="Remaja">Remaja</option>
@@ -374,11 +374,11 @@
         <p class="text-sm text-slate-500">Yakin ingin menghapus transaksi ini? Tindakan ini tidak dapat dibatalkan.</p>
 
         <div class="flex justify-end gap-2">
-            <button type="button" data-modal-close 
+            <button type="button" data-modal-close
                 class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
                 Batal
             </button>
-            <button id="confirmDelete" 
+            <button id="confirmDelete"
                 class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">
                 Hapus
             </button>
