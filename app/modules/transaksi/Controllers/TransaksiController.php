@@ -1,12 +1,12 @@
 <?php
 
-namespace App\modules\transaksi\Controllers;
+namespace App\Modules\Transaksi\Controllers;
 
 use App\Controllers\BaseController;
 use App\modules\transaksi\Models\MTransaksi;
 use CodeIgniter\HTTP\ResponseInterface;
 
-class Transaksi extends BaseController
+class TransaksiController extends BaseController
 {
     protected $model_transaksi;
 
@@ -33,12 +33,14 @@ class Transaksi extends BaseController
         // --- 1. Saldo Hari Ini (Reset Tiap Hari) ---
         $todayBuilder = $db->table('transaksi')->selectSum('nominal');
         $todayBuilder->where('DATE(created_at)', date('Y-m-d'));
-        if ($filter_region) $todayBuilder->where('region_id', $filter_region);
+        if ($filter_region)
+            $todayBuilder->where('region_id', $filter_region);
         $today_balance = $todayBuilder->get()->getRow()->nominal ?? 0;
 
         // --- 2. Total Income (Akumulasi Selamanya) ---
         $incomeBuilder = $db->table('transaksi')->selectSum('nominal');
-        if ($filter_region) $incomeBuilder->where('region_id', $filter_region);
+        if ($filter_region)
+            $incomeBuilder->where('region_id', $filter_region);
         $total_income = $incomeBuilder->get()->getRow()->nominal ?? 0;
 
         // --- 3. Total Expense (Global - Hanya Owner/Superadmin) ---
@@ -49,16 +51,16 @@ class Transaksi extends BaseController
         }
 
         $data = [
-            'title'          => 'Dashboard Keuangan',
-            'realname'       => session()->get('realname'),
-            'role'           => $role,
-            'today_balance'  => $today_balance,
-            'total_income'   => $total_income,
-            'total_expense'  => $total_expense,
-            'active_region'  => $active_region,
-            'list_regions'   => $list_regions
+            'title' => 'Transaksi',
+            'realname' => session()->get('realname'),
+            'role' => $role,
+            'today_balance' => $today_balance,
+            'total_income' => $total_income,
+            'total_expense' => $total_expense,
+            'active_region' => $active_region,
+            'list_regions' => $list_regions
         ];
-        return view('\App\modules\transaksi\Views\views_transaksi', $data);
+        return view('\App\Modules\Transaksi\Views\index', $data);
     }
 
     public function fetch()
@@ -72,14 +74,14 @@ class Transaksi extends BaseController
 
         $options = [
             // Pastikan variabel $order digunakan di sini
-            'order'  => (!empty($order) && !empty($columns)) ? ($columns[$order[0]['column']]['name'] ?: $columns[$order[0]['column']]['data']) : 'created_at',
-            'mode'   => (!empty($order)) ? $order[0]['dir'] : 'desc',
+            'order' => (!empty($order) && !empty($columns)) ? ($columns[$order[0]['column']]['name'] ?: $columns[$order[0]['column']]['data']) : 'created_at',
+            'mode' => (!empty($order)) ? $order[0]['dir'] : 'desc',
             'offset' => $start ?? 0,
-            'limit'  => $length ?? 10
+            'limit' => $length ?? 10
         ];
 
         $dataOutput = $this->model_transaksi->get_list_data($options);
-        $totalData  = $this->model_transaksi->get_total_data($options);
+        $totalData = $this->model_transaksi->get_total_data($options);
 
         $no = ($start ?? 0) + 1;
         foreach ($dataOutput as $value) {
@@ -95,11 +97,11 @@ class Transaksi extends BaseController
         }
 
         return $this->response->setJSON([
-            "draw"            => intval($draw),
-            "recordsTotal"    => intval($totalData),
+            "draw" => intval($draw),
+            "recordsTotal" => intval($totalData),
             "recordsFiltered" => intval($totalData),
-            "data"            => $dataOutput,
-            "csrfHash"        => csrf_hash()
+            "data" => $dataOutput,
+            "csrfHash" => csrf_hash()
         ]);
     }
 
@@ -124,20 +126,20 @@ class Transaksi extends BaseController
         // Cek jika masih dalam mode 'all'
         if (empty($region_id) || $region_id === 'all') {
             return $this->response->setJSON([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'Gagal: Cabang tidak terdeteksi atau belum dipilih!'
             ]);
         }
 
         $data = [
-            'region_id'         => $region_id,
-            'nominal'           => $this->request->getPost('nominal'),
-            'type'              => $this->request->getPost('type') ?? 'income',
-            'keterangan'        => $this->request->getPost('keterangan'),
+            'region_id' => $region_id,
+            'nominal' => $this->request->getPost('nominal'),
+            'type' => $this->request->getPost('type') ?? 'income',
+            'keterangan' => $this->request->getPost('keterangan'),
             'metode_pembayaran' => $this->request->getPost('metode_pembayaran'),
-            'rentang_usia'      => $this->request->getPost('rentang_usia'),
-            'created_at'        => date('Y-m-d H:i:s'),
-            'created_by'        => session()->get('userId')
+            'rentang_usia' => $this->request->getPost('rentang_usia'),
+            'created_at' => date('Y-m-d H:i:s'),
+            'created_by' => session()->get('userId')
         ];
 
         try {

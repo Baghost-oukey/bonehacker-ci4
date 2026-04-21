@@ -1,12 +1,12 @@
 <?php
 
-namespace App\modules\region\Controllers;
+namespace App\Modules\Region\Controllers;
 
 use App\Controllers\BaseController;
-use CodeIgniter\HTTP\ResponseInterface;
 use App\modules\region\Models\MRegion;
+use CodeIgniter\HTTP\ResponseInterface;
 
-class Region extends BaseController
+class RegionController extends BaseController
 {
     protected $model_regions;
 
@@ -20,15 +20,15 @@ class Region extends BaseController
     {
         //
         $data = [
-            'realname'        => session()->get('realname'),
-            'role'            => session()->get('role'),
-            'base_url'        => base_url(),
+            'realname' => session()->get('realname'),
+            'role' => session()->get('role'),
+            'base_url' => base_url(),
             'current_segment' => $this->request->getUri()->getSegment(1),
-            'title'           => 'Cabang',
-            'msg'             => session()->getFlashdata('message')
+            'title' => 'Cabang',
+            'msg' => session()->getFlashdata('message')
         ];
 
-        return view('App\modules\region\Views\views_regions', $data);
+        return view('App\Modules\Region\Views\index', $data);
     }
 
     public function fetch()
@@ -42,23 +42,23 @@ class Region extends BaseController
         $options['mode'] = !empty($order) ? $order[0]['dir'] : 'ASC';
 
         $start = $this->request->getPost('start');
-        $length            = $this->request->getPost('length');
+        $length = $this->request->getPost('length');
         $options['offset'] = empty($start) ? 0 : $start;
-        $options['limit']  = empty($length) ? 10 : $length;
+        $options['limit'] = empty($length) ? 10 : $length;
         if (!empty($requestData['search']['value'])) {
             $options['where_like'] = [
                 "r.name LIKE '%" . $requestData['search']['value'] . "%'"
             ];
         }
 
-        $dataOutput    = $this->model_regions->getListData($options);
+        $dataOutput = $this->model_regions->getListData($options);
         $totalFiltered = $this->model_regions->getTotalData($options);
-        $totalData     = $this->model_regions->getTotal();
-        $no            = $options['offset'] + 1;
+        $totalData = $this->model_regions->getTotal();
+        $no = $options['offset'] + 1;
 
         if (!empty($dataOutput)) {
             foreach ($dataOutput as $value) {
-                $value->no        = $no;
+                $value->no = $no;
                 $value->name_view = "<a href='" . base_url() . "?region=" . $value->id . "'>" . $value->name . "<br>(" . $value->jumlah . " Pasien)</a>";
 
 
@@ -74,10 +74,10 @@ class Region extends BaseController
         }
 
         $response = [
-            "draw"            => isset($requestData['draw']) ? intval($requestData['draw']) : 0,
-            "recordsTotal"    => intval($totalData),
+            "draw" => isset($requestData['draw']) ? intval($requestData['draw']) : 0,
+            "recordsTotal" => intval($totalData),
             "recordsFiltered" => intval($totalFiltered),
-            "data"            => $dataOutput
+            "data" => $dataOutput
         ];
 
 

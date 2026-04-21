@@ -96,7 +96,7 @@
 
         <!-- TABLE -->
         <div class="overflow-x-auto">
-            <table id="table-1" class="w-full text-sm">
+            <table id="table-queue" class="w-full text-sm">
 
                 <!-- HEAD -->
                 <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
@@ -158,9 +158,7 @@
                         <i class="fas fa-chevron-left text-xs mr-1"></i>
                         <span class="hidden sm:inline">Sebelumnya</span>
                     </button>
-                    <div id="paginationNumbers" class="flex items-center gap-1">
-                        <!-- pages will be generated here -->
-                    </div>
+                    <div id="paginationNumbers" class="flex items-center gap-1"></div>
                     <button id="paginationNext"
                         class="inline-flex h-8 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:border-slate-400 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-slate-300">
                         <span class="hidden sm:inline">Berikutnya</span>
