@@ -163,8 +163,8 @@ class AntreanController extends BaseController
 
         $builder = $this->db->table('patients p')
             ->select('p.id AS patient_id, p.name, p.phone, p.address, p.age, r.name as name_region, pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama, pa.provinsi_nama')
-            ->select('COALESCE(h_stat.last_visit, "-") AS last_visit_date')
-            ->select('COALESCE(h_stat.total_visit, 0) AS visit_count')
+            ->select('COALESCE(h_stat.last_visit, "-") AS last_visit_date', false)
+            ->select('COALESCE(h_stat.total_visit, 0) AS visit_count', false)
             ->join('regions r', 'r.id = p.region_id', 'left')
             ->join('patient_address pa', 'pa.patient_id = p.id', 'left')
             ->join(

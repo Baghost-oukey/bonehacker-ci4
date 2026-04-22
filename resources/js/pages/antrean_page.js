@@ -37,9 +37,9 @@ const setupAntreanPage = () => {
     let filteredRecords = 0;
     let currentPage = 1;
 
+
     // --- Tabel Utama ---
     let tableInstance = null;
-
     const loadTableData = () => {
         const config = window.antreanConfig;
 
@@ -76,8 +76,6 @@ const setupAntreanPage = () => {
                 processing: '<i class="fas fa-circle-notch fa-spin text-indigo-500"></i>',
                 emptyTable: "Belum ada antrean masuk",
                 info: "Menampilkan <span class='font-bold text-slate-800'>_START_</span> sampai <span class='font-bold text-slate-800'>_END_</span> dari <span class='font-bold text-indigo-600'>_TOTAL_</span> data",
-                // infoEmpty: "Menampilkan 0 data",
-                // paginate: { previous: 'Prev', next: 'Next' }
             },
 
             drawCallback: function () {
@@ -91,7 +89,12 @@ const setupAntreanPage = () => {
             tableInstance.search(this.value).draw();
         });
     };
-    // --- Table Paseien pada saat tambah Pasient ---
+    // --- END TABLE UTAMA ---
+
+
+
+
+    // --- TABLE TAMBAH DATA PASIENT ---
     let patientTableInstance = null;
 
     const loadPatientData = () => {
@@ -99,16 +102,19 @@ const setupAntreanPage = () => {
         $('#patientListBody').html('<tr><td colspan="5" class="animate-pulse bg-slate-50 h-20"></td></tr>');
 
         if ($.fn.DataTable.isDataTable('#table-2')) {
-            patientTableInstance.ajax.reload();
+            patientTableInstance.columns.adjust().draw();
             return;
         }
         patientTableInstance = $('#table-2').DataTable({
             processing: true,
             serverSide: true,
+            // searchDelay: 800,
+            // stateSave: true,
             autoWidth: false,
             pageLength: 10,
             lengthMenu: [10, 25, 50],
             pagingType: "simple_numbers",
+            dom: '<"overflow-x-auto"rt><"flex flex-col md:flex-row items-center justify-between px-8 py-4 gap-4 border-t border-slate-100"ip>',
             ajax: {
                 url: config.fetchPatientUrl,
                 type: "POST",
@@ -125,11 +131,7 @@ const setupAntreanPage = () => {
                         return `
                 <div class="flex items-center gap-4">
                     <div class="h-10 w-10 flex-shrink-0 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-200 flex items-center justify-center font-black text-slate-700 text-xs shadow-inner">
-                        ${data.toString().slice(-2)}
-                    </div>
-                    <div class="flex flex-col">
-                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">ID PASIEN</span>
-                        <span class="text-xs font-black text-indigo-600">#${data}</span>
+                        ${data.toString().padStart(2, '0')}
                     </div>
                 </div>`;
                     }
@@ -137,6 +139,7 @@ const setupAntreanPage = () => {
                 {
                     data: 'name',
                     className: 'px-6 py-4',
+
                     render: function (data, type, row) {
                         return `
                 <div class="flex flex-col">
@@ -169,8 +172,10 @@ const setupAntreanPage = () => {
                     }
                 },
                 {
-                    data: 'visit_count', // Ubah data ini jika fieldnya berbeda
+                    data: 'visit_count',
                     className: 'px-6 py-4 text-center',
+                    searchable: false,
+                    orderable: false,
                     render: function (data, type, row) {
                         const isLama = row.visit_count > 0;
                         return isLama ?
@@ -202,9 +207,17 @@ const setupAntreanPage = () => {
             language: {
                 search: "_INPUT_",
                 searchPlaceholder: "Cari pasien...",
-                processing: '<i class="fas fa-spinner fa-spin text-indigo-500"></i> Memuat data...'
+                processing: $('#datatable-loader').html(),
             },
-            dom: '<"overflow-x-auto"rt><"flex flex-col md:flex-row items-center justify-between px-8 py-4 gap-4 border-t border-slate-100 [<_.pagination]:flex [<_.pagination]:gap-1 [<_.page-item]:list-none"ip>',
+            initComplete: function () {
+                const container = this.api().table().container();
+                const loader = container.querySelector('.dataTables_processing');
+
+                if (loader) {
+                    loader.style.cssText = 'position:static; background:none; border:none; padding:0; margin:0; width:0; height:0;';
+                }
+            },
+
             drawCallback: function () {
                 $('.pagination').addClass('flex flex-row items-center mb-0');
                 $('.page-item').addClass('mx-0.5');
@@ -213,14 +226,24 @@ const setupAntreanPage = () => {
             }
         });
 
-        // Hubungkan Search Custom kita ke DataTable
-        $("#searchPatientList").on("keyup", function () {
-            patientTableInstance.search(this.value).draw();
+        let searchTimer;
+        $('#searchPatientList').on('keyup', function () {
+            const searchValue = $(this).val();
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(function () {
+                patientTableInstance.search(searchValue).draw();
+            }, 800);
         });
     };
+    // --- END TABLE TAMBAH DATA PASIENT ---
 
+
+
+
+    // --- ALERT TAMBAH ANTREAN ---
     window.tambahKeAntrean = (patientId) => {
         Swal.fire({
+            target: document.getElementById("exampleModal"),
             title: 'Konfirmasi',
             text: "Tambahkan pasien ini ke antrean?",
             icon: 'question',
@@ -228,10 +251,10 @@ const setupAntreanPage = () => {
             confirmButtonColor: '#0d9488',
             cancelButtonColor: '#64748b',
             confirmButtonText: 'Ya, Tambahkan',
-            cancelButtonText: 'Batal'
+            cancelButtonText: 'Batal',
+            reverseButtons: true
         }).then((result) => {
             if (result.isConfirmed) {
-                // Beri feedback loading ke user
                 Swal.fire({
                     title: 'Memproses...',
                     allowOutsideClick: false,
@@ -264,6 +287,103 @@ const setupAntreanPage = () => {
             }
         });
     };
+    // --- END ALERT TAMBAH ANTREAN ---
+
+    // --- ALERT TAMBAH PASEIN ---
+    $('#submitBtnNew').on('click', function (e) {
+        e.preventDefault();
+        const form = $('#formTambahPasien');
+
+        Swal.fire({
+            target: document.getElementById('modalnewpatient'),
+            title: 'Konfirmasi Data',
+            text: "Apakah Anda yakin ingin menambahkan data pasien baru ini?",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#0d9488',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: '<i class="fas fa-check mr-2"></i> Ya, Simpan Pasien',
+            cancelButtonText: '<i class="fas fa-times mr-2"></i> Batal',
+            reverseButtons: true,
+        }).then((result) => {
+            if (result.isConfirmed) {
+
+                // 1. Tampilkan loading pada tombol atau Swal secara instan
+                Swal.fire({
+                    target: document.getElementById('modalnewpatient'),
+                    title: 'Menyimpan Data...',
+                    html: 'Mohon tunggu sebentar',
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // 2. Eksekusi AJAX
+                $.ajax({
+                    url: form.attr('action'),
+                    type: 'POST',
+                    data: form.serialize(),
+                    dataType: 'json',
+                    success: function (response) {
+                        // Pengecekan response yang lebih fleksibel
+                        if (response.success || response.status === 'success') {
+
+                            // 3. Tampilkan Toast Sukses
+                            const Toast = Swal.mixin({
+                                toast: true,
+                                position: 'top-end',
+                                showConfirmButton: false,
+                                timer: 2500,
+                                timerProgressBar: true,
+                                target: document.getElementById('modalnewpatient')
+                            });
+
+                            Toast.fire({
+                                icon: 'success',
+                                title: 'Data Pasien Berhasil Disimpan'
+                            });
+
+                            // 4. AUTO REFRESH TABEL & TUTUP MODAL
+                            // Refresh DataTables dulu (pakai selector langsung biar pasti)
+                            if ($.fn.DataTable.isDataTable('#table-2')) {
+                                $('#table-2').DataTable().ajax.reload(null, false);
+                                console.log("Table Refreshed"); // Cek di console
+                            }
+
+                            // Tutup modal
+                            setTimeout(() => {
+                                $('#modalnewpatient').fadeOut(300, function () {
+                                    $(this).addClass('hidden').removeAttr('style');
+                                    form[0].reset();
+                                });
+                            }, 500);
+
+                        } else {
+                            Swal.fire({
+                                target: document.getElementById('modalnewpatient'),
+                                title: 'Gagal!',
+                                text: response.message || 'Cek kembali isian data Anda.',
+                                icon: 'warning'
+                            });
+                        }
+                    },
+                    error: function (xhr) {
+                        console.error("AJAX Error:", xhr.responseText);
+                        Swal.fire({
+                            target: document.getElementById('modalnewpatient'),
+                            title: 'Sistem Error!',
+                            text: 'Gagal mengirim data ke server.',
+                            icon: 'error'
+                        });
+                    }
+                });
+            }
+        });
+    });
+    // END
+
 
     // --- Button Pagination ---
     const updateCustomPagination = (api) => {
@@ -271,15 +391,10 @@ const setupAntreanPage = () => {
         const $prevBtn = $('#paginationPrev');
         const $nextBtn = $('#paginationNext');
         const $numbersContainer = $('#paginationNumbers');
-
-        // 1. Atur Status tombol Prev & Next
         $prevBtn.prop('disabled', info.page === 0);
         $nextBtn.prop('disabled', info.page >= info.pages - 1);
-
-        // 2. Clear angka halaman lama
         $numbersContainer.empty();
 
-        // 3. Gambar Angka Halaman (Logika sederhana: tampilkan semua atau batasi)
         for (let i = 0; i < info.pages; i++) {
             const activeClass = i === info.page
                 ? 'bg-indigo-600 text-white border-indigo-600'
@@ -291,22 +406,25 @@ const setupAntreanPage = () => {
                 ${i + 1}
             </button>`;
 
-            // Hanya tampilkan jika halaman < 5 (atau kamu bisa buat logika ellipsis ...)
             if (info.pages <= 5 || (i >= info.page - 2 && i <= info.page + 2)) {
                 $numbersContainer.append(btnNumber);
             }
         }
     };
 
-    // Fungsi untuk pindah halaman
+    // *** Fungsi untuk pindah halaman ***
     window.changePage = (pageIndex) => {
         if (tableInstance) {
             tableInstance.page(pageIndex).draw('page');
         }
     };
+    // --- PAGINATION END ---
+
+
+
 
     // --- EVENT LISTENERS ---
-    //  Modal Pilih Pasien (Table 2)
+    //  ** Modal Pilih Pasien (Table 2) **
     $(document).on('click', '[data-modal-open="exampleModal"]', function (e) {
         if (!$(this).closest('.modal-wrapper').length) {
             loadPatientData("");
@@ -337,24 +455,19 @@ const setupAntreanPage = () => {
             openModal(targetModal);
 
             if (targetId === "modalnewpatient" || targetId === "modalFormBaru") {
-                // Kasih jeda sedikit agar modal selesai muncul (penting buat Select2)
                 setTimeout(() => {
                     initSelect2Desa();
 
-                    // Paksa fokus ke input nama agar user nyaman
                     const nameInput = targetModal.querySelector('input[name="name"]');
                     if (nameInput) nameInput.focus();
                 }, 300);
             }
         }
-
-
         const closeTrigger = event.target.closest("[data-modal-close]");
         if (closeTrigger) {
             closeModal(closeTrigger.closest(".modal-wrapper"));
         }
     });
-
 
     $(document).on('click', '.modal-wrapper', function (e) {
         if (e.target === this) {
@@ -387,21 +500,6 @@ const setupAntreanPage = () => {
     $(document).on('click', '.modal-wrapper > div', function (e) {
         e.stopPropagation();
     });
-    // Menambahkan Modal Baru End
-
-    // 3. Auto-fill dari Desa (Gunakan delegasi agar aman)
-    $(document).on('select2:select', '#desa_id', function (e) {
-        const d = e.params.data.full_data;
-        $('#desa_nama').val(d.desNama || '');
-        $('#kecamatan_id').val(d.kecamatan?.kecIdKecamatan || '');
-        $('#kecamatan_nama').val(d.kecamatan?.kecNama || '');
-        $('#kabupaten_id').val(d.kecamatan?.kabupaten?.kabIdKabupaten || '');
-        $('#kabupaten_nama').val(d.kecamatan?.kabupaten?.kabNama || '');
-        $('#provinsi_id').val(d.kecamatan?.kabupaten?.provinsi?.provIdProvinsi || '');
-        $('#provinsi_nama').val(d.kecamatan?.kabupaten?.provinsi?.provNama || '');
-    });
-
-    
     // Tombol Sebelumnya
     $('#paginationPrev').on('click', function () {
         if (tableInstance) {
@@ -417,26 +515,10 @@ const setupAntreanPage = () => {
     });
     loadTableData(1);
 };
+// --- END MODAL TAMBAH PASIEN ---
 
-$(document).on('focusin', function (e) {
-    if ($(e.target).closest(".select2-container").length) {
-        e.stopImmediatePropagation();
-    }
-});
 
-// Pastikan kursor masuk ke search field saat Select2 dibuka
-$(document).on('select2:open', '#desa_id', function () {
-    setTimeout(() => {
-        const searchField = document.querySelector('.select2-search__field');
-        if (searchField) searchField.focus();
-    }, 100);
-});
 
-$(document).on('focusin', function (e) {
-    if ($(e.target).closest(".select2-container").length) {
-        e.stopImmediatePropagation();
-    }
-});
 
 // Jalankan Inisialisasi
 if (document.readyState === "loading") {
@@ -444,21 +526,16 @@ if (document.readyState === "loading") {
 } else {
     setupAntreanPage();
 }
+
+
+
+
+// --- FUNGSI MENGAMBIL DATA DESA ---
 function initSelect2Desa() {
-    console.log("--- Debug: Inisialisasi Select2 Desa Dimulai ---");
-    
-    const $el = $('#desa_id'); 
-
-    if ($el.data('select2')) {
-        $el.select2('destroy');
-        console.log("Debug: Instance lama dihancurkan");
-    }
-
-    $el.select2({
+    $('#desa_id').select2({
         placeholder: "Temukan Desa",
-        dropdownParent: $('#desa_id'),
+        dropdownParent: $("#modalnewpatient"),
         width: '100%',
-        dropdownAutoWidth: true,
         ajax: {
             url: 'https://wilayah.smartsociety.id/public/desa',
             dataType: 'json',
@@ -481,7 +558,12 @@ function initSelect2Desa() {
                         });
                     });
                 }
-                return { results: options, pagination: { more: data.data?.next_page_url ? true : false } };
+                return {
+                    results: options,
+                    pagination: {
+                        more: data.data?.next_page_url ? true : false
+                    }
+                };
             }
         },
         minimumInputLength: 1,
@@ -489,12 +571,45 @@ function initSelect2Desa() {
         templateResult: i => i.text,
         templateSelection: i => i.text ? i.text.replace(/<br\s*\/?>/gi, ' ').replace(/<\/?[^>]+(>|$)/g, "") : i.text
     });
-
-    // PENTING: Gunakan variabel $el yang sudah dibuat tadi
-    $el.on('select2:open', function() {
-        setTimeout(() => {
-            const searchField = document.querySelector('.select2-search__field');
-            if (searchField) searchField.focus();
-        }, 100);
-    });
 }
+
+$(document).on('select2:select', '#desa_id', function (e) {
+    const d = e.params.data.full_data;
+    $('#desa_nama').val(d?.desNama || '');
+    $('#kecamatan_id').val(d?.kecamatan?.kecIdKecamatan || '');
+    $('#kecamatan_nama').val(d?.kecamatan?.kecNama || '');
+    $('#kabupaten_id').val(d?.kecamatan?.kabupaten?.kabIdKabupaten || '');
+    $('#kabupaten_nama').val(d?.kecamatan?.kabupaten?.kabNama || '');
+    $('#provinsi_id').val(d?.kecamatan?.kabupaten?.provinsi?.provIdProvinsi || '');
+    $('#provinsi_nama').val(d?.kecamatan?.kabupaten?.provinsi?.provNama || '');
+});
+
+// Fokus ke search field saat Select2 dibuka (Dideklarasikan satu kali saja di luar fungsi)
+$(document).on('select2:open', '#desa_id', function () {
+    setTimeout(() => {
+        const searchField = document.querySelector('.select2-search__field');
+        if (searchField) searchField.focus();
+    }, 100);
+});
+
+// Untuk Toogle Switch Pasien Negara
+$(document).on('change', 'input[name="domestic"]', function () {
+    const pilihanWilayah = $(this).val();
+    console.log("================================");
+    console.log("LOG: Tombol Radio diklik!");
+    console.log("VALUE: Nilai yang dipilih adalah -> " + pilihanWilayah);
+    const $areaDesa = $('#local-fields');
+    const $areaNegara = $('#country-fields');
+    console.log("CEK HTML: local-fields ketemu? ", $areaDesa.length > 0 ? "YA (Ada)" : "TIDAK (Hilang)");
+    console.log("CEK HTML: country-fields ketemu? ", $areaNegara.length > 0 ? "YA (Ada)" : "TIDAK (Hilang)");
+
+    if (pilihanWilayah === 'luar_negeri') {
+        $areaDesa.addClass('hidden');
+        $areaNegara.removeClass('hidden');
+        $('#desa_id').val(null).trigger('change');
+    } else {
+        $areaDesa.removeClass('hidden');
+        $areaNegara.addClass('hidden');
+        $('#country_id').val('');
+    }
+});

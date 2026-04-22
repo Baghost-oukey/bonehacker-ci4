@@ -319,6 +319,186 @@
     </div>
 </div>
 
+
+<!-- MODAL TAMBAH PASIEN BARU -->
+<div id="modalnewpatient" class="modal-wrapper hidden fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 transition-all duration-300">
+    <div class="w-full max-w-2xl overflow-hidden rounded-2rem bg-white shadow-2xl ring-1 ring-slate-200">
+        <div class="relative bg-gradient-to-r from-slate-50 to-white px-8 py-6 border-b border-slate-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h5 class="text-xl font-black text-slate-800 tracking-tight uppercase">Registrasi Pasien</h5>
+                    <p class="text-[10px] font-bold text-slate-400 tracking-widest uppercase mt-1">Masukkan data rekam medis baru</p>
+                </div>
+                <button type="button" data-modal-close class="group flex h-10 w-10 items-center justify-center rounded-xl bg-white border border-slate-200 shadow-sm transition-all hover:bg-red-50 hover:border-red-100">
+                    <span class="text-xl text-slate-400 group-hover:text-red-500 transition-colors">&times;</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- FORM MODAL TAMBAH ANTRIAN -->
+        <form action="<?= site_url('patient/store') ?>" method="post" enctype="multipart/form-data" class="flex flex-col bg-white" id="formTambahPasien">
+            <?= csrf_field() ?>
+            <input type="hidden" name="desa_nama" id="desa_nama">
+            <input type="hidden" name="kecamatan_id" id="kecamatan_id">
+            <input type="hidden" name="kecamatan_nama" id="kecamatan_nama">
+            <input type="hidden" name="kabupaten_id" id="kabupaten_id">
+            <input type="hidden" name="kabupaten_nama" id="kabupaten_nama">
+            <input type="hidden" name="provinsi_id" id="provinsi_id">
+            <input type="hidden" name="provinsi_nama" id="provinsi_nama">
+
+            <div class="max-h-[65vh] space-y-8 overflow-y-auto px-8 py-6 custom-scrollbar">
+
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2 border-l-4 border-teal-500 pl-3">
+                        <span class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Data Pasien</span>
+                    </div>
+
+                    <!-- FIELD NAMA -->
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-black text-slate-500 uppercase ml-1">Nama Lengkap</label>
+                        <input type="text" name="name" required autofocus class="w-full rounded-xl border-slate-200 bg-slate-50/50 px-4 py-3 text-sm font-semibold focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all">
+                    </div>
+
+                    <!-- FIELD GENDER -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-1.5">
+                            <label class="text-[11px] font-black text-slate-500 uppercase ml-1">Jenis Kelamin</label>
+                            <select name="gender" required class="w-full rounded-xl border-slate-200 bg-slate-50/50 px-4 py-3 text-sm font-semibold cursor-pointer">
+                                <option value="">-- Pilih --</option>
+                                <option value="Man">Laki-laki</option>
+                                <option value="Woman">Perempuan</option>
+                                <option value="Woman">Banci</option>
+                            </select>
+                        </div>
+
+                        <!-- FIELD KETERANGAN RENTAN -->
+                        <div class="space-y-1.5">
+                            <label class="text-[11px] font-black text-slate-500 uppercase ml-1">Pasien Rentan?</label>
+                            <div class="flex items-center h-[50px]">
+                                <label class="relative inline-flex items-center cursor-pointer group">
+                                    <input type="checkbox" name="is_suspective" id="isSuspectiveCheckbox" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-teal-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all shadow-inner"></div>
+                                    <span class="ml-3 text-[10px] font-black text-slate-400 peer-checked:text-teal-600 transition-all uppercase">YA</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="keterangan_rentan" class="hidden animate-fade-down space-y-1.5 bg-red-50/30 p-4 rounded-2xl border border-red-100">
+                    <label class="text-[11px] font-black text-red-500 uppercase ml-1">Detail Keterangan Rentan</label>
+                    <textarea name="ket_rentan" rows="2" placeholder="Sebutkan alasan atau kondisi rentan..." class="w-full rounded-xl border-red-200 bg-white px-4 py-3 text-sm font-semibold focus:border-red-400 transition-all"></textarea>
+                </div>
+
+
+                <!-- FIELD WILAYAH PASIEN -->
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2 border-l-4 border-indigo-500 pl-3">
+                        <span class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Wilayah</span>
+                    </div>
+
+                    <div class="bg-slate-100 rounded-2xl p-1 flex gap-1 w-fit ring-1 ring-slate-200">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="domestic" value="dalam_negeri" class="sr-only peer" checked>
+                            <div class="px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider text-slate-400 peer-checked:bg-white peer-checked:text-indigo-600 peer-checked:shadow-sm transition-all">Dalam Negeri</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="domestic" value="luar_negeri" class="sr-only peer">
+                            <div class="px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider text-slate-400 peer-checked:bg-white peer-checked:text-indigo-600 peer-checked:shadow-sm transition-all">Luar Negeri</div>
+                        </label>
+                    </div>
+
+                    <!-- FILED JIKA DALAM NEGRI -->
+                    <div id="local-fields" class="space-y-4 animate-fade-down">
+                        <div class="form-group" id="desa-group">
+                            <label class="text-[11px] font-black text-slate-500 uppercase ml-1">Desa Asal Pasien</label>
+                            <select name="desa_id" id="desa_id" class="w-full">
+                                <option value="">Temukan Desa</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-1.5">
+                            <label class="text-[11px] font-black text-slate-500 uppercase ml-1">Pasien Cabang</label>
+                            <?php if ($role === 'user'): ?>
+                                <input type="text" class="w-full rounded-xl border-slate-200 bg-slate-100 px-4 py-3 text-sm font-bold text-slate-500 uppercase" value="<?= $sess_region_name ?>" readonly>
+                                <input type="hidden" name="region_id" value="<?= is_array($sess_region_id) ? $sess_region_id[0] : $sess_region_id ?>">
+                            <?php else: ?>
+                                <select name="region_id" id="region_id_new" class="w-full rounded-xl border-slate-200 bg-slate-50/50 px-4 py-3 text-sm font-semibold">
+                                    <option value="">-- PILIH --</option>
+                                    <?php foreach ($wilayah as $v): ?>
+                                        <option value="<?= $v->id ?>" <?= (!empty($active_region) && $v->id == $active_region) ? 'selected' : '' ?>><?= $v->name ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <!-- FIELD JIKA LUAR NEGRI -->
+                    <div id="country-fields" class="hidden space-y-4 animate-fade-down bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <div class="space-y-1.5">
+                            <label class="text-[11px] font-black text-slate-500 uppercase ml-1">Pilih Negara</label>
+                            <select name="country_id" id="country_id" class="w-full rounded-xl border-slate-200 bg-white px-4 py-3 text-sm font-semibold">
+                                <option value="">PILIH NEGARA</option>
+                                <?php foreach ($negara as $value): ?>
+                                    <option value="<?= $value->id ?>"><?= $value->country ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <!-- FIELD UMUR -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-1.5">
+                            <label class="text-[11px] font-black text-slate-500 uppercase ml-1">Umur</label>
+                            <input type="number" name="age" class="w-full rounded-xl border-slate-200 bg-slate-50/50 px-4 py-3 text-sm font-semibold">
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="text-[11px] font-black text-slate-500 uppercase ml-1">No. WhatsApp</label>
+                            <input type="number" id="phone_new" name="phone" placeholder="812xxxxx" class="w-full rounded-xl border-slate-200 bg-slate-50/50 px-4 py-3 text-sm font-semibold">
+                        </div>
+                    </div>
+
+                    <!-- FIELD SUMBER INFORMASI -->
+                    <div class="space-y-1.5">
+                        <label class="text-sm font-medium text-slate-700">Sumber Informasi</label>
+                        <select class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                            name="patient_information">
+                            <option value="">Pilih Sumber</option>
+                            <?php foreach ($resources as $value): ?>
+                                <option value="<?= $value->id ?>" <?= isset($patient_information) && $patient_information == $value->id ? 'selected' : '' ?>>
+                                    <?= $value->nama ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <!-- FIELD ALAMAT -->
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-black text-slate-500 uppercase ml-1">Alamat Jalan</label>
+                        <textarea name="address" rows="2" placeholder="Nama jalan, No. Rumah, RT/RW..." class="w-full rounded-xl border-slate-200 bg-slate-50/50 px-4 py-3 text-sm font-semibold focus:border-teal-500 transition-all"></textarea>
+                    </div>
+
+                    <!-- FIELD TANGGAL KEDATANGAN -->
+                    <div class="space-y-1.5">
+                        <label class="text-[11px] font-black text-teal-600 uppercase ml-1">Jadwal Kedatangan</label>
+                        <input type="datetime-local" name="visit_date" required class="w-full rounded-xl border-teal-100 bg-teal-50/30 px-4 py-3 text-sm font-bold text-teal-700">
+                    </div>
+                </div>
+            </div>
+
+            <!-- BUTTON BATAL | SIMPAN -->
+            <div class="flex items-center justify-end gap-3 border-t border-slate-100 bg-slate-50/50 px-8 py-6">
+                <button type="button" data-modal-close class="px-6 py-2.5 text-[11px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors">Batal</button>
+                <button type="submit" id="submitBtnNew" class="bg-teal-600 px-10 py-3 rounded-xl text-[11px] font-black text-white uppercase tracking-widest hover:bg-teal-600 shadow-lg shadow-teal-900/20 transition-all active:scale-95">Simpan Pasien</button>
+            </div>
+        </form>
+        <!-- END -->
+    </div>
+</div>
+
+
 <div id="modalExport" class="modal-wrapper hidden fixed inset-0 z-50 items-center justify-center bg-black/40 p-4">
     <div class="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl">
         <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
