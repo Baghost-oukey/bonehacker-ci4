@@ -15,7 +15,7 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <h4>Data <?= ($user_role === 'superadmin') ? 'Semua Pasien' : 'Pasien ' . $region_name ?></h4>
+                        <h4>Data <?= $user_role === 'superadmin' ? 'Semua Pasien' : 'Pasien ' . $region_name ?></h4>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
@@ -36,7 +36,7 @@
                     </div>
                 </div>
 
-                <?php if ($user_role !== 'superadmin') : ?>
+                <?php if ($user_role !== 'superadmin'): ?>
                     <div class="card">
                         <div class="card-header">
                             <h4>Data Pasien Luar</h4>
@@ -76,7 +76,7 @@
                 <h5 class="modal-title">Cari & Tambah Pasien Luar</h5>
                 <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
             </div>
-            <form id="addOutsidePatientForm" action="<?= base_url('users/add_outside_patient'); ?>" method="POST">
+            <form id="addOutsidePatientForm" action="<?= base_url('users/add_outside_patient') ?>" method="POST">
                 <?= csrf_field() ?>
                 <input type="hidden" name="user_id" value="<?= $user_id ?>">
                 <div class="modal-body">
@@ -125,7 +125,7 @@
             processing: true,
             serverSide: true,
             ajax: {
-                url: "<?= base_url('users/fetch_patients'); ?>",
+                url: "<?= base_url('users/fetch_patients') ?>",
                 type: "POST",
                 data: function(d) {
                     d.user_id = userId;
@@ -173,7 +173,7 @@
             processing: true,
             serverSide: true,
             ajax: {
-                url: "<?= base_url('users/fetch_patients_luar'); ?>",
+                url: "<?= base_url('users/fetch_patients_luar') ?>",
                 type: "POST",
                 data: function(d) {
                     d.user_id = userId;
@@ -219,7 +219,7 @@
             dropdownParent: $('#modalAddOutside'),
             minimumInputLength: 1,
             ajax: {
-                url: '<?= base_url('users/get_outside_patients_select'); ?>',
+                url: '<?= base_url('users/get_outside_patients_select') ?>',
                 type: 'POST',
                 dataType: 'json',
                 delay: 500,
@@ -321,7 +321,7 @@
                 confirmButtonText: 'Ya, Hapus'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    $.post('<?= base_url('users/delete_outside_patient'); ?>', {
+                    $.post('<?= base_url('users/delete_outside_patient') ?>', {
                         patient_id: pid,
                         user_id: uid,
                         "<?= csrf_token() ?>": typeof currentToken !== 'undefined' ? currentToken : "<?= csrf_hash() ?>"
@@ -352,7 +352,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     btn.addClass('btn-progress disabled');
-                    $.post("<?= base_url('whatsapp/send_notif_patients'); ?>/" + pid, {
+                    $.post("<?= base_url('whatsapp/send_notif_patients') ?>/" + pid, {
                             "<?= csrf_token() ?>": typeof currentToken !== 'undefined' ? currentToken : "<?= csrf_hash() ?>"
                         },
                         function(res) {

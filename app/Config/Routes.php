@@ -43,7 +43,6 @@ $routes->post('patient/store', '\App\Modules\patients\Controllers\Patients::stor
 $routes->post('patient/check_phone', '\App\Modules\patients\Controllers\Patients::check_phone');
 $routes->get('patient/export_data', '\App\Modules\patients\Controllers\Patients::export_data');
 
-
 // Wilayah
 $routes->group('region', ['namespace' => 'App\Modules\Region\Controllers'], function ($routes) {
   $routes->get('', 'RegionController::index');
@@ -121,38 +120,36 @@ $routes->group('jabatan', ['namespace' => 'App\Modules\jabatan\Controllers'], fu
   $routes->post('check_name_exists', 'Jabatan::check_name_exists');
 });
 
-
-
-// Tag - Keluhan
-$routes->group('complaint', ['namespace' => 'App\Modules\complaint\Controllers'], function ($routes) {
-  $routes->get('', 'Complaint::index');
-  $routes->post('fetch', 'Complaint::fetch');
-  $routes->post('store', 'Complaint::store');
-  $routes->post('update/(:num)', 'Complaint::update/$1');
-  $routes->post('destroy/(:num)', 'Complaint::destroy/$1');
-  $routes->post('check_name_exists', 'Complaint::check_name_exists');
-  $routes->get('get_tags', 'Complaint::get_tags');
+// Tag - Complaint(Keluhan)
+$routes->group('complaint', ['namespace' => 'App\Modules\Complaint\Controllers'], function ($routes) {
+  $routes->get('', 'ComplaintController::index');
+  $routes->post('fetch', 'ComplaintController::fetch');
+  $routes->post('store', 'ComplaintController::store');
+  $routes->post('update/(:num)', 'ComplaintController::update/$1');
+  $routes->post('destroy/(:num)', 'ComplaintController::destroy/$1');
+  $routes->post('check_name_exists', 'ComplaintController::check_name_exists');
+  $routes->get('get_tags', 'ComplaintController::get_tags');
 });
 
-// Tag - Rekam Medis
-$routes->group('medis', ['namespace' => 'App\Modules\medis\Controllers'], function ($routes) {
-  $routes->get('', 'Medis::index');
-  $routes->post('fetch', 'Medis::fetch');
-  $routes->get('get_tags', 'Medis::get_tags');
-  $routes->post('store', 'Medis::store');
-  $routes->post('update/(:num)', 'Medis::update/$1');
-  $routes->post('destroy/(:num)', 'Medis::destroy/$1');
-  $routes->post('check_name_exists', 'Medis::check_name_exists');
+// Tag - Medis(Rekam Medis)
+$routes->group('tag-rekam-medis', ['namespace' => 'App\Modules\TagRekamMedis\Controllers'], function ($routes) {
+  $routes->get('/', 'MedisController::index');
+  $routes->match(['get', 'post'], 'fetch', 'MedisController::fetch');
+  $routes->get('tags', 'MedisController::get_tags');
+  $routes->post('store', 'MedisController::store');
+  $routes->post('update/(:num)', 'MedisController::update/$1');
+  $routes->post('destroy/(:num)', 'MedisController::destroy/$1');
+  $routes->post('check-name', 'MedisController::check_name_exists');
 });
 
 // Tag - Result
-$routes->group('result', ['namespace' => 'App\Modules\result\Controllers'], function ($routes) {
-  $routes->get('', 'Result::index');
-  $routes->post('fetch', 'Result::fetch');
-  $routes->post('store', 'Result::store');
-  $routes->post('update/(:num)', 'Result::update/$1');
-  $routes->post('destroy/(:num)', 'Result::destroy/$1');
-  $routes->post('check_name_exists', 'Result::check_name_exists');
+$routes->group('tag-pemeriksaan', ['namespace' => 'App\Modules\TagPemeriksaan\Controllers'], function ($routes) {
+  $routes->get('', 'TagPemeriksaanController::index');
+  $routes->post('fetch', 'TagPemeriksaanController::fetch');
+  $routes->post('store', 'TagPemeriksaanController::store');
+  $routes->post('update/(:num)', 'TagPemeriksaanController::update/$1');
+  $routes->post('destroy/(:num)', 'TagPemeriksaanController::destroy/$1');
+  $routes->post('check_name_exists', 'TagPemeriksaanController::check_name_exists');
 });
 
 // Logs
@@ -194,28 +191,28 @@ $routes->group('greeting', ['namespace' => 'App\Modules\greeting\Controllers'], 
 
 // Terapis
 $routes->group('terapis', ['namespace' => 'App\Modules\terapis\Controllers'], function ($routes) {
-  $routes->get('', 'Terapis::index');
-  $routes->get('detail_terapis/(:any)', 'Terapis::detail_terapis/$1');
-  $routes->post('fetch', 'Terapis::fetch'); // Untuk narik data tabel
-  $routes->post('active/(:num)', 'Terapis::active/$1');
-  $routes->post('nonActive/(:num)', 'Terapis::nonActive/$1');
-  $routes->post('checkId', 'Terapis::checkId');
-  $routes->post('store', 'Terapis::store');
-  $routes->post('update', 'Terapis::update');
-  $routes->get('destroy/(:num)', 'Terapis::destroy/$1');
-  $routes->get('public_info/(:any)', 'Terapis::public_info/$1');
+  $routes->get('', 'TerapisController::index');
+  $routes->get('detail-terapis/(:any)', 'TerapisController::detail_terapis/$1');
+  $routes->post('fetch', 'TerapisController::fetch'); // Untuk narik data tabel
+  $routes->post('active/(:num)', 'TerapisController::active/$1');
+  $routes->post('nonActive/(:num)', 'TerapisController::nonActive/$1');
+  $routes->post('checkId', 'TerapisController::checkId');
+  $routes->post('store', 'TerapisController::store');
+  $routes->post('update', 'TerapisController::update');
+  $routes->get('destroy/(:num)', 'TerapisController::destroy/$1');
+  $routes->get('public_info/(:any)', 'TerapisController::public_info/$1');
 });
 
 // Untuk Akses info publik
 // $routes->get('p/(:any)', '\App\Controllers\Terapis::public_info/$1');
 
 // Users
-$routes->group('users', ['namespace' => 'App\Modules\users\Controllers'], function ($routes) {
-  $routes->get('', 'Users::index');
-  $routes->post('fetch', 'Users::fetch');
-  $routes->post('store', 'Users::store');
-  $routes->post('update/(:num)', 'Users::update/$1');
-  $routes->get('destroy/(:num)', 'Users::destroy/$1');
+$routes->group('users', ['namespace' => 'App\Modules\Users\Controllers'], function ($routes) {
+  $routes->get('', 'UsersController::index');
+  $routes->post('fetch', 'UsersController::fetch');
+  $routes->post('store', 'UsersController::store');
+  $routes->post('update/(:num)', 'UsersController::update/$1');
+  $routes->get('destroy/(:num)', 'UsersController::destroy/$1');
 
   // Pasien Luar
   $routes->get('view_patient/(:num)', 'Users::view_patient/$1');
