@@ -148,13 +148,31 @@ class AntreanController extends BaseController
     public function fetchPatientDataTables()
     {
         $request = service('request');
+        $cache = \Config\Services::cache();
+
+        $searchTerm = $request->getPost('search')['value'] ?? '';
+        $start = $request->getPost('start') ?? 0;
         $region = $request->getPost('region');
+        $cacheKey = 'patients_dt_' . md5($searchTerm . $start . $region . session()->get('id'));
+
+        if ($cached = $cache->get($cacheKey)) {
+            return $this->response->setJSON($cached);
+        }
+
+
+
         $builder = $this->db->table('patients p')
             ->select('p.id AS patient_id, p.name, p.phone, p.address, p.age, r.name as name_region, pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama, pa.provinsi_nama')
-            ->select('COALESCE((SELECT MAX(date) FROM histories h WHERE h.patient_id = p.id AND h.is_delete = 0), "-") AS last_visit_date')
-            ->select('COALESCE((SELECT COUNT(h2.id) FROM histories h2 WHERE h2.patient_id = p.id AND h2.is_delete = 0), 0) AS visit_count')
+            ->select('COALESCE(h_stat.last_visit, "-") AS last_visit_date')
+            ->select('COALESCE(h_stat.total_visit, 0) AS visit_count')
             ->join('regions r', 'r.id = p.region_id', 'left')
-            ->join('patient_address pa', 'pa.patient_id = p.id', 'left');
+            ->join('patient_address pa', 'pa.patient_id = p.id', 'left')
+            ->join(
+                '(SELECT patient_id, MAX(date) as last_visit, COUNT(id) as total_visit 
+                 FROM histories WHERE is_delete = 0 GROUP BY patient_id) h_stat',
+                'h_stat.patient_id = p.id',
+                'left'
+            );
 
         $role = session()->get('role');
         $active_region = session()->get('active_region');
@@ -176,12 +194,14 @@ class AntreanController extends BaseController
 
         return \Hermawan\DataTables\DataTable::of($builder)
             ->filter(function ($builder) use ($request) {
+
                 $search = $request->getPost('search')['value'] ?? null;
                 if ($search) {
                     $builder->groupStart()
-                        ->like('p.name', $search, 'after')
-                        ->orLike('p.phone', $search, 'after')
-                        ->orLike('p.id', $search, 'after')
+                        ->like('p.name', $search, 'both')
+                        ->orLike('p.phone', $search, 'both')
+                        ->orLike('p.id', $search, 'both')
+                        ->orLike('pa.desa_nama', $search, 'both')
                         ->groupEnd();
                 }
             }, true)
@@ -204,10 +224,14 @@ class AntreanController extends BaseController
                     '<span class="px-2 py-1 rounded bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase">Pasien Baru</span>';
             })
             ->add('action', function ($row) {
-                // Tombol aksi yang mewah
                 return '<a href="' . site_url('antrean/addToQueue/' . $row->patient_id) . '" class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 text-white px-4 py-2 text-xs font-bold hover:bg-indigo-700 transition active:scale-95 shadow-sm"><i class="fas fa-plus"></i> Tambah</a>';
             })
             ->toJson(true);
+
+        $dt = json_decode($this->response->getBody());
+        $cache->save($cacheKey, $dt->getBody(), 120);
+
+        return $this->response->setJSON($dt);
     }
 
     public function addToQueue($patientId)
