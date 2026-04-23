@@ -112,6 +112,7 @@ const setupRegionPage = () => {
       },
       success: (response) => {
         updateCsrf(response.new_token);
+        $('#datatable-loader').addClass('hidden');
 
         currentPage = pageNumber;
         totalRecords = Number(response.recordsTotal || 0);
@@ -142,6 +143,8 @@ const setupRegionPage = () => {
       },
       error: () => {
         renderEmptyState("Gagal memuat data cabang");
+        $('#datatable-loader').addClass('hidden');
+
         filteredRecords = 0;
         updatePaginationInfo();
         updatePaginationUI();
@@ -155,7 +158,8 @@ const setupRegionPage = () => {
     loadTableData(1);
   }, 400);
 
-  // Event Listeners
+
+  // --- Event Listeners ---
   $("#searchInput").on("keyup", function () {
     searchHandler($(this).val());
   });
@@ -172,25 +176,49 @@ const setupRegionPage = () => {
   });
 
   $("#paginationPrev").on("click", () => {
+    $('#datatable-loader').removeClass('hidden');
     if (currentPage > 1) loadTableData(currentPage - 1);
   });
 
   $("#paginationNext").on("click", () => {
     const totalPages = Math.max(1, Math.ceil(filteredRecords / pageLength));
-    if (currentPage < totalPages) loadTableData(currentPage + 1);
+    if (currentPage < totalPages) {
+      $('#datatable-loader').removeClass('hidden');
+      loadTableData(currentPage + 1);
+    }
   });
 
-  // Submit form tambah
+  // Validasi Text Field Cabang 
+  const formRegion = $("#formTambahRegion");
+  const regionInput = formRegion.find('input[name="name"]');
+
+  $('[data-modal-target="modalTambahRegion"]').on('click', function () {
+    regionInput.val('');
+  });
+
+  regionInput.on('input', function () {
+    if (!$(this).val()) {
+      $(this).val();
+    }
+  });
+
+
+  // --- Submit form tambah ---
   $("#formTambahRegion").on("submit", function (e) {
     e.preventDefault();
     const form = this;
     const $form = $(form);
     const btn = $("#btnSimpanRegion");
-
-    if (!form.checkValidity()) {
-      $form.addClass("was-validated");
-      $form.find(".invalid-feedback").removeClass("hidden");
+    const inputValue = regionInput.val().trim();
+    if (!form.checkValidity() || inputValue === 'Cabang' || inputValue === '') {
+      regionInput.removeClass('border-slate-300 focus:border-teal-500 focus:ring-teal-500')
+        .addClass('border-red-500 focus:border-red-500 focus:ring-red-500 text-red-600 bg-red-50');
+      $form.find(".invalid-feedback").text("Nama Cabang tidak boleh kosong!").removeClass("hidden");
       return;
+    } else {
+      regionInput.removeClass('border-red-500 focus:border-red-500 focus:ring-red-500 text-red-600 bg-red-50')
+        .addClass('border-slate-300 focus:border-teal-500 focus:ring-teal-500');
+      $form.find(".invalid-feedback").addClass("hidden");
     }
 
     const formData = new FormData(form);
@@ -205,28 +233,71 @@ const setupRegionPage = () => {
       dataType: "json",
       beforeSend: () => {
         btn.prop("disabled", true).text("Menyimpan...");
+        if (swalLib?.fire) {
+          swalLib.fire({
+            target: document.getElementById('modalTambahRegion'),
+            title: 'Menyimpan...',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => { Swal.showLoading(); }
+          });
+        }
       },
       success: (response) => {
-        updateCsrf(response.new_token);
-        if (response.status === "success") {
-          closeModal(document.getElementById("modalTambahRegion"));
-          form.reset();
-          $form.removeClass("was-validated");
-          loadTableData(currentPage);
+        if (swalLib) swalLib.close();
+        if (response.new_token) {
+          if (typeof config !== 'undefined') config.csrfHash = response.new_token;
 
-          if (swalLib?.fire) {
-            swalLib.fire({ title: "Berhasil", text: response.message, icon: "success" });
-          }
+          if (typeof updateCsrf === 'function') updateCsrf(response.new_token);
+        }
+
+        if (response.status === "success") {
+          setTimeout(() => {
+            closeModal(document.getElementById("modalTambahRegion"));
+            form.reset();
+            $form.removeClass("was-validated");
+            $('#modalTambahRegion input[name="name"]').val('Cabang ');
+            if (typeof loadTableData === 'function') loadTableData(currentPage);
+
+            if (swalLib?.fire) {
+              swalLib.fire({
+                title: "Berhasil",
+                text: response.message,
+                icon: "success",
+                timer: 2000,
+                showConfirmButton: false
+              });
+            }
+          }, 100);
         } else {
-          if (swalLib?.fire) {
-            swalLib.fire({ title: "Gagal", text: response.message || "Gagal menyimpan data", icon: "error" });
-          }
+          setTimeout(() => {
+            if (swalLib?.fire) {
+              swalLib.fire({
+                target: document.getElementById('modalTambahRegion'),
+                title: "Gagal",
+                text: response.message || "Gagal menyimpan data",
+                icon: "error",
+              });
+            }
+          }, 100);
         }
       },
       error: () => {
-        if (swalLib?.fire) {
-          swalLib.fire({ title: "Error", text: "Terjadi kegagalan sistem", icon: "error" });
-        }
+        if (swalLib) swalLib.close();
+
+        let msg = "Terjadi kegagalan sistem";
+        if (xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
+
+        setTimeout(() => {
+          if (swalLib?.fire) {
+            swalLib.fire({
+              target: document.getElementById('modalTambahRegion'),
+              title: "Error",
+              text: msg,
+              icon: "error"
+            });
+          }
+        }, 100);
       },
       complete: () => {
         btn.prop("disabled", false).text("Simpan");
@@ -234,34 +305,41 @@ const setupRegionPage = () => {
     });
   });
 
-  // Edit region
+
+  // --- Edit region ---
+  const editRegionInput = $('#editName');
   $(document).on("click", ".btn_edit", function (e) {
     e.preventDefault();
     const href = $(this).data("href");
     const name = $(this).data("name");
-
     $("#formEditRegion").attr("action", href);
     $("#editName").val(name);
     openModal(document.getElementById("modalEditRegion"));
   });
-
-  // Submit form edit
+  // --- Edit region: Submit form edit ---
   $("#formEditRegion").on("submit", function (e) {
     e.preventDefault();
     const form = this;
     const $form = $(form);
     const btn = $("#btnUpdateRegion");
+    const inputValue = editRegionInput.val().trim();
 
-    if (!form.checkValidity()) {
-      $form.addClass("was-validated");
-      $form.find(".invalid-feedback").removeClass("hidden");
+    if (!form.checkValidity() || inputValue.toLowerCase() === 'cabang' || inputValue === '') {
+      editRegionInput.removeClass('border-slate-300 focus:border-teal-500 focus:ring-teal-500')
+        .addClass('border-red-500 focus:border-red-500 focus:ring-red-500 text-red-600 bg-red-50');
+
+      $form.find(".invalid-feedback").text("Nama Cabang tidak boleh kosong!").removeClass("hidden");
       return;
+    } else {
+      editRegionInput.removeClass('border-red-500 focus:border-red-500 focus:ring-red-500 text-red-600 bg-red-50')
+        .addClass('border-slate-300 focus:border-teal-500 focus:ring-teal-500');
+      $form.find(".invalid-feedback").addClass("hidden");
     }
 
     const formData = new FormData(form);
-    formData.append(config.csrfName, config.csrfHash);
-    formData.append("_method", "PUT");
-
+    if (typeof config !== 'undefined' && config.csrfName) {
+      formData.append(config.csrfName, config.csrfHash);
+    }
     $.ajax({
       url: $form.attr("action"),
       type: "POST",
@@ -274,23 +352,74 @@ const setupRegionPage = () => {
       },
       success: (response) => {
         updateCsrf(response.new_token);
-        if (response.status === "success") {
-          closeModal(document.getElementById("modalEditRegion"));
-          loadTableData(currentPage);
-
-          if (swalLib?.fire) {
-            swalLib.fire({ title: "Berhasil", text: response.message, icon: "success" });
-          }
-        } else {
-          if (swalLib?.fire) {
-            swalLib.fire({ title: "Gagal", text: response.message || "Gagal mengupdate data", icon: "error" });
-          }
+        if (swalLib?.fire) {
+          swalLib.fire({
+            target: document.getElementById('modalEditRegion'),
+            title: 'Menyimpan Perubahan...',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => { Swal.showLoading(); }
+          });
         }
       },
-      error: () => {
-        if (swalLib?.fire) {
-          swalLib.fire({ title: "Error", text: "Terjadi kegagalan sistem", icon: "error" });
+      success: (response) => {
+        if (swalLib) swalLib.close();
+        if (response.new_token) {
+          if (typeof config !== 'undefined') config.csrfHash = response.new_token;
+          if (typeof updateCsrf === 'function') updateCsrf(response.new_token);
         }
+
+        if (response.status === "success") {
+          setTimeout(() => {
+            closeModal(document.getElementById("modalEditRegion"));
+            form.reset();
+            $form.removeClass("was-validated");
+            editRegionInput.removeClass('border-red-500').addClass('border-slate-300');
+
+            if (typeof loadTableData === 'function') loadTableData(currentPage);
+
+            if (swalLib?.fire) {
+              swalLib.fire({
+                title: "Berhasil",
+                text: response.message,
+                icon: "success",
+                timer: 2000,
+                showConfirmButton: false
+              });
+            }
+          }, 100);
+        } else {
+          setTimeout(() => {
+            if (swalLib?.fire) {
+              swalLib.fire({
+                target: document.getElementById('modalEditRegion'),
+                title: "Gagal Mengupdate",
+                text: response.message || "Gagal mengupdate data",
+                icon: "error",
+                confirmButtonText: 'Tutup <i class="fas fa-times ml-1"></i>',
+                confirmButtonColor: '#ef4444'
+              });
+            }
+          }, 100);
+        }
+      },
+      error: (xhr) => {
+        if (swalLib) swalLib.close();
+        let msg = "Terjadi kegagalan sistem";
+        if (xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
+
+        setTimeout(() => {
+          if (swalLib?.fire) {
+            swalLib.fire({
+              target: document.getElementById('modalEditRegion'),
+              title: "Error Server",
+              text: msg,
+              icon: "error",
+              confirmButtonText: 'Tutup <i class="fas fa-times ml-1"></i>',
+              confirmButtonColor: '#ef4444'
+            });
+          }
+        }, 100);
       },
       complete: () => {
         btn.prop("disabled", false).text("Simpan Perubahan");
@@ -298,7 +427,10 @@ const setupRegionPage = () => {
     });
   });
 
-  // Delete region
+
+  // --- Delete region ---
+  // let deleteUrl = null;
+
   $(document).on("click", ".btn_delete", function (e) {
     e.preventDefault();
     deleteUrl = $(this).data("href");
@@ -309,7 +441,8 @@ const setupRegionPage = () => {
     openModal(document.getElementById("modalDeleteRegion"));
   });
 
-  // Submit form delete
+
+  // Delete Region : Submit form delete
   $("#formDeleteRegion").on("submit", function (e) {
     e.preventDefault();
     const form = this;
@@ -317,8 +450,12 @@ const setupRegionPage = () => {
     const btn = $("#btnConfirmDelete");
 
     const formData = new FormData(form);
-    formData.append(config.csrfName, config.csrfHash);
-    formData.append("_method", "DELETE");
+
+    if (typeof config !== 'undefined' && config.csrfName) {
+      formData.append(config.csrfName, config.csrfHash);
+    }
+    // formData.append(config.csrfName, config.csrfHash);
+    // formData.append("_method", "DELETE");
 
     $.ajax({
       url: deleteUrl,
@@ -329,33 +466,79 @@ const setupRegionPage = () => {
       dataType: "json",
       beforeSend: () => {
         btn.prop("disabled", true).text("Menghapus...");
+        if (swalLib?.fire) {
+          swalLib.fire({
+            target: document.getElementById('modalDeleteRegion'),
+            title: 'Menghapus...',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => { Swal.showLoading(); }
+          });
+        }
       },
       success: (response) => {
         updateCsrf(response.new_token);
-        if (response.status === "success") {
-          closeModal(document.getElementById("modalDeleteRegion"));
-          deleteUrl = null;
-          loadTableData(currentPage);
+        if (swalLib) swalLib.close();
+        if (response.new_token) {
+          if (typeof config !== 'undefined') config.csrfHash = response.new_token;
+          if (typeof updateCsrf === 'function') updateCsrf(response.new_token);
+        }
 
-          if (swalLib?.fire) {
-            swalLib.fire({ title: "Berhasil", text: response.message, icon: "success" });
-          }
+        if (response.status === "success") {
+          setTimeout(() => {
+            closeModal(document.getElementById("modalDeleteRegion"));
+            deleteUrl = null;
+            if (typeof loadTableData === 'function') loadTableData(currentPage);
+
+            if (swalLib?.fire) {
+              swalLib.fire({
+                title: "Berhasil",
+                text: response.message,
+                icon: "success",
+                timer: 2000,
+                showConfirmButton: false
+              });
+            }
+          }, 100);
         } else {
-          if (swalLib?.fire) {
-            swalLib.fire({ title: "Gagal", text: response.message || "Gagal menghapus data", icon: "error" });
-          }
+          setTimeout(() => {
+            if (swalLib?.fire) {
+              swalLib.fire({
+                target: document.getElementById('modalDeleteRegion'),
+                title: "Gagal",
+                text: response.message || "Gagal menghapus data",
+                icon: "error",
+                confirmButtonText: 'Tutup <i class="fas fa-times ml-1"></i>',
+                confirmButtonColor: '#ef4444'
+              });
+            }
+          }, 100);
         }
       },
-      error: () => {
-        if (swalLib?.fire) {
-          swalLib.fire({ title: "Error", text: "Terjadi kegagalan sistem", icon: "error" });
-        }
+      error: (xhr) => {
+        if (swalLib) swalLib.close();
+        let msg = "Terjadi kegagalan sistem";
+        if (xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
+
+        setTimeout(() => {
+          if (swalLib?.fire) {
+            swalLib.fire({
+              target: document.getElementById('modalDeleteRegion'),
+              title: "Error Server",
+              text: msg,
+              icon: "error",
+              confirmButtonText: 'Tutup <i class="fas fa-times ml-1"></i>',
+              confirmButtonColor: '#ef4444'
+            });
+          }
+        }, 100);
       },
       complete: () => {
         btn.prop("disabled", false).text("Ya, Hapus");
       },
     });
   });
+
 
   // Modal handlers
   document.addEventListener("click", (event) => {
@@ -377,6 +560,7 @@ const setupRegionPage = () => {
     }
   });
 
+
   // Reset form saat modal tambah ditutup
   $("#modalTambahRegion").on("click", "[data-modal-close]", function () {
     $("#formTambahRegion")[0].reset();
@@ -384,15 +568,16 @@ const setupRegionPage = () => {
     $("#formTambahRegion .invalid-feedback").addClass("hidden");
   });
 
+
   // Reset form saat modal edit ditutup
   $("#modalEditRegion").on("click", "[data-modal-close]", function () {
     $("#formEditRegion").removeClass("was-validated");
     $("#formEditRegion .invalid-feedback").addClass("hidden");
   });
-
   // Initial load
   loadTableData(1);
 };
+
 
 // Initialize page
 if (document.readyState === "loading") {

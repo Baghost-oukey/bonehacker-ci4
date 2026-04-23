@@ -66,8 +66,22 @@ class RegionController extends BaseController
                 $value->updated_at = !empty($value->updated_at) ? $value->updated_at : '-';
 
                 $value->action = '
-                    <button data-name="' . $value->name . '" data-href="' . base_url('region/update/' . $value->id) . '" class="btn btn-primary btn-action mr-1 btn_edit"><i class="fas fa-edit"></i></button>
-                    <button type="button" data-href="' . base_url("region/destroy/" . $value->id) . '" class="btn btn-danger btn-action btn_delete"><i class="fas fa-trash"></i></button>';
+                    <div class="flex items-center justify-center gap-2">
+                        <button type="button" 
+                            data-name="' . htmlspecialchars($value->name, ENT_QUOTES, 'UTF-8') . '" 
+                            data-href="' . base_url('region/update/' . $value->id) . '" 
+                            title="Edit Data" 
+                            class="group flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 shadow-sm transition-all hover:border-teal-200 hover:bg-teal-50 hover:text-teal-600 btn_edit">
+                            <i class="fas fa-edit text-xs transition-transform group-hover:scale-110"></i>
+                        </button>
+
+                        <button type="button" 
+                            data-href="' . base_url('region/destroy/' . $value->id) . '" 
+                            title="Hapus Data" 
+                            class="group flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 shadow-sm transition-all hover:border-red-200 hover:bg-red-50 hover:text-red-600 btn_delete">
+                            <i class="fas fa-trash text-xs transition-transform group-hover:scale-110"></i>
+                        </button>
+                    </div>';
 
                 $no++;
             }
@@ -86,50 +100,106 @@ class RegionController extends BaseController
 
     public function store()
     {
-        $data = [
-            'name' => $this->request->getPost('name')
-        ];
-
-        // $result = $this->model_regions->insert($data);
-
-        if ($this->model_regions->insert($data)) {
-            session()->setFlashdata('message', ['success', 'Data Berhasil diSimpan']);
-        } else {
-            session()->setFlashdata('message', ['error', 'Failed to save data']);
+        $name = strtoupper(trim($this->request->getPost('name')));
+        $isExist = $this->model_regions->where('name', $name)->first();
+        $csrfToken = csrf_hash();
+        if ($isExist) {
+            return $this->response->setJSON([
+                'status'    => 'error',
+                'message'   => 'Gagal! Cabang "' . $name . '" sudah terdaftar.',
+                'new_token' => $csrfToken
+            ]);
         }
 
-        return redirect()->to(base_url('region'));
+        $data = [
+            'name' => $name
+        ];
+
+        if ($this->model_regions->insert($data)) {
+            return $this->response->setJSON([
+                'status'    => 'success',
+                'message'   => 'Data cabang berhasil disimpan!',
+                'new_token' => $csrfToken
+            ]);
+        } else {
+            return $this->response->setJSON([
+                'status'    => 'error',
+                'message'   => 'Gagal menyimpan data ke database.',
+                'new_token' => $csrfToken
+            ]);
+        }
     }
 
     public function update($id)
     {
-        $data = ['name' => $this->request->getPost('name')];
+        // $data = ['name' => $this->request->getPost('name')];
 
-        if ($this->model_regions->update($id, $data)) {
-            session()->setFlashdata('message', ['success', 'Data Cabang berhasil diubah']);
-        } else {
-            session()->setFlashdata('message', ['error', 'Data Cabang gagal diubah']);
+        // if ($this->model_regions->update($id, $data)) {
+        //     session()->setFlashdata('message', ['success', 'Data Cabang berhasil diubah']);
+        // } else {
+        //     session()->setFlashdata('message', ['error', 'Data Cabang gagal diubah']);
+        // }
+
+        // return redirect()->to(base_url('region'));
+        $name = strtoupper(trim($this->request->getPost('name')));
+        $csrfToken = csrf_hash();
+        $isExist = $this->model_regions->where('name', $name)->where('id !=', $id)->first();
+
+        if ($isExist) {
+            return $this->response->setJSON([
+                'status'    => 'error',
+                'message'   => 'Gagal! Cabang "' . $name . '" sudah terdaftar.',
+                'new_token' => $csrfToken
+            ]);
         }
 
-        return redirect()->to(base_url('region'));
+        $data = [
+            'name' => $name
+        ];
+
+        if ($this->model_regions->update($id, $data)) {
+            return $this->response->setJSON([
+                'status'    => 'success',
+                'message'   => 'Data cabang berhasil diubah!',
+                'new_token' => $csrfToken
+            ]);
+        } else {
+            return $this->response->setJSON([
+                'status'    => 'error',
+                'message'   => 'Gagal mengubah data di database.',
+                'new_token' => $csrfToken
+            ]);
+        }
     }
 
     public function destroy($id)
     {
+        $csrfToken = csrf_hash();
         $db = \Config\Database::connect();
         $countPatient = $db->table('patients')->where("region_id", $id)->countAllResults();
 
         if ($countPatient > 0) {
-            session()->setFlashdata('message', ['error', 'Data Cabang masih digunakan']);
-            return redirect()->to(base_url('region'));
+            return $this->response->setJSON([
+                'status'    => 'error',
+                'message'   => 'Gagal! Cabang masih digunakan oleh data pasien.',
+                'new_token' => $csrfToken
+            ]);
         }
 
         if ($this->model_regions->delete($id)) {
-            session()->setFlashdata('message', ['success', 'Data Cabang berhasil dihapus']);
+            return $this->response->setJSON([
+                'status'    => 'success',
+                'message'   => 'Data Cabang berhasil dihapus!',
+                'new_token' => $csrfToken
+            ]);
         } else {
-            session()->setFlashdata('message', ['error', 'Data Cabang gagal dihapus']);
+            return $this->response->setJSON([
+                'status'    => 'error',
+                'message'   => 'Terjadi kesalahan, gagal menghapus data.',
+                'new_token' => $csrfToken
+            ]);
         }
 
-        return redirect()->to(base_url('region'));
+        // return redirect()->to(base_url('region'));
     }
 }

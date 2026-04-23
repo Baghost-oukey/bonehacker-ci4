@@ -176,6 +176,7 @@
     </div>
 </div>
 
+
 <!-- Modal Hapus Region -->
 <div id="modalDeleteRegion" class="modal-wrapper hidden fixed inset-0 z-50 items-center justify-center bg-black/40 p-4">
     <div class="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl">
@@ -202,6 +203,24 @@
         </form>
     </div>
 </div>
+
+
+<!-- TEMPLATE LOADING DATA -->
+<div id="datatable-loader" class="hidden">
+    <div class="fixed inset-0 z-10001 flex flex-col items-center justify-center p-4 pointer-events-none">
+        <div class="flex flex-col items-center bg-white p-5 rounded-2xl shadow-xl border border-slate-100 animate-fade-up">
+            <div class="relative flex h-10 w-10 items-center justify-center">
+                <div class="absolute inset-0 rounded-full border-4 border-slate-100"></div>
+                <div class="absolute inset-0 rounded-full border-4 border-indigo-600 border-t-transparent animate-spin"></div>
+            </div>
+            <span class="mt-3 text-[10px] font-black text-slate-500 tracking-widest uppercase">
+                Memuat Data...
+            </span>
+        </div>
+
+    </div>
+</div>
+<!-- END -->
 
 <?= $this->endSection() ?>
 

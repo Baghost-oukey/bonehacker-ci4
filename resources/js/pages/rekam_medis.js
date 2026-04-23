@@ -126,6 +126,7 @@ const setupRekamMedisPage = () => {
         currentPage = pageNumber;
         totalRecords = Number(response.recordsTotal || 0);
         filteredRecords = Number(response.recordsFiltered || totalRecords);
+        $('#datatable-loader').addClass('hidden');
 
         const tbody = $("#table-RekamMedis tbody");
         tbody.empty();
@@ -161,6 +162,7 @@ const setupRekamMedisPage = () => {
         updatePaginationUI();
       },
       error: () => {
+        $('#datatable-loader').addClass('hidden');
         renderEmptyState("Gagal memuat data pasien");
         filteredRecords = 0;
         updatePaginationInfo();
@@ -326,9 +328,9 @@ const setupRekamMedisPage = () => {
       templateSelection: (item) =>
         item.text
           ? item.text
-              .replace(/<br\s*\/?>/gi, " ")
-              .replace(/<small>/gi, "")
-              .replace(/<\/small>/gi, "")
+            .replace(/<br\s*\/?>/gi, " ")
+            .replace(/<small>/gi, "")
+            .replace(/<\/small>/gi, "")
           : item.text,
     })
     .on("select2:select", (e) => {
@@ -382,6 +384,7 @@ const setupRekamMedisPage = () => {
 
   $("#paginationPrev").on("click", () => {
     if (currentPage > 1) {
+      $('#datatable-loader').removeClass('hidden');
       loadTableData(currentPage - 1);
     }
   });
@@ -389,7 +392,17 @@ const setupRekamMedisPage = () => {
   $("#paginationNext").on("click", () => {
     const totalPages = Math.max(1, Math.ceil(filteredRecords / pageLength));
     if (currentPage < totalPages) {
+      $('#datatable-loader').removeClass('hidden');
       loadTableData(currentPage + 1);
+    }
+  });
+
+  $("#paginationNumbers").off("click").on("click", ".pagination-btn", function (e) {
+    e.preventDefault(); 
+    const selectedPage = parseInt($(this).attr("data-page"));
+    if (!isNaN(selectedPage) && selectedPage !== currentPage) {
+      $('#datatable-loader').removeClass('hidden');
+      loadTableData(selectedPage);
     }
   });
 
