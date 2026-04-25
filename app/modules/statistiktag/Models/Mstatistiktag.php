@@ -61,7 +61,7 @@ class Mstatistiktag extends Model
 
         $builder->where('DATE(h.date_modified) >=', $startDate);
         $builder->where('DATE(h.date_modified) <=', $endDate);
-        $builder->where('h.is_delete', 0); // Di CI4 false biasanya disimpan sebagai 0
+        $builder->where('h.is_delete', 0); 
 
         if ($region_id) {
             $builder->where('h.history_region', $region_id);

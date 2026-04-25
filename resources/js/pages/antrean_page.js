@@ -130,7 +130,7 @@ const setupAntreanPage = () => {
                     render: function (data) {
                         return `
                 <div class="flex items-center gap-4">
-                    <div class="h-10 w-10 flex-shrink-0 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-200 flex items-center justify-center font-black text-slate-700 text-xs shadow-inner">
+                    <div class="h-10 w-10 shrink-0 rounded-xl bg-linear-to-br from-slate-100 to-slate-200 border border-slate-200 flex items-center justify-center font-black text-slate-700 text-xs shadow-inner">
                         ${data.toString().padStart(2, '0')}
                     </div>
                 </div>`;
@@ -160,7 +160,7 @@ const setupAntreanPage = () => {
                         const regionLabel = row.name_region || 'LOKASI UMUM';
                         return `
                     <div class="flex flex-col gap-0.5 text-left group">
-                        <div class="text-xs font-black text-slate-700 truncate max-w-[180px] uppercase tracking-tight">
+                        <div class="text-xs font-black text-slate-700 truncate max-w-45 uppercase tracking-tight">
                             ${primaryAddress}
                         </div>
                         

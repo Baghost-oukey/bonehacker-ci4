@@ -70,8 +70,8 @@ $routes->group('transaksi', ['namespace' => 'App\Modules\Transaksi\Controllers',
   $routes->post('delete', 'TransaksiController::delete');
 });
 
-// Statistik
-$routes->group('statistik', ['namespace' => 'App\Modules\statistik\Controllers'], function ($routes) {
+// Statistik => Ada Typo
+$routes->group('statistik', ['namespace' => 'App\Modules\statisktik\Controllers'], function ($routes) {
   $routes->get('', 'Statistik::index');
   $routes->get('fetch_statistics', 'Statistik::fetch_statistics');
   $routes->get('fetch_analysis', 'Statistik::fetch_analysis');
