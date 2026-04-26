@@ -1,3 +1,8 @@
+/**
+ * Rekam Medis Management Page Script
+ * Custom pagination with empty state fallback
+ */
+
 const MODAL_VISIBLE_CLASS = "flex";
 const MODAL_HIDDEN_CLASS = "hidden";
 
@@ -7,7 +12,6 @@ const getCsrfPayload = (config) => ({
 
 const debounce = (fn, delay = 400) => {
   let timerId;
-
   return (...args) => {
     clearTimeout(timerId);
     timerId = setTimeout(() => fn(...args), delay);
@@ -15,19 +19,13 @@ const debounce = (fn, delay = 400) => {
 };
 
 const openModal = (modal) => {
-  if (!modal) {
-    return;
-  }
-
+  if (!modal) return;
   modal.classList.remove(MODAL_HIDDEN_CLASS);
   modal.classList.add(MODAL_VISIBLE_CLASS);
 };
 
 const closeModal = (modal) => {
-  if (!modal) {
-    return;
-  }
-
+  if (!modal) return;
   modal.classList.remove(MODAL_VISIBLE_CLASS);
   modal.classList.add(MODAL_HIDDEN_CLASS);
 };
@@ -36,9 +34,7 @@ const setupRekamMedisPage = () => {
   const config = window.rekamMedisConfig;
   const page = document.getElementById("rekamMedisPage");
 
-  if (!config || !page || typeof window.$ === "undefined") {
-    return;
-  }
+  if (!config || !page || typeof window.$ === "undefined") return;
 
   const $ = window.$;
   const swalLib = window.Swal || window.swal;
@@ -51,10 +47,7 @@ const setupRekamMedisPage = () => {
   let deleteId = null;
 
   const updateCsrf = (newToken) => {
-    if (!newToken) {
-      return;
-    }
-
+    if (!newToken) return;
     config.csrfHash = newToken;
     $("meta[name='csrf-token']").attr("content", newToken);
     $(`input[name='${config.csrfName}']`).val(newToken);
@@ -65,10 +58,11 @@ const setupRekamMedisPage = () => {
       $("#paginationInfo").text("Menampilkan 0 sampai 0 dari 0 data");
       return;
     }
-
     const start = (currentPage - 1) * pageLength + 1;
     const end = Math.min(currentPage * pageLength, filteredRecords);
-    $("#paginationInfo").text(`Menampilkan ${start} sampai ${end} dari ${filteredRecords} data`);
+    $("#paginationInfo").text(
+      `Menampilkan ${start} sampai ${end} dari ${filteredRecords} data`,
+    );
   };
 
   const updatePaginationUI = () => {
@@ -80,81 +74,124 @@ const setupRekamMedisPage = () => {
     const endPage = Math.min(totalPages, currentPage + 2);
 
     if (startPage > 1) {
-      container.append('<button class="pagination-btn inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:border-slate-400" data-page="1">1</button>');
+      container.append(
+        `<button class="pagination-btn inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:border-slate-400" data-page="1">1</button>`,
+      );
       if (startPage > 2) {
         container.append('<span class="px-1 text-slate-300">...</span>');
       }
     }
 
     for (let pageNum = startPage; pageNum <= endPage; pageNum += 1) {
-      const activeClass = pageNum === currentPage ? "bg-teal-600 border-teal-600 text-white font-semibold shadow-md shadow-teal-600/30" : "border border-slate-300 bg-white text-slate-700 font-semibold transition hover:bg-slate-100 hover:border-slate-400";
-
-      container.append(`<button class="pagination-btn inline-flex h-8 w-8 items-center justify-center rounded-lg ${activeClass} text-xs" data-page="${pageNum}">${pageNum}</button>`);
+      const activeClass =
+        pageNum === currentPage
+          ? "bg-teal-600 border-teal-600 text-white font-semibold shadow-md shadow-teal-600/30"
+          : "border border-slate-300 bg-white text-slate-700 font-semibold transition hover:bg-slate-100 hover:border-slate-400";
+      container.append(
+        `<button class="pagination-btn inline-flex h-8 w-8 items-center justify-center rounded-lg ${activeClass} text-xs" data-page="${pageNum}">${pageNum}</button>`,
+      );
     }
 
     if (endPage < totalPages) {
       if (endPage < totalPages - 1) {
         container.append('<span class="px-1 text-slate-300">...</span>');
       }
-      container.append(`<button class="pagination-btn inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:border-slate-400" data-page="${totalPages}">${totalPages}</button>`);
+      container.append(
+        `<button class="pagination-btn inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:border-slate-400" data-page="${totalPages}">${totalPages}</button>`,
+      );
     }
 
     $("#paginationPrev").prop("disabled", currentPage <= 1);
     $("#paginationNext").prop("disabled", currentPage >= totalPages);
   };
 
-  const renderEmptyState = (message) => {
-    $("#table-RekamMedis tbody").html(`<tr class="hover:bg-slate-50 transition"><td colspan="7" class="px-6 py-12 text-center text-slate-400 italic text-sm"><i class="fas fa-inbox mr-2 text-slate-300"></i>${message}</td></tr>`);
+  const renderTableState = (message, isLoading = false) => {
+    const icon = isLoading
+      ? '<i class="fas fa-spinner fa-spin mr-2 text-slate-300"></i>'
+      : '<i class="fas fa-inbox mr-2 text-slate-300"></i>';
+    $("#table-RekamMedis tbody").html(
+      `<tr class="hover:bg-slate-50 transition"><td colspan="7" class="px-6 py-12 text-center text-slate-400 italic text-sm">${icon}${message}</td></tr>`,
+    );
   };
 
   const loadTableData = (pageNumber = 1) => {
+    const region = $("#region").val() || "";
+
+    renderTableState("Memuat data pasien...", true);
+
     $.ajax({
       url: config.fetchUrl,
       type: "POST",
       dataType: "json",
       data: {
-        ...getCsrfPayload(config),
+        [config.csrfName]: config.csrfHash,
         draw: 1,
         start: (pageNumber - 1) * pageLength,
         length: pageLength,
-        region: $("#region").val() || "",
         search: { value: searchValue },
+        region: region,
       },
       success: (response) => {
-        updateCsrf(response.new_token);
+        if (response.new_token) updateCsrf(response.new_token);
 
         currentPage = pageNumber;
         totalRecords = Number(response.recordsTotal || 0);
         filteredRecords = Number(response.recordsFiltered || totalRecords);
-        $('#datatable-loader').addClass('hidden');
 
         const tbody = $("#table-RekamMedis tbody");
         tbody.empty();
 
         if (!response.data || response.data.length === 0) {
-          renderEmptyState("Data pasien belum tersedia");
+          renderTableState("Data pasien belum tersedia");
           updatePaginationInfo();
           updatePaginationUI();
           return;
         }
 
         response.data.forEach((row) => {
-          const tr = $("<tr class='hover:bg-slate-50 transition border-b border-slate-100'></tr>");
-          tr.append(`<td class="px-6 py-3.5 text-center">${row.id || "-"}</td>`);
-          tr.append(`<td class="px-6 py-3.5">${row.name || "-"}</td>`);
+          // Build action buttons
+          const actionBtns = `
+            <div class="flex items-center justify-center gap-2">
+              <a href="/patient/show/${row.id}"
+                title="Lihat Detail"
+                class="group flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 shadow-sm transition-all hover:border-teal-200 hover:bg-teal-50 hover:text-teal-600">
+                <i class="fas fa-eye text-xs transition-transform group-hover:scale-110"></i>
+              </a>
+              ${
+                config.isSuperadmin
+                  ? `
+              <button type="button"
+                data-id="${row.id}"
+                title="Hapus Data"
+                class="group flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 shadow-sm transition-all hover:border-red-200 hover:bg-red-50 hover:text-red-600 btn-delete">
+                <i class="fas fa-trash text-xs transition-transform group-hover:scale-110"></i>
+              </button>
+              `
+                  : ""
+              }
+            </div>
+          `;
+
+          const tr = $(
+            `<tr class="hover:bg-slate-50 transition border-b border-slate-100"></tr>`,
+          );
+          tr.append(
+            `<td class="px-6 py-3.5 text-xs text-slate-500">${row.id || "-"}</td>`,
+          );
+          tr.append(
+            `<td class="px-6 py-3.5 font-medium text-slate-800">${row.name || "-"}</td>`,
+          );
           tr.append(`<td class="px-6 py-3.5">${row.name_region || "-"}</td>`);
-          tr.append(`<td class="px-6 py-3.5">${row.address || "-"}</td>`);
-          tr.append(`<td class="px-6 py-3.5">${row.date || "-"}</td>`);
-          tr.append(`<td class="px-6 py-3.5 text-center">${row.visit_count || 0}</td>`);
-          tr.append(`<td class="px-6 py-3.5 text-right">${row.action || "-"}</td>`);
-
-          if (row.is_delete === "1") {
-            tr.css({
-              color: "red",
-              textDecoration: "line-through",
-            });
-          }
-
+          tr.append(
+            `<td class="px-6 py-3.5 text-xs text-slate-500 max-w-xs truncate">${row.address || "-"}</td>`,
+          );
+          tr.append(
+            `<td class="px-6 py-3.5 text-center text-xs">${row.date || "-"}</td>`,
+          );
+          tr.append(
+            `<td class="px-6 py-3.5 text-center">${row.visit_count || 0}</td>`,
+          );
+          tr.append(`<td class="px-6 py-3.5">${actionBtns}</td>`);
           tbody.append(tr);
         });
 
@@ -162,202 +199,13 @@ const setupRekamMedisPage = () => {
         updatePaginationUI();
       },
       error: () => {
-        $('#datatable-loader').addClass('hidden');
-        renderEmptyState("Gagal memuat data pasien");
+        renderTableState("Gagal memuat data pasien");
         filteredRecords = 0;
         updatePaginationInfo();
         updatePaginationUI();
       },
     });
   };
-
-  const toggleSuspectiveNote = () => {
-    const checkbox = document.getElementById("isSuspectiveCheckbox");
-    const note = document.getElementById("keterangan_rentan");
-
-    if (!checkbox || !note) {
-      return;
-    }
-
-    if (checkbox.checked) {
-      note.classList.remove("hidden");
-      return;
-    }
-
-    note.classList.add("hidden");
-  };
-
-  const toggleCountryField = () => {
-    const domestic = document.querySelector("input[name='domestic']:checked");
-    const countryGroup = document.getElementById("country-group");
-    const desaGroup = document.getElementById("desa-group");
-    const regionGroup = document.getElementById("region-group");
-
-    if (!domestic || !countryGroup || !desaGroup || !regionGroup) {
-      return;
-    }
-
-    if (domestic.value === "luar_negeri") {
-      countryGroup.classList.remove("hidden");
-      desaGroup.classList.add("hidden");
-      regionGroup.classList.add("hidden");
-      return;
-    }
-
-    countryGroup.classList.add("hidden");
-    desaGroup.classList.remove("hidden");
-    regionGroup.classList.remove("hidden");
-  };
-
-  const simpanPasien = (btn, formElement, $form) => {
-    const formData = new FormData(formElement);
-    const csrfHeader = $("meta[name='csrf-header']").attr("content");
-    const csrfHash = $("meta[name='csrf-token']").attr("content");
-
-    if (csrfHeader && csrfHash) {
-      formData.append(csrfHeader, csrfHash);
-    }
-
-    $.ajax({
-      url: $form.attr("action"),
-      type: "POST",
-      data: formData,
-      contentType: false,
-      processData: false,
-      dataType: "json",
-      headers: csrfHeader && csrfHash ? { [csrfHeader]: csrfHash } : {},
-      beforeSend: () => {
-        btn.prop("disabled", true).addClass("btn-progress").text("Proses Simpan...");
-      },
-      success: (response) => {
-        updateCsrf(response.new_token);
-
-        if (response.status === "success") {
-          closeModal(document.getElementById("exampleModal"));
-          formElement.reset();
-          $form.removeClass("was-validated");
-          toggleSuspectiveNote();
-          toggleCountryField();
-          loadTableData(currentPage);
-
-          if (swalLib && typeof swalLib.fire === "function") {
-            swalLib.fire({
-              title: "Berhasil",
-              text: response.message,
-              icon: "success",
-              confirmButtonText: "OK",
-            });
-          }
-          return;
-        }
-
-        if (swalLib && typeof swalLib.fire === "function") {
-          swalLib.fire({
-            title: "Gagal",
-            text: response.message || "Gagal menyimpan data",
-            icon: "error",
-            confirmButtonText: "Oke",
-          });
-        }
-
-        btn.prop("disabled", false).removeClass("btn-progress").text("Simpan");
-      },
-      error: () => {
-        if (swalLib && typeof swalLib.fire === "function") {
-          swalLib.fire({
-            title: "Error",
-            text: "Terjadi kegagalan sistem",
-            icon: "error",
-          });
-        }
-
-        btn.prop("disabled", false).removeClass("btn-progress").text("Simpan");
-      },
-      complete: () => {
-        btn.prop("disabled", false).removeClass("btn-progress").text("Simpan");
-      },
-    });
-  };
-
-  $("#region_id").select2({
-    dropdownParent: $("#exampleModal"),
-  });
-
-  $("#desa_id")
-    .select2({
-      placeholder: "Temukan Desa",
-      dropdownParent: $("#exampleModal"),
-      ajax: {
-        url: "https://wilayah.smartsociety.id/public/desa",
-        dataType: "json",
-        delay: 250,
-        data: (params) => ({
-          search: params.term,
-          page: params.page || 1,
-        }),
-        processResults: (data) => {
-          const options = [];
-
-          if (data.data && data.data.data) {
-            $.each(data.data.data, (_index, item) => {
-              let optionText = item.desNama;
-              if (item.kecamatan && item.kecamatan.kabupaten) {
-                optionText += `<br><small>Kec. ${item.kecamatan.kecNama} - ${item.kecamatan.kabupaten.kabNama}</small>`;
-              }
-
-              options.push({
-                id: item.desIdDesa,
-                text: optionText,
-                data: item,
-              });
-            });
-          }
-
-          return {
-            results: options,
-            pagination: {
-              more: Boolean(data.data && data.data.next_page_url),
-            },
-          };
-        },
-        cache: true,
-      },
-      minimumInputLength: 1,
-      escapeMarkup: (markup) => markup,
-      templateResult: (item) => item.text,
-      templateSelection: (item) =>
-        item.text
-          ? item.text
-            .replace(/<br\s*\/?>/gi, " ")
-            .replace(/<small>/gi, "")
-            .replace(/<\/small>/gi, "")
-          : item.text,
-    })
-    .on("select2:select", (e) => {
-      const item = e.params.data.data || {};
-      $("#desa_nama").val(item.desNama || "");
-      $("#kecamatan_id").val(item.kecIdKecamatan || "");
-      $("#kecamatan_nama").val(item.kecamatan ? item.kecamatan.kecNama : "");
-      $("#kabupaten_id").val(item.kecamatan ? item.kecamatan.kabIdKabupaten : "");
-      $("#kabupaten_nama").val(item.kecamatan && item.kecamatan.kabupaten ? item.kecamatan.kabupaten.kabNama : "");
-      $("#provinsi_id").val(item.kecamatan && item.kecamatan.kabupaten ? item.kecamatan.kabupaten.provIdProvinsi : "");
-      $("#provinsi_nama").val(item.kecamatan && item.kecamatan.kabupaten && item.kecamatan.kabupaten.provinsi ? item.kecamatan.kabupaten.provinsi.provNama : "");
-    });
-
-  if (config.isSuperadmin && typeof window.moment !== "undefined" && $("#export_date").length) {
-    $("#export_date").daterangepicker({
-      locale: { format: "YYYY-MM-DD" },
-      ranges: {
-        "Hari Ini": [window.moment(), window.moment()],
-        "Bulan Ini": [window.moment().startOf("month"), window.moment().endOf("month")],
-        "Tahun Ini": [window.moment().startOf("year"), window.moment().endOf("year")],
-      },
-    });
-
-    $("#export_date").on("apply.daterangepicker", function (_ev, picker) {
-      $(this).val(`${picker.startDate.format("YYYY-MM-DD")} - ${picker.endDate.format("YYYY-MM-DD")}`);
-    });
-  }
 
   const searchHandler = debounce((value) => {
     searchValue = value;
@@ -376,100 +224,114 @@ const setupRekamMedisPage = () => {
   });
 
   $(document).on("click", ".pagination-btn", function () {
-    const pageNum = parseInt($(this).data("page"), 10);
-    if (!Number.isNaN(pageNum)) {
-      loadTableData(pageNum);
-    }
+    const p = parseInt($(this).data("page"), 10);
+    if (!isNaN(p)) loadTableData(p);
   });
 
   $("#paginationPrev").on("click", () => {
-    if (currentPage > 1) {
-      $('#datatable-loader').removeClass('hidden');
-      loadTableData(currentPage - 1);
-    }
+    if (currentPage > 1) loadTableData(currentPage - 1);
   });
-
   $("#paginationNext").on("click", () => {
-    const totalPages = Math.max(1, Math.ceil(filteredRecords / pageLength));
-    if (currentPage < totalPages) {
-      $('#datatable-loader').removeClass('hidden');
-      loadTableData(currentPage + 1);
+    const tp = Math.max(1, Math.ceil(filteredRecords / pageLength));
+    if (currentPage < tp) loadTableData(currentPage + 1);
+  });
+
+  // Toggle keterangan rentan
+  $(document).on("change", "#isSuspectiveCheckbox", function () {
+    const k = $("#keterangan_rentan");
+    $(this).is(":checked")
+      ? k.stop().slideDown(300).removeClass("hidden")
+      : k.stop().slideUp(300);
+  });
+
+  // Toggle domestik
+  $(document).on("change", 'input[name="domestic"]', function () {
+    const v = $(this).val();
+    if (v === "luar_negeri") {
+      $("#desa-group, #region-group").addClass("hidden");
+      $("#country-group").removeClass("hidden");
+      $("#desa_id").val(null).trigger("change");
+    } else {
+      $("#desa-group, #region-group").removeClass("hidden");
+      $("#country-group").addClass("hidden");
+      $("#country_id").val("");
     }
   });
 
-  $("#paginationNumbers").off("click").on("click", ".pagination-btn", function (e) {
-    e.preventDefault(); 
-    const selectedPage = parseInt($(this).attr("data-page"));
-    if (!isNaN(selectedPage) && selectedPage !== currentPage) {
-      $('#datatable-loader').removeClass('hidden');
-      loadTableData(selectedPage);
-    }
-  });
+  // Simpan pasien
+  $("#submitBtn").on("click", function (e) {
+    e.preventDefault();
+    const form = $("#formTambahPasien");
 
-  $("#submitBtn").on("click", function (event) {
-    event.preventDefault();
-    event.stopPropagation();
-
-    const btn = $(this);
-    const $form = btn.closest("form");
-    const formElement = $form[0];
-
-    if (!formElement.checkValidity()) {
-      $form.addClass("was-validated");
+    if (!form[0].checkValidity()) {
+      form.addClass("was-validated");
+      form.find(".invalid-feedback").removeClass("hidden");
       return;
     }
 
-    const phone = $("#phone").val();
-    if (!phone) {
-      simpanPasien(btn, formElement, $form);
-      return;
+    if (swalLib?.fire) {
+      swalLib.fire({
+        target: document.getElementById("exampleModal"),
+        title: "Menyimpan...",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+      });
     }
 
     $.ajax({
-      url: config.checkPhoneUrl,
+      url: form.attr("action"),
       type: "POST",
+      data: form.serialize(),
       dataType: "json",
-      data: {
-        phone,
-        ...getCsrfPayload(config),
-      },
-      success: (response) => {
-        updateCsrf(response.new_token);
-
-        if (!response.exists) {
-          simpanPasien(btn, formElement, $form);
-          return;
-        }
-
-        if (swalLib && typeof swalLib.fire === "function") {
-          swalLib
-            .fire({
-              title: "Nomor Sudah Ada",
-              text: "Nomor telepon sudah terdaftar. Tetap simpan data baru?",
-              icon: "warning",
-              showCancelButton: true,
-              confirmButtonText: "Ya, Simpan",
-              cancelButtonText: "Batal",
-            })
-            .then((result) => {
-              if (result.isConfirmed) {
-                simpanPasien(btn, formElement, $form);
-              }
+      success: (res) => {
+        if (swalLib) swalLib.close();
+        if (res.success || res.status === "success") {
+          closeModal(document.getElementById("exampleModal"));
+          form[0].reset();
+          form.removeClass("was-validated");
+          loadTableData(currentPage);
+          if (swalLib?.fire) {
+            swalLib.fire({
+              icon: "success",
+              title: "Berhasil!",
+              text: res.message || "Data tersimpan",
+              timer: 2000,
+              showConfirmButton: false,
             });
+          }
+        } else {
+          if (swalLib?.fire) {
+            swalLib.fire({
+              target: document.getElementById("exampleModal"),
+              title: "Gagal!",
+              text: res.message || "Error",
+              icon: "error",
+            });
+          }
+        }
+      },
+      error: () => {
+        if (swalLib) swalLib.close();
+        if (swalLib?.fire) {
+          swalLib.fire({
+            target: document.getElementById("exampleModal"),
+            title: "Error!",
+            text: "Gagal mengirim data",
+            icon: "error",
+          });
         }
       },
     });
   });
 
-  window.destroy = (id) => {
-    deleteId = id;
+  // Delete handler
+  $(document).on("click", ".btn-delete", function () {
+    deleteId = $(this).data("id");
     openModal(document.getElementById("modalDelete"));
-  };
+  });
 
   $("#confirmDelete").on("click", () => {
-    if (!deleteId) {
-      return;
-    }
+    if (!deleteId) return;
 
     $.ajax({
       url: `${config.destroyBaseUrl}/${deleteId}`,
@@ -485,37 +347,120 @@ const setupRekamMedisPage = () => {
         }
       },
       error: () => {
-        window.alert("Gagal menghapus data.");
+        if (swalLib?.fire) {
+          swalLib.fire("Error!", "Gagal menghapus data.", "error");
+        }
       },
     });
   });
 
+  // Modal handlers
   document.addEventListener("click", (event) => {
     const openTrigger = event.target.closest("[data-modal-open]");
     if (openTrigger) {
       const targetId = openTrigger.getAttribute("data-modal-open");
       openModal(document.getElementById(targetId));
+      if (targetId === "exampleModal") {
+        setTimeout(() => {
+          if (typeof initSelect2Desa === "function") initSelect2Desa();
+        }, 300);
+      }
       return;
     }
-
     const closeTrigger = event.target.closest("[data-modal-close]");
-    if (closeTrigger) {
-      closeModal(closeTrigger.closest(".modal-wrapper"));
-      return;
-    }
-
-    if (event.target.classList && event.target.classList.contains("modal-wrapper")) {
+    if (closeTrigger) closeModal(closeTrigger.closest(".modal-wrapper"));
+    if (
+      event.target.classList &&
+      event.target.classList.contains("modal-wrapper")
+    ) {
       closeModal(event.target);
     }
   });
 
-  $("#isSuspectiveCheckbox").on("change", toggleSuspectiveNote);
-  $("input[name='domestic']").on("change", toggleCountryField);
+  $(document).on("click", ".modal-wrapper", function (e) {
+    if (e.target === this) {
+      $(this).fadeOut(200, function () {
+        $(this).addClass("hidden").removeClass("flex").removeAttr("style");
+      });
+    }
+  });
 
-  toggleSuspectiveNote();
-  toggleCountryField();
+  $(document).on("click", "[data-modal-close]", function (e) {
+    e.preventDefault();
+    $(this)
+      .closest(".modal-wrapper")
+      .fadeOut(200, function () {
+        $(this).addClass("hidden").removeClass("flex").removeAttr("style");
+      });
+  });
+
   loadTableData(1);
 };
+
+// Select2 Desa
+function initSelect2Desa() {
+  if (!$("#desa_id").length) return;
+  if ($("#desa_id").hasClass("select2-hidden-accessible"))
+    $("#desa_id").select2("destroy");
+
+  $("#desa_id").select2({
+    placeholder: "Temukan Desa",
+    dropdownParent: $("#exampleModal"),
+    width: "100%",
+    ajax: {
+      url: "https://wilayah.smartsociety.id/public/desa",
+      dataType: "json",
+      delay: 250,
+      data: (p) => ({ search: p.term, page: p.page || 1 }),
+      processResults: (data) => {
+        let opts = [];
+        if (data.data?.data) {
+          $.each(data.data.data, (i, item) => {
+            const kec = item.kecamatan?.kecNama || "";
+            const kab = item.kecamatan?.kabupaten?.kabNama || "";
+            const sub = kec ? `Kec. ${kec}, ${kab}` : "";
+            opts.push({
+              id: item.desIdDesa,
+              text: `<strong>${item.desNama}</strong><br><small>${sub}</small>`,
+              full_data: item,
+            });
+          });
+        }
+        return {
+          results: opts,
+          pagination: { more: !!data.data?.next_page_url },
+        };
+      },
+    },
+    minimumInputLength: 1,
+    escapeMarkup: (m) => m,
+    templateResult: (i) => i.text,
+    templateSelection: (i) =>
+      i.text
+        ? i.text.replace(/<br\s*\/?>/gi, " ").replace(/<\/?[^>]+(>|$)/g, "")
+        : i.text,
+  });
+}
+
+$(document).on("select2:select", "#desa_id", function (e) {
+  const d = e.params.data.full_data;
+  $("#desa_nama").val(d?.desNama || "");
+  $("#kecamatan_id").val(d?.kecamatan?.kecIdKecamatan || "");
+  $("#kecamatan_nama").val(d?.kecamatan?.kecNama || "");
+  $("#kabupaten_id").val(d?.kecamatan?.kabupaten?.kabIdKabupaten || "");
+  $("#kabupaten_nama").val(d?.kecamatan?.kabupaten?.kabNama || "");
+  $("#provinsi_id").val(
+    d?.kecamatan?.kabupaten?.provinsi?.provIdProvinsi || "",
+  );
+  $("#provinsi_nama").val(d?.kecamatan?.kabupaten?.provinsi?.provNama || "");
+});
+
+$(document).on("select2:open", "#desa_id", () => {
+  setTimeout(() => {
+    const sf = document.querySelector(".select2-search__field");
+    if (sf) sf.focus();
+  }, 100);
+});
 
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", setupRekamMedisPage);
