@@ -7,16 +7,16 @@ $viteDevServer = rtrim((string) (env('vite.devServerUrl') ?? 'http://localhost:5
 $shouldUseViteDevServer = false;
 
 if ($isDevEnvironment) {
-  $viteHost = (string) parse_url($viteDevServer, PHP_URL_HOST);
-  $vitePort = (int) (parse_url($viteDevServer, PHP_URL_PORT) ?: 5173);
+    $viteHost = (string) parse_url($viteDevServer, PHP_URL_HOST);
+    $vitePort = (int) (parse_url($viteDevServer, PHP_URL_PORT) ?: 5173);
 
-  if ($viteHost !== '') {
-    $viteSocket = @fsockopen($viteHost, $vitePort, $errno, $errstr, 0.15);
-    if (is_resource($viteSocket)) {
-      $shouldUseViteDevServer = true;
-      fclose($viteSocket);
+    if ($viteHost !== '') {
+        $viteSocket = @fsockopen($viteHost, $vitePort, $errno, $errstr, 0.15);
+        if (is_resource($viteSocket)) {
+            $shouldUseViteDevServer = true;
+            fclose($viteSocket);
+        }
     }
-  }
 }
 ?>
 
@@ -38,7 +38,8 @@ if ($isDevEnvironment) {
     <?php if ($shouldUseViteDevServer): ?>
         <link rel="stylesheet" href="<?= $viteDevServer ?>/resources/css/app.css">
     <?php else: ?>
-        <link rel="stylesheet" href="<?= base_url('build/assets/app.css') . '?v=' . (is_file(FCPATH . 'build/assets/app.css') ? filemtime(FCPATH . 'build/assets/app.css') : time()) ?>">
+        <link rel="stylesheet"
+            href="<?= base_url('build/assets/app.css') . '?v=' . (is_file(FCPATH . 'build/assets/app.css') ? filemtime(FCPATH . 'build/assets/app.css') : time()) ?>">
     <?php endif; ?>
 
     <style>
@@ -49,15 +50,19 @@ if ($isDevEnvironment) {
 </head>
 
 <body>
-    <div id="app" class="min-h-screen text-slate-900">
-        <?= $this->include('App\Views\layout\sidebar') ?>
+    <div id="app" class="min-h-screen grid grid-cols-[16rem_1fr] grid-rows-[3.5rem_1fr] text-slate-900">
+        <aside class="row-span-2 border-r border-slate-200 bg-white overflow-auto">
+            <?= $this->include('App\Views\layout\sidebar') ?>
+        </aside>
 
         <div id="sidebarBackdrop" class="fixed inset-0 z-20 hidden bg-slate-900/40 lg:hidden"></div>
 
-        <div class="min-h-screen lg:ml-72">
-            <?= $this->include('App\Views\layout\header') ?>
+        <div class="min-h-screen">
+            <header class="col-start-2 border-b border-slate-200 bg-white sticky top-0 z-20">
+                <?= $this->include('App\Views\layout\header') ?>
+            </header>
 
-            <main class="w-full">
+            <main class="col-start-2 overflow-auto">
                 <?= $this->renderSection('content') ?>
             </main>
         </div>
@@ -83,11 +88,12 @@ if ($isDevEnvironment) {
         <script type="module" src="<?= $viteDevServer ?>/@vite/client"></script>
         <script type="module" src="<?= $viteDevServer ?>/resources/js/app.js"></script>
     <?php else: ?>
-        <script type="module" src="<?= base_url('build/assets/app.js') . '?v=' . (is_file(FCPATH . 'build/assets/app.js') ? filemtime(FCPATH . 'build/assets/app.js') : time()) ?>"></script>
+        <script type="module"
+            src="<?= base_url('build/assets/app.js') . '?v=' . (is_file(FCPATH . 'build/assets/app.js') ? filemtime(FCPATH . 'build/assets/app.js') : time()) ?>"></script>
     <?php endif; ?>
 
     <script>
-        (function() {
+        (function () {
             // var metaName = document.querySelector('meta[name="csrf-token-name"]');
             // var metaHash = document.querySelector('meta[name="csrf-token-hash"]');
             // var csrfName = metaName ? metaName.getAttribute('content') : null;
@@ -95,7 +101,7 @@ if ($isDevEnvironment) {
             // var csrfHash = metaHash ? metaHash.getAttribute('content') : null;
 
             function refreshCsrfToken() {
-                $.get('<?= site_url('auth/get_csrf') ?>', function(data) {
+                $.get('<?= site_url('auth/get_csrf') ?>', function (data) {
                     $('meta[name="csrf-token-hash"]').attr('content', data.token);
                     // 2. Update semua input hidden yang dibuat pake csrf_field()
                     $('input[name="' + csrfName + '"]').val(data.token);
@@ -109,7 +115,7 @@ if ($isDevEnvironment) {
                 });
             }
 
-            $(document).ready(function() {
+            $(document).ready(function () {
                 // Set up awal pas halaman load
                 var initialHash = $('meta[name="csrf-token-hash"]').attr('content');
                 if (csrfName && initialHash) {
@@ -122,7 +128,7 @@ if ($isDevEnvironment) {
 
 
                 // Jurus Anti-Macet: Setiap request POST selesai, kita minta token baru
-                $(document).ajaxComplete(function(event, xhr, settings) {
+                $(document).ajaxComplete(function (event, xhr, settings) {
                     if (settings.type === 'POST' || settings.type === 'post') {
                         refreshCsrfToken();
                     }
@@ -157,7 +163,7 @@ if ($isDevEnvironment) {
     <?php if (session()->has('message')): ?>
         <?php $msg = session('message'); ?>
         <script>
-            $(document).ready(function() {
+            $(document).ready(function () {
                 toastr.options = {
                     "progressBar": true,
                     "positionClass": "toast-top-right"

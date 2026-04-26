@@ -1,4 +1,8 @@
-// === HELPER FUNCTIONS (Wajib ada di paling atas agar terbaca sistem) ===
+/**
+ * Journal Management Page Script
+ * Custom pagination implementation
+ */
+
 const MODAL_VISIBLE_CLASS = "flex";
 const MODAL_HIDDEN_CLASS = "hidden";
 
@@ -6,15 +10,6 @@ const getCsrfPayload = (config) => ({
     [config.csrfName]: config.csrfHash,
 });
 
-const debounce = (fn, delay = 400) => {
-    let timerId;
-    return (...args) => {
-        clearTimeout(timerId);
-        timerId = setTimeout(() => fn(...args), delay);
-    };
-};
-
-// Fungsi ini yang tadi hilang/not defined
 const openModal = (modal) => {
     if (!modal) return;
     modal.classList.remove(MODAL_HIDDEN_CLASS);
@@ -22,15 +17,13 @@ const openModal = (modal) => {
     document.body.classList.add('overflow-hidden');
 };
 
-// Fungsi untuk menutup modal
 const closeModal = (modal) => {
     if (!modal) return;
     modal.classList.remove(MODAL_VISIBLE_CLASS);
     modal.classList.add(MODAL_HIDDEN_CLASS);
+    document.body.classList.remove('overflow-hidden');
 };
 
-
-// === FUNGSI UTAMA HALAMAN JURNAL ===
 const setupJournalPage = () => {
     const config = window.journalConfig;
     const tableEl = document.getElementById("table-journal");
@@ -38,143 +31,236 @@ const setupJournalPage = () => {
     if (!config || !tableEl || typeof window.$ === "undefined") return;
 
     const $ = window.$;
-    let journalTableInstance = null;
 
-    // --- TABEL UTAMA JURNAL ---
-    const loadJournalTable = () => {
-        if ($.fn.DataTable.isDataTable('#table-journal')) {
-            journalTableInstance.ajax.reload(null, false);
+    let currentPage = 1;
+    let pageLength = 25;
+    let totalRecords = 0;
+    let filteredRecords = 0;
+
+    const updateCsrf = (newToken) => {
+        if (!newToken) return;
+        config.csrfHash = newToken;
+        $("meta[name='csrf-token']").attr("content", newToken);
+        $(`input[name='${config.csrfName}']`).val(newToken);
+    };
+
+    const updatePaginationInfo = () => {
+        if (filteredRecords <= 0) {
+            $("#paginationInfo").text("Menampilkan 0 sampai 0 dari 0 data");
             return;
         }
+        const start = (currentPage - 1) * pageLength + 1;
+        const end = Math.min(currentPage * pageLength, filteredRecords);
+        $("#paginationInfo").text("Menampilkan " + start + " sampai " + end + " dari " + filteredRecords + " data");
+    };
 
-        journalTableInstance = $('#table-journal').DataTable({
-            serverSide: true,
-            autoWidth: false,
-            pageLength: 25,
-            lengthMenu: [10, 25, 50, 100],
-            order: [],
-            ajax: {
-                url: config.fetchUrl,
-                type: "POST",
-                data: function (d) {
-                    d[config.csrfName] = config.csrfHash;
-                    d.region = $('#region').val() || '';
-                    d.start_date = $('#start_date').val();
-                    d.end_date = $('#end_date').val();
-                },
-                dataSrc: function (json) {
-                    if (json.new_token) {
-                        config.csrfHash = json.new_token;
-                        if (typeof updateCsrf === 'function') updateCsrf(json.new_token);
-                    }
-                    return json.data;
+    const updatePaginationUI = () => {
+        const totalPages = Math.max(1, Math.ceil(filteredRecords / pageLength));
+        const container = $("#paginationNumbers");
+        container.empty();
+
+        const startPage = Math.max(1, currentPage - 2);
+        const endPage = Math.min(totalPages, currentPage + 2);
+
+        if (startPage > 1) {
+            container.append('<button class="pagination-btn inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:border-slate-400" data-page="1">1</button>');
+            if (startPage > 2) {
+                container.append('<span class="px-1 text-slate-300">...</span>');
+            }
+        }
+
+        for (let pageNum = startPage; pageNum <= endPage; pageNum += 1) {
+            const activeClass = pageNum === currentPage
+                ? "bg-teal-600 border-teal-600 text-white font-semibold shadow-md shadow-teal-600/30"
+                : "border border-slate-300 bg-white text-slate-700 font-semibold transition hover:bg-slate-100 hover:border-slate-400";
+            container.append('<button class="pagination-btn inline-flex h-8 w-8 items-center justify-center rounded-lg ' + activeClass + ' text-xs" data-page="' + pageNum + '">' + pageNum + '</button>');
+        }
+
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                container.append('<span class="px-1 text-slate-300">...</span>');
+            }
+            container.append('<button class="pagination-btn inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:border-slate-400" data-page="' + totalPages + '">' + totalPages + '</button>');
+        }
+
+        $("#paginationPrev").prop("disabled", currentPage <= 1);
+        $("#paginationNext").prop("disabled", currentPage >= totalPages);
+    };
+
+    const renderEmptyState = (message) => {
+        $("#table-journal tbody").html('<tr class="hover:bg-slate-50 transition"><td colspan="8" class="px-6 py-12 text-center text-slate-400 italic text-sm"><i class="fas fa-inbox mr-2 text-slate-300"></i>' + message + '</td></tr>');
+    };
+
+    const loadTableData = (pageNumber) => {
+        if (!pageNumber) pageNumber = 1;
+        
+        const searchValue = $('#customSearch').val() || '';
+        const region = $('#region').val() || '';
+        const startDate = $('#start_date').val();
+        const endDate = $('#end_date').val();
+
+        // Show loading
+        renderEmptyState('<i class="fas fa-spinner fa-spin mr-2 text-teal-500"></i> Memuat data...');
+
+        $.ajax({
+            url: config.fetchUrl,
+            type: "POST",
+            dataType: "json",
+            data: {
+                [config.csrfName]: config.csrfHash,
+                draw: 1,
+                start: (pageNumber - 1) * pageLength,
+                length: pageLength,
+                search: { value: searchValue },
+                region: region,
+                start_date: startDate,
+                end_date: endDate
+            },
+            success: function (response) {
+                if (response.new_token) {
+                    updateCsrf(response.new_token);
                 }
-            },
-            dom: '<"overflow-x-auto w-full"t><"flex flex-col md:flex-row items-center justify-between p-6 bg-white border-t border-slate-100 gap-4"<"flex items-center gap-4"li>p><"clear">',
-            columns: [
-                { data: "no", className: "px-6 py-5 text-center text-xs text-slate-500 font-mono w-16 whitespace-nowrap", sortable: false, searchable: false },
-                { data: "tanggal", className: "px-6 py-5 text-xs text-slate-600 font-bold w-32 whitespace-nowrap", searchable: true },
-                { data: "nama", className: "px-6 py-5 font-black text-slate-800 text-sm uppercase tracking-tight whitespace-nowrap", searchable: true },
-                { data: "status", className: "px-6 py-5 text-center text-xs font-bold w-24 whitespace-nowrap", searchable: false },
-                { data: "alamat", className: "px-6 py-5 text-xs text-slate-500 uppercase leading-relaxed min-w-[200px]", searchable: false },
-                { data: "result_names", className: "px-6 py-5 text-xs text-slate-600 font-medium whitespace-nowrap", searchable: false },
-                { data: "measures", className: "px-6 py-5 text-xs text-slate-600 font-medium whitespace-nowrap", searchable: true },
-                { data: "action", className: "px-6 py-5 text-center w-20 whitespace-nowrap", sortable: false, searchable: false }
-            ],
-            language: {
-                search: "_INPUT_",
-                lengthMenu: "Tampilkan _MENU_",
-                emptyTable: "Belum ada data jurnal ditemukan.",
-                info: "Data <span class='font-bold text-slate-800'>_START_</span> - <span class='font-bold text-slate-800'>_END_</span> dari <span class='font-bold text-teal-600'>_TOTAL_</span>",
-            },
 
-            // initComplete: function () {
-            //     $('.dataTables_filter').addClass('w-full md:w-auto');
-            //     $('.dataTables_filter label').addClass('w-full md:w-80 relative flex items-center mb-0');
-            //     $('.dataTables_filter input')
-            //         .addClass('w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium text-slate-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 shadow-sm transition-all outline-none')
-            //         .attr('placeholder', 'Cari pasien, jurnal...');
-            //     $('.dataTables_filter label').prepend('<i class="fas fa-search absolute left-4 text-slate-400"></i>');
-            // },
+                currentPage = pageNumber;
+                totalRecords = Number(response.recordsTotal || 0);
+                filteredRecords = Number(response.recordsFiltered || totalRecords);
 
-            drawCallback: function () {
-                $('.pagination').addClass('flex flex-row items-center mb-0');
-                $('.page-item').addClass('mx-0.5');
-                $('.page-link').addClass('px-3 py-1 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors');
-                $('.active .page-link').addClass('bg-teal-600 text-white border-teal-600 hover:bg-teal-700').removeClass('text-slate-600 text-slate-500');
-                $('.dataTables_length select').addClass('border border-slate-200 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-600 bg-white focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 mx-2 cursor-pointer');
+                const tbody = $("#table-journal tbody");
+                tbody.empty();
+
+                if (!response.data || response.data.length === 0) {
+                    renderEmptyState("Data jurnal pemeriksaan belum tersedia");
+                    updatePaginationInfo();
+                    updatePaginationUI();
+                    return;
+                }
+
+                response.data.forEach(function (row) {
+                    const tr = $('<tr class="hover:bg-slate-50 transition border-b border-slate-100"></tr>');
+                    tr.append('<td class="px-6 py-3.5 text-center text-xs text-slate-500">' + (row.no || "-") + '</td>');
+                    tr.append('<td class="px-6 py-3.5 text-xs text-slate-600 font-medium">' + (row.tanggal || "-") + '</td>');
+                    tr.append('<td class="px-6 py-3.5 font-semibold text-slate-800 text-xs uppercase">' + (row.nama || "-") + '</td>');
+                    tr.append('<td class="px-6 py-3.5 text-center text-xs font-semibold">' + (row.status || "-") + '</td>');
+                    tr.append('<td class="px-6 py-3.5 text-xs text-slate-500 max-w-xs truncate">' + (row.alamat || "-") + '</td>');
+                    tr.append('<td class="px-6 py-3.5 text-xs text-slate-600">' + (row.result_names || "-") + '</td>');
+                    tr.append('<td class="px-6 py-3.5 text-xs text-slate-600">' + (row.measures || "-") + '</td>');
+                    tr.append('<td class="px-6 py-3.5 text-center">' + (row.action || "-") + '</td>');
+                    tbody.append(tr);
+                });
+
+                updatePaginationInfo();
+                updatePaginationUI();
+            },
+            error: function () {
+                renderEmptyState("Gagal memuat data jurnal pemeriksaan");
+                filteredRecords = 0;
+                updatePaginationInfo();
+                updatePaginationUI();
             }
         });
     };
 
-    // --- EVENT LISTENERS ---
+    // Event Listeners
     const initEvents = () => {
+        // Initialize Select2 jika diperlukan
         if ($.fn.select2) {
-            // $('region').select2({width: '100%'})
-            $('.select2').select2({ width: '100%' });
-
             $('#export_region').select2({
                 width: '100%',
                 dropdownParent: $("#modalExportJournal")
             });
         }
 
-        // Dropdown Cabang
-        $('#btn-dropdown-region').on('click', function (e) {
-            e.preventDefault();
-            $('#region').select2('open');
+        // Search input
+        $('#customSearch').on('keyup', function () {
+            currentPage = 1;
+            loadTableData(1);
         });
 
-        // Search Pasien 
-        $('#customSearch').on('keyup', function () {
-            if (journalTableInstance) {
-                // Langsung gunakan this.value, DataTables yang akan mengatur delay-nya
-                journalTableInstance.search(this.value).draw();
+        // Search button
+        $('#btn-search').on('click', function() {
+            currentPage = 1;
+            loadTableData(1);
+        });
+
+        // Filter perubahan
+        $('#region, #start_date, #end_date').on('change', function () {
+            currentPage = 1;
+            loadTableData(1);
+        });
+
+        // Pagination length
+        $('#paginationLength').on('change', function () {
+            pageLength = parseInt($(this).val(), 10);
+            currentPage = 1;
+            loadTableData(1);
+        });
+
+        // Pagination buttons
+        $(document).on('click', '.pagination-btn', function () {
+            const pageNum = parseInt($(this).data('page'), 10);
+            if (!isNaN(pageNum)) {
+                loadTableData(pageNum);
             }
         });
 
-        $('#region').on('select2:select', function (e) {
-            const data = e.params.data;
-            $('#selected-region-text').text(data.text);
-            $('.fa-chevron-down').addClass('rotate-180');
-            setTimeout(() => $('.fa-chevron-down').removeClass('rotate-180'), 300);
+        $('#paginationPrev').on('click', function () {
+            if (currentPage > 1) {
+                loadTableData(currentPage - 1);
+            }
         });
 
-        if ($('#region').val()) {
-            const initialText = $('#region').find(':selected').text();
-            $('#selected-region-text').text(initialText);
-        }
-
-        // Auto Reload Tabel
-        $('#region, #start_date, #end_date').on('change', function () {
-            if (journalTableInstance) journalTableInstance.ajax.reload();
+        $('#paginationNext').on('click', function () {
+            const totalPages = Math.max(1, Math.ceil(filteredRecords / pageLength));
+            if (currentPage < totalPages) {
+                loadTableData(currentPage + 1);
+            }
         });
 
-        // Reset Filter
+        // Reset filter
         $('#btn-reset').on('click', function () {
+            $('#customSearch').val('');
             $('#start_date').val('');
             $('#end_date').val('');
             $('#region').val('').trigger('change');
+            currentPage = 1;
+            pageLength = 25;
+            $('#paginationLength').val(25);
+            loadTableData(1);
         });
 
-        // MODAL EXPORT: Buka Modal
+        // Buka Modal Export
         $('#btnOpenExport').on('click', function (e) {
             e.preventDefault();
-            // Sync filter wilayah saat ini ke form export
-            $('#export_region').val($('#region').val()).trigger('change');
-
-            // Buka Modal pakai fungsi Tailwind kita
+            if ($('#export_region').length && $('#region').length) {
+                $('#export_region').val($('#region').val()).trigger('change');
+            }
             openModal(document.getElementById('modalExportJournal'));
         });
 
-        // MODAL EXPORT: Tutup Modal
+        // Tutup Modal Export
         $('.btn-close-modal').on('click', function (e) {
             e.preventDefault();
             closeModal(document.getElementById('modalExportJournal'));
-            $('body').removeClass('overflow-hidden');
         });
 
-        // Logika Periode Tanggal (Modal Export)
+        // Klik di luar modal untuk menutup
+        $(document).on('click', '.modal-wrapper.flex', function(e) {
+            if (e.target === this) {
+                closeModal(this);
+            }
+        });
+
+        // Tombol Escape untuk menutup modal
+        $(document).on('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const visibleModal = document.querySelector('.modal-wrapper.flex');
+                if (visibleModal) {
+                    closeModal(visibleModal);
+                }
+            }
+        });
+
+        // Period picker di modal export
         $('#period_picker').on('change', function () {
             const period = $(this).val();
             const today = new Date();
@@ -211,10 +297,10 @@ const setupJournalPage = () => {
 
     // Jalankan semua setup
     initEvents();
-    loadJournalTable();
+    loadTableData(1);
 };
 
-// Jalankan Inisialisasi saat DOM sudah siap
+// Jalankan inisialisasi saat DOM sudah siap
 if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", setupJournalPage);
 } else {

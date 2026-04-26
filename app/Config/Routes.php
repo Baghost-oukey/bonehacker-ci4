@@ -54,12 +54,12 @@ $routes->group('region', ['namespace' => 'App\Modules\Region\Controllers'], func
 // app/Config/Routes.php
 
 // Journal
-$routes->group('journal', ['namespace' => 'App\Modules\journal\Controllers'], function ($routes) {
-  $routes->get('', 'Journal::index');
-  $routes->post('fetch', 'Journal::fetch');
-  $routes->get('export_excell', 'Journal::export_excell');
-  $routes->get('export_pdf', 'Journal::export_pdf');
-  $routes->get('export_file_journal', 'Journal::export_file_journal');
+$routes->group('journal', ['namespace' => 'App\Modules\Journal\Controllers'], function ($routes) {
+  $routes->get('', 'JournalController::index');
+  $routes->post('fetch', 'JournalController::fetch');
+  $routes->get('export_excell', 'JournalController::export_excell');
+  $routes->get('export_pdf', 'JournalController::export_pdf');
+  $routes->get('export_file_journal', 'JournalController::export_file_journal');
 });
 
 // Transaksi
@@ -121,14 +121,14 @@ $routes->group('jabatan', ['namespace' => 'App\Modules\jabatan\Controllers'], fu
 });
 
 // Tag - Complaint(Keluhan)
-$routes->group('complaint', ['namespace' => 'App\Modules\Complaint\Controllers'], function ($routes) {
-  $routes->get('', 'ComplaintController::index');
-  $routes->post('fetch', 'ComplaintController::fetch');
-  $routes->post('store', 'ComplaintController::store');
-  $routes->post('update/(:num)', 'ComplaintController::update/$1');
-  $routes->post('destroy/(:num)', 'ComplaintController::destroy/$1');
-  $routes->post('check_name_exists', 'ComplaintController::check_name_exists');
-  $routes->get('get_tags', 'ComplaintController::get_tags');
+$routes->group('tag-keluhan', ['namespace' => 'App\Modules\TagComplaint\Controllers'], function ($routes) {
+  $routes->get('', 'TagComplaintController::index');
+  $routes->post('fetch', 'TagComplaintController::fetch');
+  $routes->post('store', 'TagComplaintController::store');
+  $routes->post('update/(:num)', 'TagComplaintController::update/$1');
+  $routes->post('destroy/(:num)', 'TagComplaintController::destroy/$1');
+  $routes->post('check_name_exists', 'TagComplaintController::check_name_exists');
+  $routes->get('get_tags', 'TagComplaintController::get_tags');
 });
 
 // Tag - Medis(Rekam Medis)

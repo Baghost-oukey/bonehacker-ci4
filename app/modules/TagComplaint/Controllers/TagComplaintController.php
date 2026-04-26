@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Modules\Complaint\Controllers;
+namespace App\Modules\TagComplaint\Controllers;
 
 use App\Controllers\BaseController;
-use App\modules\complaint\Models\MComplaint;
+use App\Modules\TagComplaint\Models\MComplaint;
 use CodeIgniter\HTTP\ResponseInterface;
 
-class ComplaintController extends BaseController
+class TagComplaintController extends BaseController
 {
   protected $model_complaint;
   protected $session;
@@ -18,7 +18,6 @@ class ComplaintController extends BaseController
 
     if ($this->session->get('role') !== 'superadmin') {
       $this->session->setFlashdata('error', 'You do not have access to this page');
-      return redirect()->to(base_url())->send();
     }
   }
   public function index()
@@ -33,7 +32,7 @@ class ComplaintController extends BaseController
       'role' => $this->session->get('role'),
     ];
 
-    return view('App\Modules\Complaint\Views\index', $data);
+    return view('App\Modules\TagComplaint\Views\index', $data);
   }
 
   public function fetch()
@@ -48,18 +47,29 @@ class ComplaintController extends BaseController
     });
 
     $datatables->addColumn('action', function ($row, $index = null) {
-      return '<button data-name="' .
-        $row->nama .
-        '" data-description="' .
-        $row->deskripsi .
-        '" data-id="' .
-        $row->id .
-        '" data-href="' .
-        site_url('complaint/update/' . $row->id) .
-        '" class="btn btn-primary btn-action mr-1 btn_edit"><i class="fas fa-edit"></i></button>' .
-        '<button type="button" data-href="' .
-        site_url('complaint/destroy/' . $row->id) .
-        '" class="btn btn-danger btn-action btn_delete"><i class="fas fa-trash"></i></button>';
+      return '
+    <div class="flex items-center justify-center gap-2">
+
+      <button type="button" 
+        data-id="' . $row->id . '"
+        data-name="' . htmlspecialchars($row->nama, ENT_QUOTES, 'UTF-8') . '" 
+        data-description="' . htmlspecialchars($row->deskripsi, ENT_QUOTES, 'UTF-8') . '" 
+        data-href="' . site_url('TagComplaint/update/' . $row->id) . '" 
+        title="Edit Data" 
+        class="group flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 shadow-sm transition-all hover:border-teal-200 hover:bg-teal-50 hover:text-teal-600 btn_edit">
+        
+        <i class="fas fa-edit text-xs transition-transform group-hover:scale-110"></i>
+      </button>
+
+      <button type="button" 
+        data-href="' . site_url('TagComplaint/destroy/' . $row->id) . '" 
+        title="Hapus Data" 
+        class="group flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 shadow-sm transition-all hover:border-red-200 hover:bg-red-50 hover:text-red-600 btn_delete">
+        
+        <i class="fas fa-trash text-xs transition-transform group-hover:scale-110"></i>
+      </button>
+
+    </div>';
     });
     $datatables->asObject();
     return $datatables->generate();
@@ -67,8 +77,7 @@ class ComplaintController extends BaseController
 
   public function get_tags()
   {
-    $query = $this->request->getGet('query');
-    $tags = $this->model_complaint->get_all_tags($query);
+    $tags = $this->model_complaint->get_all_tags();
     $formatted_tags = array_map(function ($tag) {
       if (is_object($tag)) {
         return [
@@ -136,7 +145,7 @@ class ComplaintController extends BaseController
       $this->session->setFlashdata('message', ['danger', 'Tag keluhan gagal diperbarui']);
     }
 
-    return redirect()->to('complaint');
+    return redirect()->to('TagComplaint');
   }
 
   public function destroy($id)
@@ -146,6 +155,6 @@ class ComplaintController extends BaseController
     } else {
       $this->session->setFlashdata('message', ['danger', 'Tag keluhan gagal dihapus']);
     }
-    return redirect()->to('complaint');
+    return redirect()->to('TagComplaint');
   }
 }

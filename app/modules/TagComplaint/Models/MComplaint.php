@@ -1,6 +1,6 @@
 <?php
 
-namespace App\modules\complaint\Models;
+namespace App\modules\TagComplaint\Models;
 
 use CodeIgniter\Model;
 

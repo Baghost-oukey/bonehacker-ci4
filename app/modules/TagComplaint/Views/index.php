@@ -131,11 +131,12 @@
                 class="rounded-md p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800">&times;</button>
         </div>
 
-        <form id="addComplaintForm" action="<?= base_url('complaint/store') ?>" method="post" class="space-y-4 p-5">
+        <form id="addComplaintForm" action="<?= site_url('tag-keluhan/store') ?>" method="post" class="space-y-4 p-5">
             <?= csrf_field() ?>
 
             <div class="space-y-1">
-                <label class="text-sm font-medium text-slate-700">Nama Tag Keluhan <span class="text-red-500">*</span></label>
+                <label class="text-sm font-medium text-slate-700">Nama Tag Keluhan <span
+                        class="text-red-500">*</span></label>
                 <input type="text" name="name" id="add_name"
                     class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
                     required>
@@ -176,7 +177,8 @@
             <?= csrf_field() ?>
 
             <div class="space-y-1">
-                <label class="text-sm font-medium text-slate-700">Nama Tag Keluhan <span class="text-red-500">*</span></label>
+                <label class="text-sm font-medium text-slate-700">Nama Tag Keluhan <span
+                        class="text-red-500">*</span></label>
                 <input type="text" name="name" id="edit_name"
                     class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
                     required>
@@ -208,7 +210,8 @@
 <div id="modalDelete" class="modal-wrapper hidden fixed inset-0 z-50 items-center justify-center bg-black/40 p-4">
     <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-6 space-y-4">
         <h3 class="text-lg font-semibold text-slate-800">Peringatan!</h3>
-        <p class="text-sm text-slate-500">Yakin menghapus data ini? Tag ini akan dihapus dari semua riwayat histori terkait.</p>
+        <p class="text-sm text-slate-500">Yakin menghapus data ini? Tag ini akan dihapus dari semua riwayat histori
+            terkait.</p>
 
         <form id="deleteComplaintForm" action="" method="post" class="flex justify-end gap-2">
             <?= csrf_field() ?>
@@ -233,9 +236,10 @@
     window.complaintConfig = {
         csrfName: "<?= csrf_token() ?>",
         csrfHash: "<?= csrf_hash() ?>",
-        fetchUrl: "<?= site_url('complaint/fetch') ?>",
-        storeUrl: "<?= base_url('complaint/store') ?>",
-        checkNameUrl: "<?= base_url('complaint/check_name_exists') ?>"
+
+        fetchUrl: "<?= site_url('tag-keluhan/fetch') ?>",
+        storeUrl: "<?= site_url('tag-keluhan/store') ?>",
+        checkNameUrl: "<?= site_url('tag-keluhan/check_name_exists') ?>"
     };
 </script>
 

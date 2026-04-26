@@ -6,7 +6,7 @@ import "./components/monitoring-branch.js";
 import "./components/profile.js";
 import "./components/clock.js";
 import "./pages/header.js";
-import "./pages/antrean_page.js";
+import "./pages/antrean.js";
 import "./pages/views.js";
 import "./pages/rekam_medis.js";
 import "./pages/journal.js";

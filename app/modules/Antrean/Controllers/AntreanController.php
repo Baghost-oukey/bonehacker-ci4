@@ -45,193 +45,233 @@ class AntreanController extends BaseController
     public function fetchDataTable()
     {
         $request = service('request');
-        $region = $request->getPost('region');
-        $startDate = $request->getPost('start_date');
-        $endDate = $request->getPost('end_date');
 
-        $builder = $this->db->table('patient_queues pq')
-            ->select('pq.id as queue_id, pq.queue_date, p.id as patient_id, p.name as patient_name, p.age as patient_age, p.phone, p.address, pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama, h.id as history_id, h.process_at, h.finish_at')
-            ->select('(SELECT COUNT(h2.id) FROM histories h2 WHERE h2.patient_id = p.id AND h2.is_delete = 0) AS visit_count')
-            ->join('patients p', 'p.id = pq.patient_id', 'left')
-            ->join('patient_address pa', 'pa.patient_id = p.id', 'left')
-            ->join('histories h', 'h.patient_queue_id = pq.id', 'left')
-            ->where('h.finish_at', null);
+        try {
+            $region = $request->getPost('region');
+            $startDate = $request->getPost('start_date');
+            $endDate = $request->getPost('end_date');
 
+            $search = $request->getPost('search');
+            $searchValue = (is_array($search) && !empty($search['value'])) ? $search['value'] : '';
 
-        $role = session()->get('role');
-        $active_region = session()->get('active_region');
-        $region_session = session()->get('region_patient');
+            $start = (int) ($request->getPost('start') ?? 0);
+            $length = (int) ($request->getPost('length') ?? 10);
+            $draw = (int) ($request->getPost('draw') ?? 1);
 
+            // ======================
+            // BASE QUERY (NO HISTORY JOIN!)
+            // ======================
+            $builder = $this->db->table('patient_queues pq')
+                ->select('
+                pq.id as queue_id,
+                pq.queue_date,
+                p.id as patient_id,
+                p.name as patient_name,
+                p.age as patient_age,
+                p.phone,
+                p.address,
+                pa.desa_nama,
+                pa.kecamatan_nama,
+                pa.kabupaten_nama
+            ')
+                ->join('patients p', 'p.id = pq.patient_id', 'left')
+                ->join('patient_address pa', 'pa.patient_id = p.id', 'left');
 
-        // $regions_session = json_decode(session()->get('regions_patient'), true);
+            // ======================
+            // FILTER REGION
+            // ======================
+            $role = session()->get('role');
+            $active_region = session()->get('active_region');
+            $region_session = session()->get('region_patient');
 
-        if ($role === 'owner' || $role === 'superadmin') {
-            $filter = ($region && $region !== 'all') ? $region : ($active_region !== 'all' ? $active_region : 'all');
-        } else {
-            $filter = $region_session;
-        }
-
-        if ($filter !== 'all' && !empty($filter)) {
-            if (is_array($filter)) {
-                $builder->whereIn('pq.region_id', $filter);
+            if ($role === 'owner' || $role === 'superadmin') {
+                $filter = ($region && $region !== 'all')
+                    ? $region
+                    : ($active_region !== 'all' ? $active_region : null);
             } else {
-                $builder->where('pq.region_id', $filter);
+                $filter = $region_session;
             }
-        }
-        // if (!empty($region)) $builder->where('p.region_id', $region);
-        if (!empty($startDate) && !empty($endDate)) {
-            $builder->where('DATE(pq.queue_date) >=', date('Y-m-d', strtotime($startDate)))
-                ->where('DATE(pq.queue_date) <=', date('Y-m-d', strtotime($endDate)));
-        }
 
+            if (!empty($filter) && $filter !== 'all') {
+                is_array($filter)
+                    ? $builder->whereIn('pq.region_id', $filter)
+                    : $builder->where('pq.region_id', $filter);
+            }
 
-        return \Hermawan\DataTables\DataTable::of($builder)
-            ->filter(function ($builder) use ($request) {
-                $search = $request->getPost('search');
-                $searchValue = $search['value'] ?? null;
-                if ($searchValue) {
-                    $builder->groupStart()
-                        ->like('p.name', $searchValue)
-                        ->orLike('p.phone', $searchValue)
-                        ->orLike('pa.kabupaten_nama', $searchValue)
-                        ->orLike('pq.queue_date', $searchValue)
-                        ->groupEnd();
-                }
-            }, true)
+            // ======================
+            // FILTER DATE
+            // ======================
+            if ($startDate && $endDate) {
+                $builder->where('DATE(pq.queue_date) >=', date('Y-m-d', strtotime($startDate)));
+                $builder->where('DATE(pq.queue_date) <=', date('Y-m-d', strtotime($endDate)));
+            }
 
-            ->add('date', function ($row) {
-                return !empty($row->queue_date) ? date('d-m-Y', strtotime($row->queue_date)) : '-';
-            })
-            ->add('name', function ($row) {
-                return $row->patient_name;
-            })
-            ->add('address', function ($row) {
-                return implode(', ', array_filter([$row->address, $row->desa_nama, $row->kecamatan_nama, $row->kabupaten_nama]));
-            })
-            ->add('age', function ($row) {
-                return $row->patient_age;
-            })
-            ->add('description', function ($row) {
-                return $row->visit_count > 0 ? 'Pasien Lama' : 'Pasien Baru';
-            })
-            ->add('action', function ($row) {
-                $btn = '<div class="btn-group d-flex justify-content-between align-items-center" style="gap: 5px;">';
-                // $role = session()->get('role');
-                $historyId = $row->history_id ?? '';
-                $urlHistory = site_url('patient/show/' . $row->patient_id) . '?openModalRiwayat=true' . ($historyId ? '&history_id=' . $historyId : '') . '&queue_id=' . $row->queue_id;
+            // ======================
+            // TOTAL
+            // ======================
+            $totalRecords = (clone $builder)->countAllResults();
 
-                $btn = '<div class="flex items-center justify-end gap-2 min-w-220px">';
+            // ======================
+            // SEARCH
+            // ======================
+            if ($searchValue) {
+                $builder->groupStart()
+                    ->like('p.name', $searchValue)
+                    ->orLike('p.phone', $searchValue)
+                    ->orLike('pa.kabupaten_nama', $searchValue)
+                    ->groupEnd();
+            }
 
-                if ($row->process_at !== null) {
-                    $btn .= '<a href="' . site_url('antrean/finishQueue/' . $row->queue_id) . '" 
-                    class="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-[11px] font-bold text-white hover:bg-amber-600 transition active:scale-95 shadow-sm">
-                    <i class="fas fa-check-double"></i> Selesai
-                </a>';
+            $filteredRecords = (clone $builder)->countAllResults();
+
+            // ======================
+            // FETCH
+            // ======================
+            $rows = $builder
+                ->orderBy('pq.queue_date', 'DESC')
+                ->limit($length, $start)
+                ->get()
+                ->getResult();
+
+            // ======================
+            // ENRICH DATA (SAFE QUERY PER ROW)
+            // ======================
+            $data = [];
+            $no = $start + 1;
+
+            foreach ($rows as $row) {
+
+                // ambil history terbaru
+                $history = $this->db->table('histories')
+                    ->where('patient_queue_id', $row->queue_id)
+                    ->where('is_delete', 0)
+                    ->orderBy('id', 'DESC')
+                    ->get()
+                    ->getRow();
+
+                $visitCount = $this->db->table('histories')
+                    ->where('patient_id', $row->patient_id)
+                    ->where('is_delete', 0)
+                    ->countAllResults();
+
+                $actionBtn = '<div class="flex gap-2">';
+
+                if ($history && $history->process_at) {
+                    $actionBtn .= '<a href="' . site_url('antrean/finishQueue/' . $row->queue_id) . '" class="bg-amber-500 px-2 py-1 text-white rounded">Selesai</a>';
                 } else {
-                    $btn .= '<a href="' . site_url('antrean/procesToQueue/' . $row->queue_id) . '" 
-                    class="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-[10px] font-bold text-white hover:bg-emerald-700 transition active:scale-95 shadow-sm">
-                    <i class="fas fa-stethoscope"></i> Proses Pasien
-                </a>';
+                    $actionBtn .= '<a href="' . site_url('antrean/procesToQueue/' . $row->queue_id) . '" class="bg-emerald-600 px-2 py-1 text-white rounded">Proses</a>';
                 }
 
-                $btn .= '<a href="' . $urlHistory . '" 
-                class="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-100 px-4 py-2 text-[11px] font-bold text-slate-600 hover:bg-slate-200 transition active:scale-95">
-                <i class="fas fa-file-medical text-indigo-500"></i> Rekam Medis
-            </a>';
+                $actionBtn .= '</div>';
 
-                $btn .= '</div>';
-                return $btn;
-            })
-            ->toJson(true);
+                $data[] = [
+                    'no' => $no++,
+                    'queue_id' => $row->queue_id,
+                    'date' => date('d-m-Y', strtotime($row->queue_date)),
+                    'name' => $row->patient_name,
+                    'age' => $row->patient_age,
+                    'address' => implode(', ', array_filter([
+                        $row->address,
+                        $row->desa_nama,
+                        $row->kecamatan_nama,
+                        $row->kabupaten_nama
+                    ])),
+                    'phone' => $row->phone,
+                    'description' => $visitCount > 0 ? 'Pasien Lama' : 'Pasien Baru',
+                    'action' => $actionBtn
+                ];
+            }
+
+            return $this->response->setJSON([
+                'draw' => $draw,
+                'recordsTotal' => $totalRecords,
+                'recordsFiltered' => $filteredRecords,
+                'data' => $data
+            ]);
+
+        } catch (\Throwable $e) {
+
+            // 🔥 DEBUG REAL ERROR
+            return $this->response->setStatusCode(500)->setJSON([
+                'error' => true,
+                'message' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ]);
+        }
     }
 
     public function fetchPatientDataTables()
     {
-        $request = service('request');
-        $cache = \Config\Services::cache();
+        try {
+            $request = service('request');
+            $search = $request->getPost('search');
+            $searchValue = (is_array($search) && !empty($search['value'])) ? $search['value'] : '';
+            $region = $request->getPost('region');
+            $csrfToken = csrf_hash();
 
-        $searchTerm = $request->getPost('search')['value'] ?? '';
-        $start = $request->getPost('start') ?? 0;
-        $region = $request->getPost('region');
-        $cacheKey = 'patients_dt_' . md5($searchTerm . $start . $region . session()->get('id'));
+            $builder = $this->db->table('patients p')
+                ->select('p.id AS patient_id, p.name, p.phone, p.address')
+                ->select('r.name as name_region')
+                ->select('pa.desa_nama')
+                ->join('regions r', 'r.id = p.region_id', 'left')
+                ->join('patient_address pa', 'pa.patient_id = p.id', 'left');
 
-        if ($cached = $cache->get($cacheKey)) {
-            return $this->response->setJSON($cached);
-        }
+            // Filter wilayah sederhana
+            $role = session()->get('role');
+            $active_region = session()->get('active_region');
+            $region_session = session()->get('region_patient');
 
-
-
-        $builder = $this->db->table('patients p')
-            ->select('p.id AS patient_id, p.name, p.phone, p.address, p.age, r.name as name_region, pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama, pa.provinsi_nama')
-            ->select('COALESCE(h_stat.last_visit, "-") AS last_visit_date', false)
-            ->select('COALESCE(h_stat.total_visit, 0) AS visit_count', false)
-            ->join('regions r', 'r.id = p.region_id', 'left')
-            ->join('patient_address pa', 'pa.patient_id = p.id', 'left')
-            ->join(
-                '(SELECT patient_id, MAX(date) as last_visit, COUNT(id) as total_visit 
-                 FROM histories WHERE is_delete = 0 GROUP BY patient_id) h_stat',
-                'h_stat.patient_id = p.id',
-                'left'
-            );
-
-        $role = session()->get('role');
-        $active_region = session()->get('active_region');
-        $region_session = session()->get('region_patient');
-
-        if ($role === 'user') {
-            $filter = $region_session;
-        } else {
-            $filter = ($region && $region !== 'all') ? $region : ($active_region !== 'all' ? $active_region : 'all');
-        }
-
-        if ($filter !== 'all' && !empty($filter)) {
-            if (is_array($filter)) {
-                $builder->whereIn('p.region_id', $filter);
-            } else {
-                $builder->where('p.region_id', $filter);
+            if ($role === 'user' && !empty($region_session)) {
+                $f = is_array($region_session) ? $region_session[0] : $region_session;
+                $builder->where('p.region_id', $f);
+            } elseif ($region && $region !== 'all') {
+                $builder->where('p.region_id', $region);
+            } elseif ($active_region && $active_region !== 'all') {
+                $builder->where('p.region_id', $active_region);
             }
+
+            // Search
+            if (!empty($searchValue)) {
+                $builder->groupStart()
+                    ->like('p.name', $searchValue, 'both')
+                    ->orLike('p.phone', $searchValue, 'both')
+                    ->groupEnd();
+            }
+
+            $totalRecords = (clone $builder)->countAllResults(false);
+            $data = $builder->orderBy('p.id', 'ASC')->limit(200)->get()->getResult();
+
+            $output = [];
+            foreach ($data as $row) {
+                $output[] = [
+                    'patient_id' => (int) $row->patient_id,
+                    'name' => $row->name ?? '-',
+                    'phone' => $row->phone ?? '-',
+                    'address' => $row->address ?? ($row->desa_nama ?? '-'),
+                    'desa_nama' => $row->desa_nama,
+                    'name_region' => $row->name_region,
+                    'description' => 'Pasien',
+                    'action' => '<button onclick="tambahKeAntrean(' . $row->patient_id . ')">Pilih</button>'
+                ];
+            }
+
+            return $this->response->setJSON([
+                'draw' => 1,
+                'recordsTotal' => $totalRecords,
+                'recordsFiltered' => $totalRecords,
+                'data' => $output,
+                'new_token' => $csrfToken
+            ]);
+        } catch (\Throwable $e) {
+            return $this->response->setJSON([
+                'draw' => 1,
+                'recordsTotal' => 0,
+                'recordsFiltered' => 0,
+                'data' => [],
+                'error' => $e->getMessage()
+            ]);
         }
-
-        return \Hermawan\DataTables\DataTable::of($builder)
-            ->filter(function ($builder) use ($request) {
-
-                $search = $request->getPost('search')['value'] ?? null;
-                if ($search) {
-                    $builder->groupStart()
-                        ->like('p.name', $search, 'both')
-                        ->orLike('p.phone', $search, 'both')
-                        ->orLike('p.id', $search, 'both')
-                        ->orLike('pa.desa_nama', $search, 'both')
-                        ->groupEnd();
-                }
-            }, true)
-            ->add('name', function ($row) {
-                return '<div><div class="text-slate-800 font-bold">' . $row->name . '</div><div class="text-[10px] text-slate-400">' . $row->phone . '</div></div>';
-            })
-            ->add('address', function ($row) {
-                $addressFilter = array_filter([
-                    $row->address,
-                    $row->desa_nama,
-                    $row->kecamatan_nama,
-                    $row->kabupaten_nama
-                ]);
-                return '<span class="text-xs">' . implode(', ', $addressFilter) . '</span>';
-            })
-            ->add('description', function ($row) {
-                // Pakai badge Tailwind yang cantik
-                return $row->visit_count > 0 ?
-                    '<span class="px-2 py-1 rounded bg-blue-50 text-blue-600 text-[10px] font-bold uppercase">Pasien Lama</span>' :
-                    '<span class="px-2 py-1 rounded bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase">Pasien Baru</span>';
-            })
-            ->add('action', function ($row) {
-                return '<a href="' . site_url('antrean/addToQueue/' . $row->patient_id) . '" class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 text-white px-4 py-2 text-xs font-bold hover:bg-indigo-700 transition active:scale-95 shadow-sm"><i class="fas fa-plus"></i> Tambah</a>';
-            })
-            ->toJson(true);
-
-        $dt = json_decode($this->response->getBody());
-        $cache->save($cacheKey, $dt->getBody(), 120);
-
-        return $this->response->setJSON($dt);
     }
 
     public function addToQueue($patientId)
@@ -242,8 +282,8 @@ class AntreanController extends BaseController
             return redirect()->back()->with('message', ['error', 'Data pasien atau wilayah tidak valid.']);
         }
 
-        $insert =  $this->db->table('patient_queues')->insert([
-            'region_id'  => $patient->region_id,
+        $insert = $this->db->table('patient_queues')->insert([
+            'region_id' => $patient->region_id,
 
             'patient_id' => $patientId,
             'queue_date' => date('Y-m-d'),
@@ -252,13 +292,13 @@ class AntreanController extends BaseController
 
         if ($insert) {
             return $this->response->setJSON([
-                'status'  => 'success',
+                'status' => 'success',
                 'message' => 'Pasien ' . $patient->name . ' berhasil ditambahkan ke antrean.'
             ]);
         }
 
         return $this->response->setJSON([
-            'status'  => 'error',
+            'status' => 'error',
             'message' => 'Terjadi kesalahan sistem saat menambah antrean.'
         ])->setStatusCode(500);
     }

@@ -53,22 +53,29 @@ class MedisController extends BaseController
     });
 
     $dataTables->addColumn('action', function ($row) {
-      return '<button data-name="' .
-        $row->nama .
-        '" data-description="' .
-        $row->deskripsi .
-        '" data-id="' .
-        $row->id .
-        '" data-href="' .
-        site_url('tag-rekam-medis/update/' . $row->id) .
-        '" class="btn btn-primary btn-action mr-1 btn_edit">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button type="button" data-href="' .
-        site_url('tag-rekam-medis/destroy/' . $row->id) .
-        '" class="btn btn-danger btn-action btn_delete">
-                    <i class="fas fa-trash"></i>
-                </button>';
+      return '
+  <div class="flex items-center justify-center gap-2">
+
+    <button type="button" 
+      data-id="' . $row->id . '"
+      data-name="' . htmlspecialchars($row->nama, ENT_QUOTES, 'UTF-8') . '" 
+      data-description="' . htmlspecialchars($row->deskripsi, ENT_QUOTES, 'UTF-8') . '" 
+      data-href="' . site_url('tag-rekam-medis/update/' . $row->id) . '" 
+      title="Edit Data" 
+      class="group flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 shadow-sm transition-all hover:border-teal-200 hover:bg-teal-50 hover:text-teal-600 btn_edit">
+      
+      <i class="fas fa-edit text-xs transition-transform group-hover:scale-110"></i>
+    </button>
+
+    <button type="button" 
+      data-href="' . site_url('tag-rekam-medis/destroy/' . $row->id) . '" 
+      title="Hapus Data" 
+      class="group flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 shadow-sm transition-all hover:border-red-200 hover:bg-red-50 hover:text-red-600 btn_delete">
+      
+      <i class="fas fa-trash text-xs transition-transform group-hover:scale-110"></i>
+    </button>
+
+  </div>';
     });
 
     $dataTables->asObject();
