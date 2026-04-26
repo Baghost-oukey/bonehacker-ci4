@@ -11,31 +11,61 @@
         </button>
     </div>
 
+    <!-- TABLE -->
     <div class="overflow-x-auto">
         <table id="table-2" class="w-full text-sm">
             <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
                 <tr>
-                    <th class="px-6 py-3.5 text-center font-semibold">No</th>
+                    <th class="px-6 py-3.5 text-center font-semibold w-12">No</th>
                     <th class="px-6 py-3.5 text-left font-semibold">Keluhan</th>
                     <th class="px-6 py-3.5 text-left font-semibold">Rekam Medis</th>
                     <th class="px-6 py-3.5 text-left font-semibold">Tanggal</th>
-                    <th class="px-6 py-3.5 text-left font-semibold">Type</th>
+                    <th class="px-6 py-3.5 text-center font-semibold w-20">Type</th>
                     <th class="px-6 py-3.5 text-center font-semibold">Aksi</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100 text-slate-700">
-                <tr class="hover:bg-slate-50 transition">
-                    <td colspan="6" class="px-6 py-12 text-center text-slate-400 italic text-sm">
-                        <i class="fas fa-spinner fa-spin mr-2 text-slate-300"></i>
-                        Memuat data riwayat...
-                    </td>
-                </tr>
-            </tbody>
+            <tbody class="divide-y divide-slate-100 text-slate-700"></tbody>
         </table>
+    </div>
+
+    <!-- PAGINATION -->
+    <div class="border-t border-slate-100 bg-slate-50/50 px-6 py-4">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+                <div class="flex items-center gap-2">
+                    <label class="text-xs font-medium text-slate-600">Tampilkan</label>
+                    <select id="paginationLength"
+                        class="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15">
+                        <option value="10">10</option>
+                        <option value="25" selected>25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                    <span class="text-xs font-medium text-slate-600">data per halaman</span>
+                </div>
+                <div class="text-xs font-medium text-slate-600 sm:ml-auto">
+                    <span id="paginationInfo">Menampilkan 0 sampai 0 dari 0 data</span>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-center gap-1.5 sm:justify-end">
+                <button id="paginationPrev"
+                    class="inline-flex h-8 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:border-slate-400 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fas fa-chevron-left text-xs mr-1"></i>
+                    <span class="hidden sm:inline">Sebelumnya</span>
+                </button>
+                <div id="paginationNumbers" class="flex items-center gap-1"></div>
+                <button id="paginationNext"
+                    class="inline-flex h-8 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:border-slate-400 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span class="hidden sm:inline">Berikutnya</span>
+                    <i class="fas fa-chevron-right text-xs ml-1"></i>
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- Modal Tambah/Edit Riwayat - DI LUAR FORM patientForm -->
+<!-- Modal Tambah/Edit Riwayat -->
 <div id="exampleModal" class="modal-wrapper hidden fixed inset-0 z-50 items-center justify-center bg-black/40 p-4">
     <div class="w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-xl">
         <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">

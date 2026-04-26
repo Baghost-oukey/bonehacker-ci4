@@ -1,6 +1,6 @@
 /**
  * Patient History Card Script
- * Handles DataTable, modals, tagify, and CRUD operations
+ * Custom pagination, modals, tagify, and CRUD operations
  */
 
 const MODAL_VISIBLE_CLASS = "flex";
@@ -27,17 +27,16 @@ let deleteId = null;
 let activeTerapis = window.activeTerapis || [];
 
 const PatientHistoryPage = {
+  currentPage: 1,
+  pageLength: 25,
+  totalRecords: 0,
+  filteredRecords: 0,
+  searchValue: "",
+
   init() {
-    this.initDataTable();
     this.initTagify();
     this.initEventListeners();
-
-    window.add = this.add.bind(this);
-    window.show = this.show.bind(this);
-    window.destroy = this.destroy.bind(this);
-    window.toggleTerapiForm = this.toggleTerapiForm;
-
-    this.checkGender();
+    this.loadTableData(1);
     this.checkUrlParams();
   },
 
@@ -47,97 +46,154 @@ const PatientHistoryPage = {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   },
 
-  checkGender() {
-    const gender = document.getElementById("gender")?.value;
-    const el = document.getElementById("terapi-kejantanan");
-    if (el) el.style.display = gender === "Man" ? "flex" : "none";
+  // =============================================
+  // PAGINATION
+  // =============================================
+  updatePaginationInfo() {
+    if (this.filteredRecords <= 0) {
+      $("#paginationInfo").text("Menampilkan 0 sampai 0 dari 0 data");
+      return;
+    }
+    const start = (this.currentPage - 1) * this.pageLength + 1;
+    const end = Math.min(
+      this.currentPage * this.pageLength,
+      this.filteredRecords,
+    );
+    $("#paginationInfo").text(
+      `Menampilkan ${start} sampai ${end} dari ${this.filteredRecords} data`,
+    );
   },
 
-  toggleTerapiForm() {
-    const cb = document.getElementById("kejantanan");
-    ["terapi-form", "pemeriksaan"].forEach((id) => {
-      const el = document.getElementById(id);
-      if (el) el.style.display = cb?.checked ? "block" : "none";
-    });
-  },
+  updatePaginationUI() {
+    const totalPages = Math.max(
+      1,
+      Math.ceil(this.filteredRecords / this.pageLength),
+    );
+    const container = $("#paginationNumbers");
+    container.empty();
 
-  // DataTable
-  initDataTable() {
-    if (typeof window.$ === "undefined") return;
+    const startPage = Math.max(1, this.currentPage - 2);
+    const endPage = Math.min(totalPages, this.currentPage + 2);
 
-    if ($.fn.DataTable.isDataTable("#table-2")) {
-      $("#table-2").DataTable().destroy();
-      $("#table-2 tbody").empty();
+    if (startPage > 1) {
+      container.append(
+        `<button class="pagination-btn inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:border-slate-400" data-page="1">1</button>`,
+      );
+      if (startPage > 2)
+        container.append('<span class="px-1 text-slate-300">...</span>');
     }
 
-    $("#table-2").DataTable({
-      processing: true,
-      serverSide: true,
-      destroy: true,
-      order: [[3, "desc"]],
-      language: {
-        processing: '<i class="fas fa-spinner fa-spin text-slate-300"></i>',
-        emptyTable:
-          '<div class="py-8 text-center"><i class="fas fa-inbox text-3xl text-slate-300 mb-2"></i><p class="text-slate-500 text-sm">Belum ada data riwayat</p></div>',
-        info: "Menampilkan _START_ - _END_ dari _TOTAL_",
-        infoEmpty: "Menampilkan 0 - 0 dari 0",
-        lengthMenu: "Tampilkan _MENU_ per halaman",
-        search: "",
-        searchPlaceholder: "Cari data riwayat...",
-        paginate: {
-          previous: '<i class="fas fa-chevron-left text-xs"></i>',
-          next: '<i class="fas fa-chevron-right text-xs"></i>',
-        },
+    for (let p = startPage; p <= endPage; p++) {
+      const active =
+        p === this.currentPage
+          ? "bg-teal-600 border-teal-600 text-white font-semibold shadow-md shadow-teal-600/30"
+          : "border border-slate-300 bg-white text-slate-700 font-semibold transition hover:bg-slate-100 hover:border-slate-400";
+      container.append(
+        `<button class="pagination-btn inline-flex h-8 w-8 items-center justify-center rounded-lg ${active} text-xs" data-page="${p}">${p}</button>`,
+      );
+    }
+
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1)
+        container.append('<span class="px-1 text-slate-300">...</span>');
+      container.append(
+        `<button class="pagination-btn inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:border-slate-400" data-page="${totalPages}">${totalPages}</button>`,
+      );
+    }
+
+    $("#paginationPrev").prop("disabled", this.currentPage <= 1);
+    $("#paginationNext").prop("disabled", this.currentPage >= totalPages);
+  },
+
+  renderTableState(message, isLoading = false) {
+    const icon = isLoading
+      ? '<i class="fas fa-spinner fa-spin mr-2 text-slate-300"></i>'
+      : '<i class="fas fa-inbox mr-2 text-slate-300"></i>';
+    $("#table-2 tbody").html(
+      `<tr class="hover:bg-slate-50 transition"><td colspan="6" class="px-6 py-12 text-center text-slate-400 italic text-sm">${icon}${message}</td></tr>`,
+    );
+  },
+
+  // =============================================
+  // LOAD TABLE DATA
+  // =============================================
+  loadTableData(pageNumber = 1) {
+    const self = this;
+    this.renderTableState("Memuat data riwayat...", true);
+
+    $.ajax({
+      url: window.historyFetchUrl,
+      type: "POST",
+      dataType: "json",
+      data: {
+        [window.csrfTokenName]: window.csrfHash,
+        draw: 1,
+        start: (pageNumber - 1) * self.pageLength,
+        length: self.pageLength,
+        search: { value: self.searchValue },
       },
-      columns: [
-        { data: "no", width: "5%" },
-        { data: "complaint", width: "25%" },
-        { data: "medhis", width: "25%" },
-        { data: "date", width: "15%" },
-        { data: "type", width: "15%" },
-        { data: "action", width: "15%", orderable: false },
-      ],
-      ajax: {
-        url: window.historyFetchUrl,
-        type: "POST",
-        data: function (d) {
-          d[window.csrfTokenName] = window.csrfHash;
-        },
-        dataSrc: function (json) {
-          return json.data || [];
-        },
-        error: function (xhr) {
-          console.error("History fetch error:", xhr.status, xhr.responseText);
-        },
-      },
-      rowCallback: function (row, data) {
-        $(row).addClass("hover:bg-slate-50 transition");
-        if (data.is_delete === "1") {
-          $(row).find("td").addClass("text-red-500 line-through opacity-70");
+      success: function (response) {
+        if (response.new_token) {
+          window.csrfHash = response.new_token;
+          $('input[name="' + window.csrfTokenName + '"]').val(
+            response.new_token,
+          );
         }
+
+        self.currentPage = pageNumber;
+        self.totalRecords = Number(response.recordsTotal || 0);
+        self.filteredRecords = Number(
+          response.recordsFiltered || self.totalRecords,
+        );
+
+        const tbody = $("#table-2 tbody");
+        tbody.empty();
+
+        if (!response.data || response.data.length === 0) {
+          self.renderTableState("Belum ada data riwayat");
+          self.updatePaginationInfo();
+          self.updatePaginationUI();
+          return;
+        }
+
+        response.data.forEach(function (row) {
+          const tr = $(
+            '<tr class="hover:bg-slate-50 transition border-b border-slate-100"></tr>',
+          );
+          tr.append(
+            `<td class="px-6 py-3.5 text-center text-xs text-slate-500">${row.no || "-"}</td>`,
+          );
+          tr.append(
+            `<td class="px-6 py-3.5 text-xs text-slate-700">${row.complaint || "-"}</td>`,
+          );
+          tr.append(
+            `<td class="px-6 py-3.5 text-xs text-slate-700">${row.medhis || "-"}</td>`,
+          );
+          tr.append(
+            `<td class="px-6 py-3.5 text-xs text-slate-600">${row.date || "-"}</td>`,
+          );
+          tr.append(`<td class="px-6 py-3.5 text-xs">${row.type || "-"}</td>`);
+          tr.append(
+            `<td class="px-6 py-3.5 text-center">${row.action || "-"}</td>`,
+          );
+          tbody.append(tr);
+        });
+
+        self.updatePaginationInfo();
+        self.updatePaginationUI();
       },
-      drawCallback: function () {
-        $(".dataTables_length select").addClass(
-          "rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15",
-        );
-        $(".dataTables_filter input").addClass(
-          "rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15 w-full sm:w-64",
-        );
-        $(".paginate_button").addClass(
-          "inline-flex h-8 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:border-slate-400 mx-0.5",
-        );
-        $(".paginate_button.current").addClass(
-          "bg-teal-600 border-teal-600 text-white shadow-md shadow-teal-600/30 hover:bg-teal-700",
-        );
-        $(".paginate_button.disabled").addClass(
-          "opacity-50 cursor-not-allowed hover:bg-white hover:border-slate-300",
-        );
-        $(".dataTables_info").addClass("text-xs font-medium text-slate-600");
+      error: function () {
+        self.renderTableState("Gagal memuat data riwayat");
+        self.filteredRecords = 0;
+        self.updatePaginationInfo();
+        self.updatePaginationUI();
       },
     });
   },
 
-  // Tagify
+  // =============================================
+  // TAGIFY
+  // =============================================
   initTagify() {
     complaintTagify = this.initTagifyWithServer(
       "complaint",
@@ -171,7 +227,9 @@ const PatientHistoryPage = {
     return tagify;
   },
 
+  // =============================================
   // CRUD
+  // =============================================
   add() {
     const modal = document.getElementById("exampleModal");
     const form = document.getElementById("save_data");
@@ -193,23 +251,12 @@ const PatientHistoryPage = {
       }
     });
 
-    $("#terapi-kejantanan").show();
-    $("#kejantanan").prop("checked", false);
     $("#history-info").hide();
     $("#save-button").show();
-    $("#region_history").prop("disabled", false);
-
     document.getElementById("date").value = new Date()
       .toISOString()
       .split("T")[0];
-
-    $(".terapis").prop("disabled", false).empty();
-    if (typeof activeTerapis !== "undefined") {
-      activeTerapis.forEach((t) =>
-        $(".terapis").append(new Option(t.nama || t.name, t.id)),
-      );
-    }
-    $(".terapis").val([]).trigger("change");
+    $(".terapis").prop("disabled", false).val([]).trigger("change");
   },
 
   show(id) {
@@ -217,8 +264,6 @@ const PatientHistoryPage = {
     const form = document.getElementById("save_data");
     if (!form) return;
     form.reset();
-    $('input[type="checkbox"]').prop("checked", false);
-    $('input[type="radio"]').prop("checked", false);
 
     const showUrl = window.historyFetchUrl
       .replace(/\/\d+$/, "/" + id)
@@ -231,18 +276,9 @@ const PatientHistoryPage = {
       success: function (data) {
         const modal = document.getElementById("exampleModal");
         openModal(modal);
-        form.setAttribute(
-          "action",
-          window.historyStoreUrl.replace("store", "update"),
-        );
         modal.querySelector(".modal-title").textContent =
           "Detail Riwayat Pasien";
-
-        $("#notif-wa").hide();
-        document.getElementById("terapi-kejantanan").style.display = "flex";
-        document.getElementById("kejantanan").checked =
-          data.kejantanan === "ya";
-        self.toggleTerapiForm();
+        form.setAttribute("action", window.historyStoreUrl);
 
         form.querySelector('input[name="id"]').value = data.id || "";
         form.querySelector('input[name="patient_id"]').value =
@@ -266,40 +302,10 @@ const PatientHistoryPage = {
             resultTagify.addTags(data.results.split(", "));
         }
 
-        $("#history-info").show();
-        $("#created_by").text(data.history_created_by || "-");
-        if (data.history_updated_by && data.history_updated_by !== "-") {
-          $("#updated_by").text(data.history_updated_by);
-          $("#updated_info").show();
-        } else {
-          $("#updated_info").hide();
-        }
-
-        self.updateFormStatus(data);
+        $("#save-button").show();
       },
       error: () => alert("Gagal memuat data"),
     });
-  },
-
-  updateFormStatus(data) {
-    const dayDiff = Math.ceil(
-      Math.abs(new Date() - new Date(data.date_modified)) /
-        (1000 * 60 * 60 * 24),
-    );
-    if (dayDiff > 1 && data.type !== "draft") {
-      $("#exampleModal form :input").prop("readonly", true);
-      $("#exampleModal form :checkbox, #exampleModal form :radio").prop(
-        "disabled",
-        true,
-      );
-      [complaintTagify, medhisTagify, resultTagify].forEach((t) => {
-        if (t) t.setReadonly(true);
-      });
-      $(".terapis, #region_history").prop("disabled", true);
-      $("#save-button").hide();
-    } else {
-      $("#save-button").show();
-    }
   },
 
   destroy(id) {
@@ -311,28 +317,44 @@ const PatientHistoryPage = {
     const params = new URLSearchParams(window.location.search);
     if (params.get("openModalRiwayat") === "true") {
       const hId = params.get("history_id");
-      if (hId && hId !== "undefined" && hId !== "") {
+      if (hId && hId !== "undefined" && hId !== "")
         setTimeout(() => this.show(hId), 500);
-      }
     }
   },
 
-  // Event Listeners
+  // =============================================
+  // EVENT LISTENERS
+  // =============================================
   initEventListeners() {
     const self = this;
 
-    // ✅ Button Tambah Riwayat
-    const addBtn = document.getElementById("btn-add-history");
-    if (addBtn) {
-      addBtn.addEventListener("click", () => {
-        self.add();
-      });
-    }
+    // Tambah Riwayat button
+    document
+      .getElementById("btn-add-history")
+      ?.addEventListener("click", () => self.add());
 
-    // Select2 di modal
+    // Select2
     $("#region_history, .terapis").select2({
       dropdownParent: $("#exampleModal"),
       width: "100%",
+    });
+
+    // Pagination
+    $("#paginationLength").on("change", function () {
+      self.pageLength = parseInt($(this).val(), 10);
+      self.currentPage = 1;
+      self.loadTableData(1);
+    });
+    $(document).on("click", ".pagination-btn", function () {
+      const p = parseInt($(this).data("page"), 10);
+      if (!isNaN(p)) self.loadTableData(p);
+    });
+    $("#paginationPrev").on("click", () => {
+      if (self.currentPage > 1) self.loadTableData(self.currentPage - 1);
+    });
+    $("#paginationNext").on("click", () => {
+      const tp = Math.max(1, Math.ceil(self.filteredRecords / self.pageLength));
+      if (self.currentPage < tp) self.loadTableData(self.currentPage + 1);
     });
 
     // Save button
@@ -340,7 +362,6 @@ const PatientHistoryPage = {
       e.preventDefault();
       const btn = $(this);
       const formData = new FormData();
-
       $("#exampleModal form")
         .find("input[name], textarea[name], select[name]")
         .each(function () {
@@ -348,7 +369,6 @@ const PatientHistoryPage = {
           const name = input.attr("name");
           const value = input.val();
           if (["complaint", "medhis", "results"].includes(name)) return;
-
           if (input.is(":checkbox")) {
             if (input.is(":checked")) formData.append(name, value);
           } else if (input.is(":radio")) {
@@ -357,7 +377,6 @@ const PatientHistoryPage = {
             formData.set(name, value || "");
           }
         });
-
       if (complaintTagify)
         formData.set("complaint", JSON.stringify(complaintTagify.value || []));
       if (medhisTagify)
@@ -378,10 +397,8 @@ const PatientHistoryPage = {
         success: (res) => {
           if (res.status) {
             closeModal(document.getElementById("exampleModal"));
-            if ($.fn.DataTable.isDataTable("#table-2"))
-              $("#table-2").DataTable().ajax.reload(null, false);
-
-            if (window.Swal?.fire) {
+            self.loadTableData(self.currentPage);
+            if (window.Swal?.fire)
               window.Swal.fire({
                 icon: "success",
                 title: "Berhasil!",
@@ -389,7 +406,6 @@ const PatientHistoryPage = {
                 timer: 2000,
                 showConfirmButton: false,
               });
-            }
           } else {
             if (window.Swal?.fire)
               window.Swal.fire({
@@ -397,7 +413,6 @@ const PatientHistoryPage = {
                 title: "Gagal!",
                 text: res.message,
               });
-
             btn
               .prop("disabled", false)
               .html('<i class="fas fa-save mr-2"></i> Simpan Data');
@@ -411,13 +426,11 @@ const PatientHistoryPage = {
       });
     });
 
-    // Delete
+    // Delete button
     $(document).on("click", "#confirmDeleteButton", function () {
       if (!deleteId) return;
-
       const btn = $(this);
       btn.prop("disabled", true).text("Memproses...");
-
       $.ajax({
         url: `${window.historyDestroyUrl}/${deleteId}`,
         type: "POST",
@@ -427,14 +440,9 @@ const PatientHistoryPage = {
           if (res.status) {
             closeModal(document.getElementById("deleteModal"));
             deleteId = null;
-
-            if ($.fn.DataTable.isDataTable("#table-2"))
-              $("#table-2").DataTable().ajax.reload(null, false);
-          } else {
-            alert("Gagal: " + res.message);
-          }
+            self.loadTableData(self.currentPage);
+          } else alert("Gagal: " + res.message);
         },
-        error: () => alert("Terjadi kesalahan"),
         complete: () => {
           btn.prop("disabled", false).text("Ya, Hapus");
           deleteId = null;
@@ -446,12 +454,8 @@ const PatientHistoryPage = {
     document.addEventListener("click", (e) => {
       const closeBtn = e.target.closest("[data-modal-close]");
       if (closeBtn) closeModal(closeBtn.closest(".modal-wrapper"));
-
-      if (e.target.classList.contains("modal-wrapper")) {
-        closeModal(e.target);
-      }
+      if (e.target.classList.contains("modal-wrapper")) closeModal(e.target);
     });
-
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") {
         const m = document.querySelector(".modal-wrapper.flex");
@@ -468,3 +472,6 @@ if (document.readyState === "loading") {
 } else {
   PatientHistoryPage.init();
 }
+
+window.show = (id) => PatientHistoryPage.show(id);
+window.destroy = (id) => PatientHistoryPage.destroy(id);

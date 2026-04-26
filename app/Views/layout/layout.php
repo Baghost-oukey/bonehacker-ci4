@@ -50,22 +50,52 @@ if ($isDevEnvironment) {
 </head>
 
 <body>
-    <div id="app" class="min-h-screen grid grid-cols-[16rem_1fr] grid-rows-[3.5rem_1fr] text-slate-900">
-        <aside class="row-span-2 border-r border-slate-200 bg-white overflow-auto">
-            <?= $this->include('App\Views\layout\sidebar') ?>
+    <div id="app" class="min-h-screen flex bg-slate-50 text-slate-900">
+
+        <!-- ================= SIDEBAR ================= -->
+        <aside id="sidebar" class="
+        fixed inset-y-0 left-0 z-30 w-64 bg-white border-r border-slate-200
+        transform -translate-x-full transition-transform duration-300 ease-in-out
+
+        lg:static lg:translate-x-0 lg:shrink-0
+    ">
+            <div class="h-full overflow-y-auto">
+                <?= $this->include('App\Views\layout\sidebar') ?>
+            </div>
         </aside>
 
-        <div id="sidebarBackdrop" class="fixed inset-0 z-20 hidden bg-slate-900/40 lg:hidden"></div>
+        <!-- ================= BACKDROP ================= -->
+        <div id="sidebarBackdrop" class="fixed inset-0 z-20 hidden bg-black/40 lg:hidden"></div>
 
-        <div class="min-h-screen">
-            <header class="col-start-2 border-b border-slate-200 bg-white sticky top-0 z-20">
-                <?= $this->include('App\Views\layout\header') ?>
+        <!-- ================= MAIN ================= -->
+        <div class="flex flex-col flex-1 min-h-screen">
+
+            <!-- HEADER -->
+            <header class="sticky top-0 z-20 bg-white border-b border-slate-200">
+
+                <div class="flex items-center justify-between px-4 h-14">
+
+                    <!-- TOGGLE BUTTON MOBILE -->
+                    <button id="sidebarToggle"
+                        class="lg:hidden inline-flex items-center justify-center rounded-md p-2 text-slate-600 hover:bg-slate-100">
+                        <i class="fas fa-bars text-lg"></i>
+                    </button>
+
+                    <!-- HEADER CONTENT -->
+                    <div class="flex-1">
+                        <?= $this->include('App\Views\layout\header') ?>
+                    </div>
+
+                </div>
             </header>
 
-            <main class="col-start-2 overflow-auto">
+            <!-- CONTENT -->
+            <main class="flex-1 overflow-y-auto p-4 md:p-6">
                 <?= $this->renderSection('content') ?>
             </main>
+
         </div>
+
     </div>
 
     <script src="<?= base_url('assets/modules/jquery.min.js') ?>"></script>
@@ -91,6 +121,33 @@ if ($isDevEnvironment) {
         <script type="module"
             src="<?= base_url('build/assets/app.js') . '?v=' . (is_file(FCPATH . 'build/assets/app.js') ? filemtime(FCPATH . 'build/assets/app.js') : time()) ?>"></script>
     <?php endif; ?>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const sidebar = document.getElementById("sidebar");
+            const backdrop = document.getElementById("sidebarBackdrop");
+            const toggle = document.getElementById("sidebarToggle");
+
+            const openSidebar = () => {
+                sidebar.classList.remove("-translate-x-full");
+                backdrop.classList.remove("hidden");
+                document.body.style.overflow = "hidden";
+            };
+
+            const closeSidebar = () => {
+                sidebar.classList.add("-translate-x-full");
+                backdrop.classList.add("hidden");
+                document.body.style.overflow = "";
+            };
+
+            toggle?.addEventListener("click", openSidebar);
+            backdrop?.addEventListener("click", closeSidebar);
+
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Escape") closeSidebar();
+            });
+        });
+    </script>
 
     <script>
         (function () {
