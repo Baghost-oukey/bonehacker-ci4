@@ -30,5 +30,7 @@ import "./pages/statistik_result.js";
 import "./pages/statistik_gender.js";
 import "./pages/patient_biodata.js";
 import "./pages/patient_riwayat.js";
+import "./pages/patient_file.js";
+import "./pages/patient_show.js";
 import "./pages/statistik_gender.js";
 import "./pages/log.js";

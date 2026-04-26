@@ -14,6 +14,4 @@
 
 <?= $this->section('scripts') ?>
 
-<script src="<?= base_url('js/clock.js') ?>"></script>
-
 <?= $this->endSection() ?>
