@@ -134,7 +134,7 @@
         </div>
 
         <form action="<?= site_url('patient/store') ?>" method="post" enctype="multipart/form-data"
-            class="space-y-4 p-5 needs-validation" novalidate id="formTambahPasien">
+            class="space-y-4 p-5" novalidate id="formTambahPasien">
             <?= csrf_field() ?>
             <input type="hidden" name="desa_nama" id="desa_nama">
             <input type="hidden" name="kecamatan_id" id="kecamatan_id">
@@ -150,19 +150,22 @@
                         <label class="text-sm font-medium text-slate-700">Nama Lengkap <span
                                 class="text-red-500">*</span></label>
                         <input type="text" name="name" required autofocus
-                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
-                        <div class="invalid-feedback text-xs text-red-500 mt-1 hidden">Nama tidak boleh kosong</div>
+                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 transition-colors">
+                        <div class="invalid-feedback mt-1 hidden items-center gap-1.5 text-xs text-red-500">
+                            <i class="fas fa-exclamation-circle"></i> Nama tidak boleh kosong
+                        </div>
                     </div>
                     <div class="space-y-1">
                         <label class="text-sm font-medium text-slate-700">Jenis Kelamin <span
                                 class="text-red-500">*</span></label>
                         <select name="gender" required
-                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 transition-colors">
                             <option value="">-- Pilih --</option>
                             <option value="Man">Laki-laki</option>
                             <option value="Woman">Perempuan</option>
                         </select>
-                        <div class="invalid-feedback text-xs text-red-500 mt-1 hidden">Jenis kelamin tidak boleh kosong
+                        <div class="invalid-feedback mt-1 hidden items-center gap-1.5 text-xs text-red-500">
+                            <i class="fas fa-exclamation-circle"></i> Jenis kelamin tidak boleh kosong
                         </div>
                     </div>
                 </div>
@@ -219,7 +222,7 @@
                         <input type="hidden" name="region_id" value="<?= esc($sess_region_id) ?>">
                     <?php else: ?>
                         <select name="region_id" id="region_id" required
-                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 transition-colors">
                             <option value="">-- PILIH --</option>
                             <?php foreach ($wilayah as $value): ?>
                                 <?php $active_id = session()->get('active_region'); ?>
@@ -227,6 +230,9 @@
                                     <?= esc($value->name) ?></option>
                             <?php endforeach; ?>
                         </select>
+                        <div class="invalid-feedback mt-1 hidden items-center gap-1.5 text-xs text-red-500">
+                            <i class="fas fa-exclamation-circle"></i> Wilayah cabang wajib dipilih
+                        </div>
                     <?php endif; ?>
                 </div>
 
@@ -282,8 +288,9 @@
                         <label class="text-sm font-medium text-slate-700">Tanggal Kedatangan <span
                                 class="text-red-500">*</span></label>
                         <input type="datetime-local" name="visit_date" required
-                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
-                        <div class="invalid-feedback text-xs text-red-500 mt-1 hidden">Tanggal kedatangan wajib diisi
+                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm transition-colors focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                        <div class="invalid-feedback mt-1 hidden items-center gap-1.5 text-xs text-red-500">
+                            <i class="fas fa-exclamation-circle"></i> Tanggal kedatangan wajib diisi
                         </div>
                     </div>
                 </div>
@@ -310,11 +317,27 @@
         </div>
 
         <form action="<?= site_url('patient/export_data') ?>" method="GET" target="_blank" class="space-y-4 p-5">
-            <div class="space-y-1">
-                <label class="text-sm font-medium text-slate-700">Pilih Rentang Tanggal</label>
-                <input type="text" name="date_range" id="export_date"
-                    class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                    placeholder="Pilih Periode Laporan">
+            <div class="space-y-4">
+                <div class="space-y-1">
+                    <label class="text-sm font-medium text-slate-700">Periode Laporan</label>
+                    <select id="periodeSelect" name="periode" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500">
+                        <option value="today">Hari Ini</option>
+                        <option value="last_7_days">7 Hari Terakhir</option>
+                        <option value="this_month" selected>Bulan Ini</option>
+                        <option value="custom">Rentang Tanggal...</option>
+                    </select>
+                </div>
+
+                <div id="customDateRange" class="hidden grid grid-cols-2 gap-4 rounded-lg bg-slate-50 p-3 border border-slate-200">
+                    <div class="space-y-1">
+                        <label class="text-xs font-medium text-slate-500">Dari Tanggal</label>
+                        <input type="date" name="start_date" class="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-medium text-slate-500">Sampai Tanggal</label>
+                        <input type="date" name="end_date" class="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm">
+                    </div>
+                </div>
             </div>
 
             <div class="space-y-1">

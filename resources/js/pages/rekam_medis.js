@@ -30,6 +30,7 @@ const closeModal = (modal) => {
   modal.classList.add(MODAL_HIDDEN_CLASS);
 };
 
+// --- INIT || SETUP SCRIPT ---
 const setupRekamMedisPage = () => {
   const config = window.rekamMedisConfig;
   const page = document.getElementById("rekamMedisPage");
@@ -46,6 +47,7 @@ const setupRekamMedisPage = () => {
   let searchValue = "";
   let deleteId = null;
 
+  // --- UPDATE CRSF TOKEN ---
   const updateCsrf = (newToken) => {
     if (!newToken) return;
     config.csrfHash = newToken;
@@ -53,6 +55,8 @@ const setupRekamMedisPage = () => {
     $(`input[name='${config.csrfName}']`).val(newToken);
   };
 
+
+  // --- PAGINATION ---
   const updatePaginationInfo = () => {
     if (filteredRecords <= 0) {
       $("#paginationInfo").text("Menampilkan 0 sampai 0 dari 0 data");
@@ -105,6 +109,8 @@ const setupRekamMedisPage = () => {
     $("#paginationNext").prop("disabled", currentPage >= totalPages);
   };
 
+
+  // --- DATA FETCHING & RENDERING ---
   const renderTableState = (message, isLoading = false) => {
     const icon = isLoading
       ? '<i class="fas fa-spinner fa-spin mr-2 text-slate-300"></i>'
@@ -116,7 +122,6 @@ const setupRekamMedisPage = () => {
 
   const loadTableData = (pageNumber = 1) => {
     const region = $("#region").val() || "";
-
     renderTableState("Memuat data pasien...", true);
 
     $.ajax({
@@ -133,7 +138,6 @@ const setupRekamMedisPage = () => {
       },
       success: (response) => {
         if (response.new_token) updateCsrf(response.new_token);
-
         currentPage = pageNumber;
         totalRecords = Number(response.recordsTotal || 0);
         filteredRecords = Number(response.recordsFiltered || totalRecords);
@@ -149,7 +153,17 @@ const setupRekamMedisPage = () => {
         }
 
         response.data.forEach((row) => {
-          // Build action buttons
+          // --- INJECT STYLING UNTUK DELETE ---
+          const isDeleted = row.is_delete == 1 || row.is_delete === "1";
+          const textStyle = isDeleted
+            ? "text-red-500 line-through decoration-red-500"
+            : "";
+          const nameStyle = isDeleted
+            ? "text-red-500 line-through decoration-red-500"
+            : "text-slate-800 font-medium";
+
+
+          // --- BUTTON AKSI ---
           const actionBtns = `
             <div class="flex items-center justify-center gap-2">
               <a href="/patient/show/${row.id}"
@@ -157,9 +171,8 @@ const setupRekamMedisPage = () => {
                 class="group flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 shadow-sm transition-all hover:border-teal-200 hover:bg-teal-50 hover:text-teal-600">
                 <i class="fas fa-eye text-xs transition-transform group-hover:scale-110"></i>
               </a>
-              ${
-                config.isSuperadmin
-                  ? `
+              ${config.isSuperadmin && !isDeleted
+              ? `
               <button type="button"
                 data-id="${row.id}"
                 title="Hapus Data"
@@ -167,29 +180,31 @@ const setupRekamMedisPage = () => {
                 <i class="fas fa-trash text-xs transition-transform group-hover:scale-110"></i>
               </button>
               `
-                  : ""
-              }
+              : ""
+            }
             </div>
           `;
 
           const tr = $(
-            `<tr class="hover:bg-slate-50 transition border-b border-slate-100"></tr>`,
+            `<tr class="hover:bg-slate-50 transition border-b border-slate-100 ${isDeleted ? 'bg-red-50/30' : ''}"></tr>`,
           );
           tr.append(
-            `<td class="px-6 py-3.5 text-xs text-slate-500">${row.id || "-"}</td>`,
+            `<td class="px-6 py-3.5 text-xs ${isDeleted ? 'text-red-500 line-through' : 'text-slate-500'}">${row.id || "-"}</td>`,
           );
           tr.append(
-            `<td class="px-6 py-3.5 font-medium text-slate-800">${row.name || "-"}</td>`,
-          );
-          tr.append(`<td class="px-6 py-3.5">${row.name_region || "-"}</td>`);
-          tr.append(
-            `<td class="px-6 py-3.5 text-xs text-slate-500 max-w-xs truncate">${row.address || "-"}</td>`,
+            `<td class="px-6 py-3.5 ${nameStyle}">${row.name || "-"}</td>`,
           );
           tr.append(
-            `<td class="px-6 py-3.5 text-center text-xs">${row.date || "-"}</td>`,
+            `<td class="px-6 py-3.5 ${isDeleted ? 'text-red-500 line-through' : 'text-slate-700'}">${row.name_region || "-"}</td>`
           );
           tr.append(
-            `<td class="px-6 py-3.5 text-center">${row.visit_count || 0}</td>`,
+            `<td class="px-6 py-3.5 text-xs max-w-xs truncate ${isDeleted ? 'text-red-500 line-through' : 'text-slate-500'}">${row.address || "-"}</td>`,
+          );
+          tr.append(
+            `<td class="px-6 py-3.5 text-center text-xs ${isDeleted ? 'text-red-500 line-through' : ''}">${row.date || "-"}</td>`,
+          );
+          tr.append(
+            `<td class="px-6 py-3.5 text-center ${isDeleted ? 'text-red-500 line-through' : ''}">${row.visit_count || 0}</td>`,
           );
           tr.append(`<td class="px-6 py-3.5">${actionBtns}</td>`);
           tbody.append(tr);
@@ -236,7 +251,8 @@ const setupRekamMedisPage = () => {
     if (currentPage < tp) loadTableData(currentPage + 1);
   });
 
-  // Toggle keterangan rentan
+
+  // --- KETERANGAN RENTAN --
   $(document).on("change", "#isSuspectiveCheckbox", function () {
     const k = $("#keterangan_rentan");
     $(this).is(":checked")
@@ -244,7 +260,7 @@ const setupRekamMedisPage = () => {
       : k.stop().slideUp(300);
   });
 
-  // Toggle domestik
+  // --- TOMBOL DOMESTIK ---
   $(document).on("change", 'input[name="domestic"]', function () {
     const v = $(this).val();
     if (v === "luar_negeri") {
@@ -258,7 +274,8 @@ const setupRekamMedisPage = () => {
     }
   });
 
-  // Simpan pasien
+
+  // --- SIMPAN PASIEN ---
   $("#submitBtn").on("click", function (e) {
     e.preventDefault();
     const form = $("#formTambahPasien");
@@ -324,7 +341,20 @@ const setupRekamMedisPage = () => {
     });
   });
 
-  // Delete handler
+  // --- RANGE DATEPICKER UNTUK EXPORT ---
+  $("#periodeSelect").on("change", function () {
+    const customDateContainer = $("#customDateRange");
+    if ($(this).val() === "custom") {
+      customDateContainer.removeClass("hidden").hide().slideDown(200);
+    } else {
+      customDateContainer.slideUp(200, function () {
+        $(this).addClass("hidden");
+      });
+    }
+  });
+
+
+  // --- DELETE HANDLER ---
   $(document).on("click", ".btn-delete", function () {
     deleteId = $(this).data("id");
     openModal(document.getElementById("modalDelete"));
@@ -354,7 +384,8 @@ const setupRekamMedisPage = () => {
     });
   });
 
-  // Modal handlers
+
+  // --- MODAL HANDLERS ---
   document.addEventListener("click", (event) => {
     const openTrigger = event.target.closest("[data-modal-open]");
     if (openTrigger) {
@@ -397,7 +428,8 @@ const setupRekamMedisPage = () => {
   loadTableData(1);
 };
 
-// Select2 Desa
+
+// --- SELECT DESA ---
 function initSelect2Desa() {
   if (!$("#desa_id").length) return;
   if ($("#desa_id").hasClass("select2-hidden-accessible"))

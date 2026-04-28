@@ -21,7 +21,7 @@
         </div>
     </div>
 
-    <div class="rounded-2xl bg-white shadow-sm border border-slate-200/50 overflow-hidden">
+    <div class="rounded-2xl bg-white shadow-sm border border-slate-200/50 overflow-hidden mx-auto">
         <!-- HEADER -->
         <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4">
             <!-- TITLE SECTION -->
@@ -45,7 +45,7 @@
                     </div>
 
                     <!-- DATE RANGE -->
-                    <div class="flex items-center gap-2 text-sm">
+                    <!-- <div class="flex items-center gap-2 text-sm">
                         <div class="flex items-center gap-2">
                             <i class="fas fa-calendar-alt text-slate-400 text-base"></i>
                             <input type="date" id="start_date"
@@ -59,7 +59,10 @@
                                 class="rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-600 transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15"
                                 value="<?= date('Y-m-d') ?>">
                         </div>
-                    </div>
+                    </div> -->
+                    <input type="date" id="start_date" class="rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-600 transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15" value="">
+
+                    <input type="date" id="end_date" class="rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-600 transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15" value="">
                 </div>
 
                 <!-- RIGHT: ACTION BUTTONS -->
@@ -83,11 +86,11 @@
                         <span class="hidden sm:inline">Reset</span>
                     </button>
 
-                    <button id="btn-search"
+                    <!-- <button id="btn-search"
                         class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-700">
                         <i class="fas fa-search text-white"></i>
                         Cari
-                    </button>
+                    </button> -->
                 </div>
             </div>
         </div>

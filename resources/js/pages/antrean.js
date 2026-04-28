@@ -1,6 +1,6 @@
 /**
  * Antrean Management Page Script
- * Custom pagination with empty state fallback
+ * Custom pagination with empty state fallback (SYNCED WITH HERMAWAN DATATABLES)
  */
 
 const MODAL_VISIBLE_CLASS = "flex";
@@ -33,266 +33,128 @@ const closeModal = (modal) => {
 const setupAntreanPage = () => {
   const config = window.antreanConfig;
   const page = document.getElementById("antreanPage");
-
   if (!config || !page || typeof window.$ === "undefined") return;
-
   const $ = window.$;
   const swalLib = window.Swal || window.swal;
+  const injectStyle = () => {
+    const style = document.createElement('style');
+    style.innerHTML = `
+            .dataTables_filter input { border: 1px solid #e2e8f0; border-radius: 0.375rem; padding: 0.25rem 0.75rem; height: 2.25rem; font-size: 0.875rem; outline: none; }
+            .dataTables_filter input:focus { border-color: #0d9488; box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #0d9488; }
+            .dataTables_length select { border: 1px solid #e2e8f0; border-radius: 0.375rem; padding: 0.25rem 0.5rem; height: 2.25rem; font-size: 0.875rem; outline: none; }
+            .dataTables_length select:focus { border-color: #0d9488; }
+        `;
+    document.head.appendChild(style);
+  }
+  injectStyle();
 
-  let currentPage = 1;
-  let pageLength = 25;
-  let totalRecords = 0;
-  let filteredRecords = 0;
-  let searchValue = "";
-  let patientSearchValue = "";
   let addToQueueBaseUrl = config.fetchUrl.replace(
     "fetchDataTable",
     "addToQueue",
   );
 
-  // Update CSRF token
-  const updateCsrf = (newToken) => {
-    if (!newToken) return;
-    config.csrfHash = newToken;
-    $("meta[name='csrf-token']").attr("content", newToken);
-    $(`input[name='${config.csrfName}']`).val(newToken);
-  };
+  $.ajaxSetup({
+    data: getCsrfPayload(config)
+  });
 
-  // Update pagination info text
-  const updatePaginationInfo = () => {
-    if (filteredRecords <= 0) {
-      $("#paginationInfo").text("Menampilkan 0 sampai 0 dari 0 data");
-      return;
-    }
-    const start = (currentPage - 1) * pageLength + 1;
-    const end = Math.min(currentPage * pageLength, filteredRecords);
-    $("#paginationInfo").text(
-      `Menampilkan ${start} sampai ${end} dari ${filteredRecords} data`,
-    );
-  };
-
-  // Render pagination buttons
-  const updatePaginationUI = () => {
-    const totalPages = Math.max(1, Math.ceil(filteredRecords / pageLength));
-    const container = $("#paginationNumbers");
-    container.empty();
-
-    const startPage = Math.max(1, currentPage - 2);
-    const endPage = Math.min(totalPages, currentPage + 2);
-
-    if (startPage > 1) {
-      container.append(
-        `<button class="pagination-btn inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:border-slate-400" data-page="1">1</button>`,
-      );
-      if (startPage > 2) {
-        container.append('<span class="px-1 text-slate-300">...</span>');
-      }
-    }
-
-    for (let pageNum = startPage; pageNum <= endPage; pageNum += 1) {
-      const activeClass =
-        pageNum === currentPage
-          ? "bg-teal-600 border-teal-600 text-white font-semibold shadow-md shadow-teal-600/30"
-          : "border border-slate-300 bg-white text-slate-700 font-semibold transition hover:bg-slate-100 hover:border-slate-400";
-      container.append(
-        `<button class="pagination-btn inline-flex h-8 w-8 items-center justify-center rounded-lg ${activeClass} text-xs" data-page="${pageNum}">${pageNum}</button>`,
-      );
-    }
-
-    if (endPage < totalPages) {
-      if (endPage < totalPages - 1) {
-        container.append('<span class="px-1 text-slate-300">...</span>');
-      }
-      container.append(
-        `<button class="pagination-btn inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:border-slate-400" data-page="${totalPages}">${totalPages}</button>`,
-      );
-    }
-
-    $("#paginationPrev").prop("disabled", currentPage <= 1);
-    $("#paginationNext").prop("disabled", currentPage >= totalPages);
-  };
-
-  // Render empty/loading state for table-1
-  const renderTable1State = (message, isLoading = false) => {
-    const icon = isLoading
-      ? '<i class="fas fa-spinner fa-spin mr-2 text-slate-300"></i>'
-      : '<i class="fas fa-inbox mr-2 text-slate-300"></i>';
-    $("#table-1 tbody").html(
-      `<tr class="hover:bg-slate-50 transition"><td colspan="8" class="px-6 py-12 text-center text-slate-400 italic text-sm">${icon}${message}</td></tr>`,
-    );
-  };
-
-  // Render empty/loading state for table-2
-  const renderTable2State = (message, isLoading = false) => {
-    const icon = isLoading
-      ? '<i class="fas fa-spinner fa-spin mr-2 text-slate-300"></i>'
-      : '<i class="fas fa-inbox mr-2 text-slate-300"></i>';
-    $("#patientListBody").html(
-      `<tr><td colspan="5" class="px-6 py-12 text-center text-slate-400 italic text-sm">${icon}${message}</td></tr>`,
-    );
-  };
-
-  // Load table-1 (antrean)
-  const loadTableData = (pageNumber = 1) => {
-    const startDate = $("#startDate").val();
-    const endDate = $("#endDate").val();
-
-    renderTable1State("Memuat data antrean...", true);
-
-    $.ajax({
+  // --- INIT TABLE 1 (TABLE ANTREAN) ---
+  const table1 = $('#table-1').DataTable({
+    processing: true,
+    serverSide: true,
+    // Ganti baris dom di table-1 menjadi ini:
+    dom: '<"flex flex-col sm:flex-row items-center justify-between px-6 py-4 gap-4 border-b border-slate-100"<"flex items-center gap-4"l>>t<"flex flex-col md:flex-row items-center justify-between p-5 bg-slate-50/50 border-t border-slate-200 gap-4"<"text-xs font-medium text-slate-500"i><"flex items-center justify-end"p>>',
+    language: { search: "", searchPlaceholder: "Cari pasien...", lengthMenu: "Tampilkan _MENU_", paginate: { previous: '<i class="fas fa-chevron-left text-[10px]"></i>', next: '<i class="fas fa-chevron-right text-[10px]"></i>' } },
+    ajax: {
       url: config.fetchUrl,
       type: "POST",
-      dataType: "json",
-      data: {
-        [config.csrfName]: config.csrfHash,
-        draw: 1,
-        start: (pageNumber - 1) * pageLength,
-        length: pageLength,
-        search: { value: searchValue },
-        start_date: startDate,
-        end_date: endDate,
-      },
-      success: (response) => {
-        if (response.new_token) updateCsrf(response.new_token);
+      data: function (d) {
+        d[config.csrfName] = config.csrfHash;
+        d.start_date = $('#startDate').val();
+        d.end_date = $('#endDate').val();
+        d.region = '';
+      }
+    },
+    columns: [
+      { data: 'patient_id', class: 'px-6 py-3.5 text-center font-mono text-xs font-semibold text-slate-500', sortable: true, searchable: true },
+      { data: 'date', class: 'px-6 py-3.5 text-left text-xs text-slate-600', sortable: false, searchable: false },
+      { data: 'name', class: 'px-6 py-3.5 text-left font-bold text-slate-800', sortable: true, searchable: true },
+      { data: 'age', class: 'px-6 py-3.5 text-left text-slate-600', sortable: true, searchable: false },
+      { data: 'address', class: 'px-6 py-3.5 text-left text-xs text-slate-500 max-w-[200px] truncate', sortable: false, searchable: false },
+      { data: 'phone', class: 'px-6 py-3.5 text-left text-slate-600', sortable: true, searchable: true },
+      { data: 'description', class: 'px-6 py-3.5 text-center', sortable: false, searchable: false },
+      { data: 'action', class: 'px-6 py-3.5 text-center', sortable: false, searchable: false }
+    ],
+    rowCallback: function (row) { $(row).addClass('hover:bg-slate-50 transition border-b border-slate-100'); },
+    initComplete: function () {
+      $('.dataTables_filter label').contents().filter(function () { return this.nodeType === 3; }).remove();
+      $('.dataTables_filter input').addClass('w-full');
+    },
+    drawCallback: function () {
+      $('.dataTables_paginate').addClass('!flex !flex-row !items-center !justify-end gap-1');
+      $('.dataTables_paginate > span').addClass('!flex !flex-row !items-center gap-1');
+      $('.paginate_button').addClass('!inline-flex items-center justify-center min-w-[32px] h-8 rounded-lg border border-slate-300 text-xs font-semibold text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors !m-0 !p-0');
+      $('.paginate_button.current').addClass('!bg-teal-600 !text-white !border-teal-600 hover:!bg-teal-700').removeClass('bg-white text-slate-700');
+      $('.paginate_button.disabled').addClass('!opacity-50 cursor-not-allowed shadow-none hover:bg-white hover:text-slate-700');
+    }
+  });
 
-        currentPage = pageNumber;
-        totalRecords = Number(response.recordsTotal || 0);
-        filteredRecords = Number(response.recordsFiltered || totalRecords);
+  $("#startDate, #endDate").on("change", () => {
+    table1.ajax.reload();
+  });
 
-        const tbody = $("#table-1 tbody");
-        tbody.empty();
 
-        if (!response.data || response.data.length === 0) {
-          renderTable1State("Data antrean belum tersedia");
-          updatePaginationInfo();
-          updatePaginationUI();
-          return;
+  // --- INIT  TABLE 2 (MODAL PASIEN) ---
+  let table2Init = false;
+  const initTable2 = () => {
+    if (!table2Init) {
+      table2Init = true;
+      $('#table-2').DataTable({
+        processing: true,
+        serverSide: true,
+        // Ganti baris dom di table-2 menjadi ini:
+dom: 't<"flex items-center justify-between p-4 bg-slate-50/50 border-t border-slate-200"<"text-xs text-slate-500"i><"flex items-end"p>>',
+        language: { search: "", searchPlaceholder: "Ketik Nama, NIK, atau ID...", paginate: { previous: '<i class="fas fa-chevron-left text-[10px]"></i>', next: '<i class="fas fa-chevron-right text-[10px]"></i>' } },
+        ajax: {
+          url: config.fetchPatientUrl,
+          type: "POST",
+          data: function (d) {
+            d[config.csrfName] = config.csrfHash;
+            d.region = $("#region_id_new").val() || "";
+          }
+        },
+        columns: [
+          { data: 'patient_id', class: 'px-4 py-3 text-left font-mono text-xs font-semibold text-slate-500', sortable: true },
+          { data: 'name', class: 'px-4 py-3 text-left text-sm', sortable: true },
+          { data: 'address', class: 'px-4 py-3 text-left text-xs', sortable: false },
+          { data: 'description', class: 'px-4 py-3 text-center', sortable: false },
+          { data: 'action', class: 'px-4 py-3 text-center', sortable: false }
+        ],
+        rowCallback: function (row) { $(row).addClass('hover:bg-slate-50 transition border-b border-slate-100'); },
+        initComplete: function () {
+          $('.dataTables_filter label').contents().filter(function () { return this.nodeType === 3; }).remove();
+          $('.dataTables_filter input').addClass('w-full min-w-[300px]');
+        },
+        drawCallback: function () {
+          $('.dataTables_paginate').addClass('!flex !flex-row !items-center !justify-end gap-1');
+          $('.dataTables_paginate > span').addClass('!flex !flex-row !items-center gap-1');
+          $('.paginate_button').addClass('!inline-flex items-center justify-center min-w-[28px] h-7 rounded text-[11px] font-semibold text-slate-600 cursor-pointer hover:bg-slate-100 transition-colors !m-0 !p-0 border border-slate-300');
+          $('.paginate_button.current').addClass('!bg-slate-900 !text-white hover:!bg-slate-800 border-0').removeClass('bg-white text-slate-600');
+          $('.paginate_button.disabled').addClass('!opacity-50 cursor-not-allowed shadow-none');
         }
-
-        response.data.forEach((row) => {
-          const tr = $(
-            `<tr class="hover:bg-slate-50 transition border-b border-slate-100"></tr>`,
-          );
-          tr.append(
-            `<td class="px-6 py-3.5 text-center font-mono text-xs text-slate-500">${row.queue_id || row.no || "-"}</td>`,
-          );
-          tr.append(
-            `<td class="px-6 py-3.5 text-xs text-slate-600">${row.date || "-"}</td>`,
-          );
-          tr.append(
-            `<td class="px-6 py-3.5 font-bold text-slate-800">${row.name || "-"}</td>`,
-          );
-          tr.append(
-            `<td class="px-6 py-3.5 text-slate-600">${row.age || "-"}</td>`,
-          );
-          tr.append(
-            `<td class="px-6 py-3.5 text-xs text-slate-500">${row.address || "-"}</td>`,
-          );
-          tr.append(
-            `<td class="px-6 py-3.5 text-slate-600">${row.phone || "-"}</td>`,
-          );
-          tr.append(
-            `<td class="px-6 py-3.5 text-center">${row.description || "-"}</td>`,
-          );
-          tr.append(
-            `<td class="px-6 py-3.5 text-center">${row.action || "-"}</td>`,
-          );
-          tbody.append(tr);
-        });
-
-        updatePaginationInfo();
-        updatePaginationUI();
-      },
-      error: () => {
-        renderTable1State("Gagal memuat data antrean");
-        filteredRecords = 0;
-        updatePaginationInfo();
-        updatePaginationUI();
-      },
-    });
+      });
+    }
   };
 
-  // Load table-2 (pasien di modal)
-  const loadPatientData = () => {
-    const tableEl = document.getElementById("table-2");
-    if (!tableEl) return;
-
-    renderTable2State("Memuat data pasien...", true);
-
-    $.ajax({
-      url: config.fetchPatientUrl,
-      type: "POST",
-      dataType: "json",
-      data: {
-        [config.csrfName]: config.csrfHash,
-        draw: 1,
-        start: 0,
-        length: 100,
-        search: { value: patientSearchValue },
-        region: $("#region_id_new").val() || "",
-      },
-      success: (response) => {
-        if (response && response.new_token) {
-          updateCsrf(response.new_token);
-        }
-
-        const data = response && response.data ? response.data : [];
-        let html = "";
-
-        if (data.length > 0) {
-          data.forEach((row, index) => {
-            html += `
-              <tr class="hover:bg-slate-50 transition border-b border-slate-100">
-                <td class="px-4 py-3 text-left">
-                  <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-xs font-bold text-slate-600">
-                    ${String(row.patient_id || index + 1).padStart(2, "0")}
-                  </span>
-                </td>
-                <td class="px-4 py-3">
-                  <div class="text-sm font-semibold text-slate-800">${row.name || "-"}</div>
-                  ${row.phone ? `<div class="text-xs text-slate-400 mt-0.5"><i class="fab fa-whatsapp mr-1"></i>${row.phone}</div>` : ""}
-                </td>
-                <td class="px-4 py-3">
-                  <div class="text-xs text-slate-600 max-w-xs truncate">${row.address || row.desa_nama || "-"}</div>
-                </td>
-                <td class="px-4 py-3 text-center">
-                  ${row.description || "-"}
-                </td>
-                <td class="px-4 py-3 text-center">
-                  <button type="button" onclick="tambahKeAntrean(${row.patient_id})" 
-                    class="inline-flex items-center gap-1 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-700 transition">
-                    Pilih <i class="fas fa-arrow-right text-[10px]"></i>
-                  </button>
-                </td>
-              </tr>
-            `;
-          });
-        } else {
-          renderTable2State("Tidak ada data pasien");
-          return;
-        }
-
-        $("#patientListBody").html(html);
-      },
-      error: () => {
-        renderTable2State("Gagal memuat data pasien");
-      },
-    });
-  };
-
-  // Search handler untuk table-2
-  const patientSearchHandler = debounce((value) => {
-    patientSearchValue = value;
-    loadPatientData();
-  }, 500);
-
-  $("#searchPatientList")
-    .off("keyup")
-    .on("keyup", function () {
-      patientSearchHandler($(this).val());
+  // --- MODAL PILIH PASIEN ---
+  $(document)
+    .off("click", '[data-modal-open="exampleModal"]')
+    .on("click", '[data-modal-open="exampleModal"]', function (e) {
+      if (!$(this).closest(".modal-wrapper").length) {
+        setTimeout(() => initTable2(), 200);
+      }
     });
 
-  // Tambah ke antrean
+  // --- TAMBAH ANTREAN ---
   window.tambahKeAntrean = (patientId) => {
     Swal.fire({
       target: document.getElementById("exampleModal"),
@@ -326,7 +188,7 @@ const setupAntreanPage = () => {
               showConfirmButton: false,
             });
             closeModal(document.getElementById("exampleModal"));
-            loadTableData(currentPage);
+            table1.ajax.reload(null, false);
           },
           error: (xhr) => {
             const err = xhr.responseJSON;
@@ -341,7 +203,7 @@ const setupAntreanPage = () => {
     });
   };
 
-  // Tambah pasien baru
+  // --- SUBMIT PASIEN BARU (TAMBAH CEK WA) ---
   $("#submitBtnNew").on("click", function (e) {
     e.preventDefault();
     const form = $("#formTambahPasien");
@@ -352,122 +214,104 @@ const setupAntreanPage = () => {
       return;
     }
 
-    Swal.fire({
-      target: document.getElementById("modalnewpatient"),
-      title: "Konfirmasi Data",
-      text: "Apakah Anda yakin ingin menyimpan data pasien ini?",
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonColor: "#0d9488",
-      cancelButtonColor: "#64748b",
-      confirmButtonText: "Ya, Simpan",
-      cancelButtonText: "Batal",
-      reverseButtons: true,
-    }).then((result) => {
-      if (result.isConfirmed) {
-        Swal.fire({
-          target: document.getElementById("modalnewpatient"),
-          title: "Menyimpan...",
-          allowOutsideClick: false,
-          didOpen: () => Swal.showLoading(),
-        });
+    const phone = $('#phone_new').val();
 
-        $.ajax({
-          url: form.attr("action"),
-          type: "POST",
-          data: form.serialize(),
-          dataType: "json",
-          success: (res) => {
-            if (res.success || res.status === "success") {
+    $.ajax({
+      url: config.checkPhoneUrl,
+      type: 'POST',
+      data: { phone: phone, [config.csrfName]: config.csrfHash },
+      dataType: 'json',
+      success: function (response) {
+        if (response.new_token) {
+          config.csrfHash = response.new_token;
+          $(`input[name='${config.csrfName}']`).val(response.new_token);
+        }
+
+        if (response.exists) {
+          Swal.fire({
+            target: document.getElementById("modalnewpatient"),
+            title: "Gagal!",
+            text: "Nomor WhatsApp sudah terdaftar di sistem. Gunakan nomor lain.",
+            icon: "warning",
+          });
+        } else {
+          Swal.fire({
+            target: document.getElementById("modalnewpatient"),
+            title: "Konfirmasi Data",
+            text: "Apakah Anda yakin ingin menyimpan data pasien ini?",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonColor: "#0d9488",
+            cancelButtonColor: "#64748b",
+            confirmButtonText: "Ya, Simpan",
+            cancelButtonText: "Batal",
+            reverseButtons: true,
+          }).then((result) => {
+            if (result.isConfirmed) {
               Swal.fire({
-                toast: true,
-                position: "top-end",
-                icon: "success",
-                title: "Berhasil Disimpan",
-                showConfirmButton: false,
-                timer: 2000,
-                timerProgressBar: true,
                 target: document.getElementById("modalnewpatient"),
+                title: "Menyimpan...",
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading(),
               });
 
-              if ($("#exampleModal").hasClass("flex")) {
-                loadPatientData();
-              }
+              $.ajax({
+                url: form.attr("action"),
+                type: "POST",
+                data: form.serialize(),
+                dataType: "json",
+                success: (res) => {
+                  if (res.success || res.status === "success") {
+                    Swal.fire({
+                      toast: true,
+                      position: "top-end",
+                      icon: "success",
+                      title: "Berhasil Disimpan",
+                      showConfirmButton: false,
+                      timer: 2000,
+                      timerProgressBar: true,
+                      target: document.getElementById("modalnewpatient"),
+                    });
 
-              setTimeout(() => {
-                closeModal(document.getElementById("modalnewpatient"));
-                form[0].reset();
-                form.removeClass("was-validated");
-              }, 500);
-            } else {
-              Swal.fire({
-                target: document.getElementById("modalnewpatient"),
-                title: "Gagal!",
-                text: res.message || "Terjadi kesalahan.",
-                icon: "warning",
+                    if (table2Init) {
+                      $('#table-2').DataTable().ajax.reload(null, false);
+                    }
+
+                    setTimeout(() => {
+                      closeModal(document.getElementById("modalnewpatient"));
+                      form[0].reset();
+                      form.removeClass("was-validated");
+                    }, 500);
+
+                    table1.ajax.reload(null, false);
+                  } else {
+                    Swal.fire({
+                      target: document.getElementById("modalnewpatient"),
+                      title: "Gagal!",
+                      text: res.message || "Terjadi kesalahan.",
+                      icon: "warning",
+                    });
+                  }
+                },
+                error: () => {
+                  Swal.fire({
+                    target: document.getElementById("modalnewpatient"),
+                    title: "Error!",
+                    text: "Gagal mengirim data ke server.",
+                    icon: "error",
+                  });
+                },
               });
             }
-          },
-          error: () => {
-            Swal.fire({
-              target: document.getElementById("modalnewpatient"),
-              title: "Error!",
-              text: "Gagal mengirim data ke server.",
-              icon: "error",
-            });
-          },
-        });
+          });
+        }
+      },
+      error: function () {
+        Swal.fire({ target: document.getElementById("modalnewpatient"), title: 'Error', text: 'Gagal memverifikasi nomor WhatsApp.', icon: 'error' });
       }
     });
   });
 
-  // Search handler for table-1
-  const searchHandler = debounce((value) => {
-    searchValue = value;
-    currentPage = 1;
-    loadTableData(1);
-  }, 400);
-
-  // Event listeners
-  $("#searchInput").on("keyup", function () {
-    searchHandler($(this).val());
-  });
-
-  $("#startDate, #endDate").on("change", () => {
-    currentPage = 1;
-    loadTableData(1);
-  });
-
-  $("#paginationLength").on("change", function () {
-    pageLength = parseInt($(this).val(), 10);
-    currentPage = 1;
-    loadTableData(1);
-  });
-
-  $(document).on("click", ".pagination-btn", function () {
-    const p = parseInt($(this).data("page"), 10);
-    if (!isNaN(p)) loadTableData(p);
-  });
-
-  $("#paginationPrev").on("click", () => {
-    if (currentPage > 1) loadTableData(currentPage - 1);
-  });
-
-  $("#paginationNext").on("click", () => {
-    const tp = Math.max(1, Math.ceil(filteredRecords / pageLength));
-    if (currentPage < tp) loadTableData(currentPage + 1);
-  });
-
-  // Modal pilih pasien
-  $(document)
-    .off("click", '[data-modal-open="exampleModal"]')
-    .on("click", '[data-modal-open="exampleModal"]', function (e) {
-      if (!$(this).closest(".modal-wrapper").length) {
-        setTimeout(() => loadPatientData(), 200);
-      }
-    });
-
-  // Modal open/close handlers
   document.addEventListener("click", (event) => {
     const openTrigger = event.target.closest("[data-modal-open]");
     if (openTrigger) {
@@ -491,7 +335,6 @@ const setupAntreanPage = () => {
     if (closeTrigger) closeModal(closeTrigger.closest(".modal-wrapper"));
   });
 
-  // Click outside modal
   $(document).on("click", ".modal-wrapper", function (e) {
     if (e.target === this) {
       $(this).fadeOut(200, function () {
@@ -520,7 +363,19 @@ const setupAntreanPage = () => {
 
   $(document).on("click", ".modal-wrapper > div", (e) => e.stopPropagation());
 
-  // Export buttons
+  // --- SEARCH TABLE 1 ---
+  $("#searchInput").on("keyup", function () {
+    $('#table-1').DataTable().search($(this).val()).draw();
+  });
+
+  // --- SEARCH TABLE 2 ---
+  $("#searchPatientList").off("keyup").on("keyup", function () {
+    if ($.fn.DataTable.isDataTable('#table-2')) {
+      $('#table-2').DataTable().search($(this).val()).draw();
+    }
+  });
+
+  // --- Export buttons ---
   $("#btnPdf").on("click", () => {
     const sd = $("#startDate").val();
     const ed = $("#endDate").val();
@@ -533,8 +388,6 @@ const setupAntreanPage = () => {
     window.location.href = `${config.excelUrl}?start_date=${sd}&end_date=${ed}`;
   });
 
-  // Init
-  loadTableData(1);
 };
 
 // Select2 Desa
@@ -624,3 +477,33 @@ if (document.readyState === "loading") {
 } else {
   setupAntreanPage();
 }
+
+// FUNGSI PREVIEW GAMBAR/FILE PASIEN
+window.previewFiles = function() {
+    const previewContainer = document.getElementById('file-previews');
+    const files = document.getElementById('userfiles').files;
+    previewContainer.innerHTML = '';
+    if (files) {
+        Array.from(files).forEach(file => {
+            const reader = new FileReader();
+            const div = document.createElement('div');
+            div.className = 'relative h-16 w-16 rounded-md border border-slate-200 overflow-hidden shadow-sm';
+            reader.onload = function(e) {
+                if (file.type.startsWith('image/')) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = 'h-full w-full object-cover';
+                    div.appendChild(img);
+                } else {
+                    const icon = document.createElement('div');
+                    icon.className = 'flex h-full w-full items-center justify-center bg-slate-50 text-slate-500 text-[10px] font-bold uppercase';
+                    icon.textContent = file.name.split('.').pop();
+                    div.appendChild(icon);
+                }
+            };
+            
+            reader.readAsDataURL(file);
+            previewContainer.appendChild(div);
+        });
+    }
+};

@@ -24,19 +24,19 @@ const closeModal = (modal) => {
     document.body.classList.remove('overflow-hidden');
 };
 
+// --- INIT SCRIPT --- 
 const setupJournalPage = () => {
     const config = window.journalConfig;
     const tableEl = document.getElementById("table-journal");
 
     if (!config || !tableEl || typeof window.$ === "undefined") return;
-
     const $ = window.$;
-
     let currentPage = 1;
     let pageLength = 25;
     let totalRecords = 0;
     let filteredRecords = 0;
 
+    // --- UPDATE CRSF TOKEN ---
     const updateCsrf = (newToken) => {
         if (!newToken) return;
         config.csrfHash = newToken;
@@ -44,6 +44,7 @@ const setupJournalPage = () => {
         $(`input[name='${config.csrfName}']`).val(newToken);
     };
 
+    // --- UPDATE PAGINATION ---
     const updatePaginationInfo = () => {
         if (filteredRecords <= 0) {
             $("#paginationInfo").text("Menampilkan 0 sampai 0 dari 0 data");
@@ -87,21 +88,18 @@ const setupJournalPage = () => {
         $("#paginationNext").prop("disabled", currentPage >= totalPages);
     };
 
+
+    // --- LOAD DAN RENDER DATA TABLE ---
     const renderEmptyState = (message) => {
         $("#table-journal tbody").html('<tr class="hover:bg-slate-50 transition"><td colspan="8" class="px-6 py-12 text-center text-slate-400 italic text-sm"><i class="fas fa-inbox mr-2 text-slate-300"></i>' + message + '</td></tr>');
     };
-
     const loadTableData = (pageNumber) => {
         if (!pageNumber) pageNumber = 1;
-        
         const searchValue = $('#customSearch').val() || '';
         const region = $('#region').val() || '';
         const startDate = $('#start_date').val();
         const endDate = $('#end_date').val();
-
-        // Show loading
         renderEmptyState('<i class="fas fa-spinner fa-spin mr-2 text-teal-500"></i> Memuat data...');
-
         $.ajax({
             url: config.fetchUrl,
             type: "POST",
@@ -118,7 +116,9 @@ const setupJournalPage = () => {
             },
             success: function (response) {
                 if (response.new_token) {
-                    updateCsrf(response.new_token);
+                    // updateCsrf(response.new_token);
+                    config.csrfHash = response.new_token;
+                    $('input[name="' + config.csrfName + '"]').val(response.new_token);
                 }
 
                 currentPage = pageNumber;
@@ -134,16 +134,35 @@ const setupJournalPage = () => {
                     updatePaginationUI();
                     return;
                 }
-
                 response.data.forEach(function (row) {
                     const tr = $('<tr class="hover:bg-slate-50 transition border-b border-slate-100"></tr>');
+
+                    // 1. POLESAN BADGE STATUS
+                    let statusBadge = '-';
+                    if (row.status === 'Pasien Baru') {
+                        statusBadge = '<span class="inline-flex items-center rounded-md bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">Pasien Baru</span>';
+                    } else if (row.status === 'Pasien Lama') {
+                        statusBadge = '<span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">Pasien Lama</span>';
+                    } else {
+                        statusBadge = row.status || '-';
+                    }
+                    let hasilPemeriksaan = '-';
+                    if (!row.result_names || row.result_names === '-' || row.result_names.trim() === '') {
+                        hasilPemeriksaan = '<span class="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-1 text-[10px] font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20"><i class="fas fa-clock"></i> Menunggu</span>';
+                    } else {
+                        hasilPemeriksaan = '<div class="max-w-37.5 truncate" title="' + row.result_names + '">' + row.result_names + '</div>';
+                    }
+                    let tindakan = '-';
+                    if (row.measures && row.measures !== '-') {
+                        tindakan = '<div class="max-w-50 truncate cursor-help" title="' + row.measures + '">' + row.measures + '</div>';
+                    }
                     tr.append('<td class="px-6 py-3.5 text-center text-xs text-slate-500">' + (row.no || "-") + '</td>');
                     tr.append('<td class="px-6 py-3.5 text-xs text-slate-600 font-medium">' + (row.tanggal || "-") + '</td>');
                     tr.append('<td class="px-6 py-3.5 font-semibold text-slate-800 text-xs uppercase">' + (row.nama || "-") + '</td>');
-                    tr.append('<td class="px-6 py-3.5 text-center text-xs font-semibold">' + (row.status || "-") + '</td>');
-                    tr.append('<td class="px-6 py-3.5 text-xs text-slate-500 max-w-xs truncate">' + (row.alamat || "-") + '</td>');
-                    tr.append('<td class="px-6 py-3.5 text-xs text-slate-600">' + (row.result_names || "-") + '</td>');
-                    tr.append('<td class="px-6 py-3.5 text-xs text-slate-600">' + (row.measures || "-") + '</td>');
+                    tr.append('<td class="px-6 py-3.5 text-center">' + statusBadge + '</td>');
+                    tr.append('<td class="px-6 py-3.5 text-xs text-slate-500 max-w-37.5 truncate" title="' + (row.alamat || "-") + '">' + (row.alamat || "-") + '</td>');
+                    tr.append('<td class="px-6 py-3.5 text-xs text-slate-600">' + hasilPemeriksaan + '</td>');
+                    tr.append('<td class="px-6 py-3.5 text-xs text-slate-600">' + tindakan + '</td>');
                     tr.append('<td class="px-6 py-3.5 text-center">' + (row.action || "-") + '</td>');
                     tbody.append(tr);
                 });
@@ -160,9 +179,9 @@ const setupJournalPage = () => {
         });
     };
 
-    // Event Listeners
+    // --- EVENT LISTENER ---
     const initEvents = () => {
-        // Initialize Select2 jika diperlukan
+        // --- SELECT REGION ---
         if ($.fn.select2) {
             $('#export_region').select2({
                 width: '100%',
@@ -170,32 +189,29 @@ const setupJournalPage = () => {
             });
         }
 
-        // Search input
+        // --- SEARCH INPUT ---
+        let searchTimer;
         $('#customSearch').on('keyup', function () {
-            currentPage = 1;
-            loadTableData(1);
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(function () {
+                console.log("Mencari data untuk:", $('#customSearch').val());
+                currentPage = 1;
+                loadTableData(1);
+            }, 800);
         });
 
-        // Search button
-        $('#btn-search').on('click', function() {
-            currentPage = 1;
-            loadTableData(1);
-        });
-
-        // Filter perubahan
         $('#region, #start_date, #end_date').on('change', function () {
             currentPage = 1;
             loadTableData(1);
         });
 
-        // Pagination length
         $('#paginationLength').on('change', function () {
             pageLength = parseInt($(this).val(), 10);
             currentPage = 1;
             loadTableData(1);
         });
 
-        // Pagination buttons
+        // --- EVENT LISTENER PAGINATION ---
         $(document).on('click', '.pagination-btn', function () {
             const pageNum = parseInt($(this).data('page'), 10);
             if (!isNaN(pageNum)) {
@@ -216,7 +232,8 @@ const setupJournalPage = () => {
             }
         });
 
-        // Reset filter
+
+        // --- RESET FILTER ---
         $('#btn-reset').on('click', function () {
             $('#customSearch').val('');
             $('#start_date').val('');
@@ -228,7 +245,7 @@ const setupJournalPage = () => {
             loadTableData(1);
         });
 
-        // Buka Modal Export
+        // --- MODAL EXPORT ---
         $('#btnOpenExport').on('click', function (e) {
             e.preventDefault();
             if ($('#export_region').length && $('#region').length) {
@@ -237,21 +254,18 @@ const setupJournalPage = () => {
             openModal(document.getElementById('modalExportJournal'));
         });
 
-        // Tutup Modal Export
         $('.btn-close-modal').on('click', function (e) {
             e.preventDefault();
             closeModal(document.getElementById('modalExportJournal'));
         });
 
-        // Klik di luar modal untuk menutup
-        $(document).on('click', '.modal-wrapper.flex', function(e) {
+        $(document).on('click', '.modal-wrapper.flex', function (e) {
             if (e.target === this) {
                 closeModal(this);
             }
         });
 
-        // Tombol Escape untuk menutup modal
-        $(document).on('keydown', function(e) {
+        $(document).on('keydown', function (e) {
             if (e.key === 'Escape') {
                 const visibleModal = document.querySelector('.modal-wrapper.flex');
                 if (visibleModal) {
@@ -260,7 +274,7 @@ const setupJournalPage = () => {
             }
         });
 
-        // Period picker di modal export
+        // --- DATE PICKER ---
         $('#period_picker').on('change', function () {
             const period = $(this).val();
             const today = new Date();
@@ -294,8 +308,6 @@ const setupJournalPage = () => {
             }
         });
     };
-
-    // Jalankan semua setup
     initEvents();
     loadTableData(1);
 };

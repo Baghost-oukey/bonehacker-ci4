@@ -65,7 +65,6 @@ class MJournal extends Model
             'h.date as tanggal',
             'h.measure AS measures',
             "'-' as result_names",
-
             // '(SELECT IF(COUNT(h2.id) > 1, "Pasien Lama", "Pasien Baru") FROM histories h2 WHERE h2.patient_id = p.id AND h2.is_delete = 0) as status',
             '(SELECT IF(COUNT(h2.id) > 1, "Pasien Lama", "Pasien Baru") 
           FROM histories h2 
@@ -79,11 +78,17 @@ class MJournal extends Model
         // $builder->join('histories h', 'h.patient_id = p.id', 'inner');
         // $builder->join("($subQuery) sq", 'sq.history_id = h.id', 'left');
         // $builder->join('histories h_all', 'h_all.patient_id = p.id AND h_all.is_delete = 0', 'left');
-
         // $builder->where('p.is_delete', false);
         // $builder->where('h.is_delete', false);
         $builder->where('h.is_delete', 0);
         $builder->where('p.is_delete', 0);
+
+        if (!empty($search)) {
+            $builder->groupStart()
+                ->like('p.name', $search)
+                ->orLike('p.phone', $search)
+                ->groupEnd();
+        }
 
         if (!empty($region) && $region !== 'all') {
             if (is_array($region)) {

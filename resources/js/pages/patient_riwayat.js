@@ -34,6 +34,8 @@ const PatientHistoryPage = {
   searchValue: "",
 
   init() {
+    const page = document.getElementById("patientHistoryContainer");
+    if (!config || !page || typeof window.$ === "undefined") return;
     this.initTagify();
     this.initEventListeners();
     this.loadTableData(1);

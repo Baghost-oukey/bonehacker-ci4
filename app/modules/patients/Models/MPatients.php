@@ -110,7 +110,6 @@ class MPatients extends Model
     public function getAllData($region = null, ?int $limit = null, int $offset = 0, $start_date = null, $end_date = null)
     {
         $builder = $this->builder();
-
         $builder->select('
       patients.id, 
         patients.name, 
@@ -131,29 +130,21 @@ class MPatients extends Model
         // Join tabel regions dan patient_address
         $builder->join('regions r', 'r.id = patients.region_id', 'left');
         $builder->join('patient_address a', 'a.patient_id = patients.id', 'left');
-
         $builder->join('histories h', 'h.patient_id = patients.id AND h.is_delete = 0', 'left');
 
         // Filter berdasarkan region jika ada
         if (!empty($region)) {
             $builder->where('patients.region_id', $region);
         }
-        if ($start_date && $end_date) {
-            // $builder->where('patients.created_at >=', $start_date . ' 00:00:00');
-            // $builder->where('patients.created_at <=', $end_date . ' 23:59:59');
-            if ($start_date && $end_date) {
-                $builder->groupStart()
-                    ->where('DATE(patients.created_at) >=', $start_date)
-                    ->where('DATE(patients.created_at) <=', $end_date)
-                    ->groupEnd();
-            }
-        }
-
-        // $builder->where('patients.is_delete', 0);
-        $builder->groupBy('patients.id');
-        $builder->orderBy('patients.created_at', 'DESC');
+   if ($start_date && $end_date) {
+        $builder->groupStart()
+            ->where('DATE(h.date) >=', $start_date)
+            ->where('DATE(h.date) <=', $end_date)
+            ->groupEnd();
+    }
 
         // $builder->groupBy('patients.id');
+        $builder->orderBy('patients.created_at', 'DESC');
         $builder->groupBy(
             [
                 'patients.id',

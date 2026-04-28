@@ -7,6 +7,7 @@ use App\modules\countries\Models\MCountries;
 use App\modules\patients\Models\MPatients;
 use App\modules\region\Models\MRegion;
 use CodeIgniter\I18n\Time;
+use Hermawan\DataTables\DataTable;
 
 class AntreanController extends BaseController
 {
@@ -25,9 +26,7 @@ class AntreanController extends BaseController
     }
     public function index()
     {
-        //
         $region_patients = json_decode(session()->get('regions_patient'), true);
-
 
         $data = [
             'title' => 'Antrean',
@@ -45,233 +44,152 @@ class AntreanController extends BaseController
     public function fetchDataTable()
     {
         $request = service('request');
+        $region    = $request->getPost('region');
+        $startDate = $request->getPost('start_date');
+        $endDate   = $request->getPost('end_date');
 
-        try {
-            $region = $request->getPost('region');
-            $startDate = $request->getPost('start_date');
-            $endDate = $request->getPost('end_date');
+        $builder = $this->db->table('patient_queues pq')
+            ->select('pq.id as queue_id, pq.queue_date, p.id as patient_id, p.name as patient_name, p.age as patient_age, p.phone, p.address, pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama, h.id as history_id, h.process_at, h.finish_at')
+            ->select('(SELECT COUNT(h2.id) FROM histories h2 WHERE h2.patient_id = p.id AND h2.is_delete = 0) AS visit_count')
+            ->join('patients p', 'p.id = pq.patient_id', 'left')
+            ->join('patient_address pa', 'pa.patient_id = p.id', 'left')
+            ->join('histories h', 'h.patient_queue_id = pq.id', 'left')
+            ->where('h.finish_at', null);
 
-            $search = $request->getPost('search');
-            $searchValue = (is_array($search) && !empty($search['value'])) ? $search['value'] : '';
+        $role = session()->get('role');
+        $active_region = session()->get('active_region');
+        $region_session = session()->get('region_patient');
 
-            $start = (int) ($request->getPost('start') ?? 0);
-            $length = (int) ($request->getPost('length') ?? 10);
-            $draw = (int) ($request->getPost('draw') ?? 1);
+        if ($role === 'owner' || $role === 'superadmin') {
+            $filter = ($region && $region !== 'all') ? $region : ($active_region !== 'all' ? $active_region : 'all');
+        } else {
+            $filter = $region_session;
+        }
 
-            // ======================
-            // BASE QUERY (NO HISTORY JOIN!)
-            // ======================
-            $builder = $this->db->table('patient_queues pq')
-                ->select('
-                pq.id as queue_id,
-                pq.queue_date,
-                p.id as patient_id,
-                p.name as patient_name,
-                p.age as patient_age,
-                p.phone,
-                p.address,
-                pa.desa_nama,
-                pa.kecamatan_nama,
-                pa.kabupaten_nama
-            ')
-                ->join('patients p', 'p.id = pq.patient_id', 'left')
-                ->join('patient_address pa', 'pa.patient_id = p.id', 'left');
-
-            // ======================
-            // FILTER REGION
-            // ======================
-            $role = session()->get('role');
-            $active_region = session()->get('active_region');
-            $region_session = session()->get('region_patient');
-
-            if ($role === 'owner' || $role === 'superadmin') {
-                $filter = ($region && $region !== 'all')
-                    ? $region
-                    : ($active_region !== 'all' ? $active_region : null);
+        if ($filter !== 'all' && !empty($filter)) {
+            if (is_array($filter)) {
+                $builder->whereIn('pq.region_id', $filter);
             } else {
-                $filter = $region_session;
+                $builder->where('pq.region_id', $filter);
             }
+        }
 
-            if (!empty($filter) && $filter !== 'all') {
-                is_array($filter)
-                    ? $builder->whereIn('pq.region_id', $filter)
-                    : $builder->where('pq.region_id', $filter);
-            }
+        if (!empty($startDate) && !empty($endDate)) {
+            $builder->where('DATE(pq.queue_date) >=', date('Y-m-d', strtotime($startDate)))
+                ->where('DATE(pq.queue_date) <=', date('Y-m-d', strtotime($endDate)));
+        }
 
-            // ======================
-            // FILTER DATE
-            // ======================
-            if ($startDate && $endDate) {
-                $builder->where('DATE(pq.queue_date) >=', date('Y-m-d', strtotime($startDate)));
-                $builder->where('DATE(pq.queue_date) <=', date('Y-m-d', strtotime($endDate)));
-            }
+        return DataTable::of($builder)
+            ->filter(function ($builder) use ($request) {
+                $search = $request->getPost('search');
+                $searchValue = $search['value'] ?? null;
+                if ($searchValue) {
+                    $builder->groupStart()
+                        ->like('p.name', $searchValue)
+                        ->orLike('p.phone', $searchValue)
+                        ->orLike('pa.kabupaten_nama', $searchValue)
+                        ->orLike('pq.queue_date', $searchValue)
+                        ->groupEnd();
+                }
+            }, true)
+            ->add('date', function ($row) {
+                return !empty($row->queue_date) ? date('d-m-Y', strtotime($row->queue_date)) : '-';
+            })
+            ->add('name', function ($row) {
+                return $row->patient_name;
+            })
+            ->add('address', function ($row) {
+                return implode(', ', array_filter([$row->address, $row->desa_nama, $row->kecamatan_nama, $row->kabupaten_nama]));
+            })
+            ->add('age', function ($row) {
+                return $row->patient_age;
+            })
+            ->add('description', function ($row) {
+                return $row->visit_count > 0
+                    ? '<span class="inline-flex items-center rounded-md bg-amber-50 px-2 py-1 text-[10px] font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20">Lama</span>'
+                    : '<span class="inline-flex items-center rounded-md bg-emerald-50 px-2 py-1 text-[10px] font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">Baru</span>';
+            })
+            ->add('action', function ($row) {
+                $btn = '<div class="flex items-center justify-center gap-2">';
+                $historyId = $row->history_id ?? '';
 
-            // ======================
-            // TOTAL
-            // ======================
-            $totalRecords = (clone $builder)->countAllResults();
-
-            // ======================
-            // SEARCH
-            // ======================
-            if ($searchValue) {
-                $builder->groupStart()
-                    ->like('p.name', $searchValue)
-                    ->orLike('p.phone', $searchValue)
-                    ->orLike('pa.kabupaten_nama', $searchValue)
-                    ->groupEnd();
-            }
-
-            $filteredRecords = (clone $builder)->countAllResults();
-
-            // ======================
-            // FETCH
-            // ======================
-            $rows = $builder
-                ->orderBy('pq.queue_date', 'DESC')
-                ->limit($length, $start)
-                ->get()
-                ->getResult();
-
-            // ======================
-            // ENRICH DATA (SAFE QUERY PER ROW)
-            // ======================
-            $data = [];
-            $no = $start + 1;
-
-            foreach ($rows as $row) {
-
-                // ambil history terbaru
-                $history = $this->db->table('histories')
-                    ->where('patient_queue_id', $row->queue_id)
-                    ->where('is_delete', 0)
-                    ->orderBy('id', 'DESC')
-                    ->get()
-                    ->getRow();
-
-                $visitCount = $this->db->table('histories')
-                    ->where('patient_id', $row->patient_id)
-                    ->where('is_delete', 0)
-                    ->countAllResults();
-
-                $actionBtn = '<div class="flex gap-2">';
-
-                if ($history && $history->process_at) {
-                    $actionBtn .= '<a href="' . site_url('antrean/finishQueue/' . $row->queue_id) . '" class="bg-amber-500 px-2 py-1 text-white rounded">Selesai</a>';
+                if ($row->process_at !== null) {
+                    $btn .= '<a href="' . site_url('antrean/finishQueue/' . $row->queue_id) . '" class="inline-flex h-8 items-center justify-center rounded-md bg-amber-500 px-3 text-xs font-medium text-white shadow transition hover:bg-amber-600">Selesai</a>';
                 } else {
-                    $actionBtn .= '<a href="' . site_url('antrean/procesToQueue/' . $row->queue_id) . '" class="bg-emerald-600 px-2 py-1 text-white rounded">Proses</a>';
+                    $btn .= '<a href="' . site_url('antrean/procesToQueue/' . $row->queue_id) . '" class="inline-flex h-8 items-center justify-center rounded-md bg-emerald-600 px-3 text-xs font-medium text-white shadow transition hover:bg-emerald-700">Proses</a>';
                 }
 
-                $actionBtn .= '</div>';
+                $urlHistory = site_url('patient/show/' . $row->patient_id) . '?openModalRiwayat=true';
+                if (!empty($historyId)) $urlHistory .= '&history_id=' . $historyId;
+                $urlHistory .= '&queue_id=' . $row->queue_id;
 
-                $data[] = [
-                    'no' => $no++,
-                    'queue_id' => $row->queue_id,
-                    'date' => date('d-m-Y', strtotime($row->queue_date)),
-                    'name' => $row->patient_name,
-                    'age' => $row->patient_age,
-                    'address' => implode(', ', array_filter([
-                        $row->address,
-                        $row->desa_nama,
-                        $row->kecamatan_nama,
-                        $row->kabupaten_nama
-                    ])),
-                    'phone' => $row->phone,
-                    'description' => $visitCount > 0 ? 'Pasien Lama' : 'Pasien Baru',
-                    'action' => $actionBtn
-                ];
-            }
-
-            return $this->response->setJSON([
-                'draw' => $draw,
-                'recordsTotal' => $totalRecords,
-                'recordsFiltered' => $filteredRecords,
-                'data' => $data
-            ]);
-
-        } catch (\Throwable $e) {
-
-            // 🔥 DEBUG REAL ERROR
-            return $this->response->setStatusCode(500)->setJSON([
-                'error' => true,
-                'message' => $e->getMessage(),
-                'line' => $e->getLine(),
-                'file' => $e->getFile()
-            ]);
-        }
+                $btn .= '<a href="' . $urlHistory . '" class="inline-flex h-8 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-100 hover:text-slate-900"><i class="fas fa-file-medical mr-1.5 text-slate-400"></i> Medis</a>';
+                $btn .= '</div>';
+                return $btn;
+            })
+            ->toJson(true);
     }
 
     public function fetchPatientDataTables()
     {
-        try {
-            $request = service('request');
-            $search = $request->getPost('search');
-            $searchValue = (is_array($search) && !empty($search['value'])) ? $search['value'] : '';
-            $region = $request->getPost('region');
-            $csrfToken = csrf_hash();
+        $request = service('request');
+        $region = $request->getPost('region');
 
-            $builder = $this->db->table('patients p')
-                ->select('p.id AS patient_id, p.name, p.phone, p.address')
-                ->select('r.name as name_region')
-                ->select('pa.desa_nama')
-                ->join('regions r', 'r.id = p.region_id', 'left')
-                ->join('patient_address pa', 'pa.patient_id = p.id', 'left');
+        $builder = $this->db->table('patients p')
+            ->select('p.id AS patient_id, p.name, p.phone, p.address, p.age, r.name as name_region, pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama, pa.provinsi_nama')
+            ->select('COALESCE((SELECT MAX(date) FROM histories h WHERE h.patient_id = p.id AND h.is_delete = 0), "-") AS last_visit_date')
+            ->select('COALESCE((SELECT COUNT(h2.id) FROM histories h2 WHERE h2.patient_id = p.id AND h2.is_delete = 0), 0) AS visit_count')
+            ->join('regions r', 'r.id = p.region_id', 'left')
+            ->join('patient_address pa', 'pa.patient_id = p.id', 'left');
 
-            // Filter wilayah sederhana
-            $role = session()->get('role');
-            $active_region = session()->get('active_region');
-            $region_session = session()->get('region_patient');
+        $role = session()->get('role');
+        $active_region = session()->get('active_region');
+        $region_session = session()->get('region_patient');
 
-            if ($role === 'user' && !empty($region_session)) {
-                $f = is_array($region_session) ? $region_session[0] : $region_session;
-                $builder->where('p.region_id', $f);
-            } elseif ($region && $region !== 'all') {
-                $builder->where('p.region_id', $region);
-            } elseif ($active_region && $active_region !== 'all') {
-                $builder->where('p.region_id', $active_region);
-            }
-
-            // Search
-            if (!empty($searchValue)) {
-                $builder->groupStart()
-                    ->like('p.name', $searchValue, 'both')
-                    ->orLike('p.phone', $searchValue, 'both')
-                    ->groupEnd();
-            }
-
-            $totalRecords = (clone $builder)->countAllResults(false);
-            $data = $builder->orderBy('p.id', 'ASC')->limit(200)->get()->getResult();
-
-            $output = [];
-            foreach ($data as $row) {
-                $output[] = [
-                    'patient_id' => (int) $row->patient_id,
-                    'name' => $row->name ?? '-',
-                    'phone' => $row->phone ?? '-',
-                    'address' => $row->address ?? ($row->desa_nama ?? '-'),
-                    'desa_nama' => $row->desa_nama,
-                    'name_region' => $row->name_region,
-                    'description' => 'Pasien',
-                    'action' => '<button onclick="tambahKeAntrean(' . $row->patient_id . ')">Pilih</button>'
-                ];
-            }
-
-            return $this->response->setJSON([
-                'draw' => 1,
-                'recordsTotal' => $totalRecords,
-                'recordsFiltered' => $totalRecords,
-                'data' => $output,
-                'new_token' => $csrfToken
-            ]);
-        } catch (\Throwable $e) {
-            return $this->response->setJSON([
-                'draw' => 1,
-                'recordsTotal' => 0,
-                'recordsFiltered' => 0,
-                'data' => [],
-                'error' => $e->getMessage()
-            ]);
+        if ($role === 'user') {
+            $filter = $region_session;
+        } else {
+            $filter = ($region && $region !== 'all') ? $region : ($active_region !== 'all' ? $active_region : 'all');
         }
+
+        if ($filter !== 'all' && !empty($filter)) {
+            if (is_array($filter)) {
+                $builder->whereIn('p.region_id', $filter);
+            } else {
+                $builder->where('p.region_id', $filter);
+            }
+        }
+
+        return DataTable::of($builder)
+            ->filter(function ($builder) use ($request) {
+                $search = $request->getPost('search');
+                $searchValue = $search['value'] ?? null;
+                if ($searchValue) {
+                    $builder->groupStart()
+                        ->like('p.name', $searchValue, 'both')
+                        ->orLike('p.phone', $searchValue, 'both')
+                        ->groupEnd();
+                }
+            }, true)
+            ->add('name', function ($row) {
+                return '<div class="font-bold text-slate-800">' . esc($row->name) . '</div>' .
+                    ($row->phone ? '<div class="text-[11px] font-medium text-slate-400 mt-0.5"><i class="fab fa-whatsapp mr-1"></i>' . esc($row->phone) . '</div>' : '');
+            })
+            ->add('address', function ($row) {
+                $addressFilter = array_filter([$row->address, $row->desa_nama, $row->kecamatan_nama, $row->kabupaten_nama]);
+                return '<div class="text-xs text-slate-600 max-w-200px truncate" title="' . esc(implode(', ', $addressFilter)) . '">' . esc(implode(', ', $addressFilter)) . '</div>';
+            })
+            ->add('description', function ($row) {
+                if ($row->visit_count > 0) {
+                    return '<span class="inline-flex items-center rounded-md bg-amber-50 px-2 py-1 text-[10px] font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20">Lama</span>';
+                } else {
+                    return '<span class="inline-flex items-center rounded-md bg-emerald-50 px-2 py-1 text-[10px] font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">Baru</span>';
+                }
+            })
+            ->add('action', function ($row) {
+                return '<button type="button" onclick="window.tambahKeAntrean(' . $row->patient_id . ')" class="inline-flex h-8 items-center justify-center rounded-md bg-teal-600 px-3 text-[11px] font-bold uppercase tracking-wider text-white shadow transition hover:bg-teal-700">Pilih <i class="fas fa-arrow-right ml-1.5 text-[10px]"></i></button>';
+            })
+            ->toJson(true);
     }
 
     public function addToQueue($patientId)

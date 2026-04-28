@@ -34,8 +34,8 @@
         </div>
     </div>
 
+    <!-- TABLE 1 HALAMAN ANTREAN -->
     <div class="rounded-2xl bg-white shadow-sm border border-slate-200/50 overflow-hidden">
-        <!-- HEADER -->
         <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4">
             <div class="mb-4">
                 <h3 class="text-lg font-semibold text-slate-800">Data Antrean</h3>
@@ -45,6 +45,8 @@
             <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
                     <div class="flex-1 sm:flex-none sm:w-72">
+                        <!-- <i id="iconSearch1" class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm transition-all"></i>
+                        <i id="iconSpinner1" class="fas fa-circle-notch fa-spin absolute left-3 top-1/2 -translate-y-1/2 text-teal-600 text-sm hidden transition-all"></i> -->
                         <input type="text" id="searchInput" placeholder="Cari pasien..."
                             class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15">
                     </div>
@@ -84,7 +86,6 @@
             </div>
         </div>
 
-        <!-- TABLE -->
         <div class="overflow-x-auto">
             <table id="table-1" class="w-full text-sm">
                 <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
@@ -112,49 +113,14 @@
             </table>
         </div>
 
-        <!-- PAGINATION -->
-        <div class="border-t border-slate-100 bg-slate-50/50 px-6 py-4">
-            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-                    <div class="flex items-center gap-2">
-                        <label class="text-xs font-medium text-slate-600">Tampilkan</label>
-                        <select id="paginationLength"
-                            class="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15">
-                            <option value="10">10</option>
-                            <option value="25" selected>25</option>
-                            <option value="50">50</option>
-                            <option value="100">100</option>
-                        </select>
-                        <span class="text-xs font-medium text-slate-600">data per halaman</span>
-                    </div>
-                    <div class="text-xs font-medium text-slate-600 sm:ml-auto">
-                        <span id="paginationInfo">Menampilkan 0 sampai 0 dari 0 data</span>
-                    </div>
-                </div>
-
-                <div class="flex items-center justify-center gap-1.5 sm:justify-end">
-                    <button id="paginationPrev"
-                        class="inline-flex h-8 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:border-slate-400 disabled:opacity-50 disabled:cursor-not-allowed">
-                        <i class="fas fa-chevron-left text-xs mr-1"></i>
-                        <span class="hidden sm:inline">Sebelumnya</span>
-                    </button>
-                    <div id="paginationNumbers" class="flex items-center gap-1"></div>
-                    <button id="paginationNext"
-                        class="inline-flex h-8 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:border-slate-400 disabled:opacity-50 disabled:cursor-not-allowed">
-                        <span class="hidden sm:inline">Berikutnya</span>
-                        <i class="fas fa-chevron-right text-xs ml-1"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-
         <div class="border-t border-slate-100 bg-slate-50/30 px-6 py-3 text-xs text-slate-400">
             Data ditampilkan berdasarkan filter tanggal dan wilayah pengguna
         </div>
     </div>
 </section>
 
-<!-- Modal Hapus -->
+
+<!-- DELETE MODAL -->
 <div id="modalDelete" class="modal-wrapper hidden fixed inset-0 z-50 items-center justify-center bg-black/40 p-4">
     <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-6 space-y-4">
         <h3 class="text-lg font-semibold text-slate-800">Konfirmasi Hapus</h3>
@@ -168,7 +134,7 @@
     </div>
 </div>
 
-<!-- Modal Pilih Pasien -->
+<!-- TABLE 2 MODAL -->
 <div id="exampleModal" class="modal-wrapper hidden fixed inset-0 z-50 items-center justify-center bg-black/40 p-4">
     <div class="w-full max-w-5xl overflow-hidden rounded-2xl bg-white shadow-xl">
         <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
@@ -181,6 +147,8 @@
             <div class="flex flex-col md:flex-row md:items-center gap-4 mb-4">
                 <div class="relative flex-1">
                     <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                    <!-- <i id="iconSearch2" class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm transition-all"></i>
+                    <i id="iconSpinner2" class="fas fa-circle-notch fa-spin absolute left-3 top-1/2 -translate-y-1/2 text-teal-600 text-sm hidden transition-all"></i> -->
                     <input type="text" id="searchPatientList" placeholder="Ketik Nama, NIK, atau ID Pasien..."
                         class="w-full rounded-lg border border-slate-300 pl-9 pr-4 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
                 </div>
@@ -210,7 +178,8 @@
     </div>
 </div>
 
-<!-- Modal Registrasi Pasien Baru -->
+
+<!-- ADD PASIEN MODAL -->
 <div id="modalnewpatient" class="modal-wrapper hidden fixed inset-0 z-50 items-center justify-center bg-black/40 p-4">
     <div class="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-xl">
         <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
@@ -249,8 +218,7 @@
                             <option value="Man">Laki-laki</option>
                             <option value="Woman">Perempuan</option>
                         </select>
-                        <div class="invalid-feedback text-xs text-red-500 mt-1 hidden">Jenis kelamin tidak boleh kosong
-                        </div>
+                        <div class="invalid-feedback text-xs text-red-500 mt-1 hidden">Jenis kelamin tidak boleh kosong</div>
                     </div>
                 </div>
 
@@ -288,6 +256,19 @@
                     </div>
                 </div>
 
+                <div id="country-fields" class="hidden space-y-4">
+                    <div class="space-y-1">
+                        <label class="text-sm font-medium text-slate-700">Pilih Negara</label>
+                        <select name="country_id" id="country_id"
+                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                            <option value="">PILIH NEGARA</option>
+                            <?php foreach ($negara as $value): ?>
+                                <option value="<?= $value->id ?>"><?= esc($value->country) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+
                 <div id="local-fields" class="space-y-4">
                     <div class="space-y-1">
                         <label class="text-sm font-medium text-slate-700">Desa Asal Pasien</label>
@@ -299,12 +280,12 @@
 
                     <div class="space-y-1">
                         <label class="text-sm font-medium text-slate-700">Pasien Cabang</label>
-                        <?php if ($role === 'user'): ?>
+                        <?php if (session()->get('role') === 'user'): ?>
                             <input type="text"
                                 class="w-full rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-600"
-                                value="<?= esc($sess_region_name) ?>" readonly>
+                                value="<?= esc(session()->get('region_name')) ?>" readonly>
                             <input type="hidden" name="region_id"
-                                value="<?= is_array($sess_region_id) ? $sess_region_id[0] : $sess_region_id ?>">
+                                value="<?= is_array(session()->get('region_patient')) ? session()->get('region_patient')[0] : session()->get('region_patient') ?>">
                         <?php else: ?>
                             <select name="region_id" id="region_id_new" required
                                 class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
@@ -314,19 +295,6 @@
                                 <?php endforeach; ?>
                             </select>
                         <?php endif; ?>
-                    </div>
-                </div>
-
-                <div id="country-fields" class="hidden space-y-4">
-                    <div class="space-y-1">
-                        <label class="text-sm font-medium text-slate-700">Pilih Negara</label>
-                        <select name="country_id" id="country_id"
-                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
-                            <option value="">PILIH NEGARA</option>
-                            <?php foreach ($negara as $value): ?>
-                                <option value="<?= $value->id ?>"><?= esc($value->country) ?></option>
-                            <?php endforeach; ?>
-                        </select>
                     </div>
                 </div>
 
@@ -371,7 +339,8 @@
                     <label class="text-sm font-medium text-slate-700">Tanggal Kedatangan <span
                             class="text-red-500">*</span></label>
                     <input type="datetime-local" name="visit_date" required
-                        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                        value="<?= date('Y-m-d\TH:i') ?>">
                     <div class="invalid-feedback text-xs text-red-500 mt-1 hidden">Tanggal kedatangan wajib diisi</div>
                 </div>
             </div>
@@ -398,7 +367,9 @@
         fetchPatientUrl: "<?= site_url('antrean/fetchPatientDataTables') ?>",
         deleteBaseUrl: "<?= site_url('antrean/destroy') ?>",
         pdfUrl: "<?= site_url('antrean/print_pdf_antrean') ?>",
-        excelUrl: "<?= site_url('antrean/export_excell_antrean') ?>"
+        excelUrl: "<?= site_url('antrean/export_excell_antrean') ?>",
+        checkPhoneUrl: "<?= site_url('patient/check_phone') ?>",
+        patientHistoryUrl: "<?= site_url('patient/show') ?>"
     };
 </script>
 <?= $this->endSection() ?>

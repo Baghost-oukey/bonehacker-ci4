@@ -1,4 +1,4 @@
-<div class="rounded-2xl bg-white shadow-sm border border-slate-200/50 overflow-hidden">
+<div id="patientHistoryContainer" class="rounded-2xl bg-white shadow-sm border border-slate-200/50 overflow-hidden">
     <div
         class="border-b border-slate-100 bg-slate-50/50 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>

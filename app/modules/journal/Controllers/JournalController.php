@@ -43,27 +43,40 @@ class JournalController extends BaseController
         $request = $this->request;
         $session = session();
 
-        // ✅ PARAMETER (DISERAGAMKAN)
-        $cabang = $request->getPost('cabang');
+        // PARAMETER (DISERAGAMKAN)
+        $cabang = $request->getPost('region');
         $start_date = $request->getPost('start_date');
         $end_date = $request->getPost('end_date');
 
-        // ✅ FALLBACK SESSION
-        if (!$cabang) {
-            $cabang = $session->get('active_cabang') ?? null;
+        // SEARCH 
+        $searchData = $request->getPost('search');
+        $keyword = $searchData['value'] ? $searchData['value'] : '';
+
+        //  FALLBACK SESSION
+        // if (!$cabang) {
+        //     $cabang = $session->get('active_cabang') ?? null;
+        // }
+
+        if (empty($cabang) || $cabang === 'all') {
+            $cabang = $session->get('active_region') ?? null;
         }
 
-        // ✅ QUERY
+        //  QUERY
         $queryBuilder = $this->model_journal->get_query_for_Journal(
             $cabang,
             $start_date,
             $end_date
         );
 
+        // FILTER KE BUILDER 
+        if (!empty($keyword)) {
+            $queryBuilder->groupStart()
+                ->like('p.name', $keyword)
+                ->orLike('p.phone', $keyword)
+                ->groupEnd();
+        }
         $datatables = new DataTables($queryBuilder);
-
         $start = (int) ($request->getPost('start') ?? 0);
-
         $datatables->addColumn('no', function () use (&$start) {
             return ++$start;
         });
@@ -109,7 +122,7 @@ class JournalController extends BaseController
                     </a>';
         });
 
-        // ✅ RESPONSE AMAN
+        //  RESPONSE AMAN
         $response = $datatables->asObject()->generate();
 
         if (is_object($response)) {
@@ -118,7 +131,7 @@ class JournalController extends BaseController
             $data = ['data' => []];
         }
 
-        // ✅ UPDATE CSRF
+        //  UPDATE CSRF
         $data['new_token'] = csrf_hash();
 
         return $this->response->setJSON($data);
@@ -130,7 +143,7 @@ class JournalController extends BaseController
         set_time_limit(300);
         ini_set('memory_limit', '512M');
 
-        $cabang = $this->request->getGet('cabang_id');
+       $cabang = $this->request->getGet('region') ?? $this->request->getGet('cabang_id');
         $start_date = $this->request->getGet('start_date');
         $end_date = $this->request->getGet('end_date');
 
@@ -161,7 +174,7 @@ class JournalController extends BaseController
     // ================= EXPORT EXCEL =================
     public function export_excell()
     {
-        $cabang = $this->request->getGet('cabang_id');
+    $cabang = $this->request->getGet('region') ?? $this->request->getGet('cabang_id');
         $start_date = $this->request->getGet('start_date');
         $end_date = $this->request->getGet('end_date');
 

@@ -475,11 +475,14 @@ class Patients extends BaseController
 
     public function destroy($id)
     {
-        $this->db->table('histories')
+        $this->db->table('patients')
             ->where('id', $id)
             ->update(['is_delete' => 1]);
 
-        return $this->response->setJSON(['status' => true]);
+        return $this->response->setJSON([
+            'status' => true,
+            'new_token' => csrf_hash()
+        ]);
     }
 
     public function check_phone()
@@ -504,103 +507,7 @@ class Patients extends BaseController
         ]);
     }
 
-    public function print_pdf()
-    {
-        set_time_limit(0);
-        ini_set('memory_limit', '512M');
-        // 1. Ambil Data (Eager Loaded dari Model)
-        $region_id = $this->request->getGet('region_id');
-        $dateRange = $this->request->getGet('date_range');
-        $start_date = null;
-        $end_date = null;
-
-        if (!empty($dateRange) && strpos($dateRange, ' - ') !== false) {
-            $dates = explode(' - ', $dateRange);
-            $start_date = date('Y-m-d', strtotime(trim($dates[0])));
-            $end_date = date('Y-m-d', strtotime(trim($dates[1])));
-        }
-
-        $patients = $this->patientModel->getAllData($region_id, null, 0, $start_date, $end_date);
-        $jenisKelamin = $this->jenisKelamin;
-
-        // 2. Inisialisasi TCPDF (Ubah ke Landscape 'L' agar muat banyak kolom)
-        $pdf = new \TCPDF('L', 'mm', 'A4', true, 'UTF-8', false);
-
-        // Setup Metadata
-        $pdf->SetCreator(PDF_CREATOR);
-        $pdf->SetTitle('Data Pasien');
-        $pdf->setPrintHeader(false);
-        $pdf->setPrintFooter(false);
-        $pdf->SetMargins(10, 10, 10);
-        $pdf->SetAutoPageBreak(TRUE, 15);
-
-        $pdf->AddPage();
-
-        // 3. Header Judul
-        $pdf->SetFont('times', 'B', 14);
-        $pdf->Cell(0, 10, 'LAPORAN DATA PASIEN', 0, 1, 'C');
-        $pdf->Ln(5);
-
-        $this->drawHeader($pdf);
-        $pdf->SetFont('times', '', 8);
-        $no = 1;
-
-        while ($row = $patients->getUnbufferedRow()) {
-
-            // Cek Page Break (Landscape A4 batasnya sekitar 180mm)
-            if ($pdf->GetY() > 175) {
-                $pdf->AddPage();
-                $this->drawHeader($pdf);
-                $pdf->SetFont('times', '', 8);
-            }
-
-            // Ambil data yang sudah dihitung di model (total_history)
-            $jumlahRM = $row->total_history ?? 0;
-            // $gender   = $jenisKelamin[$row->gender] ?? $row->gender;
-            $gender = ($row->gender == 'Man') ? 'L' : 'P';
-            $alamat = trim(($row->desa_nama ?? '') . ' ' . ($row->kecamatan_nama ?? '') . ' ' . ($row->kabupaten_nama ?? ''));
-            if (empty($alamat))
-                $alamat = $row->address ?? '-';
-            $pdf->SetFont('times', '', 8);
-
-            // Render Row
-            $pdf->MultiCell(10, 7, $no++, 1, 'C', 0, 0);
-            $pdf->MultiCell(15, 7, $row->id, 1, 'C', 0, 0);
-            $pdf->MultiCell(45, 7, $row->name, 1, 'L', 0, 0); // Nama rata kiri (L)
-            $pdf->MultiCell(15, 7, $gender, 1, 'C', 0, 0);
-            $pdf->MultiCell(12, 7, $row->age, 1, 'C', 0, 0);
-            $pdf->MultiCell(30, 7, $row->name_region ?? '-', 1, 'L', 0, 0);
-            $pdf->MultiCell(30, 7, $row->phone, 1, 'L', 0, 0);
-            $pdf->MultiCell(55, 7, $row->address, 1, 'L', 0, 0); // Alamat rata kiri
-            $pdf->MultiCell(30, 7, $row->last_visit ?? '-', 1, 'C', 0, 0);
-            $pdf->MultiCell(15, 7, $row->total_history ?? 0, 1, 'C', 0, 1);
-        }
-
-        // 6. Output
-        $this->response->setHeader('Content-Type', 'application/pdf');
-        $pdf->Output('Laporan_Pasien_' . date('Ymd') . '.pdf', 'I');
-        exit();
-    }
-
-
-    private function drawHeader($pdf)
-    {
-        $pdf->SetFont('times', 'B', 8);
-        $pdf->SetFillColor(230, 230, 230);
-        $pdf->MultiCell(10, 8, 'NO', 1, 'C', 1, 0);
-        $pdf->MultiCell(15, 8, 'ID', 1, 'C', 1, 0);
-        $pdf->MultiCell(45, 8, 'Nama Pasien', 1, 'C', 1, 0);
-        $pdf->MultiCell(15, 8, 'L/P', 1, 'C', 1, 0);
-        $pdf->MultiCell(12, 8, 'Usia', 1, 'C', 1, 0);
-        $pdf->MultiCell(30, 8, 'Wilayah', 1, 'C', 1, 0);
-        $pdf->MultiCell(30, 8, 'No. Telp', 1, 'C', 1, 0);
-        $pdf->MultiCell(55, 8, 'Alamat (Desa/Kec/Kab)', 1, 'C', 1, 0);
-        $pdf->MultiCell(30, 8, 'Visit Terakhir', 1, 'C', 1, 0);
-        $pdf->MultiCell(15, 8, 'RM', 1, 'C', 1, 1);
-        $pdf->SetFont('times', '', 8);
-    }
-
-    public function update($id = null)
+     public function update($id = null)
     {
         // 1. Ambil ID dari segment URL atau Post (Fallback)
         $id = $id ?? $this->request->getPost('id');
@@ -711,17 +618,105 @@ class Patients extends BaseController
         return redirect()->to('patient/show/' . $id);
     }
 
-    public function export()
+    public function print_pdf($patients)
     {
         set_time_limit(0);
         ini_set('memory_limit', '512M');
+        // 1. Ambil Data (Eager Loaded dari Model)
+        // $region_id = $this->request->getGet('region_id');
+        // $dateRange = $this->request->getGet('date_range');
+        // $start_date = null;
+        // $end_date = null;
 
-        $region_id = $this->request->getGet('region_id');
-        $data = $this->patientModel->getAllData($region_id);
+        // if (!empty($dateRange) && strpos($dateRange, ' - ') !== false) {
+        //     $dates = explode(' - ', $dateRange);
+        //     $start_date = date('Y-m-d', strtotime(trim($dates[0])));
+        //     $end_date = date('Y-m-d', strtotime(trim($dates[1])));
+        // }
 
+        // // $patients = $this->patientModel->getAllData($region_id, null, 0, $start_date, $end_date);
+        // $jenisKelamin = $this->jenisKelamin;
+        $pdf = new \TCPDF('L', 'mm', 'A4', true, 'UTF-8', false);
+
+        // Setup Metadata
+        $pdf->SetCreator(PDF_CREATOR);
+        $pdf->SetTitle('Data Pasien');
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
+        $pdf->SetMargins(10, 10, 10);
+        $pdf->SetAutoPageBreak(TRUE, 15);
+
+        $pdf->AddPage();
+
+        // 3. Header Judul
+        $pdf->SetFont('times', 'B', 14);
+        $pdf->Cell(0, 10, 'LAPORAN DATA PASIEN', 0, 1, 'C');
+        $pdf->Ln(5);
+
+        $this->drawHeader($pdf);
+        $pdf->SetFont('times', '', 8);
+        $no = 1;
+
+        while ($row = $patients->getUnbufferedRow()) {
+
+            if ($pdf->GetY() > 175) {
+                $pdf->AddPage();
+                $this->drawHeader($pdf);
+                $pdf->SetFont('times', '', 8);
+            }
+
+            $jumlahRM = $row->total_history ?? 0;
+            // $gender   = $jenisKelamin[$row->gender] ?? $row->gender;
+            $gender = ($row->gender == 'Man') ? 'L' : 'P';
+            $alamat = trim(($row->desa_nama ?? '') . ' ' . ($row->kecamatan_nama ?? '') . ' ' . ($row->kabupaten_nama ?? ''));
+            if (empty($alamat))
+                $alamat = $row->address ?? '-';
+            $pdf->SetFont('times', '', 8);
+
+            // Render Row
+            $pdf->MultiCell(10, 7, $no++, 1, 'C', 0, 0);
+            $pdf->MultiCell(15, 7, $row->id, 1, 'C', 0, 0);
+            $pdf->MultiCell(45, 7, $row->name, 1, 'L', 0, 0); // Nama rata kiri (L)
+            $pdf->MultiCell(15, 7, $gender, 1, 'C', 0, 0);
+            $pdf->MultiCell(12, 7, $row->age, 1, 'C', 0, 0);
+            $pdf->MultiCell(30, 7, $row->name_region ?? '-', 1, 'L', 0, 0);
+            $pdf->MultiCell(30, 7, $row->phone, 1, 'L', 0, 0);
+            $pdf->MultiCell(55, 7, $row->address, 1, 'L', 0, 0); // Alamat rata kiri
+            $pdf->MultiCell(30, 7, $row->last_visit ?? '-', 1, 'C', 0, 0);
+            $pdf->MultiCell(15, 7, $row->total_history ?? 0, 1, 'C', 0, 1);
+        }
+
+        $this->response->setHeader('Content-Type', 'application/pdf');
+        $pdf->Output('Laporan_Pasien_' . date('Ymd') . '.pdf', 'I');
+        exit();
+    }
+
+
+    private function drawHeader($pdf)
+    {
+        $pdf->SetFont('times', 'B', 8);
+        $pdf->SetFillColor(230, 230, 230);
+        $pdf->MultiCell(10, 8, 'NO', 1, 'C', 1, 0);
+        $pdf->MultiCell(15, 8, 'ID', 1, 'C', 1, 0);
+        $pdf->MultiCell(45, 8, 'Nama Pasien', 1, 'C', 1, 0);
+        $pdf->MultiCell(15, 8, 'L/P', 1, 'C', 1, 0);
+        $pdf->MultiCell(12, 8, 'Usia', 1, 'C', 1, 0);
+        $pdf->MultiCell(30, 8, 'Wilayah', 1, 'C', 1, 0);
+        $pdf->MultiCell(30, 8, 'No. Telp', 1, 'C', 1, 0);
+        $pdf->MultiCell(55, 8, 'Alamat (Desa/Kec/Kab)', 1, 'C', 1, 0);
+        $pdf->MultiCell(30, 8, 'Visit Terakhir', 1, 'C', 1, 0);
+        $pdf->MultiCell(15, 8, 'RM', 1, 'C', 1, 1);
+        $pdf->SetFont('times', '', 8);
+    }
+
+   
+
+    public function export($data)
+    {
+        set_time_limit(0);
+        ini_set('memory_limit', '512M');
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
-
         $headers = ['No', 'ID Pasien', 'Name', 'Gender', 'Age', 'Address', 'Phone', 'Rentan', 'Region', 'Date', 'Total RM'];
         $sheet->fromArray($headers, NULL, 'A1');
 
@@ -780,19 +775,38 @@ class Patients extends BaseController
     {
         $type = $this->request->getGet('type');
         $region_id = $this->request->getGet('region_id');
-        $dateRange = $this->request->getGet('date_range');
-
+        $periode = $this->request->getGet('periode');
         $start_date = null;
         $end_date = null;
 
-        if (!empty($dateRange) && strpos($dateRange, ' - ') !== false) {
-            $dates = explode(' - ', $dateRange);
-            $start_date = date('Y-m-d', strtotime($dates[0]));
-            $end_date = date('Y-m-d', strtotime($dates[1]));
+        switch ($periode) {
+            case 'today':
+                $start_date = date('Y-m-d');
+                $end_date = date('Y-m-d');
+                break;
+            case 'last_7_days':
+                $start_date = date('Y-m-d', strtotime('-7 days'));
+                $end_date = date('Y-m-d');
+                break;
+            case 'this_month':
+                $start_date = date('Y-m-01'); 
+                $end_date = date('Y-m-t');    
+                break;
+            case 'custom':
+                $start_date = $this->request->getGet('start_date');
+                $end_date = $this->request->getGet('end_date');
+                break;
+            default:
+                $start_date = null;
+                $end_date = null;
+                break;
+        }
+
+        if ($periode === 'custom' && (empty($start_date) || empty($end_date))) {
+            return redirect()->back()->with('error', 'Harap lengkapi rentang tanggal kustom.');
         }
 
         $data = $this->patientModel->getAllData($region_id, null, 0, $start_date, $end_date);
-
         if ($type === 'pdf') {
             return $this->print_pdf($data);
         } else {
