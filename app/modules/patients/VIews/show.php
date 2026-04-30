@@ -59,19 +59,24 @@
 
 <?= $this->section('scripts') ?>
 <script>
-    window.patientId = '<?= $patient_id ?? "" ?>';
-    window.queueId = '<?= $queue_id ?? "" ?>';
-    window.historyFetchUrl = '<?= site_url("history/fetch/" . ($patient_id ?? 0)) ?>';
-    window.historyStoreUrl = '<?= site_url("history/store") ?>';
-    window.historyDestroyUrl = '<?= site_url("history/destroy") ?>';
-    window.complaintTagsUrl = '<?= site_url("tag-keluhan/get_tags") ?>';
-    window.medisTagsUrl = '<?= site_url("tag-rekam-medis/tags") ?>';
-    window.resultTagsUrl = '<?= site_url("tag-pemeriksaan/get_tags") ?>';
-    window.csrfTokenName = '<?= csrf_token() ?>';
-    window.csrfHash = '<?= csrf_hash() ?>';
-    window.fileUrlsData = <?= !empty($file_urls) ? (is_array($file_urls) ? json_encode($file_urls) : $file_urls) : '[]' ?>;
-    window.fileBaseUrl = '<?= base_url("patient_file") ?>';
-    window.fileUploadUrl = '<?= base_url("patient/update_files") ?>';
+    window.patientConfig = {
+        patientId: '<?= esc($patient_id ?? "") ?>',
+        queueId: '<?= esc($queue_id ?? "") ?>',
+        csrfTokenName: '<?= csrf_token() ?>',
+        csrfHash: '<?= csrf_hash() ?>',
+
+        urls: {
+            historyFetch: '<?= site_url("history/fetch/" . ($patient_id ?? 0)) ?>',
+            historyStore: '<?= site_url("history/store") ?>',
+            historyDestroy: '<?= site_url("history/destroy") ?>',
+            complaintTags: '<?= site_url("tag-keluhan/get_tags") ?>',
+            medisTags: '<?= site_url("tag-rekam-medis/tags") ?>',
+            resultTags: '<?= site_url("tag-pemeriksaan/get_tags") ?>',
+            fileBase: '<?= base_url("patient_file") ?>',
+            fileUpload: '<?= base_url("patient/update_files") ?>'
+        },
+        fileUrlsData: <?= !empty($file_urls) ? (is_array($file_urls) ? json_encode($file_urls) : $file_urls) : '[]' ?>
+    };
 </script>
 
 <?= $this->endSection() ?>

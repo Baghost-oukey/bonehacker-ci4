@@ -40,9 +40,12 @@
             <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <!-- LEFT: SEARCH -->
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-                    <div class="flex-1 sm:flex-none sm:w-72">
+                    <div class="flex-1 sm:flex-none sm:w-72 relative">
+                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                            <i class="fas fa-search text-slate-400"></i>
+                        </div>
                         <input type="text" id="searchInput" placeholder="Cari tag keluhan..."
-                            class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15">
+                            class="w-full rounded-lg border border-slate-200 py-2 pl-10 pr-3 text-sm transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15">
                     </div>
                 </div>
             </div>
@@ -227,6 +230,7 @@
         </form>
     </div>
 </div>
+
 
 <?= $this->endSection() ?>
 

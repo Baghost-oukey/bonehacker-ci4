@@ -30,15 +30,13 @@ const closeModal = (modal) => {
     modal.classList.add(MODAL_HIDDEN_CLASS);
 };
 
+// --- INIT SCRIPT ---
 const setupComplaintPage = () => {
     const config = window.complaintConfig;
     const page = document.getElementById("complaintPage");
-
     if (!config || !page || typeof window.$ === "undefined") return;
-
     const $ = window.$;
     const swalLib = window.Swal || window.swal;
-
     let currentPage = 1;
     let pageLength = 25;
     let totalRecords = 0;
@@ -50,6 +48,8 @@ const setupComplaintPage = () => {
     let originalDesc = "";
     let originalId = "";
 
+
+    // --- UPDATE CRSF TOKEN ---
     const updateCsrf = (newToken) => {
         if (!newToken) return;
         config.csrfHash = newToken;
@@ -57,6 +57,8 @@ const setupComplaintPage = () => {
         $(`input[name='${config.csrfName}']`).val(newToken);
     };
 
+
+    // --- PAGINATION SECTION ---
     const updatePaginationInfo = () => {
         if (filteredRecords <= 0) {
             $("#paginationInfo").text("Menampilkan 0 sampai 0 dari 0 data");
@@ -100,11 +102,14 @@ const setupComplaintPage = () => {
         $("#paginationNext").prop("disabled", currentPage >= totalPages);
     };
 
+
+    // --- LOAD DATA TABLE ---
     const renderEmptyState = (message) => {
         $("#table-complaint tbody").html(`<tr class="hover:bg-slate-50 transition"><td colspan="5" class="px-6 py-12 text-center text-slate-400 italic text-sm"><i class="fas fa-inbox mr-2 text-slate-300"></i>${message}</td></tr>`);
     };
-
     const loadTableData = (pageNumber = 1) => {
+        currentPage = pageNumber;
+        
         $.ajax({
             url: config.fetchUrl,
             type: "POST",
@@ -136,10 +141,14 @@ const setupComplaintPage = () => {
                 }
 
                 response.data.forEach((row) => {
+                    const trimNameTags = row.nama ? row.nama.toLowerCase().replace(/\b\w/g, s => s.toUpperCase()) : "-";
+                    const deskripsi = row.deskripsi
+                        ? `<span class="text-slate-600">${row.deskripsi}</span>`
+                        : `<span class="text-slate-400 italic text-xs">Tidak ada deskripsi</span>`;
                     const tr = $(`<tr class="hover:bg-slate-50 transition border-b border-slate-100"></tr>`);
                     tr.append(`<td class="px-6 py-3.5">${row.no || "-"}</td>`);
-                    tr.append(`<td class="px-6 py-3.5 font-medium text-slate-800">${row.nama || "-"}</td>`);
-                    tr.append(`<td class="px-6 py-3.5 text-slate-500">${row.deskripsi || "-"}</td>`);
+                    tr.append(`<td class="px-6 py-3.5 font-medium text-slate-800">${trimNameTags}</td>`);
+                    tr.append(`<td class="px-6 py-3.5 text-slate-500">${deskripsi}</td>`);
                     tr.append(`<td class="px-6 py-3.5 text-center">${row.jumlah || "0"}</td>`);
                     tr.append(`<td class="px-6 py-3.5 text-center">${row.action || "-"}</td>`);
                     tbody.append(tr);
@@ -157,7 +166,8 @@ const setupComplaintPage = () => {
         });
     };
 
-    // Validation functions
+
+    // --- VALIDASI FORM INPUT ---
     const setInvalid = (inputId, feedbackElement, btnId, msg) => {
         $(inputId).addClass('border-red-500 focus:border-red-500 focus:ring-red-500/15');
         $(inputId).removeClass('border-teal-500 focus:border-teal-500 focus:ring-teal-500/15');
@@ -178,74 +188,75 @@ const setupComplaintPage = () => {
         $(btnId).prop('disabled', true);
     };
 
-    // Validate input for duplicate name
-    const validateInput = (inputId, submitBtnId, feedbackId, originalValue, originalId, descInputId, originalDesc) => {
+
+    // --- VALIDASI DUPLIKAT NAMA ---
+    const validateInput = (inputId, submitBtnId, feedbackId, descInputId) => {
         let debounceTimer;
 
-        $(`${inputId}, ${descInputId}`).on('input', function() {
+        $(`${inputId}, ${descInputId}`).off('input').on('input', function () {
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(() => {
-                const currentName = $(inputId).val().trim();
-                const currentDesc = $(descInputId).val().trim();
+                const isEdit = inputId === '#edit_name';
+                const currentName = ($(inputId).val() || '').trim();
+                const currentDesc = ($(descInputId).val() || '').trim();
+                const origName = isEdit ? String($(inputId).attr('data-original') || '').trim() : '';
+                const origDesc = isEdit ? String($(descInputId).attr('data-original') || '').trim() : '';
+                const origId = isEdit ? String($('#editComplaintForm').attr('data-id') || '') : '';
 
-                // Check if empty
                 if (currentName === '') {
                     setInvalid(inputId, feedbackId, submitBtnId, 'Nama tag tidak boleh kosong');
                     return;
                 }
 
-                // Check if no changes at all
-                if (currentName === originalValue && currentDesc === originalDesc) {
-                    setValid(inputId, feedbackId, submitBtnId, false);
+                if (isEdit && currentName.toLowerCase() === origName.toLowerCase()) {
+                    if (currentDesc === origDesc) {
+                        setValid(inputId, feedbackId, submitBtnId, false);
+                    } else {
+                        setValid(inputId, feedbackId, submitBtnId, true);
+                    }
                     return;
                 }
 
-                // If name changed, check database
-                if (currentName !== originalValue) {
-                    if (ajaxRequest) ajaxRequest.abort();
+                if (ajaxRequest) ajaxRequest.abort();
+                $(feedbackId).removeClass('hidden').text('Memeriksa nama...').css('color', '#64748b');
 
-                    ajaxRequest = $.ajax({
-                        url: config.checkNameUrl,
-                        type: 'POST',
-                        data: {
-                            [config.csrfName]: config.csrfHash,
-                            name: currentName,
-                            id: originalId
-                        },
-                        dataType: 'json',
-                        success: function(response) {
-                            if (response.csrf_hash) {
-                                updateCsrf(response.csrf_hash);
-                            }
-
-                            if (response.exists) {
-                                isNameInvalid = true;
-                                setInvalid(inputId, feedbackId, submitBtnId, 'Nama tag sudah digunakan');
-                            } else {
-                                isNameInvalid = false;
-                                setValid(inputId, feedbackId, submitBtnId, true);
-                            }
-                        },
-                        error: function() {
-                            setInvalid(inputId, feedbackId, submitBtnId, 'Gagal memeriksa nama');
+                ajaxRequest = $.ajax({
+                    url: config.checkNameUrl,
+                    type: 'POST',
+                    data: {
+                        [config.csrfName]: config.csrfHash,
+                        name: currentName,
+                        id: origId
+                    },
+                    dataType: 'json',
+                    success: function (response) {
+                        if (response.csrf_hash) {
+                            updateCsrf(response.csrf_hash);
                         }
-                    });
-                } else {
-                    // Name same but description changed
-                    setValid(inputId, feedbackId, submitBtnId, true);
-                }
+                        if (response.exists) {
+                            isNameInvalid = true;
+                            setInvalid(inputId, feedbackId, submitBtnId, 'Nama tag sudah digunakan');
+                        } else {
+                            isNameInvalid = false;
+                            setValid(inputId, feedbackId, submitBtnId, true);
+                        }
+                    },
+                    error: function () {
+                        setInvalid(inputId, feedbackId, submitBtnId, 'Gagal memeriksa nama');
+                    }
+                });
             }, 300);
         });
     };
 
-    // Search handler with debounce
+    // --- SEARCH HANDLER ---
     const searchHandler = debounce((value) => {
         searchValue = value;
         currentPage = 1;
         loadTableData(1);
     }, 400);
 
-    // Event Listeners
+    // --- EVENT LISTENERS ---
     $("#searchInput").on("keyup", function () {
         searchHandler($(this).val());
     });
@@ -270,15 +281,15 @@ const setupComplaintPage = () => {
         if (currentPage < totalPages) loadTableData(currentPage + 1);
     });
 
-    // Form submissions
-    $('#addComplaintForm, #editComplaintForm').on('submit', function(e) {
-        e.preventDefault();
 
+    // --- MODAL FORM TAMBAH DAN EDIT TAG ---
+    $('#addComplaintForm, #editComplaintForm').off('submit').on('submit', function (e) {
+        e.preventDefault();
         const form = $(this);
         const btnSubmit = form.find('button[type="submit"]');
         const url = form.attr('action');
         const isEdit = form.attr('id') === 'editComplaintForm';
-
+        const originalBtnText = isEdit ? 'Simpan Perubahan' : 'Simpan';
         btnSubmit.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Menyimpan...');
 
         $.ajax({
@@ -286,21 +297,16 @@ const setupComplaintPage = () => {
             type: "POST",
             data: form.serialize(),
             dataType: "json",
-            success: function(response) {
+            success: function (response) {
+                btnSubmit.prop('disabled', false).text(originalBtnText);
                 if (response.csrf_hash) {
                     updateCsrf(response.csrf_hash);
                 }
-
                 if (response.status || response.success) {
-                    if (isEdit) {
-                        closeModal(document.getElementById("modalEdit"));
-                    } else {
-                        closeModal(document.getElementById("modalTambah"));
-                    }
-
+                    const targetModal = document.getElementById(isEdit ? "modalEdit" : "modalTambah");
+                    if (targetModal) closeModal(targetModal);
                     loadTableData(currentPage);
-
-                    if (swalLib?.fire) {
+                    if (typeof swalLib !== 'undefined' && swalLib?.fire) {
                         swalLib.fire({
                             icon: 'success',
                             title: 'Berhasil!',
@@ -311,8 +317,17 @@ const setupComplaintPage = () => {
                     } else {
                         alert(response.message || 'Data berhasil disimpan!');
                     }
+
+                    setTimeout(() => {
+                        if (typeof loadTableData === 'function') {
+                            loadTableData(typeof currentPage !== 'undefined' ? currentPage : 1);
+                        } else {
+                            console.error("Fungsi loadTableData tidak ditemukan, melakukan hard-reload...");
+                            window.location.reload();
+                        }
+                    });
                 } else {
-                    if (swalLib?.fire) {
+                    if (typeof swalLib !== 'undefined' && swalLib?.fire) {
                         swalLib.fire({
                             icon: 'error',
                             title: 'Gagal Simpan',
@@ -321,11 +336,11 @@ const setupComplaintPage = () => {
                     } else {
                         alert(response.message || 'Terjadi kesalahan sistem.');
                     }
-                    btnSubmit.prop('disabled', false).text(isEdit ? 'Simpan Perubahan' : 'Simpan');
                 }
             },
-            error: function() {
-                if (swalLib?.fire) {
+            error: function () {
+                btnSubmit.prop('disabled', false).text(originalBtnText);
+                if (typeof swalLib !== 'undefined' && swalLib?.fire) {
                     swalLib.fire({
                         icon: 'error',
                         title: 'Error',
@@ -334,27 +349,24 @@ const setupComplaintPage = () => {
                 } else {
                     alert('Error: Token CSRF mungkin kadaluarsa atau koneksi terputus.');
                 }
-                btnSubmit.prop('disabled', false).text(isEdit ? 'Simpan Perubahan' : 'Simpan');
             }
         });
     });
 
-    // Delete form submission
-    $('#deleteComplaintForm').on('submit', function(e) {
-        e.preventDefault();
 
+    // --- MODAL DELETE TAG ---
+    $('#deleteComplaintForm').on('submit', function (e) {
+        e.preventDefault();
         const form = $(this);
         const url = form.attr('action');
         const btnSubmit = form.find('button[type="submit"]');
-
         btnSubmit.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Menghapus...');
-
         $.ajax({
             url: url,
             type: "POST",
             data: form.serialize(),
             dataType: "json",
-            success: function(response) {
+            success: function (response) {
                 if (response.csrf_hash) {
                     updateCsrf(response.csrf_hash);
                 }
@@ -387,7 +399,7 @@ const setupComplaintPage = () => {
                     btnSubmit.prop('disabled', false).text('Ya, Hapus');
                 }
             },
-            error: function() {
+            error: function () {
                 if (swalLib?.fire) {
                     swalLib.fire({
                         icon: 'error',
@@ -402,35 +414,28 @@ const setupComplaintPage = () => {
         });
     });
 
-    // Edit button handler
-    $(document).on('click', '.btn_edit', function() {
+
+    // --- MODAL EDIT TAG ---
+    $(document).on('click', '.btn_edit', function () {
         const href = $(this).data('href');
         const name = $(this).data('name');
         const description = $(this).data('description');
         const id = $(this).data('id');
+        // originalName = name;
+        // originalDesc = description || '';
+        // originalId = id;
+        $("#edit_name").val(name).attr('data-original', name);
+        $("#edit_description").val(description || '').attr('data-original', description || '');
+        $("#editComplaintForm").attr("action", href).attr('data-id', id);
 
-        originalName = name;
-        originalDesc = description || '';
-        originalId = id;
-
-        $("#edit_name").val(name);
-        $("#edit_description").val(description);
-        $("#editComplaintForm").attr("action", href);
-
-        // Reset validation state
         resetValidation('#edit_name', '.edit-name-feedback', '#edit_submitBtn');
-
         openModal(document.getElementById("modalEdit"));
     });
-
-    // Delete button handler
-    $(document).on('click', '.btn_delete', function() {
+    $(document).on('click', '.btn_delete', function () {
         const href = $(this).data('href');
         $("#deleteComplaintForm").attr("action", href);
         openModal(document.getElementById("modalDelete"));
     });
-
-    // Modal handlers
     document.addEventListener("click", (event) => {
         const openTrigger = event.target.closest("[data-modal-open]");
         if (openTrigger) {
@@ -438,48 +443,44 @@ const setupComplaintPage = () => {
             openModal(document.getElementById(targetId));
             return;
         }
-
         const closeTrigger = event.target.closest("[data-modal-close]");
         if (closeTrigger) {
             closeModal(closeTrigger.closest(".modal-wrapper"));
             return;
         }
-
         if (event.target.classList && event.target.classList.contains("modal-wrapper")) {
             closeModal(event.target);
         }
     });
 
-    // Reset form when modal tambah is opened
-    $('#modalTambah').on('click', '[data-modal-close]', function() {
+
+    // --- RESET FORM KETIKA MODAL DITUTUP ---
+    $('#modalTambah').on('click', '[data-modal-close]', function () {
         $('#addComplaintForm')[0].reset();
         resetValidation('#add_name', '.name-feedback', '#add_submitBtn');
     });
 
-    // Initialize validation for add form when modal opens
-    const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
+    const observer = new MutationObserver(function (mutations) {
+        mutations.forEach(function (mutation) {
             if (mutation.target.classList.contains('flex')) {
                 if (mutation.target.id === 'modalTambah') {
                     $('#addComplaintForm')[0].reset();
                     resetValidation('#add_name', '.name-feedback', '#add_submitBtn');
-                    validateInput('#add_name', '#add_submitBtn', '.name-feedback', '', '', '#add_description', '');
+                    validateInput('#add_name', '#add_submitBtn', '.name-feedback', '#add_description', false);
                 }
             }
         });
     });
-
     const modalTambah = document.getElementById('modalTambah');
     if (modalTambah) {
         observer.observe(modalTambah, { attributes: true, attributeFilter: ['class'] });
     }
 
-    // Initialize validation for edit form
-    validateInput('#edit_name', '#edit_submitBtn', '.edit-name-feedback', originalName, originalId, '#edit_description', originalDesc);
-
-    // Initial load
+    validateInput('#add_name', '#add_submitBtn', '.name-feedback', '#add_description', false);
+    validateInput('#edit_name', '#edit_submitBtn', '.edit-name-feedback', '#edit_description', true)
     loadTableData(1);
 };
+
 
 // Initialize page
 if (document.readyState === "loading") {

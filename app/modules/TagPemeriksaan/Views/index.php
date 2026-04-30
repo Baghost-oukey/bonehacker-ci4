@@ -131,7 +131,7 @@
                 class="rounded-md p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800">&times;</button>
         </div>
 
-        <form id="addResultForm" action="<?= base_url('result/store') ?>" method="post" class="space-y-4 p-5">
+        <form id="addResultForm" action="<?= site_url('tag-pemeriksaan/store') ?>" method="post" class="space-y-4 p-5">
             <?= csrf_field() ?>
 
             <div class="space-y-1">
@@ -241,5 +241,5 @@
 </script>
 
 <!-- External JS -->
-<script src="<?= base_url('js/pages/result.js') ?>"></script>
+<!-- <script src="<?= base_url('js/pages/tag_pemeriksaan.js') ?>"></script> -->
 <?= $this->endSection() ?>

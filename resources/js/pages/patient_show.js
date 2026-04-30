@@ -3,10 +3,11 @@ const PatientShowPage = {
     this.initTabs();
   },
 
+  // --- INIT TABLE ---
   initTabs() {
     const buttons = document.querySelectorAll(".tab-btn");
     const contents = document.querySelectorAll(".tab-content");
-
+    if (!buttons.length || !contents.length) return;
     buttons.forEach((btn) => {
       btn.addEventListener("click", () => {
         const target = btn.dataset.tab;
@@ -27,8 +28,6 @@ const PatientShowPage = {
         // tampilkan target
         const activeTab = document.getElementById(`tab-${target}`);
         if (activeTab) activeTab.classList.remove("hidden");
-
-        // 🔥 fix DataTable render di hidden tab
         if (target === "riwayat" && window.$) {
           setTimeout(() => {
             if ($.fn.DataTable.isDataTable("#table-2")) {
@@ -41,11 +40,10 @@ const PatientShowPage = {
   },
 };
 
-document.addEventListener("DOMContentLoaded", () => {
-  PatientShowPage.init();
-});
+// document.addEventListener("DOMContentLoaded", () => {
+//   PatientShowPage.init();
+// });
 
-// INIT
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", () => PatientShowPage.init());
 } else {

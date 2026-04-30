@@ -10,6 +10,7 @@ class MedisController extends BaseController
   protected $model_medis;
   protected $session;
 
+
   public function __construct()
   {
     $this->model_medis = new MMedis();
@@ -21,6 +22,7 @@ class MedisController extends BaseController
     }
   }
 
+
   public function index()
   {
     $data = [
@@ -31,31 +33,33 @@ class MedisController extends BaseController
       'title' => 'Tag Riwayat Medis',
       'msg' => $this->session->getFlashdata('message'),
     ];
-
     return view('App\Modules\TagRekamMedis\Views\index', $data);
   }
+
 
   public function fetch()
   {
     $queryBuilder = $this->model_medis->getMedisTags();
-
+    $search = $this->request->getPost('search');
+    $searchValue = isset($search['value']) ? $search['value'] : '';
+    if (!empty($searchValue)) {
+      $queryBuilder->groupStart()
+        ->like('name', $searchValue)
+        ->orLike('description', $searchValue)
+        ->groupEnd();
+    }
     $dataTables = new \Ngekoding\CodeIgniterDataTables\DataTables($queryBuilder, '4');
-
     $dataTables->addColumnAliases([
       'medhis_tags.name' => 'nama',
       'medhis_tags.description' => 'deskripsi',
     ]);
-
     $start = (int) $this->request->getPost('start');
-
     $dataTables->addColumn('no', function ($row) use (&$start) {
       return ++$start;
     });
-
     $dataTables->addColumn('action', function ($row) {
       return '
   <div class="flex items-center justify-center gap-2">
-
     <button type="button" 
       data-id="' . $row->id . '"
       data-name="' . htmlspecialchars($row->nama, ENT_QUOTES, 'UTF-8') . '" 
@@ -77,34 +81,32 @@ class MedisController extends BaseController
 
   </div>';
     });
-
     $dataTables->asObject();
     return $dataTables->generate();
   }
 
+
   public function get_tags()
   {
     $tags = $this->model_medis->get_all_tags();
-
     $formatted = array_map(function ($tag) {
       return [
         'value' => $tag->name,
         'id' => $tag->id,
       ];
     }, $tags);
-
     return $this->response->setJSON($formatted);
   }
+
 
   public function check_name_exists()
   {
     $name = $this->request->getPost('name');
     $id = $this->request->getPost('id');
-
     $exists = $this->model_medis->checkNameExists($name, $id);
-
     return $this->response->setJSON(['exists' => $exists]);
   }
+
 
   public function store()
   {
@@ -112,15 +114,22 @@ class MedisController extends BaseController
       'name' => $this->request->getPost('name'),
       'description' => $this->request->getPost('deskripsi'),
     ];
-
     if ($this->model_medis->store($data)) {
-      $this->session->setFlashdata('message', ['success', 'Tag berhasil ditambahkan']);
+      return $this->response->setJSON([
+        'status' => true,
+        'message'   => 'Tag Rekam Medis berhasil ditambahkan',
+        'csrf_hash' => csrf_hash(),
+      ]);
     } else {
-      $this->session->setFlashdata('message', ['danger', 'Gagal menambahkan tag']);
+      return $this->response->setJSON([
+        'status' => false,
+        'message'   => 'Tag Rekam Medis gagal ditambahkan',
+        'csrf_hash' => csrf_hash(),
+      ]);
     }
-
-    return redirect()->to('tag-rekam-medis');
+    // return redirect()->to('tag-rekam-medis');
   }
+
 
   public function update($id)
   {
@@ -128,24 +137,39 @@ class MedisController extends BaseController
       'name' => $this->request->getPost('name'),
       'description' => $this->request->getPost('deskripsi'),
     ];
-
     if ($this->model_medis->update($id, $data)) {
-      $this->session->setFlashdata('message', ['success', 'Berhasil diperbarui']);
+      return $this->response->setJSON([
+        'status' => true,
+        'message'   => 'Tag Rekam Medis berhasil diperbarui',
+        'csrf_hash' => csrf_hash(),
+      ]);
     } else {
-      $this->session->setFlashdata('message', ['danger', 'Gagal diperbarui']);
+      return $this->response->setJSON([
+        'status' => false,
+        'message'   => 'Tag Rekam Medis gagal diperbarui',
+        'csrf_hash' => csrf_hash(),
+      ]);
     }
-
-    return redirect()->to('tag-rekam-medis');
+    // return redirect()->to('tag-rekam-medis');
   }
+
 
   public function destroy($id)
   {
     if ($this->model_medis->destroy($id)) {
-      $this->session->setFlashdata('message', ['success', 'Berhasil dihapus']);
+      return $this->response->setJSON([
+        'status' => true,
+        'message'   => 'Tag Rekam Medis berhasil dihapus',
+        'csrf_hash' => csrf_hash(),
+      ]);
     } else {
-      $this->session->setFlashdata('message', ['danger', 'Gagal dihapus']);
+      return $this->response->setJSON([
+        'status' => false,
+        'message'   => 'Tag Rekam Medis gagal dihapus',
+        'csrf_hash' => csrf_hash(),
+      ]);
     }
 
-    return redirect()->to('tag-rekam-medis');
+    // return redirect()->to('tag-rekam-medis');
   }
 }
