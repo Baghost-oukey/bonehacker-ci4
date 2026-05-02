@@ -36,9 +36,10 @@ const FileUploadPage = {
   },
 
   loadConfig() {
-    this.config.fileUrls = window.fileUrlsData || [];
-    this.config.fileBaseUrl = window.fileBaseUrl || "";
-    this.config.fileUploadUrl = window.fileUploadUrl || "";
+    const config = window.patientConfig;
+    this.config.fileUrls = config.fileUrlsData || [];
+    this.config.fileBaseUrl = config.urls.fileBase || "";
+    this.config.fileUploadUrl = config.urls.fileUpload || "";
   },
 
   getFileUrl(fileUrl) {
@@ -56,6 +57,7 @@ const FileUploadPage = {
     });
   },
 
+  // --- MODAL PREVIEW FILE ---
   previewFile(id) {
     const modal = document.getElementById("fileUploadModal");
     const content = document.getElementById("fileUploadContent");
@@ -79,7 +81,8 @@ const FileUploadPage = {
     }
 
     const url = this.getFileUrl(files[id]);
-    const ext = files[id].split(".").pop().toLowerCase();
+    const cleanUrl = files[id].split('?')[0];
+    const ext = cleanUrl.split(".").pop().toLowerCase();
 
     if (ext === "pdf") {
       content.innerHTML = `<embed src="${url}" type="application/pdf" class="w-full h-full min-h-[60vh] rounded-lg border">`;
@@ -90,49 +93,101 @@ const FileUploadPage = {
     }
   },
 
+  // --- MODAL DELETE FILE ---
   initBatchDelete() {
+    const self = this;
     document.addEventListener("change", (e) => {
       if (!e.target.classList.contains("delete-checkbox")) return;
       const btn = document.getElementById("batchDeleteBtn");
       if (btn) {
-        const count = document.querySelectorAll(
-          ".delete-checkbox:checked",
-        ).length;
+        const count = document.querySelectorAll(".delete-checkbox:checked").length;
         btn.classList.toggle("hidden", count === 0);
       }
     });
 
-    document
-      .getElementById("batchDeleteBtn")
-      ?.addEventListener("click", function (e) {
-        e.preventDefault();
-        if (confirm("Hapus dokumen terpilih?")) {
-          this.closest("form").submit();
+    document.getElementById("batchDeleteBtn")?.addEventListener("click", function (e) {
+      e.preventDefault();
+      const form = this.closest("form");
+      const count = document.querySelectorAll(".delete-checkbox:checked").length;
+
+      Swal.fire({
+        title: 'Hapus File Terpilih?',
+        text: `Anda akan menghapus ${count} dokumen secara permanen. Tindakan ini tidak dapat dibatalkan!`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#64748b',  
+        confirmButtonText: 'Ya, Hapus Semua',
+        cancelButtonText: 'Batal',
+        reverseButtons: true, 
+      }).then((result) => {
+        if (result.isConfirmed) {
+          Swal.fire({
+            title: 'Sedang Memproses...',
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading();
+            }
+          });
+          form.submit();
         }
       });
+    });
   },
 
+  // --- MODAL UPLOAD FILE ---
   initUploadForm() {
+    const self = this;
     const form = document.getElementById("uploadForm");
     const input = document.getElementById("modalFileInput");
     if (!form || !input) return;
-
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       if (!input.files.length) {
-        alert("Silakan pilih dokumen terlebih dahulu.");
+        Swal.fire({
+          icon: 'warning',
+          title: 'Berkas Kosong',
+          text: 'Silakan pilih dokumen terlebih dahulu sebelum mengunggah.',
+          confirmButtonColor: '#0d9488'
+        });
         return;
       }
       const btn = this.querySelector('button[type="submit"]');
       if (btn) {
         btn.disabled = true;
-        btn.innerHTML =
-          '<i class="fas fa-spinner fa-spin mr-2"></i>Mengunggah...';
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Mengunggah...';
       }
-      fetch(window.fileUploadUrl, { method: "POST", body: new FormData(this) })
-        .then(() => setTimeout(() => location.reload(), 600))
-        .catch(() => {
-          alert("Gagal mengunggah");
+
+      fetch(self.config.fileUploadUrl, {
+        method: "POST",
+        body: new FormData(this),
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      })
+        .then(response => {
+          if (!response.ok) throw new Error("Server menolak permintaan");
+          return response.text();
+        })
+        .then(() => {
+          Swal.fire({
+            icon: 'success',
+            title: 'Berhasil diunggah!',
+            text: 'Dokumen pasien telah tersimpan dengan aman.',
+            showConfirmButton: false,
+            timer: 1500,
+            timerProgressBar: true
+          }).then(() => {
+            location.reload();
+          });
+        })
+        .catch((error) => {
+          console.error("Upload Error:", error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Gagal Mengunggah',
+            text: 'Terjadi kesalahan saat mengirim file. Pastikan ukuran file tidak melebihi batas (Maks. 2MB).',
+            confirmButtonColor: '#ef4444'
+          });
+
           if (btn) {
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-upload mr-2"></i>Unggah';

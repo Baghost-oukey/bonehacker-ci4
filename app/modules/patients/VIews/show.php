@@ -64,7 +64,6 @@
         queueId: '<?= esc($queue_id ?? "") ?>',
         csrfTokenName: '<?= csrf_token() ?>',
         csrfHash: '<?= csrf_hash() ?>',
-
         urls: {
             historyFetch: '<?= site_url("history/fetch/" . ($patient_id ?? 0)) ?>',
             historyStore: '<?= site_url("history/store") ?>',
@@ -73,7 +72,7 @@
             medisTags: '<?= site_url("tag-rekam-medis/tags") ?>',
             resultTags: '<?= site_url("tag-pemeriksaan/get_tags") ?>',
             fileBase: '<?= base_url("patient_file") ?>',
-            fileUpload: '<?= base_url("patient/update_files") ?>'
+            fileUpload: '<?= site_url("patient/update_files") ?>'
         },
         fileUrlsData: <?= !empty($file_urls) ? (is_array($file_urls) ? json_encode($file_urls) : $file_urls) : '[]' ?>
     };

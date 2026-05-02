@@ -150,6 +150,7 @@ $routes->group('tag-pemeriksaan', ['namespace' => 'App\Modules\TagPemeriksaan\Co
   $routes->post('update/(:num)', 'TagPemeriksaanController::update/$1');
   $routes->post('destroy/(:num)', 'TagPemeriksaanController::destroy/$1');
   $routes->post('check_name_exists', 'TagPemeriksaanController::check_name_exists');
+  $routes->get('get_tags', 'TagPemeriksaanController::get_tags');
 });
 
 // Logs

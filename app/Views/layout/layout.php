@@ -34,7 +34,7 @@ if ($isDevEnvironment) {
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
-
+    <link href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css" rel="stylesheet" type="text/css" />
     <?php if ($shouldUseViteDevServer): ?>
         <link rel="stylesheet" href="<?= $viteDevServer ?>/resources/css/app.css">
     <?php else: ?>
@@ -150,7 +150,7 @@ if ($isDevEnvironment) {
     </script>
 
     <script>
-        (function () {
+        (function() {
             // var metaName = document.querySelector('meta[name="csrf-token-name"]');
             // var metaHash = document.querySelector('meta[name="csrf-token-hash"]');
             // var csrfName = metaName ? metaName.getAttribute('content') : null;
@@ -158,7 +158,7 @@ if ($isDevEnvironment) {
             // var csrfHash = metaHash ? metaHash.getAttribute('content') : null;
 
             function refreshCsrfToken() {
-                $.get('<?= site_url('auth/get_csrf') ?>', function (data) {
+                $.get('<?= site_url('auth/get_csrf') ?>', function(data) {
                     $('meta[name="csrf-token-hash"]').attr('content', data.token);
                     // 2. Update semua input hidden yang dibuat pake csrf_field()
                     $('input[name="' + csrfName + '"]').val(data.token);
@@ -172,7 +172,7 @@ if ($isDevEnvironment) {
                 });
             }
 
-            $(document).ready(function () {
+            $(document).ready(function() {
                 // Set up awal pas halaman load
                 var initialHash = $('meta[name="csrf-token-hash"]').attr('content');
                 if (csrfName && initialHash) {
@@ -185,7 +185,7 @@ if ($isDevEnvironment) {
 
 
                 // Jurus Anti-Macet: Setiap request POST selesai, kita minta token baru
-                $(document).ajaxComplete(function (event, xhr, settings) {
+                $(document).ajaxComplete(function(event, xhr, settings) {
                     if (settings.type === 'POST' || settings.type === 'post') {
                         refreshCsrfToken();
                     }
@@ -220,7 +220,7 @@ if ($isDevEnvironment) {
     <?php if (session()->has('message')): ?>
         <?php $msg = session('message'); ?>
         <script>
-            $(document).ready(function () {
+            $(document).ready(function() {
                 toastr.options = {
                     "progressBar": true,
                     "positionClass": "toast-top-right"

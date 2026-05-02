@@ -48,7 +48,7 @@
                                         </span>
                                     </td>
                                     <td class="px-6 py-3.5 text-center">
-                                        <button type="button" class="previewBtn inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 transition" data-id="<?= $index ?>">
+                                        <button type="button" class="previewBtn inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 transition" data-id="<?= $index ?>" data-url="<?= esc($file_url) ?>">
                                             <i class="fas fa-eye"></i> Lihat
                                         </button>
                                     </td>
@@ -84,7 +84,7 @@
             <h5 class="text-lg font-semibold text-slate-800">Unggah File Baru</h5>
             <button type="button" data-modal-close class="rounded-md p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800">&times;</button>
         </div>
-        <form id="uploadForm" enctype="multipart/form-data" class="space-y-4 p-5">
+        <form id="uploadForm" action="<?= site_url('patient/upload_file') ?>" enctype="multipart/form-data" class="space-y-4 p-5">
             <?= csrf_field() ?>
             <input type="hidden" name="id" value="<?= esc($patient_id) ?>">
             <div class="space-y-1">
@@ -116,3 +116,4 @@
         </div>
     </div>
 </div>
+

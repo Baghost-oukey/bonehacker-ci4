@@ -600,3 +600,27 @@
         </div>
     </div>
 </div>
+
+<div id="deleteModal" class="modal-wrapper hidden fixed inset-0 z-[9999] flex items-center justify-center bg-gray-900/40 backdrop-blur-sm transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 relative transform transition-all border border-gray-100">
+        <button type="button" data-modal-close class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors focus:outline-none">
+            <i class="fas fa-times text-lg"></i>
+        </button>
+        <div class="text-center mb-6 mt-2">
+            <div class="w-16 h-16 rounded-full bg-red-50 text-red-500 flex items-center justify-center mx-auto mb-4 text-3xl border border-red-100">
+                <i class="fas fa-trash-alt"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Hapus Riwayat?</h3>
+            <p class="text-gray-500 text-sm px-2">Data riwayat ini akan dihapus permanen. Apakah Anda yakin melanjutkan?</p>
+        </div>
+        <div class="flex items-center justify-center gap-3 mt-6">
+            <button type="button" data-modal-close class="w-1/2 px-4 py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-xl font-semibold transition-colors border border-gray-200 focus:outline-none">
+                Batal
+            </button>
+            <button type="button" id="confirmDeleteButton" class="w-1/2 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition-colors shadow-lg shadow-red-600/30 focus:outline-none flex items-center justify-center">
+                Ya, Hapus
+            </button>
+        </div>
+        
+    </div>
+</div>

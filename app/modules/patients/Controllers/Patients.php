@@ -311,14 +311,11 @@ class Patients extends BaseController
         if (empty($user_id)) {
             return '-';
         }
-
         $builder = $this->db->table('users');
-
         $user = $builder->select('realname')
             ->where('id', $user_id)
             ->get()
             ->getRow(); // Sama dengan row() di CI3
-
         return $user ? $user->realname : '-';
     }
 

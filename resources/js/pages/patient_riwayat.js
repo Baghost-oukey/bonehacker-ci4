@@ -46,6 +46,7 @@ const PatientHistoryPage = {
     this.checkUrlParams();
   },
 
+
   // --- UPDATE CRSF TOKEN ---
   updateCsrf(newToken) {
     if (!newToken) return;
@@ -99,6 +100,7 @@ const PatientHistoryPage = {
     $("#paginationPrev").prop("disabled", this.currentPage <= 1);
     $("#paginationNext").prop("disabled", this.currentPage >= totalPages);
   },
+
 
   // --- TABLE LOAD ---
   renderTableState(message, isLoading = false) {
@@ -157,6 +159,7 @@ const PatientHistoryPage = {
     });
   },
 
+
   // --- TAGIFY ---
   initTagify() {
     if (typeof Tagify === 'undefined') return;
@@ -167,10 +170,15 @@ const PatientHistoryPage = {
 
   initTagifyWithServer(inputName, url) {
     const textarea = document.querySelector(`textarea[name="${inputName}"]`);
-    if (!textarea) return null;
+    if (!textarea) {
+      // console.error(` [Tagify ERROR] Error! Textarea dengan name="${inputName}" Tidak ditemukan.`);
+      return null;
+    }
+    if (textarea.value.includes('[{"value":')) textarea.value = "";
+
     const tagify = new Tagify(textarea, {
       whitelist: [],
-     originalInputValueFormat: valuesArr => valuesArr.map(item => item.value).join(', '),
+      originalInputValueFormat: valuesArr => valuesArr.map(item => item.value).join(', '),
       dropdown: {
         maxItems: 20,
         enabled: 0,
@@ -178,23 +186,37 @@ const PatientHistoryPage = {
         appendTarget: document.body,
       }
     });
+
     let controller;
 
     tagify.on("input", (e) => {
       const value = e.detail.value;
-      tagify.whitelist = null;
+      const fetchUrl = `${url}?query=${encodeURIComponent(value)}`;
+      tagify.settings.whitelist.length = 0;
+      tagify.loading(true).dropdown.hide();
+
       if (controller) controller.abort();
       controller = new AbortController();
-      tagify.loading(true);
-      fetch(`${url}?query=${encodeURIComponent(value)}`, { signal: controller.signal })
-        .then((res) => res.json())
+      fetch(fetchUrl, { signal: controller.signal })
+        .then((res) => {
+          if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+          return res.json();
+        })
         .then((list) => {
-          tagify.whitelist = list;
+          const dataArray = Array.isArray(list) ? list : (list.data || []);
+          tagify.settings.whitelist = dataArray;
           tagify.loading(false).dropdown.show(value);
-        }).catch(() => tagify.loading(false));
+        })
+        .catch((err) => {
+          if (err.name !== 'AbortError') {
+            console.error(`[X] FETCH GAGAL PADA [${inputName.toUpperCase()}]:`, err);
+          }
+          tagify.loading(false);
+        });
     });
     return tagify;
   },
+
 
   // --- CRUD & FORM ---
   setCheckboxes(name, dataString) {
@@ -339,6 +361,7 @@ const PatientHistoryPage = {
     }
   },
 
+
   // --- ADD RIWAYAT ---
   add() {
     const modal = document.getElementById("exampleModal");
@@ -366,6 +389,7 @@ const PatientHistoryPage = {
     $(".terapis").prop("disabled", false).val([]).trigger("change");
   },
 
+
   // --- SHOW DETAIL RIWAYAT ---
   show(id, isDuplicate = false) {
     const self = this;
@@ -391,7 +415,7 @@ const PatientHistoryPage = {
 
   // --- HAPUS RIWAYAT ---
   destroy(id) {
-    deleteId = id;
+    this.deleteId = id;
     openModal(document.getElementById("deleteModal"));
   },
 
@@ -407,8 +431,15 @@ const PatientHistoryPage = {
     document.getElementById("btn-add-history")?.addEventListener("click", () => self.add());
     $(document).on("click", ".btn-edit-history", function () { self.show($(this).data('id')); });
     $(document).on("click", ".btn-copy-history", function () { self.show($(this).data('id'), true); });
-    $(document).on("click", ".btn-delete-history", function () { self.destroy($(this).data('id')); });
-
+    $(document).on("click", ".btn-delete-history", function (e) {
+      e.preventDefault();
+      const id = $(this).data('id');
+      const modalHapus = document.getElementById("deleteModal");
+      if (!modalHapus) {
+        return; 
+      }
+      self.destroy(id);
+    });
     $("#region_history, .terapis").select2({ dropdownParent: $("#exampleModal"), width: "100%" });
 
     // --- SIMPAN BUTTON ---
@@ -417,9 +448,18 @@ const PatientHistoryPage = {
       const btn = $(this);
       const form = $("#save_data");
       const formData = new FormData(form[0]);
-      if (complaintTagify) formData.set("complaint", complaintTagify.value.map(t => t.value).join(', '));
-      if (medhisTagify) formData.set("medhis", medhisTagify.value.map(t => t.value).join(', '));
-      if (resultTagify) formData.set("results", resultTagify.value.map(t => t.value).join(', '));
+      if (complaintTagify) {
+        const val = complaintTagify.value;
+        formData.set("complaint", Array.isArray(val) ? val.map(t => t.value).join(', ') : "");
+      }
+      if (medhisTagify) {
+        const val = medhisTagify.value;
+        formData.set("medhis", Array.isArray(val) ? val.map(t => t.value).join(', ') : "");
+      }
+      if (resultTagify) {
+        const val = resultTagify.value;
+        formData.set("results", Array.isArray(val) ? val.map(t => t.value).join(', ') : "");
+      }
       formData.set(self.config.csrfTokenName, self.currentCsrfHash);
       btn.prop("disabled", true).html('<i class="fas fa-spinner fa-spin mr-2"></i> Menyimpan...');
       $.ajax({
@@ -441,17 +481,30 @@ const PatientHistoryPage = {
             btn.prop("disabled", false).html('Simpan Data');
           }
         },
-        error: () => btn.prop("disabled", false).html('Simpan Data')
+        error: (xhr) => {
+          btn.prop("disabled", false).html('Simpan Data');
+          if (xhr.status === 500) {
+            if (window.Swal) {
+              Swal.fire({
+                icon: "error",
+                title: "Error 500 (Server Crash)",
+                text: "Terdapat kesalahan di CodeIgniter! Kemungkinan karena Checkbox kosong menyebabkan error implode() di Backend. Cek file Controller Anda.",
+              });
+            }
+          } else {
+            if (window.Swal) Swal.fire('Gagal Menyimpan', 'Terjadi masalah jaringan atau server.', 'error');
+          }
+        }
       });
     });
 
     // --- DELETE KONFIRMASI ---
     $(document).on("click", "#confirmDeleteButton", function () {
-      if (!deleteId) return;
+      if (!self.deleteId) return;
       const btn = $(this);
       btn.prop("disabled", true).text("Memproses...");
       $.ajax({
-        url: `${self.config.urls.historyDestroy}/${deleteId}`,
+        url: `${self.config.urls.historyDestroy}/${self.deleteId}`,
         type: "POST",
         dataType: "json",
         data: { [self.config.csrfTokenName]: self.currentCsrfHash },
@@ -462,25 +515,36 @@ const PatientHistoryPage = {
           if (res.status) {
             closeModal(document.getElementById("deleteModal"));
             self.loadTableData(self.currentPage);
+            if (window.Swal?.fire) window.Swal.fire({ icon: "success", title: "Terhapus!", timer: 2000, showConfirmButton: false });
           } else alert("Gagal: " + res.message);
         },
-        complete: () => { btn.prop("disabled", false).text("Ya, Hapus"); deleteId = null; },
+        complete: () => {
+          btn.prop("disabled", false).text("Ya, Hapus");
+          self.deleteId = null;
+        },
       });
     });
 
     //  --- CHECKBOX LOGIC UNTUK MATRIX ---
-    const areas = ['odp', 'vital', 'kelenjar', 'hormon', 'tk', 'fd', 'lp_atas', 'lp_bawah', 'lp_kanan', 'lp_kiri', 'cv4', 'cv6', 'l1', 'l3', 'piriformis', 'sendok'];
-    areas.forEach(area => {
-      $(`input[name="${area}_kanan_grade"]`).on('change', function () {
-        if ($(this).is(':checked')) $(`input[name="${area}_kanan_grade"]`).not(this).prop('checked', false);
-      });
-      $(`input[name="${area}_kiri_grade"]`).on('change', function () {
-        if ($(this).is(':checked')) $(`input[name="${area}_kiri_grade"]`).not(this).prop('checked', false);
-      });
-      $(`input[name="${area}_kanan_grade"], input[name="${area}_kiri_grade"]`).on('change', function () {
-        const side = $(this).attr('name').includes('_kanan') ? '_kanan' : '_kiri';
-        if ($(this).is(':checked')) $(`input[name="${area}${side}"]`).prop('checked', true);
-      });
+    $(document).on('change', '#pemeriksaan input[type="checkbox"]', function () {
+      const name = $(this).attr('name');
+      if (!name) return;
+
+      // Jika yang diklik adalah pilihan GRADE
+      if (name.includes('_grade')) {
+        if ($(this).is(':checked')) {
+          $(`input[name="${name}"]`).not(this).prop('checked', false);
+          // const sakitName = name.replace('_grade', '');
+          // $(`input[name="${sakitName}"]`).prop('checked', true);
+        }
+      }
+      // Jika yang diklik adalah SAKIT/TIDAK (Kolom pertama)
+      else {
+        if (!$(this).is(':checked')) {
+          // UX: Jika "Sakit" di-uncheck, hapus juga centang grade-nya agar bersih
+          $(`input[name="${name}_grade"]`).prop('checked', false);
+        }
+      }
     });
 
     document.addEventListener("click", (e) => {
