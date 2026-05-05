@@ -45,7 +45,7 @@ class Mstatistikresult extends Model
     protected $afterDelete    = [];
 
 
-    public function getResultStatistic(string $startDate, string $endDate, int $regionId = null, $filter = null): array
+    public function getResultStatistic(string $startDate, string $endDate, $regionId = null, $filter = null): array
     {
         $tagNames = $this->builder()
             ->select('name')
@@ -63,6 +63,7 @@ class Mstatistikresult extends Model
         if ($regionId) {
             $builder->where('h.history_region', $regionId);
         }
+        
         $data = $builder->groupBy('rt.name')
             ->get()
             ->getResultArray();

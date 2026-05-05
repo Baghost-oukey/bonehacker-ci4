@@ -3,27 +3,24 @@
  * Lokasi: resource/app/js/pages/statistikdaerah.js
  */
 
+// --- INIT SCRIPT --- 
 if (window.$) {
     window.$(document).ready(function ($) {
-
-        // Guard: pastikan elemen utama ada
         if (!$('#statisticChart').length) return;
-
         const config = window.statistikDaerahConfig;
         if (!config || typeof window.moment === "undefined") return;
-
-        // Initialize Select2
         $('.select2').select2({ width: '100%' });
         $('#region_id').select2({ width: '100%' });
-
         var currentFilter = 'daily';
         window.moment.locale('id');
 
-        // Date Range Picker Initialization
+        // --- DATEPICKER ---
         $('#reportrange').daterangepicker({
             startDate: window.moment().subtract(6, 'days'),
             endDate: window.moment(),
             opens: 'left',
+            linkedCalendars: false, 
+            showDropdowns: true,    
             ranges: {
                 'Hari Ini': [window.moment(), window.moment()],
                 'Kemarin': [window.moment().subtract(1, 'days'), window.moment().subtract(1, 'days')],
@@ -36,21 +33,17 @@ if (window.$) {
             $('#reportrange span').html(start.format('D MMMM YYYY') + ' - ' + end.format('D MMMM YYYY'));
             fetchStatistics(start, end, currentFilter);
         });
-
-        // Set Initial Date Display
         var initialStart = window.moment().subtract(6, 'days');
         var initialEnd = window.moment();
         $('#reportrange span').html(initialStart.format('D MMMM YYYY') + ' - ' + initialEnd.format('D MMMM YYYY'));
-
-        // Load Initial Data
         fetchKabupaten();
         fetchStatistics(initialStart, initialEnd, currentFilter);
+
 
         // --- Event Listeners ---
         $('#statisticFilter, #region_id').on('change', function () {
             currentFilter = $('#statisticFilter').val();
-            var drp = $('#reportrange').data('daterangepicker');
-            fetchStatistics(drp.startDate, drp.endDate, currentFilter);
+            triggerReload();
         });
 
         $('#kabupaten_id').on('change', function () {
@@ -59,8 +52,8 @@ if (window.$) {
                 fetchKecamatan(kabId);
                 $('#kecamatan_id').prop('disabled', false);
             } else {
-                $('#kecamatan_id').prop('disabled', true).html('<option value="">Pilih Kecamatan</option>');
-                $('#desa_id').prop('disabled', true).html('<option value="">Pilih Desa/Kelurahan</option>');
+                $('#kecamatan_id').prop('disabled', true).empty().append(new Option('Pilih Kecamatan', ''));
+                $('#desa_id').prop('disabled', true).empty().append(new Option('Pilih Desa/Kelurahan', ''));
             }
             triggerReload();
         });
@@ -71,7 +64,7 @@ if (window.$) {
                 fetchDesa(kecId);
                 $('#desa_id').prop('disabled', false);
             } else {
-                $('#desa_id').prop('disabled', true).html('<option value="">Pilih Desa/Kelurahan</option>');
+                $('#desa_id').prop('disabled', true).empty().append(new Option('Pilih Desa/Kelurahan', ''));
             }
             triggerReload();
         });
@@ -80,24 +73,31 @@ if (window.$) {
             triggerReload();
         });
 
+
+        // --- RELOAD FILTERED DATA ---
         function triggerReload() {
             var drp = $('#reportrange').data('daterangepicker');
-            fetchStatistics(drp.startDate, drp.endDate, currentFilter);
+            if (drp) {
+                fetchStatistics(drp.startDate, drp.endDate, currentFilter);
+            }
         }
 
+
         // --- AJAX Functions ---
+        // --- FETCH DATA UNTUK SELECT KABUPATEN, KECAMATAN, DESA ---
         function fetchKabupaten() {
             $.ajax({
                 url: config.fetchKabupatenUrl,
                 method: 'GET',
                 dataType: 'json',
                 success: function (response) {
-                    var options = '<option value="">Pilih Kabupaten/Kota</option>';
+                    var $select = $('#kabupaten_id');
+                    $select.empty().append(new Option('Pilih Kabupaten/Kota', ''));
                     response.forEach(function (row) {
-                        options += `<option value="${row.kabupaten_id}">${row.kabupaten_nama}</option>`;
+                        $select.append(new Option(row.kabupaten_nama, row.kabupaten_id));
                     });
-                    $('#kabupaten_id').html(options);
-                }
+                },
+                error: function (xhr, status, error) { console.error("Gagal load Kabupaten:", error); }
             });
         }
 
@@ -108,12 +108,13 @@ if (window.$) {
                 data: { kabupaten_id: kabId },
                 dataType: 'json',
                 success: function (response) {
-                    var options = '<option value="">Pilih Kecamatan</option>';
+                    var $select = $('#kecamatan_id');
+                    $select.empty().append(new Option('Pilih Kecamatan', ''));
                     response.forEach(function (row) {
-                        options += `<option value="${row.kecamatan_id}">${row.kecamatan_nama}</option>`;
+                        $select.append(new Option(row.kecamatan_nama, row.kecamatan_id));
                     });
-                    $('#kecamatan_id').html(options);
-                }
+                },
+                error: function (xhr, status, error) { console.error("Gagal load Kecamatan:", error); }
             });
         }
 
@@ -124,18 +125,28 @@ if (window.$) {
                 data: { kecamatan_id: kecId },
                 dataType: 'json',
                 success: function (response) {
-                    var options = '<option value="">Pilih Desa/Kelurahan</option>';
+                    var $select = $('#desa_id');
+                    $select.empty().append(new Option('Pilih Desa/Kelurahan', ''));
                     response.forEach(function (row) {
-                        options += `<option value="${row.desa_id}">${row.desa_nama}</option>`;
+                        $select.append(new Option(row.desa_nama, row.desa_id));
                     });
-                    $('#desa_id').html(options);
-                }
+                },
+                error: function (xhr, status, error) { console.error("Gagal load Desa:", error); }
             });
         }
 
         function fetchStatistics(startDate, endDate, filter) {
             var finalStart = startDate.clone();
             var finalEnd = endDate.clone();
+            var selectedLabel = "Jumlah Rekam Medis";
+            if ($('#desa_id').val()) {
+                selectedLabel += " Desa " + $('#desa_id option:selected').text();
+            } else if ($('#kecamatan_id').val()) {
+                selectedLabel += " Kecamatan " + $('#kecamatan_id option:selected').text();
+            } else if ($('#kabupaten_id').val()) {
+                selectedLabel += " Kabupaten " + $('#kabupaten_id option:selected').text();
+            }
+
             $.ajax({
                 url: config.fetchStatisticsUrl,
                 method: 'GET',
@@ -167,29 +178,30 @@ if (window.$) {
                         });
                     }
                     var finalValues = labels.map(l => chartData[l]);
-                    renderChart(labels, finalValues, filter);
-                }
+                    renderChart(labels, finalValues, filter, selectedLabel);
+                },
+                error: function (xhr, status, error) { console.error("Gagal load Statistik:", error); }
             });
         }
 
-        function renderChart(labels, values, filter) {
+
+        // --- CHART RENDERING FUNCTION ---
+        function renderChart(labels, values, filter, datasetLabel) {
             var ctx = document.getElementById('statisticChart').getContext('2d');
             var displayLabels = labels.map(function (l) {
                 if (filter === 'daily') return window.moment(l).format('D MMM');
                 if (filter === 'monthly') return window.moment(l, 'YYYY-MM').format('MMM YYYY');
                 return l;
             });
-
             if (window.myChart instanceof Chart) window.myChart.destroy();
-
             window.myChart = new window.Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: displayLabels,
                     datasets: [{
-                        label: "Jumlah Rekam Medis",
+                        label: datasetLabel, 
                         data: values,
-                        backgroundColor: 'rgba(79, 70, 229, 0.6)', // Indigo modern
+                        backgroundColor: 'rgba(79, 70, 229, 0.6)',
                         borderColor: 'rgba(79, 70, 229, 1)',
                         borderWidth: 1,
                         borderRadius: 4
@@ -205,7 +217,8 @@ if (window.$) {
                                 generateLabels: function (chart) {
                                     const total = values.reduce((a, b) => a + b, 0);
                                     const original = window.Chart.defaults.plugins.legend.labels.generateLabels(chart);
-                                    original[0].text = `Total Rekam Medis: ${total}`;
+                                    // Membuat label legend menjadi lebih deskriptif
+                                    original[0].text = `${datasetLabel}: ${total} Pasien`;
                                     return original;
                                 }
                             }

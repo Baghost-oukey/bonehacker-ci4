@@ -107,6 +107,4 @@
         resendUrl: "<?= base_url('whatsapp/log_whatsapp/resend') ?>"
     };
 </script>
-
-<script src="<?= base_url('assets/js/page/whatsapp_logs.js') ?>"></script>
 <?= $this->endSection() ?>

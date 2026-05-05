@@ -7,19 +7,18 @@
             <h1 class="text-2xl font-black text-slate-800 tracking-tight">WhatsApp API</h1>
             <p class="text-sm text-slate-500 mt-1">Kelola data API untuk integrasi pesan WhatsApp otomatis.</p>
         </div>
-        <button type="button" onclick="openModal(document.getElementById('addModal'))" class="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-teal-600 text-white text-sm font-bold hover:bg-teal-700 transition-all shadow-md shadow-teal-500/20 active:scale-95 outline-none">
+        <button id="btn-add-wa" type="button" class="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-teal-600 text-white text-sm font-bold hover:bg-teal-700 transition-all shadow-md shadow-teal-500/20 active:scale-95 outline-none">
             <i class="fas fa-plus"></i> Tambah Data
         </button>
     </div>
 
     <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-        
+
         <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
                 <h2 class="text-lg font-bold text-slate-800">Daftar Konfigurasi</h2>
                 <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-1">Total: <?= count($records) ?> Data</p>
             </div>
-            
             <div id="search-container" class="relative w-full md:w-80 group">
                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-20">
                     <i class="fas fa-search text-slate-400 group-focus-within:text-teal-600 transition-colors text-sm"></i>
@@ -43,23 +42,28 @@
                     <?php if (count($records) > 0): ?>
                         <?php foreach ($records as $record): ?>
                             <tr class="hover:bg-slate-50/50 transition-colors group">
-                                <td class="px-6 py-4 text-sm text-slate-500 font-mono"><?= $record->id ?></td>
-                                <td class="px-6 py-4 text-sm font-semibold text-slate-700"><?= $record->url_api ?></td>
-                                <td class="px-6 py-4 text-xs font-mono text-slate-500 bg-slate-50 rounded-lg inline-block mt-3"><?= substr($record->instance_id, 0, 4) . '****' ?></td>
-                                <td class="px-6 py-4 text-xs font-mono text-slate-500"><?= substr($record->token, 0, 5) . '****************' ?></td>
-                                <td class="px-6 py-4 text-xs text-slate-500 max-w-xs truncate"><?= $record->message ?></td>
+                                <td class="px-6 py-4 text-sm text-slate-500 font-mono"><?= esc($record->id) ?></td>
+                                <td class="px-6 py-4 text-sm font-semibold text-slate-700"><?= esc($record->url_api) ?></td>
+                                <td class="px-6 py-4 text-xs font-mono text-slate-500 bg-slate-50 rounded-lg inline-block mt-3">
+                                    <?= esc(substr($record->instance_id, 0, 4)) . '****' ?>
+                                </td>
+                                <td class="px-6 py-4 text-xs font-mono text-slate-500">
+                                    <?= esc(substr($record->token, 0, 5)) . '****************' ?>
+                                </td>
+                                <td class="px-6 py-4 text-xs text-slate-500 max-w-xs truncate"><?= esc($record->message) ?></td>
                                 <td class="px-6 py-4 text-right">
                                     <div class="flex items-center justify-end gap-2">
+                                        <!-- Data attribut ini sudah aman karena pakai htmlspecialchars -->
                                         <button type="button" class="btn-edit flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 text-slate-400 hover:text-teal-600 hover:border-teal-200 hover:bg-teal-50 transition-all outline-none"
-                                            data-id="<?= $record->id ?>"
-                                            data-url="<?= $record->url_api ?>"
-                                            data-instance="<?= $record->instance_id ?>"
-                                            data-token="<?= $record->token ?>"
+                                            data-id="<?= esc($record->id) ?>"
+                                            data-url="<?= esc($record->url_api) ?>"
+                                            data-instance="<?= esc($record->instance_id) ?>"
+                                            data-token="<?= esc($record->token) ?>"
                                             data-message="<?= htmlspecialchars($record->message) ?>">
                                             <i class="fas fa-edit text-xs"></i>
                                         </button>
                                         <button type="button" class="btn-delete flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 text-slate-400 hover:text-red-600 hover:border-red-200 hover:bg-red-50 transition-all outline-none"
-                                            data-id="<?= $record->id ?>">
+                                            data-id="<?= esc($record->id) ?>">
                                             <i class="fas fa-trash text-xs"></i>
                                         </button>
                                     </div>
@@ -170,12 +174,12 @@
     </div>
 </div>
 <?= $this->endSection() ?>
-
 <?= $this->section('scripts') ?>
 <script>
     window.waConfig = {
-        baseUrl: "<?= base_url('whatsapp') ?>"
+        baseUrl: "<?= base_url('whatsapp') ?>",
+        csrfTokenName: "<?= csrf_token() ?>",
+        csrfHash: "<?= csrf_hash() ?>"
     };
 </script>
-<script src="<?= base_url('assets/js/page/whatsapp.js') ?>"></script>
 <?= $this->endSection() ?>

@@ -59,5 +59,11 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
-<script src="<?= base_url('js/pages/system-logs.js') ?>"></script>
+<script>
+    window.logConfig = {
+        csrfName: "<?= csrf_token() ?>",
+        csrfHash: "<?= csrf_hash() ?>"
+    };
+</script>
+<!-- <script src="<?= base_url('js/pages/system-logs.js') ?>"></script> -->
 <?= $this->endSection() ?>

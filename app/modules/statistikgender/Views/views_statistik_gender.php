@@ -67,6 +67,7 @@
 <script>
     window.statistikGenderConfig = {
         fetchUrl: "<?= base_url('statistikgender/fetch_statistics') ?>"
+        
     };
 </script>
 <?= $this->endSection() ?>

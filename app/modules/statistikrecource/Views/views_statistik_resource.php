@@ -16,7 +16,7 @@
     <div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
             <h1 class="text-2xl font-black text-slate-800 tracking-tight"><?= esc($title) ?></h1>
-            <p class="text-sm text-slate-500 mt-1">Analisis proporsi dan efektivitas saluran akuisisi pasien.</p>
+            <p class="text-sm text-slate-500 mt-1">Statistik Sumber Informasi Yang didapatkan Pasien pada saat Pendaftaran</p>
         </div>
     </div>
     <!-- END -->

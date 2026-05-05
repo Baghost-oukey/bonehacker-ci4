@@ -1,11 +1,11 @@
 <?= $this->extend('layout/layout') ?>
 <?= $this->section('content') ?>
 
-<div class="p-4 sm:p-6 md:p-8 max-w-350 mx-auto">
+<div class="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto">
     <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
             <h1 class="text-2xl font-black text-slate-800 tracking-tight" id="dynamicTitle">Statistik Keluhan</h1>
-            <p class="text-sm text-slate-500 mt-1">Pantau grafik dan jumlah data operasional harian, bulanan, atau tahunan.</p>
+            <p class="text-sm text-slate-500 mt-1">Laporan Statistik Dan Rekam Medis Pasien </p>
         </div>
     </div>
 

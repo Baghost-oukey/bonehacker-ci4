@@ -26,7 +26,6 @@ if (window.$) {
             "destroy": true,
             "dom": '<"w-full"t><"flex flex-col md:flex-row items-center justify-between p-5 bg-white border-t border-slate-100 gap-4"<"text-xs font-semibold text-slate-500"i><"flex items-center justify-end"p>>',
             "language": {
-                "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Indonesian.json",
                 "search": "_INPUT_",
                 "searchPlaceholder": "Cari hasil...",
                 "info": "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
@@ -80,6 +79,8 @@ if (window.$) {
         $('#rangefilter').daterangepicker({
             locale: { format: 'D MMMM YYYY' },
             opens: 'left',
+            linkedCalendars: false,
+            showDropdowns: true,
             ranges: {
                 'Hari Ini': [window.moment(), window.moment()],
                 'Kemarin': [window.moment().subtract(1, 'days'), window.moment().subtract(1, 'days')],

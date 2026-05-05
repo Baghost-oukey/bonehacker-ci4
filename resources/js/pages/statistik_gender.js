@@ -25,6 +25,8 @@ if (window.$) {
                 endDate: moment(),
                 locale: { format: 'D MMMM YYYY' },
                 opens: 'left',
+                linkedCalendars: false,
+                showDropdowns: true,
                 ranges: {
                     'Hari Ini': [moment(), moment()],
                     'Kemarin': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
@@ -39,13 +41,23 @@ if (window.$) {
         }
 
         // --- FILTER REGION ---
-        $('#statisticFilter, #region_id').on('change', function () {
-            currentFilter = $('#statisticFilter').val();
+        $('#region_id').on('change', function () {
+            var selectedRegion = $(this).val();
             var drp = $('#reportrange').data('daterangepicker');
             if (drp) {
                 fetchStatistics(drp.startDate, drp.endDate, currentFilter);
             }
         });
+
+        if ($('#statisticFilter').length) {
+            $('#statisticFilter').on('change', function () {
+                currentFilter = $(this).val();
+                var drp = $('#reportrange').data('daterangepicker');
+                if (drp) {
+                    fetchStatistics(drp.startDate, drp.endDate, currentFilter);
+                }
+            });
+        }
 
         // --- AMBIL DATA ---
         function fetchStatistics(startDate, endDate, filter) {
@@ -70,7 +82,13 @@ if (window.$) {
 
         // --- CHART STATISTIK DATA ---
         function renderChart(data) {
-            if (!data || data.length === 0) return;
+            // if (!data || data.length === 0) return;
+            if (window.myChart instanceof Chart) {
+                window.myChart.destroy();
+            }
+            if (!data || !Array.isArray(data) || data.length === 0) {
+                return;
+            }
             var labels = data.map(item => item.date);
             var male = data.map(item => parseInt(item.total_male) || 0);
             var female = data.map(item => parseInt(item.total_female) || 0);
@@ -78,7 +96,6 @@ if (window.$) {
             if (window.myChart instanceof Chart) {
                 window.myChart.destroy();
             }
-
             window.myChart = new Chart(ctx, {
                 type: 'bar',
                 data: {

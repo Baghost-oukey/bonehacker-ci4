@@ -115,6 +115,4 @@
         flashError: "<?= session()->getFlashdata('error') ?? '' ?>"
     };
 </script>
-
-<script src="<?= base_url('assets/js/page/jabatan.js') ?>"></script>
 <?= $this->endSection() ?>

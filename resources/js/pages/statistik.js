@@ -9,7 +9,6 @@ if (window.$) {
         let start = window.moment().startOf('month');
         let end = window.moment().endOf('month');
         let myChart = null;
-
         $('#region_id').select2();
         window.moment.locale('id');
 
@@ -17,6 +16,7 @@ if (window.$) {
             $('#reportrange span').html(start.format('D MMMM YYYY') + ' - ' + end.format('D MMMM YYYY'));
             fetchStatistics(start, end);
         }
+
 
         // --- FUNGSI DATEPICKER ---
         const drpOptions = {
@@ -56,20 +56,35 @@ if (window.$) {
             fetchStatistics(drp.startDate, drp.endDate);
         });
 
+
         // --- FUNGSI AMBIL DATA ---
         function fetchStatistics(startDate, endDate) {
             var regionId = $('#region_id').val();
+            const progressionCircle = '<i class="fas fa-circle-notch fa-spin text-slate-300"></i>';
+            $('#totalCount, #newPatientsCount, #oldPatientsCount, #avgPerDay').html(progressionCircle);
+            $('#percBaru, #percLama').text('Menghitung...');
 
+            $('#tbody-analysis').html(`
+                <tr class="hover:bg-slate-50 transition">
+                    <td colspan="7" class="px-6 py-12 text-center text-slate-400 italic text-sm">
+                        <i class="fas fa-circle-notch fa-spin mr-2 text-indigo-500 text-xl"></i>
+                        Sedang menyinkronkan data...
+                    </td>
+                </tr>
+            `);
+            let requestData = {
+                start_date: startDate.format('YYYY-MM-DD'),
+                end_date: endDate.format('YYYY-MM-DD'),
+                region_id: regionId
+            };
+            requestData[config.csrfTokenName] = config.csrfHash;
             $.ajax({
                 url: config.fetchUrl,
                 method: 'GET',
-                data: {
-                    start_date: startDate.format('YYYY-MM-DD'),
-                    end_date: endDate.format('YYYY-MM-DD'),
-                    region_id: regionId
-                },
+                data: requestData,
                 dataType: 'json',
                 success: function (data) {
+                    if (data.csrf_hash) config.csrfHash = data.csrf_hash;
                     $('#totalCount').text(data.summary.total.toLocaleString());
                     $('#newPatientsCount').text(data.summary.baru.toLocaleString());
                     $('#oldPatientsCount').text(data.summary.lama.toLocaleString());
@@ -77,8 +92,8 @@ if (window.$) {
 
                     let pB = data.summary.total > 0 ? ((data.summary.baru / data.summary.total) * 100).toFixed(1) : 0;
                     let pL = data.summary.total > 0 ? ((data.summary.lama / data.summary.total) * 100).toFixed(1) : 0;
-                    $('#percBaru').text(pB + '%  Pasein Baru');
-                    $('#percLama').text(pL + '% Pasein Lama');
+                    $('#percBaru').text(pB + '% Pasien Baru');
+                    $('#percLama').text(pL + '% Pasien Lama');
 
                     renderTable(data.details, regionId, startDate, endDate);
                     renderChart(data.details);
@@ -87,19 +102,14 @@ if (window.$) {
         }
 
         // --- FUNGSI RENDER TABLE ---
-        // --- FUNGSI RENDER TABLE ---
         function renderTable(details, selectedRegion, start, end) {
             let html = '';
             let diff = end.diff(start, 'days') + 1;
-
-            // Saring data berdasarkan region yang dipilih (LOGIKA TETAP)
             let filteredData = details;
             if (selectedRegion && selectedRegion !== "") {
                 filteredData = details.filter(item => item.id == selectedRegion);
             }
-
             if (!filteredData || filteredData.length === 0 || (filteredData.length === 1 && filteredData[0].total_pasien == 0)) {
-                // EMPTY STATE (Sesuai referensi Gambar 2)
                 html = `<tr class="hover:bg-slate-50 transition">
                     <td colspan="7" class="px-6 py-12 text-center text-slate-400 italic text-sm">
                         <i class="fas fa-inbox mr-2 text-slate-300"></i>
@@ -139,22 +149,19 @@ if (window.$) {
             $('#tbody-analysis').html(html);
         }
 
+
         // --- FUNGSI RENDER CHART ---
         function renderChart(details) {
-            var labels = details.map(i => i.cabang.toUpperCase());
-            var values = details.map(i => i.total_pasien);
+            var filteredData = details.filter(i => i.total_pasien > 0);
             var ctx = document.getElementById('statisticChart').getContext('2d');
-            var isHorizontal = labels.length > 10;
-            var gradient = isHorizontal
-                ? ctx.createLinearGradient(0, 0, 800, 0)
-                : ctx.createLinearGradient(0, 400, 0, 0);
-
-            gradient.addColorStop(0, 'rgba(99, 102, 241, 0.9)');
-            gradient.addColorStop(1, 'rgba(165, 180, 252, 0.2)');
-
             if (window.myChart) {
                 window.myChart.destroy();
             }
+            if (filteredData.length === 0) {
+                return;
+            }
+            var labels = filteredData.map(i => i.cabang.toUpperCase());
+            var values = filteredData.map(i => i.total_pasien);
 
             window.myChart = new window.Chart(ctx, {
                 type: 'bar',
@@ -163,19 +170,16 @@ if (window.$) {
                     datasets: [{
                         label: 'Total Pasien',
                         data: values,
-                        backgroundColor: gradient,
-                        hoverBackgroundColor: '#4f46e5',
-                        borderRadius: 6,
-                        borderSkipped: false,
+                        backgroundColor: '#3b82f6', 
+                        hoverBackgroundColor: '#2563eb',
+                        borderRadius: 4,
                         maxBarThickness: 32,
-                        categoryPercentage: 0.8,
-                        barPercentage: 0.9
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    indexAxis: isHorizontal ? 'y' : 'x',
+                    indexAxis: 'y', 
                     plugins: {
                         legend: { display: false },
                         tooltip: {
@@ -196,32 +200,39 @@ if (window.$) {
                     scales: {
                         x: {
                             beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Total Pasien', 
+                                color: '#64748b',
+                                font: { size: 12, weight: 'bold', family: "'Inter', sans-serif" },
+                                padding: { top: 10 }
+                            },
                             grid: {
-                                display: isHorizontal,
                                 color: '#f1f5f9',
                                 drawBorder: false,
-                                borderDash: [4, 4]
+                                borderDash: [4, 4] 
                             },
                             ticks: {
                                 color: '#64748b',
                                 font: { size: 10, weight: '600', family: "'Inter', sans-serif" },
-                                autoSkip: true,
-                                maxRotation: 0
+                                precision: 0 
                             },
                             border: { display: false }
                         },
                         y: {
-                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Cabang', 
+                                color: '#64748b',
+                                font: { size: 12, weight: 'bold', family: "'Inter', sans-serif" },
+                                padding: { bottom: 10 }
+                            },
                             grid: {
-                                display: !isHorizontal,
-                                color: '#f1f5f9',
-                                drawBorder: false,
-                                borderDash: [4, 4]
+                                display: false 
                             },
                             ticks: {
                                 color: '#64748b',
-                                font: { size: 10, weight: '600', family: "'Inter', sans-serif" },
-                                padding: 8
+                                font: { size: 10, weight: '600', family: "'Inter', sans-serif" }
                             },
                             border: { display: false }
                         }

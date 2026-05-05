@@ -136,8 +136,6 @@ class TransaksiController extends BaseController
             'nominal' => $this->request->getPost('nominal'),
             'type' => $this->request->getPost('type') ?? 'income',
             'keterangan' => $this->request->getPost('keterangan'),
-            'metode_pembayaran' => $this->request->getPost('metode_pembayaran'),
-            'rentang_usia' => $this->request->getPost('rentang_usia'),
             'created_at' => date('Y-m-d H:i:s'),
             'created_by' => session()->get('userId')
         ];
@@ -157,7 +155,6 @@ class TransaksiController extends BaseController
     {
         $id = $this->request->getPost('id_transaksi');
 
-        // Opsi: Tambahkan pengecekan role di sini jika hanya Superadmin yang boleh hapus
         if ($this->model_transaksi->delete($id)) {
             return $this->response->setJSON(['status' => 'success', 'message' => 'Transaksi berhasil dihapus']);
         }

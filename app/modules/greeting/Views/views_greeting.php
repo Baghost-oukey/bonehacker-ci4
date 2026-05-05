@@ -107,5 +107,4 @@
         csrfHash: "<?= csrf_hash() ?>"
     };
 </script>
-<script src="<?= base_url('assets/js/page/greeting.js') ?>"></script>
 <?= $this->endSection() ?>

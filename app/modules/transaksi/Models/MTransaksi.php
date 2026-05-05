@@ -12,7 +12,18 @@ class MTransaksi extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['region_id', 'nominal', 'metode_pembayaran', 'rentang_usia', 'created_at', 'created_by'];
+    protected $allowedFields    = [
+        'region_id',
+        'nominal',
+        'type',
+        'kategori',
+        'keterangan',
+        'status',
+        'cancel_reason',
+        'created_at',
+        'created_by',
+        'cancelled_by'
+    ];
 
     protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;
@@ -47,17 +58,15 @@ class MTransaksi extends Model
     public function get_list_data($options)
     {
         $builder = $this->db->table('transaksi t')
-            ->select('t.id_transaksi, t.created_at, t.nominal, t.metode_pembayaran, t.rentang_usia, r.name as region_name')
+            ->select('t.id_transaksi, t.created_at, t.nominal, t.type, t.kategori, t.keterangan, r.name as region_name')
             ->join('regions r', 'r.id = t.region_id', 'left');
 
         $role = session()->get('role');
         $aktif_region = session()->get('active_region');
 
-        // PROTEKSI: Jika bukan owner/superadmin, WAJIB filter berdasarkan region user
         if ($role !== 'superadmin' && $role !== 'owner') {
             $builder->where('t.region_id', session()->get('region_id'));
         } else {
-            // Jika owner/superadmin, baru boleh pakai filter Global Switch
             if ($aktif_region && $aktif_region !== 'all') {
                 $builder->where('t.region_id', $aktif_region);
             }
@@ -83,5 +92,31 @@ class MTransaksi extends Model
         }
 
         return $builder->countAllResults();
+    }
+
+    public function get_dashboard_stats($filter_region = null)
+    {
+        $db = \Config\Database::connect();
+
+        // --- Saldo Hari Ini ---
+        $todayBuilder = $db->table($this->table)->selectSum('nominal')->where('DATE(created_at)', date('Y-m-d'));
+        if ($filter_region) $todayBuilder->where('region_id', $filter_region);
+        $today_balance = $todayBuilder->get()->getRow()->nominal ?? 0;
+
+        // --- Total Pemasukan ---
+        $incomeBuilder = $db->table($this->table)->selectSum('nominal')->where('type', 'income');
+        if ($filter_region) $incomeBuilder->where('region_id', $filter_region);
+        $total_income = $incomeBuilder->get()->getRow()->nominal ?? 0;
+
+        // --- Total Pengeluaran ---
+        $expenseBuilder = $db->table($this->table)->selectSum('nominal')->where('type', 'expense');
+        if ($filter_region) $expenseBuilder->where('region_id', $filter_region);
+        $total_expense = $expenseBuilder->get()->getRow()->nominal ?? 0;
+
+        return [
+            'today_balance' => $today_balance,
+            'total_income'  => $total_income,
+            'total_expense' => $total_expense
+        ];
     }
 }

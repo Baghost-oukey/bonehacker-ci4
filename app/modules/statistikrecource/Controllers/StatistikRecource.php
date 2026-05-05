@@ -38,27 +38,22 @@ class StatistikRecource extends BaseController
         $startDate = $this->request->getGet('start_date');
         $endDate = $this->request->getGet('end_date');
         $regionID = $this->request->getGet('region_id');
-
-        if (!$startDate || !$endDate) {
-            return $this->response->setJSON([
-                'status' => 'error',
-                'message' => 'Rentang tanggal harus diisi'
-            ]);
+        if (empty($startDate) || empty($endDate)) {
+            $startDate = date('Y-m-01'); 
+            $endDate   = date('Y-m-t'); 
         }
-
         $sources = $this->model_marketing->get_sumber_marketing($startDate, $endDate, $regionID);
-
         $totalAll = 0;
         if (!empty($sources)) {
             foreach ($sources as $s) {
                 $totalAll += (int)$s->total_pasien;
             }
         }
-
         return $this->response->setJSON([
-            'status'  => 'success',
+            'status'             => 'success',
+            'csrf_hash'          => csrf_hash(), 
             'total_all_patients' => $totalAll,
-            'details' => $sources
+            'details'            => $sources
         ]);
     }
 }

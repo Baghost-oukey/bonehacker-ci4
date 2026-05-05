@@ -7,7 +7,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
 ?>
 
 <aside id="appSidebar" class="fixed inset-y-0 left-0 z-40 flex h-svh w-64 -translate-x-full flex-col border-r border-slate-200 bg-white shadow-lg shadow-slate-900/5 backdrop-blur-sm transition-transform duration-300 lg:translate-x-0">
-    
+
     <div class="flex flex-col gap-2 p-2 border-b border-slate-200">
         <a href="<?= base_url() ?>" class="group/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all hover:bg-slate-100 hover:text-slate-900">
             <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-slate-900 text-[11px] font-bold text-white shadow-sm">B</span>
@@ -16,12 +16,12 @@ $userInitial = strtoupper(substr($realname, 0, 1));
     </div>
 
     <div class="no-scrollbar flex min-h-0 flex-1 flex-col gap-0 overflow-auto">
-        
+
         <div class="relative flex w-full min-w-0 flex-col p-2">
             <div class="flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-slate-500/70">
                 Dashboard
             </div>
-            
+
             <ul class="flex w-full min-w-0 flex-col gap-1">
                 <li>
                     <a href="<?= base_url('beranda') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= in_array($current_segment, ['beranda', '']) ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
@@ -58,8 +58,46 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                 <li>
                     <a href="<?= base_url('transaksi') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'transaksi' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                         <i class="fas fa-money-bill-wave w-4 text-center shrink-0"></i>
-                        <span class="truncate">Keuangan</span>
+                        <span class="truncate">Transaksi</span>
                     </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="relative flex w-full min-w-0 flex-col p-2">
+            <div class="flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-slate-500/70">
+                Kas
+            </div>
+
+            <ul class="flex w-full min-w-0 flex-col gap-1">
+                <li>
+                    <details class="group" <?= in_array($current_segment, ['kas', 'gaji']) ? 'open' : '' ?>>
+                        <summary class="flex w-full cursor-pointer list-none items-center justify-between rounded-md p-2 text-left text-sm transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 [&::-webkit-details-marker]:hidden">
+                            <span class="flex items-center gap-2">
+                                <i class="fas fa-credit-card w-4 text-center shrink-0"></i>
+                                <span class="truncate font-medium">Keuangan</span>
+                            </span>
+                            <i class="fas fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200 group-open:rotate-180 shrink-0"></i>
+                        </summary>
+
+                        <ul class="mx-3.5 mt-1 flex min-w-0 translate-x-px flex-col gap-1 border-l border-slate-200 px-2.5 py-0.5">
+                            <li>
+                                <a href="<?= base_url('kas') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'kas' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                    <span class="truncate">Arus Kas</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="<?= base_url('gaji') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'gaji' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                    <span class="truncate">Kelola Gaji</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="<?= base_url('gaji') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'gaji' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                    <span class="truncate">Statistik Keuangan</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </details>
                 </li>
             </ul>
         </div>
@@ -68,7 +106,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
             <div class="flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-slate-500/70">
                 Analitik
             </div>
-            
+
             <ul class="flex w-full min-w-0 flex-col gap-1">
                 <li>
                     <details class="group" <?= in_array($current_segment, ['statistiktag', 'statistik', 'statistikresource', 'statistikresult', 'statistikgender', 'statistikdaerah']) ? 'open' : '' ?>>
@@ -79,7 +117,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                             </span>
                             <i class="fas fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200 group-open:rotate-180 shrink-0"></i>
                         </summary>
-                        
+
                         <ul class="mx-3.5 mt-1 flex min-w-0 translate-x-px flex-col gap-1 border-l border-slate-200 px-2.5 py-0.5">
                             <li>
                                 <a href="<?= base_url('statistiktag') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'statistiktag' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>">
@@ -118,66 +156,88 @@ $userInitial = strtoupper(substr($realname, 0, 1));
         </div>
 
         <?php if ($role === 'superadmin' || $role === 'owner'): ?>
-        <div class="relative flex w-full min-w-0 flex-col p-2">
-            <div class="flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-slate-500/70">
-                Manajemen
+            <div class="relative flex w-full min-w-0 flex-col p-2">
+                <div class="flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-slate-500/70">
+                    Manajemen
+                </div>
+
+                <ul class="flex w-full min-w-0 flex-col gap-1">
+                    <li>
+                        <details class="group" <?= in_array($current_segment, ['complaint', 'medis', 'result']) ? 'open' : '' ?>>
+                            <summary class="flex w-full cursor-pointer list-none items-center justify-between rounded-md p-2 text-left text-sm transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 [&::-webkit-details-marker]:hidden">
+                                <span class="flex items-center gap-2">
+                                    <i class="fas fa-tags w-4 text-center shrink-0"></i>
+                                    <span class="truncate font-medium">Tags</span>
+                                </span>
+                                <i class="fas fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200 group-open:rotate-180 shrink-0"></i>
+                            </summary>
+                            <ul class="mx-3.5 mt-1 flex min-w-0 translate-x-px flex-col gap-1 border-l border-slate-200 px-2.5 py-0.5">
+                                <li><a href="<?= base_url('tag-keluhan') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'tag-keluhan' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Tag Keluhan</span></a></li>
+                                <li><a href="<?= base_url('tag-rekam-medis') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'tag-rekam-medis' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Tag Rekam Medis</span></a></li>
+                                <li><a href="<?= base_url('tag-pemeriksaan') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'tag-pemeriksaan' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Tag Pemeriksaan</span></a></li>
+                            </ul>
+                        </details>
+                    </li>
+
+                    <li>
+                        <details class="group" <?= in_array($current_segment, ['logs', 'whatsapp', 'log_whatsapp', 'jabatan', 'greeting']) ? 'open' : '' ?>>
+                            <summary class="flex w-full cursor-pointer list-none items-center justify-between rounded-md p-2 text-left text-sm transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 [&::-webkit-details-marker]:hidden">
+                                <span class="flex items-center gap-2">
+                                    <i class="fas fa-cog w-4 text-center shrink-0"></i>
+                                    <span class="truncate font-medium">Pengaturan</span>
+                                </span>
+                                <i class="fas fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200 group-open:rotate-180 shrink-0"></i>
+                            </summary>
+                            <ul class="mx-3.5 mt-1 flex min-w-0 translate-x-px flex-col gap-1 border-l border-slate-200 px-2.5 py-0.5">
+                                <li><a href="<?= base_url('logs') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'logs' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Logs</span></a></li>
+                                <li><a href="<?= base_url('whatsapp') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'whatsapp' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">WhatsApp</span></a></li>
+                                <li><a href="<?= base_url('log_whatsapp') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'log_whatsapp' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Log WhatsApp</span></a></li>
+                                <li><a href="<?= base_url('jabatan') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'jabatan' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Jabatan</span></a></li>
+                                <li><a href="<?= base_url('greeting') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'greeting' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Greetings</span></a></li>
+                            </ul>
+                        </details>
+                    </li>
+
+                    <li>
+                        <a href="<?= base_url('users') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'users' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
+                            <i class="fas fa-users w-4 text-center shrink-0"></i>
+                            <span class="truncate">Users</span>
+                        </a>
+                    </li>
+                    <!-- <li>
+                        <a href="<?= base_url('terapis') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'terapis' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
+                            <i class="fas fa-user-md w-4 text-center shrink-0"></i>
+                            <span class="truncate">Karyawan</span>
+                        </a>
+                    </li> -->
+
+
+                    <li>
+                        <details class="group" <?= in_array($current_segment, ['terapis', 'medis']) ? 'open' : '' ?>>
+                            <summary class="flex w-full cursor-pointer list-none items-center justify-between rounded-md p-2 text-left text-sm transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 [&::-webkit-details-marker]:hidden">
+                                <span class="flex items-center gap-2">
+                                    <i class="fas fa-user-md w-4 text-center shrink-0"></i>
+                                    <span class="truncate font-medium">Karyawan</span>
+                                </span>
+                                <i class="fas fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200 group-open:rotate-180 shrink-0"></i>
+                            </summary>
+                            <ul class="mx-3.5 mt-1 flex min-w-0 translate-x-px flex-col gap-1 border-l border-slate-200 px-2.5 py-0.5">
+                                <li>
+                                    <a href="<?= base_url('terapis') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'terapis' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                        <span class="truncate">Karyawan Regular</span>
+                                    </a>
+                                </li>
+                                <li><a href="<?= base_url('tag-rekam-medis') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'tag-rekam-medis' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Karyawan Kejantanan</span></a></li>
+
+                            </ul>
+                        </details>
+                    </li>
+                </ul>
             </div>
-            
-            <ul class="flex w-full min-w-0 flex-col gap-1">
-                <li>
-                    <details class="group" <?= in_array($current_segment, ['complaint', 'medis', 'result']) ? 'open' : '' ?>>
-                        <summary class="flex w-full cursor-pointer list-none items-center justify-between rounded-md p-2 text-left text-sm transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 [&::-webkit-details-marker]:hidden">
-                            <span class="flex items-center gap-2">
-                                <i class="fas fa-tags w-4 text-center shrink-0"></i>
-                                <span class="truncate font-medium">Tags</span>
-                            </span>
-                            <i class="fas fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200 group-open:rotate-180 shrink-0"></i>
-                        </summary>
-                        <ul class="mx-3.5 mt-1 flex min-w-0 translate-x-px flex-col gap-1 border-l border-slate-200 px-2.5 py-0.5">
-                            <li><a href="<?= base_url('tag-keluhan') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'tag-keluhan' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Tag Keluhan</span></a></li>
-                            <li><a href="<?= base_url('tag-rekam-medis') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'tag-rekam-medis' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Tag Rekam Medis</span></a></li>
-                            <li><a href="<?= base_url('tag-pemeriksaan') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'tag-pemeriksaan' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Tag Pemeriksaan</span></a></li>
-                        </ul>
-                    </details>
-                </li>
-                
-                <li>
-                    <details class="group" <?= in_array($current_segment, ['logs', 'whatsapp', 'log_whatsapp', 'jabatan', 'greeting']) ? 'open' : '' ?>>
-                        <summary class="flex w-full cursor-pointer list-none items-center justify-between rounded-md p-2 text-left text-sm transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 [&::-webkit-details-marker]:hidden">
-                            <span class="flex items-center gap-2">
-                                <i class="fas fa-cog w-4 text-center shrink-0"></i>
-                                <span class="truncate font-medium">Pengaturan</span>
-                            </span>
-                            <i class="fas fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200 group-open:rotate-180 shrink-0"></i>
-                        </summary>
-                        <ul class="mx-3.5 mt-1 flex min-w-0 translate-x-px flex-col gap-1 border-l border-slate-200 px-2.5 py-0.5">
-                            <li><a href="<?= base_url('logs') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'logs' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Logs</span></a></li>
-                            <li><a href="<?= base_url('whatsapp') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'whatsapp' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">WhatsApp</span></a></li>
-                            <li><a href="<?= base_url('log_whatsapp') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'log_whatsapp' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Log WhatsApp</span></a></li>
-                            <li><a href="<?= base_url('jabatan') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'jabatan' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Jabatan</span></a></li>
-                            <li><a href="<?= base_url('greeting') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'greeting' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Greetings</span></a></li>
-                        </ul>
-                    </details>
-                </li>
-                
-                <li>
-                    <a href="<?= base_url('users') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'users' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
-                        <i class="fas fa-users w-4 text-center shrink-0"></i>
-                        <span class="truncate">Users</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="<?= base_url('terapis') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'terapis' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
-                        <i class="fas fa-user-md w-4 text-center shrink-0"></i>
-                        <span class="truncate">Terapis</span>
-                    </a>
-                </li>
-            </ul>
-        </div>
         <?php endif; ?>
 
     </div>
-    
+
     <div class="mt-auto border-t border-slate-200 p-2">
         <?= $this->include('App\Views\layout\footer') ?>
     </div>

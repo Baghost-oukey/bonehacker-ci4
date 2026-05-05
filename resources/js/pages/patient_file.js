@@ -28,6 +28,7 @@ const FileUploadPage = {
   },
 
   init() {
+    if(typeof window.patientConfig === "undefined") return;
     this.loadConfig();
     this.initPreviewButtons();
     this.initBatchDelete();

@@ -3,8 +3,7 @@
  * Handles DataTables initialization and CRUD modal operations
  */
 
-// === 1. GLOBAL HELPER FUNCTIONS ===
-// (Fungsi bawaan standar untuk konsistensi dengan modul lain)
+//  --- GLOBAL HELPER FUNCTIONS ---
 const MODAL_VISIBLE_CLASS = "flex";
 const MODAL_HIDDEN_CLASS = "hidden";
 
@@ -33,20 +32,44 @@ const closeModal = (modal) => {
 };
 
 
-// === 2. MAIN PAGE SETUP FUNCTION ===
+window.openModal = (modal) => {
+    if (!modal) return;
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+    setTimeout(() => {
+        modal.classList.remove("opacity-0");
+        modal.classList.add("opacity-100");
+        const content = modal.querySelector('.transform');
+        if (content) {
+            content.classList.remove("scale-95");
+            content.classList.add("scale-100");
+        }
+    }, 20);
+};
+
+window.closeModal = (modal) => {
+    if (!modal) return;
+    modal.classList.remove("opacity-100");
+    modal.classList.add("opacity-0");
+    const content = modal.querySelector('.transform');
+    if (content) {
+        content.classList.remove("scale-100");
+        content.classList.add("scale-95");
+    }
+    setTimeout(() => {
+        modal.classList.remove("flex");
+        modal.classList.add("hidden");
+    }, 300);
+};
+
+//  --- MAIN PAGE SETUP FUNCTION ---
 const setupWhatsappPage = () => {
-    // Ambil konfigurasi dari View
     const config = window.waConfig;
-    
-    // Sabuk pengaman: Pastikan jQuery dan Config tersedia
     if (!config || typeof window.$ === "undefined") return;
-
     const $ = window.$;
-
-    // --- STATE VARIABLES ---
-    // (Gunakan let, persis seperti di Terapis)
     let tableInstance = null;
     let currentRecordId = null;
+
 
     // --- INISIALISASI DATATABLES ---
     const initTable = () => {
@@ -59,38 +82,32 @@ const setupWhatsappPage = () => {
 
     // --- SETUP EVENT LISTENERS ---
     const initEvents = () => {
-        
-        // Event: Saat Modal Hapus Terbuka (Bootstrap style)
-        $('#deleteModal').on('show.bs.modal', function (event) {
-            const button = $(event.relatedTarget);
-            currentRecordId = button.data('id');
 
-            // Dinamis ubah action URL pada form hapus
-            // Support fallback jika masih pakai baseUrl biasa atau sudah pakai deleteBaseUrl
-            const actionUrl = config.deleteBaseUrl 
-                ? `${config.deleteBaseUrl}/${currentRecordId}` 
-                : `${config.baseUrl}/delete/${currentRecordId}`;
-                
-            $('#deleteForm').attr('action', actionUrl);
+        // --- ADD BUTTON ---
+        $('#btn-add-wa').on('click', function () {
+            window.openModal(document.getElementById('addModal'));
         });
 
-        // Event: Saat Modal Edit Terbuka (Bootstrap style)
-        $('#editModal').on('show.bs.modal', function (event) {
-            const button = $(event.relatedTarget);
-            currentRecordId = button.data('id');
+        // --- DELETE BUTTON ---
+        $('#table-wa tbody').on('click', '.btn-delete', function () {
+            const id = $(this).data('id');
+            const actionUrl = `${config.baseUrl}/delete/${id}`;
+            $('#deleteForm').attr('action', actionUrl);
+            window.openModal(document.getElementById('deleteModal'));
+        });
 
-            // Ekstrak data dari tombol ke dalam input form
+        // --- EDIT BUTTON ---
+        $('#table-wa tbody').on('click', '.btn-edit', function () {
+            const button = $(this);
+            const id = button.data('id');
             $('#editUrlApi').val(button.data('url'));
             $('#editInstanceId').val(button.data('instance'));
             $('#editToken').val(button.data('token'));
             $('#editMessageTemplate').val(button.data('message'));
-
-            // Dinamis ubah action URL pada form edit
-            const actionUrl = config.editBaseUrl 
-                ? `${config.editBaseUrl}/${currentRecordId}` 
-                : `${config.baseUrl}/edit/${currentRecordId}`;
-
+            const actionUrl = `${config.baseUrl}/update/${id}`;
             $('#editForm').attr('action', actionUrl);
+
+            window.openModal(document.getElementById('editModal'));
         });
     };
 
@@ -99,8 +116,7 @@ const setupWhatsappPage = () => {
     initEvents();
 };
 
-// === 3. AUTO-RUN ===
-// Jalankan script saat halaman HTML selesai dimuat sepenuhnya
+// --- AUTO-RUN ---
 if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", setupWhatsappPage);
 } else {

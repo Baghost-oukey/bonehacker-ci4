@@ -242,3 +242,20 @@ $routes->group('patient', ['namespace' => 'App\Modules\patients\Controllers'], f
   // Delete/Hapus
   $routes->post('destroy/(:any)', 'Patients::destroy/$1');
 });
+
+// Routes - Kas
+$routes->group('kas', ['namespace' => 'App\modules\kas\Controllers'], function($routes) {
+    $routes->get('/', 'Kas::index');
+    $routes->post('get_data_pemasukan', 'Kas::get_data_pemasukan');
+    $routes->post('get_data_pengeluaran', 'Kas::get_data_pengeluaran');
+    $routes->post('get_data_pengeluaran_harian', 'Kas::get_data_pengeluaran_harian');
+    $routes->get('get_master_harian', 'Kas::get_master_harian');
+    $routes->post('simpan_transaksi', 'Kas::simpan_transaksi');
+    $routes->post('bayar_pengeluaran_harian', 'Kas::bayar_pengeluaran_harian');
+    
+    // Grouping untuk CRUD Master Pengeluaran Harian
+    $routes->group('master', function($routes) {
+        $routes->post('simpan', 'Kas::simpan_master_harian');
+        $routes->post('hapus', 'Kas::hapus_master_harian');
+    });
+});
