@@ -6,6 +6,7 @@
                     <th class="px-6 py-5 border-b border-slate-100 whitespace-nowrap">Tanggal</th>
                     <th class="px-6 py-5 border-b border-slate-100 whitespace-nowrap">Cabang</th>
                     <th class="px-6 py-5 border-b border-slate-100 min-w-50">Keterangan</th>
+                    <th class="px-6 py-5 border-b border-slate-100 min-w-50">Ditambahkan Oleh</th>
                     <th class="px-6 py-5 border-b border-slate-100 text-right whitespace-nowrap text-emerald-600">Nominal</th>
                     <th class="px-6 py-5 border-b border-slate-100 text-center">Aksi</th>
                 </tr>

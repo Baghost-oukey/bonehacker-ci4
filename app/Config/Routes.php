@@ -252,6 +252,7 @@ $routes->group('kas', ['namespace' => 'App\modules\kas\Controllers'], function($
     $routes->get('get_master_harian', 'Kas::get_master_harian');
     $routes->post('simpan_transaksi', 'Kas::simpan_transaksi');
     $routes->post('bayar_pengeluaran_harian', 'Kas::bayar_pengeluaran_harian');
+    $routes->post('set_filter_region', 'Kas::set_filter_region');
     
     // Grouping untuk CRUD Master Pengeluaran Harian
     $routes->group('master', function($routes) {
@@ -259,3 +260,10 @@ $routes->group('kas', ['namespace' => 'App\modules\kas\Controllers'], function($
         $routes->post('hapus', 'Kas::hapus_master_harian');
     });
 });
+
+// Routes - Statsitik Keuangan
+$routes->group('statistikkeuangan', ['namespace' => 'App\Modules\StatistikKeuangan\Controllers'], function ($routes) {
+    $routes->get('/', 'StatistikKeuangan::index'); // Gunakan '/' agar terbaca sebagai root grup
+    $routes->get('get_chart_data', 'StatistikKeuangan::get_chart_data'); 
+});
+

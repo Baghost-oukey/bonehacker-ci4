@@ -63,6 +63,8 @@ class Kas extends BaseController
             'role'          => $role,
             'list_regions'  => $db->table('regions')->select('id, name')->get()->getResultArray(), 
             'today_balance' => $stats['today_balance'] ?? 0,
+            'today_income'  => $stats['today_income'] ?? 0,   
+            'today_expense' => $stats['today_expense'] ?? 0,
             'total_income'  => $stats['total_income'] ?? 0, 
             'total_expense' => $stats['total_expense'] ?? 0, 
         ];
@@ -242,5 +244,12 @@ class Kas extends BaseController
             'recordsFiltered' => $total_data,
             'data'            => $list_data
         ]);
+    }
+
+    public function set_filter_region()
+    {
+        $region_id = $this->request->getPost('region_id');
+        session()->set('active_region', $region_id);
+        return $this->response->setJSON(['status' => 'success']);
     }
 }
