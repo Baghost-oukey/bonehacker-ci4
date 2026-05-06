@@ -16,6 +16,29 @@ $routes->group('auth', ['namespace' => 'App\Modules\auth\Controllers'], function
   $routes->get('get_csrf', 'Auth::get_csrf');
 });
 
+// API Routes
+$routes->group('api', ['namespace' => 'App\Modules\api\Controllers'], function ($routes) {
+    $routes->post('login', 'Auth::login');
+    
+    // Antrean API
+    $routes->get('antrean', 'Antrean::index');
+    $routes->post('antrean/proses', 'Antrean::proses');
+    $routes->post('antrean/selesai', 'Antrean::selesai');
+
+    // Patients API
+    $routes->get('patients', 'Patients::index');
+    $routes->post('patients/add-to-queue', 'Patients::addToQueue');
+    $routes->post('patients/register', 'Patients::register');
+
+    // History & Medical Records API
+    $routes->get('history/(:num)', 'History::index/$1');
+    $routes->get('history/tags', 'History::tags');
+    $routes->post('history/save', 'History::save');
+
+    // Statistics API
+    $routes->get('statistics/summary', 'Statistics::summary');
+});
+
 // Beranda
 $routes->get('beranda', 'BerandaController::index', ['namespace' => 'App\Modules\Beranda\Controllers']);
 
@@ -258,4 +281,18 @@ $routes->group('kas', ['namespace' => 'App\modules\kas\Controllers'], function($
         $routes->post('simpan', 'Kas::simpan_master_harian');
         $routes->post('hapus', 'Kas::hapus_master_harian');
     });
+});
+
+// --- API ROUTES FOR MOBILE ---
+$routes->group('api', ['namespace' => 'App\Modules\api\Controllers'], function ($routes) {
+  $routes->post('auth/login', 'Auth::login');
+  $routes->get('statistics/summary', 'Statistics::summary');
+  $routes->get('antrean/today', 'Antrean::today');
+  $routes->post('antrean/update-status', 'Antrean::updateStatus');
+  $routes->get('patients/search', 'Patient::search');
+  $routes->post('patients/register', 'Patient::register');
+  $routes->post('patients/add-to-queue', 'Patient::addToQueue');
+  $routes->get('medical-records/patient/(:num)', 'MedicalRecord::getPatientHistory/$1');
+  $routes->get('medical-records/tags', 'MedicalRecord::getTags');
+  $routes->post('medical-records/save', 'MedicalRecord::save');
 });

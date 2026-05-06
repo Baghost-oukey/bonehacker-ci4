@@ -77,8 +77,8 @@ class Filters extends BaseFilters
             // 'honeypot',
             // 'csrf',
             // 'invalidchars',
-            'csrf' => ['except' => ['auth/get_csrf']],
-            'auth' => ['except' => ['auth', 'auth/*', '/']],
+            'csrf' => ['except' => ['auth/get_csrf', 'api/*']],
+            'auth' => ['except' => ['auth', 'auth/*', '/', 'api/*']],
         ],
         'after' => [
             // 'honeypot',
