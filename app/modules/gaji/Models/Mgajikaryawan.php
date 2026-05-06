@@ -1,0 +1,138 @@
+<?php
+
+namespace App\modules\gaji\Models;
+
+use CodeIgniter\Model;
+
+class Mgajikaryawan extends Model
+{
+    protected $table            = 'riwayat_gaji';
+    protected $primaryKey       = 'id';
+    protected $useAutoIncrement = true;
+    protected $returnType       = 'array';
+    protected $useSoftDeletes   = false;
+    protected $protectFields    = true;
+    protected $allowedFields    = [
+        'terapis_id',
+        'periode_bulan',
+        'periode_tahun',
+        'total_kehadiran',
+        'gaji_pokok_total',
+        'total_tunjangan',
+        'total_potongan',
+        'gaji_bersih',
+        'tanggal_bayar',
+        'status'
+    ];
+
+    protected bool $allowEmptyInserts = false;
+    protected bool $updateOnlyChanged = true;
+
+    protected array $casts = [];
+    protected array $castHandlers = [];
+
+    // Dates
+    protected $useTimestamps = true;
+    protected $dateFormat    = 'datetime';
+    protected $createdField  = 'created_at';
+    // protected $updatedField  = 'updated_at';
+    // protected $deletedField  = 'deleted_at';
+
+    // Validation
+    protected $validationRules      = [];
+    protected $validationMessages   = [];
+    protected $skipValidation       = false;
+    protected $cleanValidationRules = true;
+
+    // Callbacks
+    protected $allowCallbacks = true;
+    protected $beforeInsert   = [];
+    protected $afterInsert    = [];
+    protected $beforeUpdate   = [];
+    protected $afterUpdate    = [];
+    protected $beforeFind     = [];
+    protected $afterFind      = [];
+    protected $beforeDelete   = [];
+    protected $afterDelete    = [];
+
+
+
+    public function getPayrollEstimates($regionId = 'all')
+    {
+        $builder = $this->db->table('terapis t');
+        // SUB QUERY UNTUK JUMLAH TINDAKAN 
+        $subQueryTindakan = "(SELECT COUNT(h.id) FROM histories h WHERE FIND_IN_SET(t.id, h.terapis_id))";
+        $builder->select('
+        t.id as terapis_id, 
+        t.nama, 
+        t.foto, 
+        r.name as wilayah,
+        j.nama_jabatan,
+        COALESCE(pg.tipe_gaji, "Belum Diset") as tipe_gaji,
+        COALESCE(pg.nominal_gaji, 0) as nominal_gaji,
+        ' . $subQueryTindakan . ' as jml_tindakan, 
+        0 as total_kasbon
+    ', false);
+
+        // (SELECT SUM(nominal) FROM kasbon WHERE terapis_id = t.id AND status_potongan = "belum_dipotong") as total_kasbon
+        $builder->join('gaji_karyawan pg', 'pg.terapis_id = t.id', 'left');
+        $builder->join('regions r', 'r.id = t.region_id', 'left');
+        $builder->join('jabatan j', 'j.id = t.jabatan_id', 'left');
+        $builder->where('t.is_active', 1);
+
+        if ($regionId !== 'all') {
+            $builder->where('t.region_id', $regionId);
+        }
+        return $builder->get()->getResultArray();
+    }
+
+    public function getPayrollHistory($bulan, $tahun, $regionId = 'all')
+    {
+        $builder = $this->db->table($this->table . ' p');
+        $builder->select('
+            p.*, 
+            t.nama, 
+            r.name as wilayah
+        ');
+        $builder->join('terapis t', 't.id = p.terapis_id');
+        $builder->join('regions r', 'r.id = t.region_id', 'left');
+
+        $builder->where('p.periode_bulan', $bulan);
+        $builder->where('p.periode_tahun', $tahun);
+        $builder->where('p.status', 'lunas');
+
+        if ($regionId !== 'all') {
+            $builder->where('t.region_id', $regionId);
+        }
+
+        $builder->orderBy('p.tanggal_bayar', 'DESC');
+
+        return $builder->get()->getResultArray();
+    }
+
+    public function getDetailPerhitungan($id)
+    {
+        $subQueryTindakan = "(SELECT COUNT(h.id) FROM histories h WHERE FIND_IN_SET(t.id, h.terapis_id))";
+
+        $builder = $this->db->table('terapis t');
+        $builder->select('
+            t.id, 
+            t.nama, 
+            COALESCE(pg.tipe_gaji, "Belum Diset") as tipe_gaji, 
+            COALESCE(pg.nominal_gaji, 0) as nominal_gaji,
+            ' . $subQueryTindakan . ' as jml_tindakan
+        ', false);
+        $builder->join('gaji_karyawan pg', 'pg.terapis_id = t.id', 'left');
+
+        // Ambil data spesifik 1 orang yang diklik
+        $builder->where('t.id', $id);
+
+        $terapis = $builder->get()->getRowArray();
+
+        return [
+            'terapis'   => $terapis,
+            'kasbon'    => [], // Dikosongkan dulu untuk besok
+            'tunjangan' => []  // Dikosongkan dulu untuk besok
+        ];
+    }
+}

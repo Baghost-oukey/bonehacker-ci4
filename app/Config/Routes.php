@@ -267,3 +267,11 @@ $routes->group('statistikkeuangan', ['namespace' => 'App\Modules\StatistikKeuang
     $routes->get('get_chart_data', 'StatistikKeuangan::get_chart_data'); 
 });
 
+
+// Routes - Gaji
+$routes->group('gaji', ['namespace' => 'App\modules\gaji\Controllers'], function($routes) {
+    $routes->get('/', 'Gajikaryawan::index'); 
+    $routes->post('setting/save', 'Gajikaryawan::saveSetting'); 
+    $routes->get('detail/(:num)', 'Gajikaryawan::detailEstimasi/$1'); 
+    $routes->post('proses_bayar', 'Gajikaryawan::prosesBayar'); 
+});

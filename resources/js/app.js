@@ -36,3 +36,4 @@ import "./pages/statistik_gender.js";
 import "./pages/log.js";
 import "./pages/kas.js";
 import "./pages/statistik_keuangan.js";
+import "./pages/gaji_karyawan.js";
