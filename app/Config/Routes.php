@@ -244,34 +244,43 @@ $routes->group('patient', ['namespace' => 'App\Modules\patients\Controllers'], f
 });
 
 // Routes - Kas
-$routes->group('kas', ['namespace' => 'App\modules\kas\Controllers'], function($routes) {
-    $routes->get('/', 'Kas::index');
-    $routes->post('get_data_pemasukan', 'Kas::get_data_pemasukan');
-    $routes->post('get_data_pengeluaran', 'Kas::get_data_pengeluaran');
-    $routes->post('get_data_pengeluaran_harian', 'Kas::get_data_pengeluaran_harian');
-    $routes->get('get_master_harian', 'Kas::get_master_harian');
-    $routes->post('simpan_transaksi', 'Kas::simpan_transaksi');
-    $routes->post('bayar_pengeluaran_harian', 'Kas::bayar_pengeluaran_harian');
-    $routes->post('set_filter_region', 'Kas::set_filter_region');
-    
-    // Grouping untuk CRUD Master Pengeluaran Harian
-    $routes->group('master', function($routes) {
-        $routes->post('simpan', 'Kas::simpan_master_harian');
-        $routes->post('hapus', 'Kas::hapus_master_harian');
-    });
+$routes->group('kas', ['namespace' => 'App\modules\kas\Controllers'], function ($routes) {
+  $routes->get('/', 'Kas::index');
+  $routes->post('get_data_pemasukan', 'Kas::get_data_pemasukan');
+  $routes->post('get_data_pengeluaran', 'Kas::get_data_pengeluaran');
+  $routes->post('get_data_pengeluaran_harian', 'Kas::get_data_pengeluaran_harian');
+  $routes->get('get_master_harian', 'Kas::get_master_harian');
+  $routes->post('simpan_transaksi', 'Kas::simpan_transaksi');
+  $routes->post('bayar_pengeluaran_harian', 'Kas::bayar_pengeluaran_harian');
+  $routes->post('set_filter_region', 'Kas::set_filter_region');
+
+  // Grouping untuk CRUD Master Pengeluaran Harian
+  $routes->group('master', function ($routes) {
+    $routes->post('simpan', 'Kas::simpan_master_harian');
+    $routes->post('hapus', 'Kas::hapus_master_harian');
+  });
 });
 
 // Routes - Statsitik Keuangan
 $routes->group('statistikkeuangan', ['namespace' => 'App\Modules\StatistikKeuangan\Controllers'], function ($routes) {
-    $routes->get('/', 'StatistikKeuangan::index'); // Gunakan '/' agar terbaca sebagai root grup
-    $routes->get('get_chart_data', 'StatistikKeuangan::get_chart_data'); 
+  $routes->get('/', 'StatistikKeuangan::index'); // Gunakan '/' agar terbaca sebagai root grup
+  $routes->get('get_chart_data', 'StatistikKeuangan::get_chart_data');
 });
 
 
 // Routes - Gaji
-$routes->group('gaji', ['namespace' => 'App\modules\gaji\Controllers'], function($routes) {
-    $routes->get('/', 'Gajikaryawan::index'); 
-    $routes->post('setting/save', 'Gajikaryawan::saveSetting'); 
-    $routes->get('detail/(:num)', 'Gajikaryawan::detailEstimasi/$1'); 
-    $routes->post('proses_bayar', 'Gajikaryawan::prosesBayar'); 
+$routes->group('gaji', ['namespace' => 'App\modules\gaji\Controllers'], function ($routes) {
+  $routes->get('/', 'Gajikaryawan::index');
+  $routes->post('setting/save', 'Gajikaryawan::saveSetting');
+  $routes->get('detail/(:num)', 'Gajikaryawan::detailEstimasi/$1');
+  $routes->post('proses_bayar', 'Gajikaryawan::prosesBayar');
+});
+
+// Rutes - Kas bon
+$routes->group('kasbon', ['namespace' => 'App\modules\kasbon_karyawan\Controllers'], function($routes) {
+    $routes->get('/', 'Kasbonkaryawan::index');
+    $routes->post('fetch', 'Kasbonkaryawan::fetchKaryawan'); 
+    $routes->get('detail/(:num)', 'Kasbonkaryawan::detail/$1'); 
+    $routes->post('store', 'Kasbonkaryawan::store'); 
+    $routes->post('bayar', 'Kasbonkaryawan::bayar');
 });

@@ -37,3 +37,6 @@ import "./pages/log.js";
 import "./pages/kas.js";
 import "./pages/statistik_keuangan.js";
 import "./pages/gaji_karyawan.js";
+import "./pages/kasbon_karyawan.js";
+import "./pages/kasbon_form.js";
+import "./pages/cicilan_form.js";

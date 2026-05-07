@@ -79,7 +79,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                                 </a>
                             </li>
                             <li><a href="<?= base_url('whatsapp') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'whatsapp' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Tunjangan Karyawan</span></a></li>
-                            <li><a href="<?= base_url('log_whatsapp') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'log_whatsapp' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Kasbon Karyawan</span></a></li>
+                            <li><a href="<?= base_url('kasbon') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'log_whatsapp' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Kasbon Karyawan</span></a></li>
                         </ul>
                     </details>
                 </li>
