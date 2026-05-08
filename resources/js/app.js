@@ -40,3 +40,6 @@ import "./pages/gaji_karyawan.js";
 import "./pages/kasbon_karyawan.js";
 import "./pages/kasbon_form.js";
 import "./pages/cicilan_form.js";
+import "./pages/tunjangan_karyawan.js";
+import "./pages/transaksi_tunjangan.js";
+import "./pages/transaksi_tunjangan_detail.js";

@@ -68,8 +68,8 @@ class Gajikaryawan extends BaseController
     public function detailEstimasi($terapisId)
     {
         $detail = $this->Mriwayatgaji->getDetailPerhitungan($terapisId);
-        if ($detail) {
-            return $this->response->setJSON(['status' => 'success', 'data' => $detail]);
+        if (!empty($detail['terapis'])) {
+            return $this->response->setJSON(['status' => 'success', 'data' => $detail['terapis']]);
         }
         return $this->response->setJSON(['status' => 'error', 'message' => 'Data tidak ditemukan']);
     }
@@ -77,34 +77,61 @@ class Gajikaryawan extends BaseController
 
     public function prosesBayar()
     {
-        $terapisId = $this->request->getPost('terapis_id');
+        $terapisId = (int)$this->request->getPost('terapis_id');
+        $totalKehadiran = (int)$this->request->getPost('total_kehadiran');
+
+        $gajiData = $this->db->table('gaji_karyawan')->where('terapis_id', $terapisId)->get()->getRowArray();
+        if (empty($gajiData) || empty($gajiData['tipe_gaji'])) {
+            return redirect()->to('/gaji')->with('error', 'Pengaturan gaji belum diset untuk karyawan ini.');
+        }
+
+        $tipeGaji = $gajiData['tipe_gaji'] ?? 'bulanan';
+        $nominalGaji = isset($gajiData['nominal_gaji']) ? (int)$gajiData['nominal_gaji'] : 0;
+
+        $gajiPokokTotal = ($tipeGaji === 'harian') ? ($nominalGaji * $totalKehadiran) : $nominalGaji;
+
+        $totalPotongan = (int)($this->db->table('kasbon_karyawan')
+            ->selectSum('nominal', 'total')
+            ->where('terapis_id', $terapisId)
+            ->whereIn('status_potongan', ['belum_lunas', 'belum_dipotong'])
+            ->get()
+            ->getRowArray()['total'] ?? 0);
+
+        $totalTunjangan = (int)($this->db->table('transaksi_tunjangan')
+            ->selectSum('nominal', 'total')
+            ->where('terapis_id', $terapisId)
+            ->where('status_pembayaran', 'Belum Dibayar')
+            ->get()
+            ->getRowArray()['total'] ?? 0);
+
+        $gajiBersih = $gajiPokokTotal + $totalTunjangan - $totalPotongan;
+
         $dataGaji = [
             'terapis_id'       => $terapisId,
             'periode_bulan'    => date('n'),
             'periode_tahun'    => date('Y'),
-            'total_kehadiran'  => $this->request->getPost('total_kehadiran') ?? 0,
-            'gaji_pokok_total' => preg_replace('/[^0-9]/', '', $this->request->getPost('gaji_pokok_total')),
-            'total_tunjangan'  => preg_replace('/[^0-9]/', '', $this->request->getPost('total_tunjangan')),
-            'total_potongan'   => preg_replace('/[^0-9]/', '', $this->request->getPost('total_potongan')),
-            'gaji_bersih'      => preg_replace('/[^0-9]/', '', $this->request->getPost('gaji_bersih')),
+            'total_kehadiran'  => $totalKehadiran,
+            'gaji_pokok_total' => $gajiPokokTotal,
+            'total_tunjangan'  => $totalTunjangan,
+            'total_potongan'   => $totalPotongan,
+            'gaji_bersih'      => $gajiBersih,
             'tanggal_bayar'    => date('Y-m-d H:i:s'),
             'status'           => 'lunas'
         ];
 
         $this->db->transStart();
         $this->Mriwayatgaji->insert($dataGaji);
-        $this->db->table('kasbon')
+
+        $this->db->table('kasbon_karyawan')
             ->where('terapis_id', $terapisId)
-            ->where('status_potongan', 'belum_dipotong')
-            ->update(['status_potongan' => 'sudah_dipotong']);
+            ->whereIn('status_potongan', ['belum_lunas', 'belum_dipotong'])
+            ->update(['status_potongan' => 'lunas']);
 
-        // 4. Ubah status tindakan terapis menjadi 'sudah_dibayar' (Jika ada tabel tindakannya)
-        // $this->db->table('transaksi_tindakan')
-        //          ->where('terapis_id', $terapisId)
-        //          ->where('status_gaji', 'belum_dibayar')
-        //          ->update(['status_gaji' => 'sudah_dibayar']);
+        $this->db->table('transaksi_tunjangan')
+            ->where('terapis_id', $terapisId)
+            ->where('status_pembayaran', 'Belum Dibayar')
+            ->update(['status_pembayaran' => 'Sudah Cair']);
 
-        // 5. Selesaikan Transaction
         $this->db->transComplete();
 
         if ($this->db->transStatus() === FALSE) {

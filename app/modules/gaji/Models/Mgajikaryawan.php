@@ -35,7 +35,7 @@ class Mgajikaryawan extends Model
     protected $useTimestamps = true;
     protected $dateFormat    = 'datetime';
     protected $createdField  = 'created_at';
-    // protected $updatedField  = 'updated_at';
+    protected $updatedField  = '';
     // protected $deletedField  = 'deleted_at';
 
     // Validation
@@ -60,10 +60,13 @@ class Mgajikaryawan extends Model
     public function getPayrollEstimates($regionId = 'all')
     {
         $builder = $this->db->table('terapis t');
-        // SUB QUERY UNTUK JUMLAH TINDAKAN 
+        // SUB QUERY UNTUK JUMLAH TINDAKAN
         $subQueryTindakan = "(SELECT COUNT(h.id) FROM histories h WHERE FIND_IN_SET(t.id, h.terapis_id))";
-        $builder->select('
-        t.id as terapis_id, 
+        $subQueryKasbon = "(SELECT COALESCE(SUM(nominal), 0) FROM kasbon_karyawan WHERE terapis_id = t.id AND status_potongan IN ('belum_lunas', 'belum_dipotong'))";
+        $subQueryTunjangan = "(SELECT COALESCE(SUM(nominal), 0) FROM transaksi_tunjangan WHERE terapis_id = t.id AND status_pembayaran = 'Belum Dibayar')";
+
+        $builder->select(
+            't.id as terapis_id, 
         t.nama, 
         t.foto, 
         r.name as wilayah,
@@ -71,10 +74,10 @@ class Mgajikaryawan extends Model
         COALESCE(pg.tipe_gaji, "Belum Diset") as tipe_gaji,
         COALESCE(pg.nominal_gaji, 0) as nominal_gaji,
         ' . $subQueryTindakan . ' as jml_tindakan, 
-        0 as total_kasbon
-    ', false);
+        ' . $subQueryKasbon . ' as total_kasbon,
+        ' . $subQueryTunjangan . ' as total_tunjangan'
+        , false);
 
-        // (SELECT SUM(nominal) FROM kasbon WHERE terapis_id = t.id AND status_potongan = "belum_dipotong") as total_kasbon
         $builder->join('gaji_karyawan pg', 'pg.terapis_id = t.id', 'left');
         $builder->join('regions r', 'r.id = t.region_id', 'left');
         $builder->join('jabatan j', 'j.id = t.jabatan_id', 'left');
@@ -113,15 +116,19 @@ class Mgajikaryawan extends Model
     public function getDetailPerhitungan($id)
     {
         $subQueryTindakan = "(SELECT COUNT(h.id) FROM histories h WHERE FIND_IN_SET(t.id, h.terapis_id))";
+        $subQueryKasbon = "(SELECT COALESCE(SUM(nominal), 0) FROM kasbon_karyawan WHERE terapis_id = t.id AND status_potongan IN ('belum_lunas', 'belum_dipotong'))";
+        $subQueryTunjangan = "(SELECT COALESCE(SUM(nominal), 0) FROM transaksi_tunjangan WHERE terapis_id = t.id AND status_pembayaran = 'Belum Dibayar')";
 
         $builder = $this->db->table('terapis t');
-        $builder->select('
-            t.id, 
+        $builder->select(
+            't.id, 
             t.nama, 
             COALESCE(pg.tipe_gaji, "Belum Diset") as tipe_gaji, 
             COALESCE(pg.nominal_gaji, 0) as nominal_gaji,
-            ' . $subQueryTindakan . ' as jml_tindakan
-        ', false);
+            ' . $subQueryTindakan . ' as jml_tindakan,
+            ' . $subQueryKasbon . ' as total_kasbon,
+            ' . $subQueryTunjangan . ' as total_tunjangan'
+        , false);
         $builder->join('gaji_karyawan pg', 'pg.terapis_id = t.id', 'left');
 
         // Ambil data spesifik 1 orang yang diklik
@@ -130,9 +137,7 @@ class Mgajikaryawan extends Model
         $terapis = $builder->get()->getRowArray();
 
         return [
-            'terapis'   => $terapis,
-            'kasbon'    => [], // Dikosongkan dulu untuk besok
-            'tunjangan' => []  // Dikosongkan dulu untuk besok
+            'terapis'   => $terapis
         ];
     }
 }

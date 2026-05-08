@@ -57,6 +57,72 @@ const setupGajiPage = () => {
     $(document).on('keyup', '.input-rupiah', function () {
         this.value = formatRupiah(this.value, 'Rp ');
     });
+
+    const formBayarGaji = document.getElementById('formBayarGaji');
+    if (formBayarGaji) {
+        formBayarGaji.addEventListener('submit', handleProsesBayarSubmit);
+    }
+};
+
+const showSwalError = (message) => {
+    if (window.Swal?.fire) {
+        Swal.fire({ icon: 'error', title: 'Validasi Gagal', text: message });
+        return;
+    }
+    alert(message);
+};
+
+const confirmSwal = (message) => {
+    if (window.Swal?.fire) {
+        return Swal.fire({
+            icon: 'question',
+            title: 'Konfirmasi Proses Gaji',
+            text: message,
+            showCancelButton: true,
+            confirmButtonText: 'Ya, proses sekarang',
+            cancelButtonText: 'Batal'
+        });
+    }
+
+    return Promise.resolve({ isConfirmed: window.confirm(message) });
+};
+
+const handleProsesBayarSubmit = (event) => {
+    event.preventDefault();
+    const form = event.target;
+    const terapisId = form.querySelector('[name="terapis_id"]').value;
+    const attendanceValue = form.querySelector('[name="total_kehadiran"]').value;
+    const gajiBersih = form.querySelector('[name="gaji_bersih"]').value;
+    const tipeGaji = form.dataset.tipeGaji || 'bulanan';
+    const totalKehadiran = parseInt(attendanceValue, 10) || 0;
+
+    if (!terapisId) {
+        showSwalError('Terapis belum terpilih. Silakan ulangi proses gaji.');
+        return;
+    }
+
+    if (totalKehadiran < 0) {
+        showSwalError('Total kehadiran tidak boleh kurang dari 0.');
+        return;
+    }
+
+    if (tipeGaji === 'harian' && totalKehadiran <= 0) {
+        showSwalError('Masukkan total kehadiran minimal 1 untuk gaji harian.');
+        return;
+    }
+
+    if (!gajiBersih || gajiBersih.trim() === '' || gajiBersih.trim() === 'Rp 0') {
+        showSwalError('Gaji bersih belum terhitung. Pastikan data kehadiran dan perhitungan sudah benar.');
+        return;
+    }
+
+    confirmSwal(`Yakin ingin memproses gaji ini?\n\nGaji Bersih: ${gajiBersih}`)
+        .then((result) => {
+            if (result.isConfirmed) {
+                form.removeEventListener('submit', handleProsesBayarSubmit);
+                form.submit();
+            }
+        });
 };
 
 // 4. FUNGSI GLOBAL (Exposed untuk onclick HTML)
@@ -100,18 +166,38 @@ window.bukaOffcanvas = (terapisId) => {
         .then(response => response.json())
         .then(res => {
             if (res.status === 'success') {
-                const data = res.data.terapis;
+                const data = res.data;
                 document.getElementById('oc_terapis_id').value = data.id;
                 document.getElementById('oc_nama_terapis').innerText = data.nama;
 
-                let nominalGajiPokok = data.nominal_gaji || 0;
-                let totalPotongan = 0;
-                let gajiBersih = parseInt(nominalGajiPokok) - totalPotongan;
+                const tipeGaji = data.tipe_gaji || 'bulanan';
+                const nominalGaji = parseInt(data.nominal_gaji) || 0;
+                const totalKasbon = parseInt(data.total_kasbon) || 0;
+                const totalTunjangan = parseInt(data.total_tunjangan) || 0;
+                const attendanceInput = document.getElementById('oc_kehadiran');
+                const gajiPokokInput = document.getElementById('oc_gaji_pokok');
+                const tunjanganInput = document.getElementById('oc_tunjangan');
+                const potonganInput = document.getElementById('oc_potongan');
+                const bersihInput = document.getElementById('oc_bersih');
 
-                document.getElementById('oc_gaji_pokok').value = formatRupiah(nominalGajiPokok);
-                document.getElementById('oc_potongan').value = formatRupiah(totalPotongan);
-                document.getElementById('oc_bersih').value = formatRupiah(gajiBersih);
+                const renderPayroll = () => {
+                    const attendance = parseInt(attendanceInput.value) || 0;
+                    const gajiPokokTotal = tipeGaji === 'harian'
+                        ? nominalGaji * attendance
+                        : nominalGaji;
 
+                    const gajiBersih = gajiPokokTotal + totalTunjangan - totalKasbon;
+
+                    gajiPokokInput.value = formatRupiah(gajiPokokTotal);
+                    tunjanganInput.value = formatRupiah(totalTunjangan);
+                    potonganInput.value = formatRupiah(totalKasbon);
+                    bersihInput.value = formatRupiah(gajiBersih);
+                };
+
+                attendanceInput.addEventListener('input', renderPayroll);
+                renderPayroll();
+
+                form.dataset.tipeGaji = tipeGaji;
                 loading.classList.add('hidden');
                 form.classList.remove('hidden');
             }

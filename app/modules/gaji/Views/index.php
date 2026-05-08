@@ -1,7 +1,7 @@
 <?= $this->extend('layout/layout') ?>
 <?= $this->section('content') ?>
 
-<div class="p-6 bg-slate-50 min-h-screen">
+<div id="gajiPage" class="p-6 bg-slate-50 min-h-screen">
     <div class="mb-6 flex justify-between items-center">
         <div>
             <h1 class="text-2xl font-bold text-slate-800">Analisis & Kelola Gaji</h1>
@@ -13,6 +13,11 @@
     <?php if (session()->getFlashdata('success')) : ?>
         <div class="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 border border-green-200">
             <?= session()->getFlashdata('success') ?>
+        </div>
+    <?php endif; ?>
+    <?php if (session()->getFlashdata('error')) : ?>
+        <div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 border border-red-200">
+            <?= session()->getFlashdata('error') ?>
         </div>
     <?php endif; ?>
 
@@ -61,7 +66,7 @@
                                             <span class="text-slate-600 font-medium">Rp <?= number_format($row['nominal_gaji'], 0, ',', '.') ?></span>
                                         <?php endif; ?>
                                         <!-- Tombol Gear Modal Setting -->
-                                        <button onclick="bukaModalSetting(<?= $row['terapis_id'] ?>, '<?= $row['tipe_gaji'] ?>', <?= $row['nominal_gaji'] ?>)" class="text-slate-400 hover:text-blue-600 transition">
+                                        <button onclick="bukaModalSetting(<?= $row['terapis_id'] ?>, '<?= $row['tipe_gaji'] ?>', <?= $row['nominal_gaji'] ?? 0 ?>)" class="text-slate-400 hover:text-blue-600 transition">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -120,37 +125,6 @@
     </div>
 </div>
 
-<!-- MODAL SETTING GAJI (Posisinya Fixed di atas layar) -->
-<div id="modalSetting" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-slate-900/50 backdrop-blur-sm transition-opacity">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden transform scale-95 transition-transform" id="modalSettingContent">
-        <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
-            <h3 class="text-lg font-bold text-slate-800">Atur Gaji Dasar</h3>
-            <button onclick="tutupModalSetting()" class="text-slate-400 hover:text-slate-600">&times;</button>
-        </div>
-        <form action="<?= base_url('penggajian/setting/save') ?>" method="POST" class="p-6">
-            <input type="hidden" name="terapis_id" id="set_terapis_id">
-
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-slate-700 mb-1">Tipe Gaji</label>
-                <select name="tipe_gaji" id="set_tipe_gaji" class="w-full border-slate-200 rounded-lg focus:ring-blue-500 focus:border-blue-500">
-                    <option value="harian">Harian (Per Kehadiran)</option>
-                    <option value="bulanan">Bulanan (Gaji Tetap)</option>
-                </select>
-            </div>
-
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-slate-700 mb-1">Nominal (Rp)</label>
-                <input type="text" name="nominal_gaji" id="set_nominal_gaji" class="w-full border-slate-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 input-rupiah">
-            </div>
-
-            <div class="flex justify-end gap-3">
-                <button type="button" onclick="tutupModalSetting()" class="px-4 py-2 text-sm text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200">Batal</button>
-                <button type="submit" class="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700">Simpan Pengaturan</button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <!-- OFFCANVAS PROSES GAJI (Sliding dari Kanan) -->
 <div id="offcanvasProses" class="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-white shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
     <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
@@ -166,7 +140,8 @@
         </div>
 
         <!-- Form Konten -->
-        <form id="formBayarGaji" action="<?= base_url('penggajian/proses_bayar') ?>" method="POST" class="hidden">
+        <form id="formBayarGaji" action="<?= base_url('gaji/proses_bayar') ?>" method="POST" class="hidden">
+            <?= csrf_field() ?>
             <input type="hidden" name="terapis_id" id="oc_terapis_id">
 
             <div class="mb-6 p-4 bg-slate-50 rounded-lg border border-slate-100">
@@ -187,6 +162,10 @@
                 <div class="flex justify-between">
                     <span class="text-slate-500">Gaji Pokok / Dasar</span>
                     <input type="text" name="gaji_pokok_total" id="oc_gaji_pokok" class="text-right font-medium text-slate-800 border-none bg-transparent p-0 w-1/2 focus:ring-0" readonly>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-500 text-indigo-700">Total Tunjangan</span>
+                    <input type="text" name="total_tunjangan" id="oc_tunjangan" class="text-right font-medium text-indigo-700 border-none bg-transparent p-0 w-1/2 focus:ring-0" readonly>
                 </div>
                 <div class="flex justify-between">
                     <span class="text-slate-500 text-red-500">Potongan Kasbon</span>

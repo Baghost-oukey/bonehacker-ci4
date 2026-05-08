@@ -284,3 +284,31 @@ $routes->group('kasbon', ['namespace' => 'App\modules\kasbon_karyawan\Controller
     $routes->post('store', 'Kasbonkaryawan::store'); 
     $routes->post('bayar', 'Kasbonkaryawan::bayar');
 });
+
+
+// Rotes - tunjangan karyawan
+$routes->group('tunjangan-karyawan', ['namespace' => 'App\modules\tunjangan_karyawan\Controllers'], function($routes) {
+    $routes->get('/', 'Tunjangankaryawan::index');
+    $routes->post('fetch', 'Tunjangankaryawan::fetch');
+    $routes->post('store', 'Tunjangankaryawan::store');
+    $routes->delete('delete/(:num)', 'Tunjangankaryawan::delete/$1');
+});
+
+// Rutes - transaksi tunjangan
+$routes->group('transaksi-tunjangan', ['namespace' => 'App\modules\transaksi_tunjangan\Controllers'], function($routes) {
+    $routes->get('/', 'Transaksitunjangan::index');
+    $routes->post('fetch', 'Transaksitunjangan::fetch');
+    $routes->get('detail/(:num)', 'Transaksitunjangan::detail/$1');
+    $routes->post('store', 'Transaksitunjangan::store');
+
+});
+
+// =====================================================================
+// ROUTES MODUL PENGGAJIAN (PAYROLL)
+// =====================================================================
+$routes->group('detail-gaji', ['namespace' => 'App\modules\detail_gaji\Controllers'], function($routes) {
+    $routes->get('/', 'Detailgaji::index');
+    $routes->get('review/(:num)', 'Detailgaji::review/$1');
+    $routes->post('proses_simpan', 'Detailgaji::proses_simpan');
+
+});

@@ -1,18 +1,21 @@
 <?php
 
-namespace App\Models;
+namespace App\modules\tunjangan_karyawan\Models;
 
 use CodeIgniter\Model;
 
 class Mtunjangankaryawan extends Model
 {
-    protected $table            = 'mtunjangankaryawans';
+    protected $table            = 'tunjangan_karyawan';
     protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = [];
+    protected $allowedFields    = [
+        'nama_tunjangan',
+        'kategori'
+    ];
 
     protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;
@@ -21,7 +24,7 @@ class Mtunjangankaryawan extends Model
     protected array $castHandlers = [];
 
     // Dates
-    protected $useTimestamps = false;
+    protected $useTimestamps = true;
     protected $dateFormat    = 'datetime';
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
@@ -43,4 +46,11 @@ class Mtunjangankaryawan extends Model
     protected $afterFind      = [];
     protected $beforeDelete   = [];
     protected $afterDelete    = [];
+
+    public function getByKategori(string $kategori): array
+    {
+        return $this->where('kategori', $kategori)
+            ->orderBy('nama_tunjangan', 'ASC')
+            ->findAll();
+    }
 }
