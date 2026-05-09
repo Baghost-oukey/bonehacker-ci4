@@ -1,6 +1,6 @@
 <?php
 
-namespace App\modules\statisktik\Models;
+namespace App\modules\statistik\Models;
 
 use CodeIgniter\Model;
 

@@ -1,11 +1,11 @@
 <?php
 
-namespace App\modules\statistikrecource\Models;
+namespace App\modules\statistikresource\Models;
 
 use CodeIgniter\Model;
 use PhpOffice\PhpSpreadsheet\Calculation\FunctionArray;
 
-class MstatistikRecource extends Model
+class MStatistikResource extends Model
 {
     protected $table            = 'resources';
     protected $primaryKey       = 'id';

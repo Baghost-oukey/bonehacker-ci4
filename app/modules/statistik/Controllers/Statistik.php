@@ -1,10 +1,10 @@
 <?php
 
-namespace App\modules\statisktik\Controllers;
+namespace App\modules\statistik\Controllers;
 
 use App\Controllers\BaseController;
 use App\modules\region\Models\MRegion;
-use App\modules\statisktik\Models\MStatistik;
+use App\modules\statistik\Models\MStatistik;
 use CodeIgniter\HTTP\ResponseInterface;
 
 class Statistik extends BaseController
@@ -36,7 +36,7 @@ class Statistik extends BaseController
             'msg'             => $msg ?: $this->session->getFlashdata('message') ?: ['', '', '']
         ];
 
-        return view('App\modules\statisktik\Views\views_statistik', $data);
+        return view('App\modules\statistik\Views\views_statistik', $data);
     }
 
     // public function fetch_statistics()

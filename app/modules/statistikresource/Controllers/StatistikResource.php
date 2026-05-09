@@ -1,12 +1,12 @@
 <?php
 
-namespace App\modules\statistikrecource\Controllers;
+namespace App\modules\statistikresource\Controllers;
 
 use App\Controllers\BaseController;
-use App\modules\statistikrecource\Models\MstatistikRecource;
+use App\modules\statistikresource\Models\MStatistikResource;
 use CodeIgniter\HTTP\ResponseInterface;
 
-class StatistikRecource extends BaseController
+class StatistikResource extends BaseController
 {
 
 
@@ -14,7 +14,7 @@ class StatistikRecource extends BaseController
 
     public function __construct()
     {
-        $this->model_marketing = new MstatistikRecource();
+        $this->model_marketing = new MStatistikResource();
     }
 
     public function index()
@@ -30,7 +30,7 @@ class StatistikRecource extends BaseController
         ];
         $data['wilayah'] = $db->table('regions')->get()->getResult();
         $data['title'] = "Statistik Media Sosial";
-        return view('App\modules\statistikrecource\Views\views_statistik_resource', $data);
+        return view('App\modules\statistikresource\Views\views_statistik_resource', $data);
     }
 
     public function get_marketing_data()

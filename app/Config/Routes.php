@@ -72,8 +72,8 @@ $routes->group('transaksi', ['namespace' => 'App\Modules\Transaksi\Controllers',
   $routes->post('delete', 'TransaksiController::delete');
 });
 
-// Statistik => Ada Typo
-$routes->group('statistik', ['namespace' => 'App\Modules\statisktik\Controllers', 'filter' => 'auth'], function ($routes) {
+// Statistik
+$routes->group('statistik', ['namespace' => 'App\Modules\statistik\Controllers', 'filter' => 'auth'], function ($routes) {
   $routes->get('', 'Statistik::index');
   $routes->get('fetch_statistics', 'Statistik::fetch_statistics');
   $routes->get('fetch_analysis', 'Statistik::fetch_analysis');
@@ -107,9 +107,9 @@ $routes->group('statistikdaerah', ['namespace' => 'App\Modules\statistikdaerah\C
 });
 
 // Statistik-Sumber Daya
-$routes->group('statistikresource', ['namespace' => 'App\Modules\statistikrecource\Controllers', 'filter' => 'auth'], function ($routes) {
-  $routes->get('', 'statistikrecource::index');
-  $routes->get('get_marketing_data', 'statistikrecource::get_marketing_data');
+$routes->group('statistikresource', ['namespace' => 'App\Modules\statistikresource\Controllers', 'filter' => 'auth'], function ($routes) {
+  $routes->get('', 'StatistikResource::index');
+  $routes->get('get_marketing_data', 'StatistikResource::get_marketing_data');
 });
 
 // Jabatan
