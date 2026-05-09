@@ -56,11 +56,14 @@ class MRegion extends Model
             LEFT JOIN patients as p ON p.region_id = r.id ";
     }
 
-    public function getData(array $column = null)
+    public function getData(array $column = null, $allowed_regions = null)
     {
         $builder = $this->builder();
         if (isset($column)) {
             $builder->select($column);
+        }
+        if (!empty($allowed_regions)) {
+            $builder->whereIn('id', $allowed_regions);
         }
         return $builder->get()->getResult();
     }

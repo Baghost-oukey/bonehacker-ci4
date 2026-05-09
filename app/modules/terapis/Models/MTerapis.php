@@ -56,7 +56,7 @@ class MTerapis extends Model
     protected $beforeDelete   = [];
     protected $afterDelete    = [];
 
-    public function getTerapis($region = null)
+    public function getTerapis($region = null, $allowed_regions = null)
     {
         $builder = $this->db->table($this->table . ' t');
 
@@ -68,6 +68,9 @@ class MTerapis extends Model
             $builder->where('t.region_id', $region);
         }
 
+        if (!empty($allowed_regions)) {
+            $builder->whereIn('t.region_id', $allowed_regions);
+        }
 
         return $builder;
     }
@@ -98,9 +101,13 @@ class MTerapis extends Model
         return $this->delete($id);
     }
 
-    public function get_regions()
+    public function get_regions($allowed_regions = null)
     {
-        return $this->db->table('regions')->select('id, name')->get()->getResult();
+        $builder = $this->db->table('regions')->select('id, name');
+        if (!empty($allowed_regions)) {
+            $builder->whereIn('id', $allowed_regions);
+        }
+        return $builder->get()->getResult();
     }
 
     public function get_jabatan()

@@ -34,7 +34,7 @@ class TerapisController extends BaseController
     $role = $this->session->get('role');
 
     if ($method !== 'public_info' && $method !== 'profil_saya') {
-      if ($role !== 'superadmin' && $role !== 'owner') {
+      if ($role !== 'superadmin' && $role !== 'owner' && $role !== 'admin') {
         $this->session->setFlashdata('message', ['danger', 'You do not have access to this page']);
         return redirect()->to(base_url())->send();
       }
@@ -45,17 +45,20 @@ class TerapisController extends BaseController
   {
     //
 
+    $role = $this->session->get('role');
+    $allowed_regions = ($role !== 'superadmin') ? $this->session->get('region_patient') : null;
+
     $data = [
       'realname' => $this->session->get('realname'),
       'base_url' => base_url(),
       'current_segment' => $this->request->getUri()->getSegment(1),
       'title' => 'Terapis',
-      'regions' => $this->model_terapis->get_regions(),
+      'regions' => $this->model_terapis->get_regions($allowed_regions),
       'jabatan' => $this->model_jabatan->getData(),
       'msg' => $this->session->getFlashdata('message'),
-      'role' => $this->session->get('role'),
+      'role' => $role,
     ];
-    $data['wilayah'] = $this->model_region->getData();
+    $data['wilayah'] = $this->model_region->getData(null, $allowed_regions);
 
     return view('App\modules\terapis\Views\index', $data);
   }
@@ -63,7 +66,10 @@ class TerapisController extends BaseController
   public function fetch()
   {
     $region = $this->request->getPost('region');
-    $queryBuilder = $this->model_terapis->getTerapis($region);
+    $role = $this->session->get('role');
+    $allowed_regions = ($role !== 'superadmin') ? $this->session->get('region_patient') : null;
+
+    $queryBuilder = $this->model_terapis->getTerapis($region, $allowed_regions);
 
     $datatables = new \Ngekoding\CodeIgniterDataTables\DataTables($queryBuilder, '4');
 
