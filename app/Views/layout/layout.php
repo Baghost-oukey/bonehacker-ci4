@@ -1,6 +1,25 @@
 <!DOCTYPE html>
 <html lang="id">
 
+<?php
+$isDevEnvironment = ENVIRONMENT === 'development';
+$viteDevServer = rtrim((string) (env('vite.devServerUrl') ?? 'http://localhost:5173'), '/');
+$shouldUseViteDevServer = false;
+
+if ($isDevEnvironment) {
+    $viteHost = (string) parse_url($viteDevServer, PHP_URL_HOST);
+    $vitePort = (int) (parse_url($viteDevServer, PHP_URL_PORT) ?: 5173);
+
+    if ($viteHost !== '') {
+        $viteSocket = @fsockopen($viteHost, $vitePort, $errno, $errstr, 0.15);
+        if (is_resource($viteSocket)) {
+            $shouldUseViteDevServer = true;
+            fclose($viteSocket);
+        }
+    }
+}
+?>
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no">
@@ -9,30 +28,21 @@
 
     <title><?= $title ?? 'Dashboard' ?> | Bonehacker</title>
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
-    <link rel="stylesheet" href="<?= base_url('assets/modules/bootstrap/css/bootstrap.min.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/modules/fontawesome/css/all.min.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/modules/datatables/datatables.min.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('assets/modules/datatables/DataTables-1.10.16/css/dataTables.bootstrap4.min.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/modules/toastr/css/toastr.min.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('assets/css/style.min.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('assets/css/components.min.css') ?>">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css">
-    <!-- Buat Aktifkan Lib notif yang modern -->
-    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/css/iziToast.min.css"> -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+    <link href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css" rel="stylesheet" type="text/css" />
+    <?php if ($shouldUseViteDevServer): ?>
+        <link rel="stylesheet" href="<?= $viteDevServer ?>/resources/css/app.css">
+    <?php else: ?>
+        <link rel="stylesheet"
+            href="<?= base_url('build/assets/app.css') . '?v=' . (is_file(FCPATH . 'build/assets/app.css') ? filemtime(FCPATH . 'build/assets/app.css') : time()) ?>">
+    <?php endif; ?>
 
     <style>
-        .dataTables_wrapper .dataTables_filter {
-            float: right;
-        }
-
-        .dataTables_wrapper .dataTables_length {
-            display: inline-block;
-            margin-right: 20px;
-        }
-
         .export-hidden {
             display: none;
         }
@@ -40,31 +50,61 @@
 </head>
 
 <body>
-    <div id="app">
-        <div class="main-wrapper main-wrapper-1">
-            <div class="navbar-bg"></div>
+    <div id="app" class="min-h-screen flex bg-slate-50 text-slate-900">
 
-            <?= $this->include('App\Views\layout\headers') ?>
+        <!-- ================= SIDEBAR ================= -->
+        <aside id="sidebar" class="
+        fixed inset-y-0 left-0 z-30 w-64 bg-white border-r border-slate-200
+        transform -translate-x-full transition-transform duration-300 ease-in-out
 
-            <div class="main-content">
-                <?= $this->renderSection('content') ?>
+        lg:static lg:translate-x-0 lg:shrink-0
+    ">
+            <div class="h-full overflow-y-auto">
+                <?= $this->include('App\Views\layout\sidebar') ?>
             </div>
+        </aside>
 
-            <?= $this->include('App\Views\layout\sidebar') ?>
-            <?= $this->include('App\Views\layout\footer') ?>
+        <!-- ================= BACKDROP ================= -->
+        <div id="sidebarBackdrop" class="fixed inset-0 z-20 hidden bg-black/40 lg:hidden"></div>
+
+        <!-- ================= MAIN ================= -->
+        <div class="flex flex-col flex-1 min-h-screen">
+
+            <!-- HEADER -->
+            <header class="sticky top-0 z-20 bg-white border-b border-slate-200">
+
+                <div class="flex items-center justify-between px-4 h-14">
+
+                    <!-- TOGGLE BUTTON MOBILE -->
+                    <button id="sidebarToggle"
+                        class="lg:hidden inline-flex items-center justify-center rounded-md p-2 text-slate-600 hover:bg-slate-100">
+                        <i class="fas fa-bars text-lg"></i>
+                    </button>
+
+                    <!-- HEADER CONTENT -->
+                    <div class="flex-1">
+                        <?= $this->include('App\Views\layout\header') ?>
+                    </div>
+
+                </div>
+            </header>
+
+            <!-- CONTENT -->
+            <main class="flex-1 overflow-y-auto p-4 md:p-6">
+                <?= $this->renderSection('content') ?>
+            </main>
+
         </div>
+
     </div>
 
     <script src="<?= base_url('assets/modules/jquery.min.js') ?>"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script src="<?= base_url('assets/modules/bootstrap/js/bootstrap.min.js') ?>"></script>
     <script src="<?= base_url('assets/modules/nicescroll/jquery.nicescroll.min.js') ?>"></script>
-    <script src="<?= base_url('assets/js/stisla.js') ?>"></script>
     <script src="<?= base_url('assets/modules/datatables/datatables.min.js') ?>"></script>
     <script src="<?= base_url('assets/modules/toastr/js/toastr.min.js') ?>"></script>
     <script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
-    <script src="<?= base_url('assets/js/scripts.js') ?>"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -74,13 +114,47 @@
     <!-- Kalo mau pakai tag diaktifkan -->
     <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify"></script>
     <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.polyfills.min.js"></script>
+    <?php if ($shouldUseViteDevServer): ?>
+        <script type="module" src="<?= $viteDevServer ?>/@vite/client"></script>
+        <script type="module" src="<?= $viteDevServer ?>/resources/js/app.js"></script>
+    <?php else: ?>
+        <script type="module"
+            src="<?= base_url('build/assets/app.js') . '?v=' . (is_file(FCPATH . 'build/assets/app.js') ? filemtime(FCPATH . 'build/assets/app.js') : time()) ?>"></script>
+    <?php endif; ?>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const sidebar = document.getElementById("sidebar");
+            const backdrop = document.getElementById("sidebarBackdrop");
+            const toggle = document.getElementById("sidebarToggle");
+
+            const openSidebar = () => {
+                sidebar.classList.remove("-translate-x-full");
+                backdrop.classList.remove("hidden");
+                document.body.style.overflow = "hidden";
+            };
+
+            const closeSidebar = () => {
+                sidebar.classList.add("-translate-x-full");
+                backdrop.classList.add("hidden");
+                document.body.style.overflow = "";
+            };
+
+            toggle?.addEventListener("click", openSidebar);
+            backdrop?.addEventListener("click", closeSidebar);
+
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Escape") closeSidebar();
+            });
+        });
+    </script>
 
     <script>
         (function() {
             var csrfName = $('meta[name="csrf-token-name"]').attr('content');
 
             function refreshCsrfToken() {
-                $.get('<?= site_url('auth/get_csrf'); ?>', function(data) {
+                $.get('<?= site_url('auth/get_csrf') ?>', function(data) {
                     $('meta[name="csrf-token-hash"]').attr('content', data.token);
                     $('input[name="' + csrfName + '"]').val(data.token);
                     $.ajaxSetup({

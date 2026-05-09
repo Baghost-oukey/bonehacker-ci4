@@ -34,7 +34,7 @@ class Statistikgender extends BaseController
             'base_url'        => base_url(),
             'current_segment' => $this->request->getUri()->getSegment(1),
             'title'           => 'Statistik Gender',
-            'wilayah'         => $this->model_statistic_gender->getRegions(), 
+            'wilayah'         => $this->model_statistic_gender->getRegions(),
             'msg'             => $msg ?? ['', '', '']
         ];
         return view('App\modules\statistikgender\Views\views_statistik_gender', $data);
@@ -42,11 +42,11 @@ class Statistikgender extends BaseController
 
     public function fetch_statistics()
     {
-        $startDate = $this->request->getGet('start_date');
-        $endDate   = $this->request->getGet('end_date');
-        $filter    = $this->request->getGet('filter') ?? 'daily';
-        // $regid     = $this->request->getGet('region_id');
-        $regionId  = (!empty($regionId)) ? (int)$regionId : null;
+        $startDate       = $this->request->getGet('start_date');
+        $endDate         = $this->request->getGet('end_date');
+        $filter          = $this->request->getGet('filter') ?? 'daily';
+        $getRegionId     = $this->request->getVar('region_id');
+        $regionId = (!empty($getRegionId) && $getRegionId !== "null" && $getRegionId !== "") ? (int)$getRegionId : null;
         $data = $this->model_statistic_gender->get_statistics($startDate, $endDate, $regionId, $filter);
         return $this->response->setJSON($data);
     }

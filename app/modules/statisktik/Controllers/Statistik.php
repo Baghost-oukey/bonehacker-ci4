@@ -53,8 +53,9 @@ class Statistik extends BaseController
     {
         $startDate = $this->request->getGet('start_date');
         $endDate   = $this->request->getGet('end_date');
+        $regionId  = $this->request->getGet('region_id');
+        $result = $this->model_statistik->get_analisis($startDate, $endDate, $regionId);
 
-        $result = $this->model_statistik->get_analisis($startDate, $endDate);
         $summary = [
             'total' => 0,
             'baru'  => 0,
@@ -70,10 +71,6 @@ class Statistik extends BaseController
 
         $diff = (strtotime($endDate) - strtotime($startDate)) / (60 * 60 * 24) + 1;
         $summary['avg_per_day'] = $diff > 0 ? round($summary['total'] / $diff, 1) : 0;
-
-        // $filter    = $this->request->getGet('filter') ?? 'daily';
-        // $regid     = $this->request->getGet('region_id');
-        // $data = $this->model_statistik->get_statistics($startDate, $endDate, $regid, $filter);
 
         return $this->response->setJSON([
             'summary' => $summary,

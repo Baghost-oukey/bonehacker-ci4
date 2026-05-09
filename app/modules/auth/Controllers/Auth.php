@@ -21,7 +21,7 @@ class Auth extends BaseController
     {
         //
         if (session()->get('isLogin')) {
-            return redirect()->to(base_url('beranda_views'));
+            return redirect()->to(base_url('beranda'));
         }
 
         $data = [
@@ -44,26 +44,6 @@ class Auth extends BaseController
         // $user = $this->authModel->verifyLogin((string) $username, (string)$password);
         $user = $this->authModel->where('username', $username)->first();
 
-        // Lama
-        // if ($user) {
-        //     $sessionData = [
-        //         'isLogin'         => true,
-        //         'userId'          => $user->id,
-        //         'realname'        => $user->realname,
-        //         'role'            => $user->role,
-        //         'regions_patient' => $user->regions_patient,
-        //     ];
-        //     session()->set($sessionData);
-
-        //     session()->regenerate();
-
-        //     return redirect()->to(base_url('beranda_views'));
-        // } else {
-        //     $params = ['1', 'error', 'Nama pengguna dan kata sandi tidak sesuai', ''];
-        //     session()->setFlashdata('pesan', $params);
-
-        //     return redirect()->to(base_url('auth'));
-        // }
         if ($user) {
             $isPasswordCorrect = false;
             if (password_verify($password, $user->password)) {
@@ -131,7 +111,7 @@ class Auth extends BaseController
                 session()->set($sessionData);
                 session()->regenerate();
 
-                return redirect()->to(base_url('beranda_views'));
+                return redirect()->to(base_url('beranda'));
             }
         }
 

@@ -91,13 +91,10 @@ class MHistory extends Model
         $builder->select('h.*');
         $builder->select('GROUP_CONCAT(DISTINCT ct.name ORDER BY ct.name SEPARATOR ", ") AS complaint_names');
         $builder->select('GROUP_CONCAT(DISTINCT mt.name ORDER BY mt.name SEPARATOR ", ") AS medhis_names');
-
         $builder->join('complaint_tags ct', "FIND_IN_SET(ct.id, h.complaint) > 0", 'left');
         $builder->join('medhis_tags mt', "FIND_IN_SET(mt.id, h.medhis) > 0", 'left');
-
         $builder->where('h.patient_id', $id);
         $builder->where('h.is_delete', 0);
-
         if (!empty($options['where_like'])) {
             $builder->groupStart();
             foreach ($options['where_like'] as $like) {
@@ -105,18 +102,15 @@ class MHistory extends Model
             }
             $builder->groupEnd();
         }
-
         $builder->groupBy('h.id');
-
         $order = $options['order'] ?? 'id';
         $mode  = $options['mode'] ?? 'desc';
         $builder->orderBy($order, $mode);
-
         $limit  = $options['limit'] ?? 10;
         $offset = $options['offset'] ?? 0;
-
         return $builder->get($limit, $offset)->getResult();
     }
+
 
     public function getTotalData($id, $option = [])
     {
@@ -126,7 +120,6 @@ class MHistory extends Model
         $builder->join('medhis_tags mt', "FIND_IN_SET(mt.id, h.medhis) > 0", 'left');
         $builder->where('h.patient_id', $id);
         $builder->where('h.is_delete', 0);
-
         if (!empty($option['where_like'])) {
             $builder->groupStart();
             foreach ($option['where_like'] as $like) {
@@ -136,6 +129,7 @@ class MHistory extends Model
         return $builder->get()->getRow()->total ?? 0;
     }
 
+
     public function count_histories_by_patient_id($patient_id)
     {
         return $this->builder()
@@ -144,10 +138,12 @@ class MHistory extends Model
             ->countAllResults();
     }
 
+
     public function getById($id)
     {
         return $this->where('id', $id)->first();
     }
+
 
     public function getActiveTerapis()
     {
@@ -157,6 +153,7 @@ class MHistory extends Model
             ->get()->getResult();
     }
 
+
     public function getSelectedTerapis($history_id)
     {
         return $this->db->table('terapis')
@@ -165,12 +162,15 @@ class MHistory extends Model
             ->where('histories.id', $history_id)
             ->get()->getResult();
     }
+
+
     public function getKejantananById($id_history)
     {
         return $this->db->table('kejantanan')
             ->where('history_id', $id_history)
             ->get()->getRow();
     }
+
 
     public function getKeterangan($patient_id)
     {
@@ -180,11 +180,13 @@ class MHistory extends Model
             ->first();
     }
 
+
     public function getComplaintTags($ids)
     {
         if (empty($ids)) return [];
         return $this->db->table('complaint_tags')->whereIn('id', $ids)->get()->getResultArray();
     }
+
 
     public function getMedhisTags($ids)
     {
@@ -192,40 +194,33 @@ class MHistory extends Model
         return $this->db->table('medhis_tags')->whereIn('id', $ids)->get()->getResultArray();
     }
 
+
     public function getResultTags($ids)
     {
         if (empty($ids)) return [];
         return $this->db->table('result_tags')->whereIn('id', $ids)->get()->getResultArray();
     }
 
-    // Fungsi Transaksi Kejantanan (Gaya CI4)
+
     public function updateKejantanan($id_history, $kejantanan_data, $status_kejantanan = 'tidak')
     {
         $this->db->transStart();
-
-        // HAPUS BARIS $this->update($id_history, $data); 
-        // Kita gak mau ganggu data history yang udah bener di-insert tadi.
-
         $dbKejantanan = $this->db->table('kejantanan');
-
-        // Cek status kejantanan dari parameter atau data post
         if ($status_kejantanan === 'ya') {
-            $existing = $dbKejantanan->where('id_history', $id_history)->get()->getRow();
-
+            $existing = $dbKejantanan->where('history_id', $id_history)->get()->getRow();
             if ($existing) {
-                $dbKejantanan->where('id_history', $id_history)->update($kejantanan_data);
+                $dbKejantanan->where('history_id', $id_history)->update($kejantanan_data);
             } else {
-                $kejantanan_data['id_history'] = $id_history;
+                $kejantanan_data['history_id'] = $id_history;
                 $dbKejantanan->insert($kejantanan_data);
             }
         } else {
-            // Kalau statusnya 'tidak', hapus record-nya di tabel kejantanan biar gak nyampah
-            $dbKejantanan->where('id_history', $id_history)->delete();
+            $dbKejantanan->where('history_id', $id_history)->delete();
         }
-
         $this->db->transComplete();
         return $this->db->transStatus();
     }
+    
     // Fungsi Lama
     // public function updateKejantanan($id_history, $data, $kejantanan_data)
     // {

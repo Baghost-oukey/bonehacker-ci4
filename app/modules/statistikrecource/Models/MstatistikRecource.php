@@ -48,22 +48,21 @@ class MstatistikRecource extends Model
     public function get_sumber_marketing($startDate, $endDate, $regionID = null)
     {
         $db = \Config\Database::connect();
-
         $builder = $db->table('resources res');
-        $builder->select('res.nama as saluran, COUNT(DISTINCT h.patient_id) as total_pasien');
+        $builder->select('res.nama as saluran, COUNT(p.id) as total_pasien');
+        $startrealDate = $db->escape($startDate . ' 00:00:00');
+        $endrealDate   = $db->escape($endDate . ' 23:59:59');
 
-      $builder->join('patients p', 'p.patient_information = res.id', 'left');
+        $joinCondition = "p.patient_information = res.id " .
+            "AND p.created_at >= " . $startrealDate . " " .
+            "AND p.created_at <= " . $endrealDate . " " .
+            "AND p.is_delete = 0";
 
-        $builder->join('histories h', "h.patient_id = p.id 
-                    AND h.date >= '$startDate 00:00:00' 
-                    AND h.date <= '$endDate 23:59:59' 
-                    AND h.is_delete = 0", 'left');
-
-        $builder->join('patient_queues pq', 'pq.id = h.patient_queue_id', 'left');
-
-        if ($regionID) {
-            $builder->where('pq.region_id', $regionID);
+        if (!empty($regionID)) {
+            $joinCondition .= " AND p.region_id = " . $db->escape($regionID);
         }
+
+        $builder->join('patients p', $joinCondition, 'left');
 
         $builder->groupBy('res.id');
         $builder->orderBy('total_pasien', 'DESC');

@@ -100,26 +100,17 @@ class MStatistik extends Model
     public function get_analisis($startDate, $endDate, $regionId = null)
     {
         $db = \Config\Database::connect();
-
-        // 1. Subquery Kunjungan Pertama
         $firstVisited = $db->table('histories')
             ->select('patient_id, MIN(date) as first_date')
             ->where('is_delete', 0)
             ->groupBy('patient_id')
             ->getCompiledSelect();
-
         $builder = $db->table('regions r');
         $builder->select('r.id, r.name as cabang');
-
-        // Perhitungan Agregasi
         $builder->select("COUNT(DISTINCT h.id) as total_pasien");
         $builder->select("COUNT(DISTINCT CASE WHEN first_v.first_date BETWEEN '{$startDate} 00:00:00' AND '{$endDate} 23:59:59' THEN h.patient_id END) as pasien_baru");
         $builder->select("COUNT(DISTINCT CASE WHEN first_v.first_date < '{$startDate} 00:00:00' THEN h.patient_id END) as pasien_lama");
-
-        // 2. JOIN STRATEGY (PENTING)
-        // Gunakan 'on' string yang bersih untuk menghindari SQL Syntax Error
         $joinCondition = "(h.patient_queue_id = pq.id OR h.history_region = r.id)";
-
         $builder->join('patient_queues pq', 'pq.region_id = r.id', 'left');
         $builder->join('histories h', $joinCondition .
             " AND h.date >= '{$startDate} 00:00:00'" .
@@ -127,8 +118,6 @@ class MStatistik extends Model
             " AND h.is_delete = 0", 'left');
 
         $builder->join("($firstVisited) first_v", 'first_v.patient_id = h.patient_id', 'left');
-
-        // 3. Filter Wilayah (Jika dipilih dari Dropdown)
         if (!empty($regionId)) {
             $builder->where('r.id', $regionId);
         }

@@ -24,7 +24,7 @@ class History extends BaseController
         $this->db = \Config\Database::connect();
     }
 
-    // Ambil Data
+
     public function fetch($id)
     {
         $requestData = $this->request->getPost();
@@ -42,7 +42,6 @@ class History extends BaseController
             'limit'  => $this->request->getPost('length') ?? 10,
         ];
 
-        // Search logic
         if (!empty($requestData['search']['value'])) {
             $searchValue = $requestData['search']['value'];
             $options['where_like'] = [
@@ -50,11 +49,9 @@ class History extends BaseController
                 "mt.name LIKE '%$searchValue%'"
             ];
         }
-
         $dataOutput    = $this->model_history->getListData($id, $options);
         $totalFiltered = $this->model_history->getTotalData($id, $options);
         $totalData     = $this->model_history->countAllResults(); // Total tanpa filter
-
         $no = $options['offset'] + 1;
         foreach ($dataOutput as $value) {
             $value->no = $no++;
@@ -68,7 +65,6 @@ class History extends BaseController
                     <button type="button" class="btn btn-danger btn-sm" onclick="destroy(\'' . $value->id . '\')"><i class="fas fa-trash"></i></button>
                 </div>';
         }
-
         return $this->response->setJSON([
             "draw"            => intval($this->request->getPost('draw')),
             "recordsTotal"    => intval($totalData),
@@ -87,7 +83,7 @@ class History extends BaseController
         if (!empty($grade)) {
             $result[] = is_array($grade) ? implode(',', $grade) : $grade;
         }
-        return !empty($result) ? implode(',', $result) : null;
+        return !empty($result) ? implode(',', $result) : "";
     }
 
 
@@ -97,13 +93,10 @@ class History extends BaseController
         if (empty($inputTags) || $inputTags == '[]' || $inputTags == 'null') return "-";
         $tags = json_decode($inputTags, true);
         if (!is_array($tags)) {
-            // Jika bukan JSON (misal input text biasa), bersihkan dan explode
             $tagName = explode(',', trim($inputTags, "[]\" "));
         } else {
-            // Ambil kolom 'value' (teks tag-nya)
             $tagName = array_column($tags, 'value');
         }
-
         $tagIds = [];
         foreach ($tagName as $name) {
             $name = trim($name);
@@ -119,6 +112,7 @@ class History extends BaseController
         }
         return !empty($tagIds) ? implode(',', $tagIds) : '-';
     }
+
 
     // private function processTags($inputTags, $tableName)
     // {
@@ -191,13 +185,10 @@ class History extends BaseController
     //     return redirect()->to('patient/show/' . $patientId);
     // }
 
-    // Versi Tanpa Session
     public function store()
     {
         $patientId = $this->request->getPost('patient_id');
         $queueId   = $this->request->getPost('queue_id');
-
-        // Cek Antrean
         if (!empty($queueId)) {
             $queue = $this->db->table('patient_queues')->where('id', $queueId)->get()->getRow();
             if ($queue && $queue->is_stored_history == 1) {
@@ -205,31 +196,24 @@ class History extends BaseController
             }
             $this->db->table('patient_queues')->where('id', $queueId)->update(['is_stored_history' => 1]);
         }
-
         $complaintValues = $this->processTags($this->request->getPost('complaint'), 'complaint_tags');
         $medhisValues    = $this->processTags($this->request->getPost('medhis'), 'medhis_tags');
         $resultValues    = $this->processTags($this->request->getPost('results'), 'result_tags');
-
         $data = $this->mapHistoryData($patientId, $complaintValues, $medhisValues, $resultValues);
-
         // $data['phone']      = $data['phone'] ?? '-';
         $data['tensi']      = $this->request->getPost('tensi') ?? "";
         $data['cervical']   = $this->request->getPost('cervical') ?? "";
         $data['thoraxal']   = $this->request->getPost('thoraxal') ?? "";
         $data['lumbar']     = $this->request->getPost('lumbar') ?? "";
-
-
         if (isset($data['phone']) && empty($data['phone'])) {
             $data['phone'] = $data['phone'] ?: '-';
         }
         $kejantananData = $this->mapKejantananData();
         $statusKejantanan = $this->request->getPost('kejantanan') === 'ya' ? 'ya' : 'tidak';
-
         if ($this->model_history->insert($data)) {
             $historyId = $this->model_history->getInsertID();
             unset($data['phone']);
             $this->model_history->updateKejantanan($historyId, $kejantananData, $statusKejantanan);
-
             $patient = $this->model_patient->find($patientId);
             $whatsappData = $this->model_whatsapp->getMessageAndCredentials();
             if ($this->request->getPost('notifikasi') && $whatsappData && $patient) {
@@ -251,11 +235,9 @@ class History extends BaseController
                 'message' => 'Data riwayat gagal disimpan: ' . implode(', ', $this->model_history->errors())
             ]);
         }
-
         return redirect()->to('patient/show/' . $patientId);
     }
 
-    // Perbarui Data
     public function update()
     {
         $id = $this->request->getPost('id');
@@ -275,48 +257,41 @@ class History extends BaseController
         $kejantananData = $this->mapKejantananData();
 
         if ($this->model_history->update($id, $data)) {
-            // 2. BARU UPDATE TABEL KEJANTANAN
             $this->model_history->updateKejantanan($id, $kejantananData, $statusKejantanan);
-
-            return $this->response->setJSON(['status' => true, 'message' => 'Data pasien berhasil diperbarui']);
-        } else {
-            return $this->response->setJSON(['status' => false, 'message' => 'Data pasien gagal diperbarui']);
-        }if ($this->model_history->update($id, $data)) {
-            $kejantananData   = $this->mapKejantananData();
-            $statusKejantanan = $this->request->getPost('kejantanan') === 'ya' ? 'ya' : 'tidak';
-            $this->model_history->updateKejantanan($id, $kejantananData, $statusKejantanan);
-
             return $this->response->setJSON(['status' => true, 'message' => 'Data pasien berhasil diperbarui']);
         } else {
             return $this->response->setJSON(['status' => false, 'message' => 'Data pasien gagal diperbarui']);
         }
-
+        if ($this->model_history->update($id, $data)) {
+            $kejantananData   = $this->mapKejantananData();
+            $statusKejantanan = $this->request->getPost('kejantanan') === 'ya' ? 'ya' : 'tidak';
+            $this->model_history->updateKejantanan($id, $kejantananData, $statusKejantanan);
+            return $this->response->setJSON(['status' => true, 'message' => 'Data pasien berhasil diperbarui']);
+        } else {
+            return $this->response->setJSON(['status' => false, 'message' => 'Data pasien gagal diperbarui']);
+        }
         return redirect()->to('patient/show/' . $patientId);
     }
+
 
     private function getRealname($userId)
     {
         if (empty($userId)) return '-';
-
-        // Sesuaikan dengan nama tabel user kamu, biasanya 'users'
         $user = $this->db->table('users')
-            ->select('realname') // atau 'realname' sesuai kolom di DB
+            ->select('realname')
             ->where('id', $userId)
             ->get()
             ->getRow();
-
         return $user ? $user->realname : '-';
     }
+
 
     public function show($id = null)
     {
         if (!$this->request->isAJAX()) {
             return redirect()->to(site_url('history'));
         }
-
-        // 1. Ambil data utama history
         $data = $this->model_history->find($id);
-
         if (!$data) {
             return $this->response->setJSON(['message' => 'Data tidak ditemukan'])->setStatusCode(404);
         }
@@ -330,45 +305,41 @@ class History extends BaseController
                 }
             }
         }
-
         $data->complaint = $this->_getTagNameFromIds($data->complaint, 'complaint_tags');
         $data->medhis    = $this->_getTagNameFromIds($data->medhis, 'medhis_tags');
         $data->results   = $this->_getTagNameFromIds($data->results, 'result_tags');
-
         $data->history_created_by = !empty($data->created_by) ? $this->getRealname($data->created_by) : '-';
         $data->history_updated_by = !empty($data->updated_by) ? $this->getRealname($data->updated_by) : '-';
-
         if (!empty($data->finish_at) && !empty($data->process_at)) {
             $diff = strtotime($data->finish_at) - strtotime($data->process_at);
             $data->time_consume = round($diff / 3600, 2) . ' jam';
         } else {
             $data->time_consume = null;
         }
-
         return $this->response->setJSON($data);
     }
+
 
     private function _getTagNameFromIds($ids, $table)
     {
         if (empty($ids) || $ids === '-') return '-';
-
         $idArray = explode(',', $ids);
         $db = \Config\Database::connect();
         $builder = $db->table($table);
         $tags = $builder->whereIn('id', $idArray)->get()->getResultArray();
-
         if (empty($tags)) return '-';
-
         $tagNames = array_column($tags, 'name');
         return implode(', ', $tagNames);
     }
+
 
     private function mapHistoryData($patientId, $complaint, $medhis, $results)
     {
         return [
             'patient_id'            => $patientId,
-            'terapis_id'            => $this->request->getPost('terapis') ? implode(',', $this->request->getPost('terapis')) : null,
-            'history_region'        => $this->request->getPost('history_region') ?? "",
+            'terapis_id'            => is_array($this->request->getPost('terapis')) ? implode(',', $this->request->getPost('terapis')) : "",
+            // 'terapis_id'            => $this->request->getPost('terapis') ? implode(',', $this->request->getPost('terapis')) : null,
+            'history_region'        => $this->request->getPost('history_region') ?: null,
             'complaint'             => $complaint ?? "-",
             'medhis'                => $medhis ?? "-",
             'results'               => $results ?? "-",
@@ -389,33 +360,42 @@ class History extends BaseController
             'keterangan_kompresi'   => $this->request->getPost('ket_kompresi') ?? "",
             'keterangan_plintiran'  => $this->request->getPost('ket_plintiran') ?? "",
             'keterangan_visualfoot' => $this->request->getPost('ket_viska') ?? "",
-            'plintiran'             => is_array($this->request->getPost('plintiran')) ? implode(',', $this->request->getPost('plintiran')) : null,
-            'kompresi'              => is_array($this->request->getPost('kompresi')) ? implode(',', $this->request->getPost('kompresi')) : null,
-            'verteba'               => is_array($this->request->getPost('vertebra')) ? implode(',', $this->request->getPost('vertebra')) : null,
-            'thorax'                => is_array($this->request->getPost('thorax')) ? implode(',', $this->request->getPost('thorax')) : null,
-            'visualfoot'            => is_array($this->request->getPost('visual_kaki')) ? implode(',', $this->request->getPost('visual_kaki')) : null,
-            'pubis'                 => is_array($this->request->getPost('pubis')) ? implode(',', $this->request->getPost('pubis')) : null,
+
+            'plintiran'             => is_array($this->request->getPost('plintiran')) ? implode(',', $this->request->getPost('plintiran')) : "",
+            'kompresi'              => is_array($this->request->getPost('kompresi')) ? implode(',', $this->request->getPost('kompresi')) : "",
+            'verteba'               => is_array($this->request->getPost('vertebra')) ? implode(',', $this->request->getPost('vertebra')) : "",
+            'thorax'                => is_array($this->request->getPost('thorax')) ? implode(',', $this->request->getPost('thorax')) : "",
+            'visualfoot'            => is_array($this->request->getPost('visual_kaki')) ? implode(',', $this->request->getPost('visual_kaki')) : "",
+            'pubis'                 => is_array($this->request->getPost('pubis')) ? implode(',', $this->request->getPost('pubis')) : "",
+            // 'plintiran'             => is_array($this->request->getPost('plintiran')) ? implode(',', $this->request->getPost('plintiran')) : null,
+            // 'kompresi'              => is_array($this->request->getPost('kompresi')) ? implode(',', $this->request->getPost('kompresi')) : null,
+            // 'verteba'               => is_array($this->request->getPost('vertebra')) ? implode(',', $this->request->getPost('vertebra')) : null,
+            // 'thorax'                => is_array($this->request->getPost('thorax')) ? implode(',', $this->request->getPost('thorax')) : null,
+            // 'visualfoot'            => is_array($this->request->getPost('visual_kaki')) ? implode(',', $this->request->getPost('visual_kaki')) : null,
+            // 'pubis'                 => is_array($this->request->getPost('pubis')) ? implode(',', $this->request->getPost('pubis')) : null,
+
             'date'                  => $this->request->getPost('date') ? $this->request->getPost('date') . ' ' . date('H:i:s') : date('Y-m-d H:i:s'),
-            'kejantanan'            => $this->request->getPost('kejantanan') === 'ya' ? 'ya' : null,
+            'kejantanan'            => $this->request->getPost('kejantanan') === 'ya' ? 'ya' : 'tidak',
             'created_by'            => session()->get('userId'),
         ];
     }
 
+
     private function mapKejantananData()
     {
         return [
-            'ereksi'                => $this->request->getPost('ereksi'),
-            'porno'                 => $this->request->getPost('nonton_porno'),
-            'frekuensi_porno'       => $this->request->getPost('frekuensi_nonton_porno'),
-            'frekuensi_porno_lain'  => $this->request->getPost('frekuensi_nonton_lainnya') ?: NULL,
-            'onani'                 => $this->request->getPost('sering_onani'),
-            'frekuensi_onani'       => $this->request->getPost('frekuensi_onani'),
-            'frekuensi_onani_lain'  => $this->request->getPost('frekuensi_onani_lainnya') ?: NULL,
-            'ranjang'               => $this->request->getPost('ranjang'),
-            'frekuensi_ranjang'     => $this->request->getPost('frekuensi_ranjang'),
-            'frekuensi_ranjang_lain' => $this->request->getPost('frekuensi_ranjang_lainnya') ?: NULL,
-            'obat_kuat'             => $this->request->getPost('obat_kuat'),
-            'penyebab'              => $this->request->getPost('penyebab'),
+            'ereksi'                 => $this->request->getPost('ereksi') ?? "",
+            'porno'                  => $this->request->getPost('nonton_porno') ?? "",
+            'frekuensi_porno'        => $this->request->getPost('frekuensi_nonton_porno') ?? "",
+            'frekuensi_porno_lain'   => $this->request->getPost('frekuensi_nonton_lainnya') ?: "",
+            'onani'                  => $this->request->getPost('sering_onani') ?? "",
+            'frekuensi_onani'        => $this->request->getPost('frekuensi_onani') ?? "",
+            'frekuensi_onani_lain'   => $this->request->getPost('frekuensi_onani_lainnya') ?: "",
+            'ranjang'                => $this->request->getPost('ranjang') ?? "",
+            'frekuensi_ranjang'      => $this->request->getPost('frekuensi_ranjang') ?? "",
+            'frekuensi_ranjang_lain' => $this->request->getPost('frekuensi_ranjang_lainnya') ?: "",
+            'obat_kuat'              => $this->request->getPost('obat_kuat') ?? "",
+            'penyebab'               => $this->request->getPost('penyebab') ?? "",
             'otot_dada_perut_kanan' => $this->penggabungan($this->request->getPost('odp_kanan'), $this->request->getPost('odp_kanan_grade')),
             'otot_dada_perut_kiri'  => $this->penggabungan($this->request->getPost('odp_kiri'), $this->request->getPost('odp_kiri_grade')),
             'vital_kanan'           => $this->penggabungan($this->request->getPost('vital_kanan'), $this->request->getPost('vital_kanan_grade')),
@@ -451,7 +431,6 @@ class History extends BaseController
     private function sendWhatsAppMessage($phone, $message, $instance_id, $token)
     {
         $url = "https://app.meoblaster.com/api/send?number={$phone}&type=text&message=" . urlencode($message) . "&instance_id={$instance_id}&access_token={$token}";
-
         $curl = curl_init();
         curl_setopt_array($curl, array(
             CURLOPT_URL => $url,
@@ -463,37 +442,28 @@ class History extends BaseController
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => 'GET', // Use GET since parameters are in the URL
         ));
-
         $response = curl_exec($curl);
         $http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         $curl_error = curl_error($curl);
         curl_close($curl);
-
-        // Log the response for debugging
         log_message('debug', 'MeoBlaster Response: ' . $response);
         log_message('debug', 'HTTP Code: ' . $http_code);
         log_message('debug', 'cURL Error: ' . $curl_error);
-
-        // Return response or false on failure
         return ($http_code === 200 && !$curl_error) ? $response : false;
     }
+
 
     private function sendAndLogWhatsApp($historyId, $name, $phone, $whatsappData)
     {
         $currentDatetime = date('Y-m-d H:i:s');
-
-        // Kirim Pesan
         $response = $this->sendWhatsAppMessage(
             $phone,
             $whatsappData->message,
             $whatsappData->instance_id,
             $whatsappData->token
         );
-
         $resArr = json_decode($response, true);
         $isSent = (isset($resArr['status']) && $resArr['status'] === 'success') ? 1 : 0;
-
-        // Simpan Log
         $logData = [
             'history_id' => $historyId,
             'name'       => $name,
@@ -504,20 +474,17 @@ class History extends BaseController
             'created_at' => $currentDatetime,
             'updated_at' => $currentDatetime
         ];
-
         return $this->model_logwa->insert($logData);
     }
+
 
     public function copy()
     {
         $id = $this->request->getPost('id');
         $patientId = $this->request->getPost('patient_id');
-
-        // 1. Ambil data pasien untuk kebutuhan WhatsApp
         $patient = $this->model_patient->getById($patientId);
         $phone   = $patient ? $patient->phone : null;
         $name    = $patient ? $patient->name : null;
-
         if ($phone && strpos($phone, '0') === 0) {
             $phone = '62' . substr($phone, 1);
         }
@@ -529,24 +496,15 @@ class History extends BaseController
 
         if ($existingData) {
             $data = $this->mapHistoryData($patientId, $complaintValues, $medhisValues, $resultValues);
-
-            // Sesuaikan tanggal khusus untuk fungsi Copy
             $dateInput = $this->request->getPost('date');
             $data['date'] = !empty($dateInput) ? $dateInput . ' ' . date('H:i:s') : date('Y-m-d H:i:s');
             $data['created_by'] = session()->get('userId');
-
-            // Gunakan mapper kejantanan
             $kejantananData = $this->mapKejantananData();
-
-            // 5. Simpan Data Baru (Insert) melalui Model
             $newId = $this->model_history->updateKejantanan($id, $data, $kejantananData);
-
             if ($newId) {
-                // 6. Handle WhatsApp Notification (Jika dicentang)
                 if ($this->request->getPost('notifikasi') && $whatsappData) {
                     $this->sendAndLogWhatsApp($newId, $name, $phone, $whatsappData);
                 }
-
                 session()->setFlashdata('message', ['success', 'Data riwayat berhasil disalin']);
             } else {
                 session()->setFlashdata('message', ['danger', 'Data riwayat gagal disalin']);
@@ -554,9 +512,9 @@ class History extends BaseController
         } else {
             session()->setFlashdata('message', ['danger', 'Data lama tidak ditemukan']);
         }
-
         return redirect()->to('patient/show/' . $patientId);
     }
+
 
     public function destroy($id)
     {

@@ -1,215 +1,86 @@
 <?= $this->extend('layout/layout') ?>
 <?= $this->section('content') ?>
-<section class="section">
-    <div class="section-header">
-        <h1><?= esc($title) ?></h1>
+
+<div class="p-4 sm:p-6 md:p-8 max-w-350 mx-auto">
+
+    <!-- HEADER -->
+    <div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+        <div>
+            <h1 class="text-2xl font-black text-slate-800 tracking-tight">Hasil Pemeriksaan</h1>
+            <p class="text-sm text-slate-500 mt-1">Laporan distribusi dan statistik detail hasil pemeriksaan medis.</p>
+        </div>
     </div>
-    <div class="section-body">
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5 id="dynamicTitle">Statistik Hasil Pemeriksaan</h5>
+
+    <div class="flex flex-col gap-6">
+        <!-- FILTER DATA -->
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 lg:p-6">
+            <div class="flex flex-col lg:flex-row gap-4 items-end justify-between">
+
+                <div class="w-full lg:w-5/12">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Rentang Waktu Analisis</label>
+                    <div id="rangefilter" class="flex items-center justify-between gap-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 cursor-pointer transition-all">
+                        <div class="flex items-center gap-2 pointer-events-none text-indigo-500">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span class="text-slate-700"></span>
                         </div>
-                        <div>
-                            <div id="rangefilter" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%">
-                                <i class="fa fa-calendar"></i>&nbsp;
-                                <span></span> <i class="fa fa-caret-down"></i>
-                            </div>
-                            <div>
-                                <select id="selectfilter" style="width: 150px; padding: 5px; margin-top: 5px; cursor: pointer">
-                                    <option value="daily">Hari</option>
-                                    <option value="monthly">Bulan</option>
-                                    <option value="yearly">Tahun</option>
-                                </select>
-                                <select id="regionSelect" style="width: 150px; padding: 5px; margin-top: 5px; cursor: pointer">
-                                    <?php if (isset($regions_patient) && !empty($regions_patient)): ?>
-                                        <?php foreach ($wilayah as $value): ?>
-                                            <?php if (in_array($value->id, (array)$regions_patient)): ?>
-                                                <option value="<?= $value->id ?>" selected><?= esc($value->name) ?></option>
-                                            <?php endif; ?>
-                                        <?php endforeach; ?>
-                                    <?php else: ?>
-                                        <option value="">Semua Wilayah</option>
-                                        <?php foreach ($wilayah as $value): ?>
-                                            <option value="<?= $value->id ?>" <?= (isset($selected_region) && $selected_region == $value->id) ? 'selected' : '' ?>>
-                                                <?= esc($value->name) ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
-                                </select>
-                            </div>
-                        </div>
+                        <i class="fas fa-chevron-down text-[10px] text-slate-400 pointer-events-none"></i>
                     </div>
-                    <div class="card-body">
-                        <div id="chartContainer" style="height: auto; margin: auto">
-                            <h5 class="card-title" id="heading"></h5>
-                            <table id="statisticTable" class="table table-bordered w-100">
-                                <thead>
-                                    <tr>
-                                        <th style="width:90%;">Nama Tag</th>
-                                        <th style="width:10%;">Jumlah</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                </tbody>
-                            </table>
-                        </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto items-end">
+                    <div class="w-full sm:w-64">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Lokasi Cabang</label>
+                        <select id="regionSelect" class="bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-xl px-4 py-2.5 outline-none cursor-pointer focus:ring-2 focus:ring-indigo-500/20 w-full transition-all">
+                            <?php if (isset($regions_patient) && !empty($regions_patient)): ?>
+                                <?php foreach ($wilayah as $value): ?>
+                                    <?php if (in_array($value->id, (array)$regions_patient)): ?>
+                                        <option value="<?= $value->id ?>" selected><?= esc($value->name) ?></option>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <option value="">Semua Wilayah</option>
+                                <?php foreach ($wilayah as $value): ?>
+                                    <option value="<?= $value->id ?>" <?= (isset($selected_region) && $selected_region == $value->id) ? 'selected' : '' ?>>
+                                        <?= esc($value->name) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </select>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- TABLE DATA  -->
+        <div id="chartContainer" class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden w-full transition-all hover:shadow-md">
+            <div class="p-5 border-b border-slate-100 bg-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <h5 class="text-base font-bold text-slate-800 m-0" id="heading">Detail Pemeriksaan</h5>
+                <div id="custom-search-container" class="w-full sm:w-auto"></div>
+            </div>
+
+            <div class="overflow-x-auto w-full">
+                <table id="statisticTable" class="w-full text-left border-collapse whitespace-nowrap">
+                    <thead>
+                        <tr class="bg-slate-50/80 border-b border-slate-200 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                            <th class="px-6 py-4 border-0 w-[80%]">Hasil Pemeriksaan / Tag</th>
+                            <th class="px-6 py-4 border-0 text-center w-[20%]">Jumlah</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm text-slate-700 font-medium">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
-</section>
+</div>
+
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
 <script>
-    $(document).ready(function() {
-        $('#regionSelect').select2({
-            placeholder: "Pilih Wilayah",
-            allowClear: true
-        });
-
-        if ($('#statisticTable').length) {
-            var currentFilter = 'daily';
-            var previousStartDate = moment().subtract(6, 'days');
-            var previousEndDate = moment();
-
-            // Inisialisasi DataTable
-            var table = $('#statisticTable').DataTable({
-                "paging": true,
-                "pageLength": 10,
-                "lengthChange": false,
-                "ordering": true,
-                "info": true,
-                "searching": true,
-                "language": {
-                    "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Indonesian.json"
-                }
-            });
-
-            // DateRangePicker Setup
-            $('#rangefilter').daterangepicker({
-                locale: {
-                    format: 'D MMMM YYYY'
-                },
-                ranges: {
-                    'Hari Ini': [moment(), moment()],
-                    'Kemarin': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-                    '7 Hari Terakhir': [moment().subtract(6, 'days'), moment()],
-                    '30 Hari Terakhir': [moment().subtract(29, 'days'), moment()],
-                    'Bulan Ini': [moment().startOf('month'), moment().endOf('month')],
-                    'Bulan Lalu': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
-                }
-            }, function(start, end) {
-                cb(start, end);
-            });
-
-            function cb(start, end) {
-                $('#rangefilter span').html(start.format('D MMMM YYYY') + ' - ' + end.format('D MMMM YYYY'));
-                previousStartDate = start;
-                previousEndDate = end;
-                updateHeading(start, end, currentFilter);
-                fetchStatistics(start, end, currentFilter);
-            }
-
-            // Inisialisasi awal
-            cb(previousStartDate, previousEndDate);
-
-            $('#selectfilter').on('change', function() {
-                currentFilter = $(this).val();
-                let start, end;
-
-                if (currentFilter === 'daily') {
-                    start = previousStartDate;
-                    end = previousEndDate;
-                } else if (currentFilter === 'monthly') {
-                    start = moment(previousStartDate).startOf('month');
-                    end = moment(previousEndDate).endOf('month');
-                } else if (currentFilter === 'yearly') {
-                    start = moment(previousStartDate).startOf('year');
-                    end = moment(previousEndDate).endOf('year');
-                }
-
-                $('#rangefilter').data('daterangepicker').setStartDate(start);
-                $('#rangefilter').data('daterangepicker').setEndDate(end);
-                cb(start, end);
-            });
-
-            $('#regionSelect').on('change', function() {
-                fetchStatistics(previousStartDate, previousEndDate, currentFilter);
-            });
-
-            function updateHeading(startDate, endDate, filter) {
-                let headingText = "";
-                if (filter === 'daily') {
-                    headingText = startDate.isSame(endDate, 'day') ? startDate.format('D MMM YYYY') : startDate.format('D MMM YYYY') + ' - ' + endDate.format('D MMM YYYY');
-                } else if (filter === 'monthly') {
-                    headingText = startDate.isSame(endDate, 'month') ? startDate.format('MMMM YYYY') : startDate.format('MMMM YYYY') + ' - ' + endDate.format('MMMM YYYY');
-                } else if (filter === 'yearly') {
-                    headingText = startDate.isSame(endDate, 'year') ? startDate.format('YYYY') : startDate.format('YYYY') + ' - ' + endDate.format('YYYY');
-                }
-                $('#heading').text(headingText);
-            }
-
-            function fetchStatistics(startDate, endDate, filter) {
-                var region = $('#regionSelect').val();
-                $.ajax({
-                    url: '<?= base_url('statistikresult/fetch_statistics') ?>',
-                    method: 'GET',
-                    data: {
-                        start_date: startDate.format('YYYY-MM-DD'),
-                        end_date: endDate.format('YYYY-MM-DD'),
-                        filter: filter,
-                        region_id: region
-                    },
-                    dataType: 'json',
-                    beforeSend: function() {
-                        // Opsi: Tambahkan loader jika tabel sangat besar
-                    },
-                    success: function(data) {
-                        table.clear();
-                        var rows = [];
-
-                        if (Array.isArray(data)) {
-                            data.forEach(function(item) {
-                                let name = item.tagName || item.tagName || item.name;
-                                let total = parseInt(item.total) || 0;
-                                if (total > 0) {
-                                    rows.push([name, total]);
-                                }
-                            })
-                        } else if (typeof data === 'object' && data !== null) {
-                            Object.keys(data).forEach(function(tagName) {
-                                let total = (typeof data[tagName] === 'object') ? (data[tagName].total || 0) : data[tagName];
-                                if (total > 0) {
-                                    rows.push([tagName, total]);
-                                }
-                            });
-                        }
-
-                        if (rows.length > 0) {
-                            table.rows.add(rows).draw();
-                        } else {
-                            console.log("Data diterima tapi tidak ada baris yang valid:", data);
-                            table.draw();
-                        }
-                        // Object.keys(data).forEach(function(tagName) {
-                        //     let total = data[tagName].total || 0;
-                        //     if (total > 0) { // Hanya tampilkan yang ada datanya
-                        //         rows.push([tagName, total]);
-                        //     }
-                        // });
-                        // table.rows.add(rows).draw();
-                    },
-                    error: function(xhr) {
-                        console.error("Error fetch statistics:", xhr.responseText);
-                    }
-                });
-            }
-        }
-    });
+    window.statistikResultConfig = {
+        fetchUrl: "<?= base_url('statistikresult/fetch_statistics') ?>"
+    };
 </script>
 <?= $this->endSection() ?>

@@ -1,193 +1,97 @@
 <?= $this->extend('layout/layout') ?>
 <?= $this->section('content') ?>
-<section class="section">
-    <div class="section-header">
-        <h1><?= esc($title) ?></h1>
+
+<div class="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto">
+    <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+        <div>
+            <h1 class="text-2xl font-black text-slate-800 tracking-tight" id="dynamicTitle">Statistik Keluhan</h1>
+            <p class="text-sm text-slate-500 mt-1">Laporan Statistik Dan Rekam Medis Pasien </p>
+        </div>
     </div>
-    <div class="section-body">
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5 id="dynamicTitle">Statistik Keluhan</h5>
+
+    <div class="flex flex-col gap-6">
+
+        <!-- FILTER MODAL -->
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 lg:p-6">
+            <div class="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+                <div class="font-bold text-slate-700 flex items-center gap-2">
+                    <i class="fas fa-filter text-indigo-500"></i> Filter Data
+                </div>
+                <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto lg:justify-end">
+
+                    <!-- FILTER DATE -->
+                    <div id="rangefilter" class="flex items-center justify-between gap-3 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 cursor-pointer transition-all min-w-60 relative">
+                        <div class="flex items-center gap-2 pointer-events-none">
+                            <i class="fas fa-calendar-alt text-indigo-600"></i>
+                            <span id="selected-date-text"></span>
                         </div>
-                        <div>
-                            <div id="rangefilter" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%">
-                                <i class="fa fa-calendar"></i>&nbsp;
-                                <span></span> <i class="fa fa-caret-down"></i>
-                            </div>
-                            <div>
-                                <select id="selecttag" style="width: 150px; padding: 5px; margin-top: 5px; cursor: pointer">
-                                    <option value="complaint">Keluhan</option>
-                                    <option value="medhis">Riwayat Medis</option>
-                                </select>
-                                <select id="selectfilter" style="width: 150px; padding: 5px; margin-top: 5px; cursor: pointer">
-                                    <option value="daily">Hari</option>
-                                    <option value="monthly">Bulan</option>
-                                    <option value="yearly">Tahun</option>
-                                </select>
-                                <select id="regionSelect" name="regionSelect" style="width: 150px; padding: 5px; margin-top: 5px; cursor: pointer">
-                                    <?php if (isset($regions_patient) && !empty($regions_patient)): ?>
-                                        <?php foreach ($wilayah as $region): ?>
-                                            <?php if ($region->id == $regions_patient[0]): ?>
-                                                <option value="<?= $region->id ?>" selected><?= esc($region->name) ?></option>
-                                            <?php endif; ?>
-                                        <?php endforeach; ?>
-                                    <?php else: ?>
-                                        <option value="">Semua Wilayah</option>
-                                        <?php foreach ($wilayah as $region): ?>
-                                            <option value="<?= $region->id ?>" <?= (isset($selected_region) && $selected_region == $region->id) ? 'selected' : '' ?>>
-                                                <?= esc($region->name) ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
-                                </select>
-                            </div>
-                        </div>
+                        <i class="fas fa-chevron-down text-[10px] text-slate-400 pointer-events-none"></i>
                     </div>
-                    <div class="card-body col-12">
-                        <div id="chartContainer" style="height: auto; margin: auto">
-                            <h5 class="card-title" id="heading"></h5>
-                            <div class="table-responsive">
-                                <table id="statisticTable" class="table table-bordered table-striped w-100">
-                                    <thead>
-                                        <tr>
-                                            <th style="width:80%;">Nama Tag</th>
-                                            <th style="width:20%;">Jumlah</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+
+                    <!-- FILTER KELUAHAN | RIWAYAT -->
+                    <select id="selecttag" class="bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-xl px-4 py-2.5 outline-none cursor-pointer min-w-35 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                        <option value="complaint">Keluhan</option>
+                        <option value="medhis">Riwayat Medis</option>
+                    </select>
+
+                    <!-- FILTER DAY -->
+                    <!-- <select id="selectfilter" class="bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-xl px-4 py-2.5 outline-none cursor-pointer min-w-32.5 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                        <option value="daily">Hari</option>
+                        <option value="monthly">Bulan</option>
+                        <option value="yearly">Tahun</option>
+                    </select> -->
+
+                    <!-- FILTER WILAYAH -->
+                    <select id="regionSelect" name="regionSelect" class="bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-xl px-4 py-2.5 outline-none cursor-pointer min-w-45 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                        <?php if (isset($regions_patient) && !empty($regions_patient)): ?>
+                            <?php foreach ($wilayah as $region): ?>
+                                <?php if ($region->id == $regions_patient[0]): ?>
+                                    <option value="<?= $region->id ?>" selected><?= esc($region->name) ?></option>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <option value="">Semua Wilayah</option>
+                            <?php foreach ($wilayah as $region): ?>
+                                <option value="<?= $region->id ?>" <?= (isset($selected_region) && $selected_region == $region->id) ? 'selected' : '' ?>>
+                                    <?= esc($region->name) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </select>
                 </div>
             </div>
         </div>
     </div>
-</section>
+</div>
+
+<!-- TABLE KETERANGAN STATISTIK -->
+<div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden w-full max-w-6xl mx-auto transition-all hover:shadow-md">
+    <div class="p-6 border-b border-slate-100 bg-white">
+        <div class="flex items-center justify-between">
+            <h5 class="text-base font-bold text-slate-800 m-0" id="heading">Statistik Keluhan</h5>
+            <div id="table-search-container"></div>
+        </div>
+    </div>
+    <div class="overflow-x-auto w-full">
+        <table id="statisticTable" class="w-full text-left border-collapse whitespace-nowrap">
+            <thead>
+                <tr class="bg-slate-50/80 border-b border-slate-200">
+                    <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border-0">Nama Tag / Keluhan</th>
+                    <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border-0 text-center">Total Frekuensi</th>
+                </tr>
+            </thead>
+            <tbody class="text-sm text-slate-700 font-medium"></tbody>
+        </table>
+    </div>
+</div>
+
+
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
 <script>
-    $(document).ready(function() {
-        $('#regionSelect').select2({
-            width: '150px'
-        });
-
-        if ($('#statisticTable').length) {
-            var currentFilter = 'daily';
-            var currentTag = 'complaint';
-            var previousStartDate = moment().subtract(6, 'days');
-            var previousEndDate = moment();
-
-            // Inisialisasi DataTable CI4
-            var table = $('#statisticTable').DataTable({
-                "paging": true,
-                "pageLength": 10,
-                "lengthChange": false,
-                "ordering": true,
-                "info": true,
-                "searching": true,
-                "destroy": true // Mengizinkan re-inisialisasi
-            });
-
-            // Inisialisasi Daterangepicker
-            $('#rangefilter').daterangepicker({
-                startDate: previousStartDate,
-                endDate: previousEndDate,
-                locale: {
-                    format: 'D MMMM YYYY'
-                },
-                ranges: {
-                    'Hari Ini': [moment(), moment()],
-                    'Kemarin': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-                    '7 Hari Terakhir': [moment().subtract(6, 'days'), moment()],
-                    '30 Hari Terakhir': [moment().subtract(29, 'days'), moment()],
-                    'Bulan Ini': [moment().startOf('month'), moment().endOf('month')],
-                    'Bulan Lalu': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
-                }
-            }, function(start, end) {
-                $('#rangefilter span').html(start.format('D MMMM YYYY') + ' - ' + end.format('D MMMM YYYY'));
-                previousStartDate = start;
-                previousEndDate = end;
-                updateHeading(start, end, currentFilter);
-                fetchStatistics(start, end, currentFilter, currentTag);
-            });
-
-            // Set tampilan awal
-            $('#rangefilter span').html(previousStartDate.format('D MMMM YYYY') + ' - ' + previousEndDate.format('D MMMM YYYY'));
-            updateHeading(previousStartDate, previousEndDate, currentFilter);
-            fetchStatistics(previousStartDate, previousEndDate, currentFilter, currentTag);
-
-            // Listener Dropdown
-            $('#selectfilter').on('change', function() {
-                currentFilter = $(this).val();
-                fetchStatistics(previousStartDate, previousEndDate, currentFilter, currentTag);
-            });
-
-            $('#selecttag').on('change', function() {
-                currentTag = $(this).val();
-                $('#dynamicTitle').text(currentTag === 'complaint' ? 'Statistik Keluhan' : 'Statistik Riwayat Medis');
-                fetchStatistics(previousStartDate, previousEndDate, currentFilter, currentTag);
-            });
-
-            $('#regionSelect').on('change', function() {
-                fetchStatistics(previousStartDate, previousEndDate, currentFilter, currentTag);
-            });
-
-            function updateHeading(startDate, endDate, filter) {
-                moment.locale('id');
-                var headingText = startDate.format('D MMM YYYY') + (startDate.isSame(endDate, 'day') ? '' : ' - ' + endDate.format('D MMM YYYY'));
-                $('#heading').text(headingText);
-            }
-
-            function fetchStatistics(startDate, endDate, filter, tag) {
-                var region = $('#regionSelect').val();
-                $.ajax({
-                    url: '<?= base_url('statistiktag/fetch_statistics') ?>',
-                    method: 'GET',
-                    data: {
-                        start_date: startDate.format('YYYY-MM-DD'),
-                        end_date: endDate.format('YYYY-MM-DD'),
-                        filter: filter,
-                        tag: tag,
-                        region_id: region
-                    },
-                    dataType: 'json',
-                    beforeSend: function() {
-                        // Opsi: Tambahkan loading spinner
-                    },
-                    success: function(data) {
-                        table.clear();
-                        var rows = [];
-
-                        if (data && typeof data === 'object') {
-                            Object.keys(data).forEach(function(tagName) {
-                                // Ambil total dari nested object: { "NamaTag": { "total": 5, ... } }
-                                let total = data[tagName].total || 0;
-
-                                if (total > 0) { // Hanya masukkan jika jumlahnya lebih dari 0
-                                    rows.push([tagName, total]);
-                                }
-                            });
-                        }
-
-                        if (rows.length > 0) {
-                            table.rows.add(rows).draw();
-                        } else {
-                            console.warn("Data diterima tapi tidak ada tag dengan jumlah > 0:", data);
-                            table.draw();
-                        }
-                    },
-                    error: function(xhr) {
-                        console.error("Error fetching data:", xhr.responseText);
-                    }
-                });
-            }
-        }
-    });
+    window.statistikConfig = {
+        fetchUrl: "<?= base_url('statistiktag/fetch_statistics') ?>"
+    };
 </script>
 <?= $this->endSection() ?>

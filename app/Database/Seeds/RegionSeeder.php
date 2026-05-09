@@ -35,6 +35,8 @@ class RegionSeeder extends Seeder
             ['id' => 25, 'name' => 'TSI JOGJA', 'created_at' => '2024-11-22 19:56:42', 'updated_at' => '2024-11-22 19:56:42'],
             ['id' => 27, 'name' => 'TASIKMALAYA', 'created_at' => '2025-01-28 14:18:56', 'updated_at' => '2025-01-28 14:18:56'],
             ['id' => 28, 'name' => 'PEKALONGAN', 'created_at' => '2025-02-04 09:45:38', 'updated_at' => '2025-02-04 09:45:38'],
+            ['id' => 29, 'name' => 'SURYO', 'created_at' => '2025-06-01 11:39:04', 'updated_at' => '2025-06-01 11:39:04'],
+            ['id' => 31, 'name' => 'BUMIAYU', 'created_at' => '2025-11-17 11:33:47', 'updated_at' => '2025-11-17 11:33:47'],
         ];
         $this->db->table('regions')->insertBatch($data);
     }

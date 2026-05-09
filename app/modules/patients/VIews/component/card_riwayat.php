@@ -1,2631 +1,631 @@
-<div id="exampleModal" class="modal fade">
-    <div class="modal-dialog modal-lg modal-dialog-centered" style="max-width: 80vw; width: 80vw; margin:auto;">
-        <div class="modal-content">
-            <!-- Header -->
-            <div class="modal-header">
-                <h5 class="modal-title">Tambah Riwayat Pasien</h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span aria-hidden="true">&times;</span>
+<div id="patientHistoryContainer" class="rounded-2xl bg-white shadow-sm border border-slate-200/50 overflow-hidden">
+    <!-- HEADER TABLE -->
+    <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+            <h3 class="text-lg font-semibold text-slate-800">Riwayat Kunjungan Pasien</h3>
+            <p class="text-sm text-slate-500">Daftar rekam medis dan histori terapi</p>
+        </div>
+        <button id="btn-add-history" type="button" data-modal-open="exampleModal"
+            class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 transition">
+            <i class="fas fa-plus"></i> Tambah Riwayat
+        </button>
+    </div>
+
+    <!-- TABLE RIWAYAT -->
+    <div class="overflow-x-auto">
+        <table id="table-2" class="w-full text-sm">
+            <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
+                <tr>
+                    <th class="px-6 py-3.5 text-center font-semibold w-12">No</th>
+                    <th class="px-6 py-3.5 text-left font-semibold">Keluhan</th>
+                    <th class="px-6 py-3.5 text-left font-semibold">Rekam Medis</th>
+                    <th class="px-6 py-3.5 text-left font-semibold">Tanggal</th>
+                    <th class="px-6 py-3.5 text-center font-semibold w-20">Type</th>
+                    <th class="px-6 py-3.5 text-center font-semibold">Aksi</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-slate-700"></tbody>
+        </table>
+    </div>
+
+    <!-- PAGINATION -->
+    <div class="border-t border-slate-100 bg-slate-50/50 px-6 py-4">
+        <!-- Struktur Pagination (Sesuai dengan Skeleton Anda) -->
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+                <div class="flex items-center gap-2">
+                    <label class="text-xs font-medium text-slate-600">Tampilkan</label>
+                    <select id="paginationLength" class="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15">
+                        <option value="10">10</option>
+                        <option value="25" selected>25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                    <span class="text-xs font-medium text-slate-600">data per halaman</span>
+                </div>
+                <div class="text-xs font-medium text-slate-600 sm:ml-auto">
+                    <span id="paginationInfo">Menampilkan 0 sampai 0 dari 0 data</span>
+                </div>
+            </div>
+            <div class="flex items-center justify-center gap-1.5 sm:justify-end">
+                <button id="paginationPrev" class="inline-flex h-8 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fas fa-chevron-left text-xs mr-1"></i><span class="hidden sm:inline">Sebelumnya</span>
+                </button>
+                <div id="paginationNumbers" class="flex items-center gap-1"></div>
+                <button id="paginationNext" class="inline-flex h-8 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span class="hidden sm:inline">Berikutnya</span><i class="fas fa-chevron-right text-xs ml-1"></i>
                 </button>
             </div>
+
             <form id="save_data" action="<?= site_url('history/store') ?>" method="post" class="needs-validation" novalidate="">
+
+        </div>
+    </div>
+</div>
+
+
+<!-- MODAL TAMBAH/EDIT RIWAYAT -->
+<div id="exampleModal" class="modal-wrapper hidden fixed inset-0 z-60 items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 transition-opacity">
+    <!-- Diperlebar menjadi max-w-6xl karena isi form sangat banyak -->
+    <div class="w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+        
+        <!-- MODAL HEADER -->
+        <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4 bg-white z-10">
+            <h5 class="text-xl font-bold text-slate-800 modal-title">Tambah Riwayat Pasien</h5>
+            <button type="button" data-modal-close class="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+        </div>
+
+        <!-- MODAL BODY -->
+        <div class="flex-1 overflow-y-auto custom-scrollbar p-6 bg-slate-50/30">
+            <form id="save_data" action="<?= site_url('history/store') ?>" method="post" class="space-y-8" novalidate>
+
                 <?= csrf_field() ?>
                 <input type="hidden" name="id" id="history_id">
                 <input type="hidden" name="patient_id" id="patient_id" value="<?= $patient_id ?>">
                 <input type="hidden" name="queue_id" id="queue_id" value="<?= $queue_id ?>">
-                <div class="modal-body">
-                    <!-- Header -->
-                    <div class="row mb-2">
-                        <div class="col-6">
-                            <h4>BONE HACKER</h4>
+
+                <!-- SECTION 1: HEADER INFO PASIEN (Mirip Screenshot) -->
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="w-full md:w-1/3 pt-2">
+                        <h2 class="text-2xl font-bold text-slate-500 uppercase tracking-widest">BONE HACKER</h2>
+                    </div>
+                    <div class="w-full md:w-2/3">
+                        <div class="grid grid-cols-1 gap-y-3 text-sm text-slate-700">
+                            <div class="flex items-center">
+                                <label class="w-1/3 font-medium text-slate-500">Tanggal Dibuat</label>
+                                <span class="w-4 text-center">:</span>
+                                <div class="flex-1">
+                                    <input type="date" name="date" id="date" value="<?= esc($current_date) ?>" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-white">
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <label class="w-1/3 font-medium text-slate-500">Nama</label>
+                                <span class="w-4 text-center">:</span>
+                                <div class="flex-1 font-semibold text-slate-800"><?= esc($patient->name ?? '-') ?></div>
+                            </div>
+                            <div class="flex items-center">
+                                <label class="w-1/3 font-medium text-slate-500">Usia</label>
+                                <span class="w-4 text-center">:</span>
+                                <div class="flex-1 font-semibold text-slate-800"><?= esc($patient->age ?? '-') ?> Tahun</div>
+                            </div>
+                            <div class="flex items-start">
+                                <label class="w-1/3 font-medium text-slate-500 mt-1">Alamat</label>
+                                <span class="w-4 text-center mt-1">:</span>
+                                <div class="flex-1 text-slate-800 mt-1">
+                                    <?php
+                                    $parts = [];
+                                    if (!empty($patient->address)) $parts[] = $patient->address;
+                                    if (!empty($address->desa_nama)) $parts[] = $address->desa_nama;
+                                    if (!empty($address->kecamatan_nama)) $parts[] = $address->kecamatan_nama;
+                                    if (!empty($address->kabupaten_nama)) $parts[] = $address->kabupaten_nama;
+                                    echo esc(implode(', ', $parts));
+                                    ?>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <label class="w-1/3 font-medium text-slate-500">No. WA</label>
+                                <span class="w-4 text-center">:</span>
+                                <div class="flex-1 text-slate-800"><?= esc($patient->phone ?? '-') ?></div>
+                            </div>
+                            <div class="flex items-center">
+                                <label class="w-1/3 font-medium text-slate-500">Wilayah Periksa</label>
+                                <span class="w-4 text-center">:</span>
+                                <div class="flex-1">
+                                    <select id="region_history" name="history_region" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-white">
+                                        <option value="">Semua Wilayah</option>
+                                        <?php foreach ($wilayah as $value): ?>
+                                            <?php
+                                            $selected = '';
+                                            if (isset($regions_patient[0]) && $value->id == $regions_patient[0]) {
+                                                $selected = 'selected';
+                                            } elseif (isset($patient->region_id) && $value->id == $patient->region_id) {
+                                                $selected = 'selected';
+                                            }
+                                            ?>
+                                            <option value="<?= $value->id ?>" <?= $selected ?>><?= esc($value->name) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-6">
-                            <div class="d-flex flex-column">
-                                <div class="d-flex align-items-center mb-2">
-                                    <label class="d-flex" style="width: 30%;">
-                                        <span style="flex: 1;">Tanggal Dibuat</span>
-                                        <span>:</span>
-                                    </label>
-                                    <div style="width: 70%; padding-left: 10px;">
-                                        <input type="date" required class="form-control" name="date"
-                                            value="<?= esc($current_date) ?>">
+                    </div>
+                </div>
+
+                <!-- WAKTU TERAPI -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 border-y border-slate-200 py-6">
+                    <div class="space-y-1">
+                        <label class="text-sm font-medium text-slate-600">Waktu mulai terapi :</label>
+                        <input type="text" name="processAt" id="processAt" disabled class="w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-500">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-sm font-medium text-slate-600">Waktu selesai terapi :</label>
+                        <input type="text" name="finishAt" id="finishAt" disabled class="w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-500">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-sm font-medium text-slate-600">Total Waktu :</label>
+                        <input type="text" name="timeConsume" id="timeConsume" disabled class="w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-500">
+                    </div>
+                </div>
+
+                <!-- KELUHAN & RIWAYAT -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-800">Keluhan :</label>
+                        <textarea name="complaint" id="complaintTags" rows="3" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"></textarea>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-800">Riwayat Medis :</label>
+                        <textarea name="medhis" id="medhisTags" rows="3" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"></textarea>
+                    </div>
+                </div>
+
+                <!-- TABLE PEMERIKSAAN UTAMA (Mirip Screenshot) -->
+                <div class="rounded-xl border border-slate-200 overflow-hidden bg-white">
+                    <table class="w-full text-sm text-left">
+                        <tbody class="divide-y divide-slate-200">
+                            <!-- TENSI -->
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="bg-slate-50/80 px-4 py-4 font-medium text-slate-700 w-48 border-r border-slate-200 align-top">Tensi</td>
+                                <td class="px-4 py-4" colspan="2">
+                                    <div class="flex items-center gap-3 max-w-xs">
+                                        <input type="text" name="tensi" class="flex-1 rounded-lg border border-slate-300 px-3 py-2 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none transition">
+                                        <span class="text-slate-500 font-medium">mmHg</span>
                                     </div>
-                                </div>
-
-                                <div class="d-flex align-items-center mb-2">
-                                    <label class="d-flex" style="width: 34.5%;">
-                                        <span style="flex: 1;">Nama</span>
-                                        <span>:</span>
-                                    </label>
-                                    <div style="width: 80%; padding-left: 10px;">
-                                        <?= esc($patient->name ?? '') ?>
+                                </td>
+                            </tr>
+                            
+                            <!-- VERTEBRA -->
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="bg-slate-50/80 px-4 py-4 font-medium text-slate-700 border-r border-slate-200 align-top">Type Vertebra</td>
+                                <td class="px-4 py-4 w-1/2 align-top">
+                                    <div class="flex flex-wrap gap-4">
+                                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" name="vertebra[]" value="C" id="vertebra_c" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500 w-4 h-4">
+                                            <span class="text-slate-700">C</span>
+                                        </label>
+                                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" name="vertebra[]" value="S" id="vertebra_s" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500 w-4 h-4">
+                                            <span class="text-slate-700">S</span>
+                                        </label>
+                                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" name="vertebra[]" value="FLAT" id="vertebra_flat" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500 w-4 h-4">
+                                            <span class="text-slate-700">FLAT</span>
+                                        </label>
                                     </div>
-                                </div>
+                                </td>
+                                <td class="px-4 py-4 w-1/2 align-top">
+                                    <textarea name="ket_vertebrata" rows="2" placeholder="Masukkan keterangan" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none transition"></textarea>
+                                </td>
+                            </tr>
 
-                                <div class="d-flex align-items-center mb-2">
-                                    <label class="d-flex" style="width: 34.5%;">
-                                        <span style="flex: 1;">Usia</span>
-                                        <span>:</span>
-                                    </label>
-                                    <div style="width: 80%; padding-left: 10px;">
-                                        <?= esc($patient->age ?? '') ?> Tahun
+                            <!-- THORAX -->
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="bg-slate-50/80 px-4 py-4 font-medium text-slate-700 border-r border-slate-200 align-top">Type Thorax</td>
+                                <td class="px-4 py-4 align-top">
+                                    <div class="flex flex-wrap gap-4">
+                                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" name="thorax[]" value="CD" id="thorax_cd" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500 w-4 h-4">
+                                            <span class="text-slate-700">CD</span>
+                                        </label>
+                                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" name="thorax[]" value="CB" id="thorax_cb" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500 w-4 h-4">
+                                            <span class="text-slate-700">CB</span>
+                                        </label>
+                                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" name="thorax[]" value="BOTLE" id="thorax_botle" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500 w-4 h-4">
+                                            <span class="text-slate-700">BOTLE</span>
+                                        </label>
                                     </div>
-                                </div>
+                                </td>
+                                <td class="px-4 py-4 align-top">
+                                    <textarea name="ket_thorax" rows="2" placeholder="Masukkan keterangan" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none transition"></textarea>
+                                </td>
+                            </tr>
 
-                                <div class="d-flex align-items-start mb-2">
-                                    <label class="d-flex align-items-center" style="width: 30%;">
-                                        <span style="flex: 1;">Alamat</span>
-                                        <span>:</span>
-                                    </label>
-                                    <div style="width: 70%; padding-left: 10px;">
-                                        <?php
-                                        $parts = [];
-                                        if (!empty($patient->address)) $parts[] = $patient->address;
-                                        if (!empty($address->desa_nama)) $parts[] = $address->desa_nama;
-                                        if (!empty($address->kecamatan_nama)) $parts[] = $address->kecamatan_nama;
-                                        if (!empty($address->kabupaten_nama)) $parts[] = $address->kabupaten_nama;
-                                        echo esc(implode(', ', $parts));
-                                        ?>
+                            <!-- STANDARD INPUTS (Cervical - Sacrum) -->
+                            <?php 
+                            $simpleFields = [
+                                'Cervical' => 'cervical', 
+                                'Thoraxal' => 'thoraxal', 
+                                'Lumbal' => 'lumbar', 
+                                'Sacrum' => 'sacrum'
+                            ];
+                            foreach($simpleFields as $label => $name): ?>
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="bg-slate-50/80 px-4 py-3 font-medium text-slate-700 border-r border-slate-200 align-middle"><?= $label ?></td>
+                                <td class="px-4 py-3" colspan="2">
+                                    <input type="text" name="<?= $name ?>" class="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none transition">
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+
+                            <!-- KOMPRESI -->
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="bg-slate-50/80 px-4 py-4 font-medium text-slate-700 border-r border-slate-200 align-top">Kompresi</td>
+                                <td class="px-4 py-4 align-top">
+                                    <div class="flex flex-wrap gap-4">
+                                        <?php $komp = ['Cervical'=>'cervical', 'Vertebra'=>'vertebra', 'HS'=>'HS', 'Kanan'=>'kanan', 'Kiri'=>'kiri']; 
+                                        foreach($komp as $lbl => $val): ?>
+                                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" name="kompresi[]" value="<?= $val ?>" id="kompresi_<?= strtolower($val) ?>" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500 w-4 h-4">
+                                            <span class="text-slate-700"><?= $lbl ?></span>
+                                        </label>
+                                        <?php endforeach; ?>
                                     </div>
-                                </div>
+                                </td>
+                                <td class="px-4 py-4 align-top">
+                                    <textarea name="ket_kompresi" rows="2" placeholder="Masukkan keterangan" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none transition"></textarea>
+                                </td>
+                            </tr>
 
-                                <div class="d-flex align-items-center mb-2">
-                                    <label class="d-flex" style="width: 34.5%;">
-                                        <span style="flex: 1;">No. WA</span>
-                                        <span>:</span>
-                                    </label>
-                                    <div style="width: 80%; padding-left: 10px;">
-                                        <?= esc($patient->phone ?? '-') ?>
+                            <!-- PELVIS -->
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="bg-slate-50/80 px-4 py-3 font-medium text-slate-700 border-r border-slate-200 align-middle">Pelvis</td>
+                                <td class="px-4 py-3" colspan="2">
+                                    <input type="text" name="pelvis" class="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none transition">
+                                </td>
+                            </tr>
+
+                            <!-- PLINTIRAN -->
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="bg-slate-50/80 px-4 py-4 font-medium text-slate-700 border-r border-slate-200 align-top">Plintiran</td>
+                                <td class="px-4 py-4 align-top">
+                                    <div class="flex flex-wrap gap-4">
+                                        <?php $plin = ['Kanan'=>'kanan', 'Kiri'=>'kiri', 'Silang'=>'silang']; 
+                                        foreach($plin as $lbl => $val): ?>
+                                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" name="plintiran[]" value="<?= $val ?>" id="plintiran_<?= $val ?>" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500 w-4 h-4">
+                                            <span class="text-slate-700"><?= $lbl ?></span>
+                                        </label>
+                                        <?php endforeach; ?>
                                     </div>
-                                </div>
+                                </td>
+                                <td class="px-4 py-4 align-top">
+                                    <textarea name="ket_plintiran" rows="2" placeholder="Masukkan keterangan" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none transition"></textarea>
+                                </td>
+                            </tr>
 
-                                <div class="d-flex align-items-center mb-2">
-                                    <label class="d-flex" style="width: 30%;">
-                                        <span style="flex: 1;">Wilayah Periksa</span>
-                                        <span>:</span>
-                                    </label>
-                                    <div style="width: 70%; padding-left: 10px;">
-                                        <select id="region_history" name="history_region" class="form-control" style="width: 100%">
-                                            <option value="">Semua Wilayah</option>
+                            <!-- VISUAL KAKI -->
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="bg-slate-50/80 px-4 py-4 font-medium text-slate-700 border-r border-slate-200 align-top">Visual Kaki</td>
+                                <td class="px-4 py-4 align-top">
+                                    <div class="flex flex-wrap gap-4">
+                                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" name="visual_kaki[]" value="kanan" id="visual_kaki_kanan" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500 w-4 h-4">
+                                            <span class="text-slate-700">Kanan</span>
+                                        </label>
+                                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" name="visual_kaki[]" value="kiri" id="visual_kaki_kiri" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500 w-4 h-4">
+                                            <span class="text-slate-700">Kiri</span>
+                                        </label>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4 align-top">
+                                    <textarea name="ket_viska" rows="2" placeholder="Masukkan keterangan" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none transition"></textarea>
+                                </td>
+                            </tr>
 
-                                            <?php foreach ($wilayah as $value): ?>
-                                                <?php
-                                                // Logika Selected: Cek dari session regions_patient atau dari data pasien
-                                                $selected = '';
-                                                if (isset($regions_patient[0]) && $value->id == $regions_patient[0]) {
-                                                    $selected = 'selected';
-                                                } elseif (isset($patient->region_id) && $value->id == $patient->region_id) {
-                                                    $selected = 'selected';
-                                                }
-                                                ?>
-                                                <option value="<?= $value->id ?>" <?= $selected ?>>
-                                                    <?= esc($value->name) ?>
-                                                </option>
+                            <!-- PUBIS MATRIX -->
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="bg-slate-50/80 px-4 py-4 font-medium text-slate-700 border-r border-slate-200 align-middle">Pubis</td>
+                                <td class="p-0 align-top" colspan="2">
+                                    <table class="w-full text-center border-collapse">
+                                        <thead>
+                                            <tr class="text-slate-500 border-b border-slate-200">
+                                                <th class="py-3 font-medium border-r border-slate-200 w-1/6 bg-slate-50/30"></th>
+                                                <th class="py-3 font-medium">Atas</th>
+                                                <th class="py-3 font-medium">Bawah</th>
+                                                <th class="py-3 font-medium">Samping</th>
+                                                <th class="py-3 font-medium">Depan</th>
+                                                <th class="py-3 font-medium">Dominan</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-slate-100">
+                                            <?php foreach(['Kanan' => 'kanan', 'Kiri' => 'kiri'] as $label => $val): ?>
+                                            <tr>
+                                                <td class="py-3 font-medium text-slate-700 border-r border-slate-200 bg-slate-50/30"><?= $label ?></td>
+                                                <?php foreach(['atas', 'bawah', 'samping', 'depan', 'dominan'] as $pos): ?>
+                                                <td class="py-3">
+                                                    <input type="checkbox" name="pubis[]" value="<?= $val.'_'.$pos ?>" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500 w-4 h-4 cursor-pointer">
+                                                </td>
+                                                <?php endforeach; ?>
+                                            </tr>
                                             <?php endforeach; ?>
-                                        </select>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+
+                            <!-- POWER -->
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="bg-slate-50/80 px-4 py-3 font-medium text-slate-700 border-r border-slate-200 align-middle">Power</td>
+                                <td class="px-4 py-3" colspan="2">
+                                    <input type="text" name="power" class="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none transition">
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- HASIL, LAIN-LAIN, TINDAKAN, PR, TERAPIS -->
+                <div class="space-y-5">
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-800">Hasil Pemeriksaan :</label>
+                        <textarea name="results" id="resultTags" rows="4" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"></textarea>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-800">Lain-Lain (Progres Terapi):</label>
+                        <textarea name="other" rows="3" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"></textarea>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-800">Tindakan :</label>
+                        <textarea name="measure" rows="3" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"></textarea>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-800">PR :</label>
+                        <input type="text" name="pr" id="pr" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-800">Terapis :</label>
+                        <!-- Biarkan select2 menangani style-nya, pastikan class .terapis tetap ada -->
+                        <select class="terapis w-full" name="terapis[]" multiple="multiple">
+                            <?php foreach ($terapis as $t): ?>
+                                <option value="<?= esc($t->id) ?>"><?= esc($t->nama ?? $t->name ?? 'Tanpa Nama') ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+
+                <hr class="border-slate-200">
+
+                <!-- TERAPI KEJANTANAN -->
+                <div id="terapi-kejantanan" class="bg-slate-50/50 border border-slate-200 rounded-xl p-5" style="display: none;">
+                    <label class="inline-flex items-center gap-3 cursor-pointer mb-4">
+                        <input type="checkbox" id="kejantanan" name="kejantanan" value="ya" onchange="toggleTerapiForm()" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500 w-5 h-5">
+                        <span class="text-base font-semibold text-slate-800">Aktifkan Terapi Kejantanan</span>
+                    </label>
+
+                    <div id="terapi-form" class="mt-4 border-t border-slate-200 pt-4" style="display: none;">
+                        <div class="space-y-6 text-sm text-slate-700">
+                            <!-- Pertanyaan 1 -->
+                            <div class="flex flex-col md:flex-row md:items-start border-b border-slate-100 pb-4 gap-2">
+                                <div class="w-full md:w-3/5 font-medium">Apakah jika bangun tidur pagi hari masih ereksi?</div>
+                                <div class="w-full md:w-2/5 flex gap-4">
+                                    <label class="inline-flex items-center gap-2 cursor-pointer"><input type="radio" name="ereksi" value="ya" class="text-teal-600 focus:ring-teal-500"> Ya</label>
+                                    <label class="inline-flex items-center gap-2 cursor-pointer"><input type="radio" name="ereksi" value="tidak" class="text-teal-600 focus:ring-teal-500"> Tidak</label>
+                                </div>
+                            </div>
+                            
+                            <!-- Pertanyaan 2 -->
+                            <div class="flex flex-col md:flex-row md:items-start border-b border-slate-100 pb-4 gap-2">
+                                <div class="w-full md:w-3/5 font-medium">Apakah suka melihat film porno?</div>
+                                <div class="w-full md:w-2/5">
+                                    <div class="flex gap-4 mb-2">
+                                        <label class="inline-flex items-center gap-2 cursor-pointer"><input type="radio" name="nonton_porno" value="ya" onclick="showFrequency('nonton-porn-frequency', true)" class="text-teal-600 focus:ring-teal-500"> Ya</label>
+                                        <label class="inline-flex items-center gap-2 cursor-pointer"><input type="radio" name="nonton_porno" value="tidak" onclick="showFrequency('nonton-porn-frequency', false)" class="text-teal-600 focus:ring-teal-500"> Tidak</label>
                                     </div>
+                                    <div id="nonton-porn-frequency" class="bg-white p-3 rounded-lg border border-slate-200 mt-2 space-y-2" style="display: none;">
+                                        <p class="font-medium text-xs text-slate-500 mb-1">Jika Ya, seberapa sering?</p>
+                                        <label class="flex items-center gap-2"><input type="radio" name="frekuensi_nonton_porno" value="sehari_sekali" class="text-teal-600 focus:ring-teal-500"> Sehari sekali</label>
+                                        <label class="flex items-center gap-2"><input type="radio" name="frekuensi_nonton_porno" value="lebih_dari_1x_sehari" class="text-teal-600 focus:ring-teal-500"> Lebih dari 1x sehari</label>
+                                        <label class="flex items-center gap-2"><input type="radio" name="frekuensi_nonton_porno" value="seminggu_sekali" class="text-teal-600 focus:ring-teal-500"> Seminggu sekali</label>
+                                        <label class="flex items-center gap-2"><input type="radio" name="frekuensi_nonton_porno" value="lainnya" onclick="toggleLainnyaTextbox('nonton-lainnya-textbox', true)" class="text-teal-600 focus:ring-teal-500"> Lainnya</label>
+                                        <input type="text" id="nonton-lainnya-textbox" name="frekuensi_nonton_lainnya" class="w-full rounded border border-slate-300 px-2 py-1 text-sm mt-1 focus:border-teal-500 outline-none" style="display: none;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Pertanyaan 3 -->
+                            <div class="flex flex-col md:flex-row md:items-start border-b border-slate-100 pb-4 gap-2">
+                                <div class="w-full md:w-3/5 font-medium">Apakah sering melakukan onani?</div>
+                                <div class="w-full md:w-2/5">
+                                    <div class="flex gap-4 mb-2">
+                                        <label class="inline-flex items-center gap-2 cursor-pointer"><input type="radio" name="sering_onani" value="ya" onclick="showFrequency('onani-frequency', true)" class="text-teal-600 focus:ring-teal-500"> Ya</label>
+                                        <label class="inline-flex items-center gap-2 cursor-pointer"><input type="radio" name="sering_onani" value="tidak" onclick="showFrequency('onani-frequency', false)" class="text-teal-600 focus:ring-teal-500"> Tidak</label>
+                                    </div>
+                                    <div id="onani-frequency" class="bg-white p-3 rounded-lg border border-slate-200 mt-2 space-y-2" style="display: none;">
+                                        <p class="font-medium text-xs text-slate-500 mb-1">Jika Ya, seberapa sering?</p>
+                                        <label class="flex items-center gap-2"><input type="radio" name="frekuensi_onani" value="sehari_sekali" class="text-teal-600 focus:ring-teal-500"> Sehari sekali</label>
+                                        <label class="flex items-center gap-2"><input type="radio" name="frekuensi_onani" value="lebih_dari_1x_sehari" class="text-teal-600 focus:ring-teal-500"> Lebih dari 1x sehari</label>
+                                        <label class="flex items-center gap-2"><input type="radio" name="frekuensi_onani" value="seminggu_sekali" class="text-teal-600 focus:ring-teal-500"> Seminggu sekali</label>
+                                        <label class="flex items-center gap-2"><input type="radio" name="frekuensi_onani" value="lainnya" onclick="toggleLainnyaTextbox('onani-lainnya-textbox', true)" class="text-teal-600 focus:ring-teal-500"> Lainnya</label>
+                                        <input type="text" id="onani-lainnya-textbox" name="frekuensi_onani_lainnya" class="w-full rounded border border-slate-300 px-2 py-1 text-sm mt-1 focus:border-teal-500 outline-none" style="display: none;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Pertanyaan 4, 5, 6, 7 -->
+                            <?php 
+                            $q4 = ['menggairahkan'=>'Menggairahkan', 'kurang_menggairahkan'=>'Kurang menggairahkan', 'cuek'=>'Cuek', 'aktif_dominan'=>'Aktif/dominan', 'balance'=>'Balance'];
+                            $q5 = ['sehari_sekali'=>'Sehari sekali', 'lebih_dari_1x_sehari'=>'Lebih dari 1x sehari', 'seminggu_sekali'=>'Seminggu sekali'];
+                            ?>
+                            <div class="flex flex-col md:flex-row md:items-start border-b border-slate-100 pb-4 gap-2">
+                                <div class="w-full md:w-3/5 font-medium">Dalam urusan ranjang, istri Anda termasuk yang seperti apa?</div>
+                                <div class="w-full md:w-2/5 flex flex-col gap-2">
+                                    <?php foreach($q4 as $val => $lbl): ?>
+                                    <label class="inline-flex items-center gap-2 cursor-pointer"><input type="radio" name="ranjang" value="<?= $val ?>" class="text-teal-600 focus:ring-teal-500"> <?= $lbl ?></label>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col md:flex-row md:items-start border-b border-slate-100 pb-4 gap-2">
+                                <div class="w-full md:w-3/5 font-medium">Seberapa sering istri Anda berhubungan seksual?</div>
+                                <div class="w-full md:w-2/5 flex flex-col gap-2">
+                                    <?php foreach($q5 as $val => $lbl): ?>
+                                    <label class="inline-flex items-center gap-2 cursor-pointer"><input type="radio" name="frekuensi_ranjang" value="<?= $val ?>" class="text-teal-600 focus:ring-teal-500"> <?= $lbl ?></label>
+                                    <?php endforeach; ?>
+                                    <label class="inline-flex items-center gap-2 cursor-pointer"><input type="radio" name="frekuensi_ranjang" value="lainnya" onclick="toggleLainnyaTextbox('hubungan-lainnya-textbox', true)" class="text-teal-600 focus:ring-teal-500"> Lainnya</label>
+                                    <input type="text" id="hubungan-lainnya-textbox" name="frekuensi_ranjang_lainnya" class="w-full rounded border border-slate-300 px-2 py-1 text-sm mt-1 focus:border-teal-500 outline-none" style="display: none;">
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col md:flex-row md:items-start border-b border-slate-100 pb-4 gap-2">
+                                <div class="w-full md:w-3/5 font-medium">Pernah konsumsi obat kuat?</div>
+                                <div class="w-full md:w-2/5 flex flex-col gap-2">
+                                    <label class="inline-flex items-center gap-2 cursor-pointer"><input type="radio" name="obat_kuat" value="ya" class="text-teal-600 focus:ring-teal-500"> Ya</label>
+                                    <label class="inline-flex items-center gap-2 cursor-pointer"><input type="radio" name="obat_kuat" value="tidak" class="text-teal-600 focus:ring-teal-500"> Tidak</label>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col md:flex-row md:items-start gap-2">
+                                <div class="w-full md:w-3/5 font-medium">Menurut Anda, apa faktor penyebab dari masalah disfungsi seksual Anda?</div>
+                                <div class="w-full md:w-2/5">
+                                    <textarea name="penyebab" rows="3" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"></textarea>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <hr>
-
-                    <div class="row mb-2">
-                        <div class="col-4">
-                            <label>Waktu mulai terapi :</label><br>
-                            <input type="text" class="w-100" name="processAt" id="processAt" disabled></input>
-                        </div>
-                        <div class="col-4">
-                            <label>Waktu selesai terapi :</label><br>
-                            <input type="text" class="w-100" name="finishAt" id="finishAt" disabled></input>
-                        </div>
-                        <div class="col-4">
-                            <label>Total Waktu :</label><br>
-                            <input type="text" class="w-100" name="timeConsume" id="timeConsume" disabled></input>
-                        </div>
-                    </div>
-                    <br>
-
-                    <!-- Keluhan dan Riwayat Medis -->
-                    <div class="row mb-2">
-                        <div class="col-6">
-                            <label>Keluhan :</label><br>
-                            <textarea class="w-100 h-100" name="complaint" rows="3" id="complaintTags" autofocus></textarea>
-                        </div>
-                        <div class="col-6">
-                            <label>Riwayat Medis :</label><br>
-                            <textarea class="w-100 h-100" name="medhis" rows="3" id="medhisTags" autofocus></textarea>
-                        </div>
-                    </div>
-                    <br>
-                    <br>
-
-                    <div class="table-responsive">
-                        <!-- Pemeriksaan -->
-                        <table class="table table-bordered">
-                            <tr>
-                                <td>Tensi</td>
-                                <td colspan="5">
-                                    <div class="d-flex align-items-center">
-                                        <input type="text" class="form-control mr-3" name="tensi">
-                                        <span>mmHg</span>
-                                    </div>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td>Type Vertebra</td>
-                                <td colspan="3">
-                                    <div class="d-flex flex-wrap gap-3">
-                                        <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="checkbox" name="vertebra[]"
-                                                value="C" id="vertebra_c">
-                                            <label class="form-check-label" for="vertebra_c">C</label>
-                                        </div>
-                                        <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="checkbox" name="vertebra[]"
-                                                value="S" id="vertebra_s">
-                                            <label class="form-check-label" for="vertebra_s">S</label>
-                                        </div>
-                                        <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="checkbox" name="vertebra[]"
-                                                value="FLAT" id="vertebra_flat">
-                                            <label class="form-check-label mr-3" for="vertebra_flat">FLAT</label>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td colspan="2">
-                                    <textarea class="form-control my-2" name="ket_vertebrata" placeholder="Masukkan keterangan"></textarea>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td>Type Thorax</td>
-                                <td colspan="3">
-                                    <div class="d-flex flex-wrap gap-3">
-                                        <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="checkbox" name="thorax[]"
-                                                id="thorax_cd" value="CD">
-                                            <label class="form-check-label" for="thorax_cd">CD</label>
-                                        </div>
-                                        <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="checkbox" name="thorax[]"
-                                                id="thorax_cb" value="CB">
-                                            <label class="form-check-label" for="thorax_cb">CB</label>
-                                        </div>
-                                        <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="checkbox" name="thorax[]"
-                                                id="thorax_botle" value="BOTLE">
-                                            <label class="form-check-label" for="thorax_botle">BOTLE</label>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td colspan="2">
-                                    <textarea class="form-control my-2" name="ket_thorax" placeholder="Masukkan keterangan"></textarea>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td>Cervical</td>
-                                <td colspan="5"><input type="text" class="form-control" name="cervical"></td>
-                            </tr>
-
-                            <tr>
-                                <td>Thoraxal</td>
-                                <td colspan="5"><input type="text" class="form-control" name="thoraxal"></td>
-                            </tr>
-
-                            <tr>
-                                <td>Lumbal</td>
-                                <td colspan="5"><input type="text" class="form-control" name="lumbar"></td>
-                            </tr>
-                            <tr>
-                                <td>Sacrum</td>
-                                <td colspan="5"><input type="text" class="form-control" name="sacrum"></td>
-                            </tr>
-
-                            <tr>
-                                <td>Kompresi</td>
-                                <td colspan="3">
-                                    <div class="d-flex flex-wrap gap-3">
-                                        <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="checkbox" name="kompresi[]"
-                                                id="kompresi_cervical" value="cervical">
-                                            <label class="form-check-label mr-2"
-                                                for="kompresi_cervical">Cervical</label>
-                                        </div>
-                                        <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="checkbox" name="kompresi[]"
-                                                id="kompresi_vertebra" value="vertebra">
-                                            <label class="form-check-label mr-2"
-                                                for="kompresi_vertebra">Vertebra</label>
-                                        </div>
-                                        <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="checkbox" name="kompresi[]"
-                                                id="kompresi_hs" value="HS">
-                                            <label class="form-check-label mr-2" for="kompresi_hs">HS</label>
-                                        </div>
-                                        <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="checkbox" name="kompresi[]"
-                                                id="kompresi_kanan" value="kanan">
-                                            <label class="form-check-label mr-2" for="kompresi_kanan">Kanan</label>
-                                        </div>
-                                        <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="checkbox" name="kompresi[]"
-                                                id="kompresi_kiri" value="kiri">
-                                            <label class="form-check-label mr-2" for="kompresi_kiri">Kiri</label>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td colspan="2">
-                                    <textarea class="form-control my-2" name="ket_kompresi" placeholder="Masukkan keterangan"></textarea>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td>Pelvis</td>
-                                <td colspan="5"><input type="text" class="form-control" name="pelvis"></td>
-                            </tr>
-
-                            <tr>
-                                <td>Plintiran</td>
-                                <td colspan="3">
-                                    <div class="d-flex flex-wrap gap-3">
-                                        <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="checkbox" name="plintiran[]"
-                                                id="plintiran_kanan" value="kanan">
-                                            <label class="form-check-label" for="plintiran_kanan">Kanan</label>
-                                        </div>
-                                        <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="checkbox" name="plintiran[]"
-                                                id="plintiran_kiri" value="kiri">
-                                            <label class="form-check-label" for="plintiran_kiri">Kiri</label>
-                                        </div>
-                                        <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="checkbox" name="plintiran[]"
-                                                id="plintiran_silang" value="silang">
-                                            <label class="form-check-label" for="plintiran_silang">Silang</label>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td colspan="2">
-                                    <textarea class="form-control my-2" name="ket_plintiran" placeholder="Masukkan keterangan"></textarea>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td>Visual Kaki</td>
-                                <td colspan="3">
-                                    <div class="d-flex flex-wrap gap-3">
-                                        <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="checkbox" name="visual_kaki[]"
-                                                id="visual_kaki_kanan" value="kanan">
-                                            <label class="form-check-label" for="visual_kaki_kanan">Kanan</label>
-                                        </div>
-                                        <div class="form-check form-check-inline">
-                                            <input class="form-check-input" type="checkbox" name="visual_kaki[]"
-                                                id="visual_kaki_kiri" value="kiri">
-                                            <label class="form-check-label" for="visual_kaki_kiri">Kiri</label>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td colspan="2">
-                                    <textarea class="form-control my-2" name="ket_viska" placeholder="Masukkan keterangan"></textarea>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td width="16.66%">
-                                    <span>Pubis</span>
-                                </td>
-                                <td width="16.66%" style="text-align: center;">
-                                    <span>Atas</span>
-                                </td>
-                                <td width="16.66%" style="text-align: center;">
-                                    <span>Bawah</span>
-                                </td>
-                                <td width="16.66%" style="text-align: center;">
-                                    <span>Samping</span>
-                                </td>
-                                <td width="16.66%" style="text-align: center;">
-                                    <span>Depan</span>
-                                </td>
-                                <td width="16.66%" style="text-align: center;">
-                                    <span>Dominan</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td width="16.66%">
-                                    <span>Kanan</span>
-                                </td>
-                                <td width="16.66%" style="text-align: center;">
-                                    <input type="checkbox" name="pubis[]" value="kanan_atas">
-                                </td>
-                                <td width="16.66%" style="text-align: center;">
-                                    <input type="checkbox" name="pubis[]" value="kanan_bawah">
-                                </td>
-                                <td width="16.66%" style="text-align: center;">
-                                    <input type="checkbox" name="pubis[]" value="kanan_samping">
-                                </td>
-                                <td width="16.66%" style="text-align: center;">
-                                    <input type="checkbox" name="pubis[]" value="kanan_depan">
-                                </td>
-                                <td width="16.66%" style="text-align: center;">
-                                    <input type="checkbox" name="pubis[]" value="kanan_dominan">
-                                </td>
-                            </tr>
-                            <tr>
-                                <td width="16.66%">
-                                    <span>Kiri</span>
-                                </td>
-                                <td width="16.66%" style="text-align: center;">
-                                    <input type="checkbox" name="pubis[]" value="kiri_atas">
-                                </td>
-                                <td width="16.66%" style="text-align: center;">
-                                    <input type="checkbox" name="pubis[]" value="kiri_bawah">
-                                </td>
-                                <td width="16.66%" style="text-align: center;">
-                                    <input type="checkbox" name="pubis[]" value="kiri_samping">
-                                </td>
-                                <td width="16.66%" style="text-align: center;">
-                                    <input type="checkbox" name="pubis[]" value="kiri_depan">
-                                </td>
-                                <td width="16.66%" style="text-align: center;">
-                                    <input type="checkbox" name="pubis[]" value="kiri_dominan">
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td>Power</td>
-                                <td colspan="5"><input type="text" class="form-control" name="power"></td>
-                            </tr>
-                        </table>
-                    </div>
-
-                    <!-- Hasil Pemeriksaan -->
-                    <div class="row mb-2">
-                        <div class="col-12 mb-3">
-                            <label>Hasil Pemeriksaan :</label><br>
-                            <textarea class="w-100 h-100" name="results" rows="3" id="resultTags" autofocus></textarea>
-                        </div>
-                    </div>
-                    <br>
-
-                    <div class="row mb-2">
-                        <div class="col-12">
-                            <label>Lain-Lain (Progres Terapi):</label>
-                            <textarea class="form-control" name="other" rows="3"></textarea>
-                        </div>
-                    </div>
-
-                    <!-- Tindakan -->
-                    <div class="row mb-2">
-                        <div class="col-12">
-                            <label>Tindakan :</label>
-                            <textarea class="form-control" name="measure" rows="3"></textarea>
-                        </div>
-                    </div>
-
-                    <div class="row mb-2">
-                        <div class="col-12">
-                            <label for="pr" class="col-form-label mr-3">PR :</label>
-                            <input type="text" id="pr" class="form-control" name="pr">
-                        </div>
-                    </div>
-
-                    <div class="row mb-2">
-                        <div class="col-12">
-                            <label for="pr" class="col-form-label" style="display: block; margin-bottom: 5px;">Terapis :</label>
-                            <select class="terapis" name="terapis[]" id="pr" multiple="multiple" style="width: 100%;">
-                                <?php foreach ($terapis as $t): ?>
-                                    <option value="<?= esc($t->id) ?>">
-                                        <?= esc($t->nama ?? $t->name ?? 'Tanpa Nama') ?>
-                                    </option>
+                <!-- MATRIX PEMERIKSAAN  -->
+                <!-- Fungsi matriks di-hide di versi lama, kita pertahankan fungsionalitas hide/show -->
+                <div id="pemeriksaan" class="border border-slate-200 rounded-xl overflow-hidden mt-6" style="display: none;">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-center text-xs whitespace-nowrap">
+                            <thead class="bg-slate-50 border-b border-slate-200">
+                                <tr>
+                                    <th colspan="2" class="p-2 border-r border-slate-200"></th>
+                                    <th colspan="4" class="p-2 border-r border-slate-200 text-slate-600 font-bold tracking-widest">KANAN</th>
+                                    <th colspan="4" class="p-2 text-slate-600 font-bold tracking-widest">KIRI</th>
+                                </tr>
+                                <tr class="border-b border-slate-200 text-slate-500">
+                                    <th class="p-2">NO</th>
+                                    <th class="p-2 border-r border-slate-200">AREA MESSAGE</th>
+                                    <th class="p-2">SAKIT/TIDAK</th>
+                                    <th class="p-2 bg-yellow-50">GRADE 1</th>
+                                    <th class="p-2 bg-orange-50">GRADE 2</th>
+                                    <th class="p-2 bg-red-50 border-r border-slate-200">GRADE 3</th>
+                                    <th class="p-2 border-r border-slate-200">AREA MESSAGE</th>
+                                    <th class="p-2">SAKIT/TIDAK</th>
+                                    <th class="p-2 bg-yellow-50">GRADE 1</th>
+                                    <th class="p-2 bg-orange-50">GRADE 2</th>
+                                    <th class="p-2 bg-red-50">GRADE 3</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 text-slate-700 bg-white">
+                                <?php 
+                                $matrixRows = [
+                                    1 => ['OTOT DADA PERUT', 'odp'],
+                                    2 => ['VITAL', 'vital'],
+                                    3 => ['KELENJAR', 'kelenjar'],
+                                    4 => ['HORMON', 'hormon'],
+                                    5 => ['TULANG KERING', 'tk'],
+                                    6 => ['FEMUR DALAM', 'fd'],
+                                    8 => ['CV4', 'cv4'],
+                                    9 => ['CV6', 'cv6'],
+                                    10 => ['L1', 'l1'],
+                                    11 => ['L3', 'l3'],
+                                    12 => ['PIRIFORMIS', 'piriformis'],
+                                    13 => ['SENDOK', 'sendok']
+                                ];
+                                foreach($matrixRows as $no => $r):
+                                    $lbl = $r[0]; $nm = $r[1];
+                                ?>
+                                <tr class="hover:bg-slate-50/50">
+                                    <td class="p-2 font-medium"><?= $no ?></td>
+                                    <td class="p-2 border-r border-slate-200 text-left font-medium"><?= $lbl ?></td>
+                                    <td class="p-2"><input type="checkbox" name="<?= $nm ?>_kanan" value="sakit" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"></td>
+                                    <td class="p-2 bg-yellow-50/30"><input type="radio" name="<?= $nm ?>_kanan_grade" value="grade1" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"></td>
+                                    <td class="p-2 bg-orange-50/30"><input type="radio" name="<?= $nm ?>_kanan_grade" value="grade2" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"></td>
+                                    <td class="p-2 bg-red-50/30 border-r border-slate-200"><input type="radio" name="<?= $nm ?>_kanan_grade" value="grade3" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"></td>
+                                    <td class="p-2 border-r border-slate-200 text-left font-medium"><?= $lbl ?></td>
+                                    <td class="p-2"><input type="checkbox" name="<?= $nm ?>_kiri" value="sakit" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"></td>
+                                    <td class="p-2 bg-yellow-50/30"><input type="radio" name="<?= $nm ?>_kiri_grade" value="grade1" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"></td>
+                                    <td class="p-2 bg-orange-50/30"><input type="radio" name="<?= $nm ?>_kiri_grade" value="grade2" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"></td>
+                                    <td class="p-2 bg-red-50/30"><input type="radio" name="<?= $nm ?>_kiri_grade" value="grade3" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"></td>
+                                </tr>
                                 <?php endforeach; ?>
-                            </select>
-                        </div>
-                    </div>
-
-                    <hr>
-
-                    <div class="row mb-2" id="terapi-kejantanan" style="display: none;">
-                        <div class="col-12">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="kejantanan" value="ya"
-                                    name="kejantanan" onchange="toggleTerapiForm()">
-                                <label class="form-check-label" for="kejantanan">Aktifkan Terapi Kejantanan</label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="terapi-form" style="display: none;">
-                        <table style="width: 100%; margin: 20px 0; border-collapse: collapse;">
-                            <tbody>
-                                <!-- Pertanyaan 1: Apakah jika bangun tidur pagi hari masih ereksi? -->
-                                <tr>
-                                    <td
-                                        style="padding: 10px; border-bottom: 1px solid #ddd;  border-top: 1px solid #ddd; width: 60%;">
-                                        Apakah jika bangun tidur pagi hari masih ereksi?</td>
-                                    <td
-                                        style="padding: 10px; border-bottom: 1px solid #ddd; border-top: 1px solid #ddd; width: 40%;">
-                                        <label style="margin-right: 15px;"><input type="radio" name="ereksi"
-                                                value="ya"> Ya</label>
-                                        <label style="margin-right: 15px;"><input type="radio" name="ereksi"
-                                                value="tidak"> Tidak</label>
-                                    </td>
+                                
+                                <!-- (Lingkar Perut) -->
+                                <?php $lpRows = ['atas'=>'LINGKAR PERUT ATAS','bawah'=>'LINGKAR PERUT BAWAH','kanan'=>'LINGKAR PERUT KANAN','kiri'=>'LINGKAR PERUT KIRI']; 
+                                $first = true; foreach($lpRows as $suf => $lbl): ?>
+                                <tr class="hover:bg-slate-50/50">
+                                    <?php if($first): ?><td class="p-2 font-medium" rowspan="4">7</td><?php $first=false; endif; ?>
+                                    <td class="p-2 border-r border-slate-200 text-left font-medium"><?= $lbl ?></td>
+                                    <td class="p-2"><input type="checkbox" name="lp_<?= $suf ?>" value="sakit" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"></td>
+                                    <td class="p-2 bg-yellow-50/30"><input type="radio" name="lp_<?= $suf ?>_grade" value="grade1" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"></td>
+                                    <td class="p-2 bg-orange-50/30"><input type="radio" name="lp_<?= $suf ?>_grade" value="grade2" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"></td>
+                                    <td class="p-2 bg-red-50/30 border-r border-slate-200"><input type="radio" name="lp_<?= $suf ?>_grade" value="grade3" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"></td>
+                                    <td class="p-2 border-r border-slate-200 bg-slate-50/50"></td><td class="p-2 bg-slate-50/50"></td><td class="p-2 bg-slate-50/50"></td><td class="p-2 bg-slate-50/50"></td><td class="p-2 bg-slate-50/50"></td>
                                 </tr>
-
-                                <!-- Pertanyaan 2: Apakah suka melihat film porno? -->
-                                <tr>
-                                    <td style="padding: 10px; border-bottom: 1px solid #ddd; width: 60%;">Apakah suka
-                                        melihat film porno?</td>
-                                    <td style="padding: 10px; border-bottom: 1px solid #ddd; width: 40%;">
-                                        <label style="margin-right: 15px;"><input type="radio" name="nonton_porno"
-                                                value="ya" onclick="showFrequency('nonton-porn-frequency', true)">
-                                            Ya</label>
-                                        <label style="margin-right: 15px;"><input type="radio" name="nonton_porno"
-                                                value="tidak"
-                                                onclick="showFrequency('nonton-porn-frequency', false)"> Tidak</label>
-
-                                        <div id="nonton-porn-frequency" style="display: none; margin-top: 10px;">
-                                            <label>Jika Ya, seberapa sering?</label><br>
-                                            <label style="margin-right: 15px;"><input type="radio"
-                                                    name="frekuensi_nonton_porno" value="sehari_sekali"> Sehari
-                                                sekali</label><br>
-                                            <label style="margin-right: 15px;"><input type="radio"
-                                                    name="frekuensi_nonton_porno" value="lebih_dari_1x_sehari"> Lebih
-                                                dari 1x sehari</label><br>
-                                            <label style="margin-right: 15px;"><input type="radio"
-                                                    name="frekuensi_nonton_porno" value="seminggu_sekali"> Seminggu
-                                                sekali</label><br>
-                                            <label style="margin-right: 15px;"><input type="radio"
-                                                    name="frekuensi_nonton_porno" value="lainnya"
-                                                    onclick="toggleLainnyaTextbox('nonton-lainnya-textbox', true)">
-                                                Lainnya</label>
-                                            <input type="text" id="nonton-lainnya-textbox"
-                                                name="frekuensi_nonton_lainnya"
-                                                style="display: none; width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box;">
-                                        </div>
-                                    </td>
-                                </tr>
-
-                                <!-- Pertanyaan 3: Apakah sering melakukan onani? -->
-                                <tr>
-                                    <td style="padding: 10px; border-bottom: 1px solid #ddd; width: 60%;">Apakah sering
-                                        melakukan onani?</td>
-                                    <td style="padding: 10px; border-bottom: 1px solid #ddd; width: 40%;">
-                                        <label style="margin-right: 15px;"><input type="radio" name="sering_onani"
-                                                value="ya" onclick="showFrequency('onani-frequency', true)">
-                                            Ya</label>
-                                        <label style="margin-right: 15px;"><input type="radio" name="sering_onani"
-                                                value="tidak" onclick="showFrequency('onani-frequency', false)">
-                                            Tidak</label>
-
-                                        <div id="onani-frequency" style="display: none; margin-top: 10px;">
-                                            <label>Jika Ya, seberapa sering?</label><br>
-                                            <label style="margin-right: 15px;"><input type="radio"
-                                                    name="frekuensi_onani" value="sehari_sekali"> Sehari
-                                                sekali</label><br>
-                                            <label style="margin-right: 15px;"><input type="radio"
-                                                    name="frekuensi_onani" value="lebih_dari_1x_sehari"> Lebih dari 1x
-                                                sehari</label><br>
-                                            <label style="margin-right: 15px;"><input type="radio"
-                                                    name="frekuensi_onani" value="seminggu_sekali"> Seminggu
-                                                sekali</label><br>
-                                            <label style="margin-right: 15px;"><input type="radio"
-                                                    name="frekuensi_onani" value="lainnya"
-                                                    onclick="toggleLainnyaTextbox('onani-lainnya-textbox', true)">
-                                                Lainnya</label>
-                                            <input type="text" id="onani-lainnya-textbox"
-                                                name="frekuensi_onani_lainnya"
-                                                style="display: none; width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box;">
-                                        </div>
-                                    </td>
-                                </tr>
-
-                                <!-- Pertanyaan 4: Dalam urusan ranjang, istri Anda termasuk yang seperti apa? -->
-                                <tr>
-                                    <td style="padding: 10px; border-bottom: 1px solid #ddd; width: 60%;">Dalam urusan
-                                        ranjang, istri Anda termasuk yang seperti apa?</td>
-                                    <td style="padding: 10px; border-bottom: 1px solid #ddd; width: 40%;">
-                                        <label style="margin-right: 15px;"><input type="radio" name="ranjang"
-                                                value="menggairahkan"> Menggairahkan</label><br>
-                                        <label style="margin-right: 15px;"><input type="radio" name="ranjang"
-                                                value="kurang_menggairahkan"> Kurang menggairahkan</label><br>
-                                        <label style="margin-right: 15px;"><input type="radio" name="ranjang"
-                                                value="cuek"> Cuek</label><br>
-                                        <label style="margin-right: 15px;"><input type="radio" name="ranjang"
-                                                value="aktif_dominan"> Aktif/dominan</label><br>
-                                        <label style="margin-right: 15px;"><input type="radio" name="ranjang"
-                                                value="balance"> Balance</label>
-                                    </td>
-                                </tr>
-
-                                <!-- Pertanyaan 5: Seberapa sering istri Anda berhubungan seksual? -->
-                                <tr>
-                                    <td style="padding: 10px; border-bottom: 1px solid #ddd; width: 60%;">Seberapa
-                                        sering istri Anda berhubungan seksual?</td>
-                                    <td style="padding: 10px; border-bottom: 1px solid #ddd; width: 40%;">
-                                        <label style="margin-right: 15px;"><input type="radio"
-                                                name="frekuensi_ranjang" value="sehari_sekali"> Sehari
-                                            sekali</label><br>
-                                        <label style="margin-right: 15px;"><input type="radio"
-                                                name="frekuensi_ranjang" value="lebih_dari_1x_sehari"> Lebih dari 1x
-                                            sehari</label><br>
-                                        <label style="margin-right: 15px;"><input type="radio"
-                                                name="frekuensi_ranjang" value="seminggu_sekali"> Seminggu
-                                            sekali</label><br>
-                                        <label style="margin-right: 15px;"><input type="radio"
-                                                name="frekuensi_ranjang" value="lainnya"
-                                                onclick="toggleLainnyaTextbox('hubungan-lainnya-textbox', true)">
-                                            Lainnya</label>
-                                        <input type="text" id="hubungan-lainnya-textbox"
-                                            name="frekuensi_ranjang_lainnya"
-                                            style="display: none; width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box;">
-                                    </td>
-                                </tr>
-
-                                <!-- Pertanyaan 6: Pernah konsumsi obat kuat? -->
-                                <tr>
-                                    <td style="padding: 10px; border-bottom: 1px solid #ddd; width: 60%;">Pernah
-                                        konsumsi obat kuat?</td>
-                                    <td style="padding: 10px; border-bottom: 1px solid #ddd; width: 40%;">
-                                        <label style="margin-right: 15px;"><input type="radio" name="obat_kuat"
-                                                value="ya"> Ya</label><br>
-                                        <label style="margin-right: 15px;"><input type="radio" name="obat_kuat"
-                                                value="tidak"> Tidak</label>
-                                    </td>
-                                </tr>
-
-                                <!-- Pertanyaan 7: Menurut Anda, apa faktor penyebab dari masalah disfungsi seksual Anda? -->
-                                <tr>
-                                    <td style="padding: 10px; border-bottom: 1px solid #ddd; width: 60%;">Menurut Anda,
-                                        apa faktor penyebab dari masalah disfungsi seksual Anda?</td>
-                                    <td style="padding: 10px; border-bottom: 1px solid #ddd; width: 40%;">
-                                        <textarea name="penyebab" style="width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box;" rows="3"></textarea>
-                                    </td>
-                                </tr>
+                                <?php endforeach; ?>
                             </tbody>
                         </table>
                     </div>
+                </div>
 
-                    <div id="pemeriksaan" style="display: none;">
-                        <div class="table-responsive">
-                            <table class="table" style="text-align: center; font-size: 12px;">
-                                <tr>
-                                    <td></td>
-                                    <td></td>
-                                    <td colspan="4">KANAN</td>
-                                    <td></td>
-                                    <td colspan="4">KIRI</td>
-                                </tr>
-                                <tr>
-                                    <th>NO</th>
-                                    <th>AREA MESSAGE</th>
-                                    <th>SAKIT/TIDAK</th>
-                                    <th>GRADE 1</th>
-                                    <th>GRADE 2</th>
-                                    <th>GRADE 3</th>
-                                    <th>AREA MESSAGE</th>
-                                    <th>SAKIT/TIDAK</th>
-                                    <th>GRADE 1</th>
-                                    <th>GRADE 2</th>
-                                    <th>GRADE 3</th>
-                                </tr>
-                                <tr>
-                                    <td>1</td>
-                                    <td>OTOT DADA PERUT</td>
-                                    <td><input type="checkbox" name="odp_kanan" value="sakit"></td>
-                                    <td><input type="checkbox" name="odp_kanan_grade" value="grade1"></td>
-                                    <td><input type="checkbox" name="odp_kanan_grade" value="grade2"></td>
-                                    <td><input type="checkbox" name="odp_kanan_grade" value="grade3"></td>
-                                    <td>OTOT DADA PERUT</td>
-                                    <td><input type="checkbox" name="odp_kiri" value="sakit"></td>
-                                    <td><input type="checkbox" name="odp_kiri_grade" value="grade1"></td>
-                                    <td><input type="checkbox" name="odp_kiri_grade" value="grade2"></td>
-                                    <td><input type="checkbox" name="odp_kiri_grade" value="grade3"></td>
-                                </tr>
-                                <tr>
-                                    <td>2</td>
-                                    <td>VITAL</td>
-                                    <td><input type="checkbox" name="vital_kanan" value="sakit"></td>
-                                    <td><input type="checkbox" name="vital_kanan_grade" value="grade1"></td>
-                                    <td><input type="checkbox" name="vital_kanan_grade" value="grade2"></td>
-                                    <td><input type="checkbox" name="vital_kanan_grade" value="grade3"></td>
-                                    <td>VITAL</td>
-                                    <td><input type="checkbox" name="vital_kiri" value="sakit"></td>
-                                    <td><input type="checkbox" name="vital_kiri_grade" value="grade1"></td>
-                                    <td><input type="checkbox" name="vital_kiri_grade" value="grade2"></td>
-                                    <td><input type="checkbox" name="vital_kiri_grade" value="grade3"></td>
-                                </tr>
-                                <tr>
-                                    <td>3</td>
-                                    <td>KELENJAR</td>
-                                    <td><input type="checkbox" name="kelenjar_kanan" value="sakit"></td>
-                                    <td><input type="checkbox" name="kelenjar_kanan_grade" value="grade1"></td>
-                                    <td><input type="checkbox" name="kelenjar_kanan_grade" value="grade2"></td>
-                                    <td><input type="checkbox" name="kelenjar_kanan_grade" value="grade3"></td>
-                                    <td>KELENJAR</td>
-                                    <td><input type="checkbox" name="kelenjar_kiri" value="sakit"></td>
-                                    <td><input type="checkbox" name="kelenjar_kiri_grade" value="grade1"></td>
-                                    <td><input type="checkbox" name="kelenjar_kiri_grade" value="grade2"></td>
-                                    <td><input type="checkbox" name="kelenjar_kiri_grade" value="grade3"></td>
-                                </tr>
-                                <tr>
-                                    <td>4</td>
-                                    <td>HORMON</td>
-                                    <td><input type="checkbox" name="hormon_kanan" value="sakit"></td>
-                                    <td><input type="checkbox" name="hormon_kanan_grade" value="grade1"></td>
-                                    <td><input type="checkbox" name="hormon_kanan_grade" value="grade2"></td>
-                                    <td><input type="checkbox" name="hormon_kanan_grade" value="grade3"></td>
-                                    <td>HORMON</td>
-                                    <td><input type="checkbox" name="hormon_kiri" value="sakit"></td>
-                                    <td><input type="checkbox" name="hormon_kiri_grade" value="grade1"></td>
-                                    <td><input type="checkbox" name="hormon_kiri_grade" value="grade2"></td>
-                                    <td><input type="checkbox" name="hormon_kiri_grade" value="grade3"></td>
-                                </tr>
-                                <tr>
-                                    <td>5</td>
-                                    <td>TULANG KERING</td>
-                                    <td><input type="checkbox" name="tk_kanan" value="sakit"></td>
-                                    <td><input type="checkbox" name="tk_kanan_grade" value="grade1"></td>
-                                    <td><input type="checkbox" name="tk_kanan_grade" value="grade2"></td>
-                                    <td><input type="checkbox" name="tk_kanan_grade" value="grade3"></td>
-                                    <td>TULANG KERING</td>
-                                    <td><input type="checkbox" name="tk_kiri" value="sakit"></td>
-                                    <td><input type="checkbox" name="tk_kiri_grade" value="grade1"></td>
-                                    <td><input type="checkbox" name="tk_kiri_grade" value="grade2"></td>
-                                    <td><input type="checkbox" name="tk_kiri_grade" value="grade3"></td>
-                                </tr>
-                                <tr>
-                                    <td>6</td>
-                                    <td>FEMUR DALAM</td>
-                                    <td><input type="checkbox" name="fd_kanan" value="sakit"></td>
-                                    <td><input type="checkbox" name="fd_kanan_grade" value="grade1"></td>
-                                    <td><input type="checkbox" name="fd_kanan_grade" value="grade2"></td>
-                                    <td><input type="checkbox" name="fd_kanan_grade" value="grade3"></td>
-                                    <td>FEMUR DALAM</td>
-                                    <td><input type="checkbox" name="fd_kiri" value="sakit"></td>
-                                    <td><input type="checkbox" name="fd_kiri_grade" value="grade1"></td>
-                                    <td><input type="checkbox" name="fd_kiri_grade" value="grade2"></td>
-                                    <td><input type="checkbox" name="fd_kiri_grade" value="grade3"></td>
-                                </tr>
-                                <tr>
-                                    <td rowspan="4">7</td>
-                                    <td>LINGKAR PERUT ATAS</td>
-                                    <td><input type="checkbox" name="lp_atas" value="sakit"></td>
-                                    <td><input type="checkbox" name="lp_atas_grade" value="grade1"></td>
-                                    <td><input type="checkbox" name="lp_atas_grade" value="grade2"></td>
-                                    <td><input type="checkbox" name="lp_atas_grade" value="grade3"></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-                                <tr>
-                                    <td>LINGKAR PERUT BAWAH</td>
-                                    <td><input type="checkbox" name="lp_bawah" value="sakit"></td>
-                                    <td><input type="checkbox" name="lp_bawah_grade" value="grade1"></td>
-                                    <td><input type="checkbox" name="lp_bawah_grade" value="grade2"></td>
-                                    <td><input type="checkbox" name="lp_bawah_grade" value="grade3"></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-                                <tr>
-                                    <td>LINGKAR PERUT KANAN</td>
-                                    <td><input type="checkbox" name="lp_kanan" value="sakit"></td>
-                                    <td><input type="checkbox" name="lp_kanan_grade" value="grade1"></td>
-                                    <td><input type="checkbox" name="lp_kanan_grade" value="grade2"></td>
-                                    <td><input type="checkbox" name="lp_kanan_grade" value="grade3"></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-                                <tr>
-                                    <td>LINGKAR PERUT KIRI</td>
-                                    <td><input type="checkbox" name="lp_kiri" value="sakit"></td>
-                                    <td><input type="checkbox" name="lp_kiri_grade" value="grade1"></td>
-                                    <td><input type="checkbox" name="lp_kiri_grade" value="grade2"></td>
-                                    <td><input type="checkbox" name="lp_kiri_grade" value="grade3"></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-                                <tr>
-                                    <td>8</td>
-                                    <td>CV4</td>
-                                    <td><input type="checkbox" name="cv4_kanan" value="sakit"></td>
-                                    <td><input type="checkbox" name="cv4_kanan_grade" value="grade1"></td>
-                                    <td><input type="checkbox" name="cv4_kanan_grade" value="grade2"></td>
-                                    <td><input type="checkbox" name="cv4_kanan_grade" value="grade3"></td>
-                                    <td>CV4</td>
-                                    <td><input type="checkbox" name="cv4_kiri" value="sakit"></td>
-                                    <td><input type="checkbox" name="cv4_kiri_grade" value="grade1"></td>
-                                    <td><input type="checkbox" name="cv4_kiri_grade" value="grade2"></td>
-                                    <td><input type="checkbox" name="cv4_kiri_grade" value="grade3"></td>
-                                </tr>
-                                <tr>
-                                    <td>9</td>
-                                    <td>CV6</td>
-                                    <td><input type="checkbox" name="cv6_kanan" value="sakit"></td>
-                                    <td><input type="checkbox" name="cv6_kanan_grade" value="grade1"></td>
-                                    <td><input type="checkbox" name="cv6_kanan_grade" value="grade2"></td>
-                                    <td><input type="checkbox" name="cv6_kanan_grade" value="grade3"></td>
-                                    <td>CV6</td>
-                                    <td><input type="checkbox" name="cv6_kiri" value="sakit"></td>
-                                    <td><input type="checkbox" name="cv6_kiri_grade" value="grade1"></td>
-                                    <td><input type="checkbox" name="cv6_kiri_grade" value="grade2"></td>
-                                    <td><input type="checkbox" name="cv6_kiri_grade" value="grade3"></td>
-                                </tr>
-                                <tr>
-                                    <td>10</td>
-                                    <td>L1</td>
-                                    <td><input type="checkbox" name="l1_kanan" value="sakit"></td>
-                                    <td><input type="checkbox" name="l1_kanan_grade" value="grade1"></td>
-                                    <td><input type="checkbox" name="l1_kanan_grade" value="grade2"></td>
-                                    <td><input type="checkbox" name="l1_kanan_grade" value="grade3"></td>
-                                    <td>L1</td>
-                                    <td><input type="checkbox" name="l1_kiri" value="sakit"></td>
-                                    <td><input type="checkbox" name="l1_kiri_grade" value="grade1"></td>
-                                    <td><input type="checkbox" name="l1_kiri_grade" value="grade2"></td>
-                                    <td><input type="checkbox" name="l1_kiri_grade" value="grade3"></td>
-                                </tr>
-                                <tr>
-                                    <td>11</td>
-                                    <td>L3</td>
-                                    <td><input type="checkbox" name="l3_kanan" value="sakit"></td>
-                                    <td><input type="checkbox" name="l3_kanan_grade" value="grade1"></td>
-                                    <td><input type="checkbox" name="l3_kanan_grade" value="grade2"></td>
-                                    <td><input type="checkbox" name="l3_kanan_grade" value="grade3"></td>
-                                    <td>L3</td>
-                                    <td><input type="checkbox" name="l3_kiri" value="sakit"></td>
-                                    <td><input type="checkbox" name="l3_kiri_grade" value="grade1"></td>
-                                    <td><input type="checkbox" name="l3_kiri_grade" value="grade2"></td>
-                                    <td><input type="checkbox" name="l3_kiri_grade" value="grade3"></td>
-                                </tr>
-                                <tr>
-                                    <td>12</td>
-                                    <td>PIRIFORMIS</td>
-                                    <td><input type="checkbox" name="piriformis_kanan" value="sakit"></td>
-                                    <td><input type="checkbox" name="piriformis_kanan_grade" value="grade1"></td>
-                                    <td><input type="checkbox" name="piriformis_kanan_grade" value="grade2"></td>
-                                    <td><input type="checkbox" name="piriformis_kanan_grade" value="grade3"></td>
-                                    <td>PIRIFORMIS</td>
-                                    <td><input type="checkbox" name="piriformis_kiri" value="sakit"></td>
-                                    <td><input type="checkbox" name="piriformis_kiri_grade" value="grade1"></td>
-                                    <td><input type="checkbox" name="piriformis_kiri_grade" value="grade2"></td>
-                                    <td><input type="checkbox" name="piriformis_kiri_grade" value="grade3"></td>
-                                </tr>
-                                <tr>
-                                    <td>13</td>
-                                    <td>SENDOK</td>
-                                    <td><input type="checkbox" name="sendok_kanan" value="sakit"></td>
-                                    <td><input type="checkbox" name="sendok_kanan_grade" value="grade1"></td>
-                                    <td><input type="checkbox" name="sendok_kanan_grade" value="grade2"></td>
-                                    <td><input type="checkbox" name="sendok_kanan_grade" value="grade3"></td>
-                                    <td>SENDOK</td>
-                                    <td><input type="checkbox" name="sendok_kiri" value="sakit"></td>
-                                    <td><input type="checkbox" name="sendok_kiri_grade" value="grade1"></td>
-                                    <td><input type="checkbox" name="sendok_kiri_grade" value="grade2"></td>
-                                    <td><input type="checkbox" name="sendok_kiri_grade" value="grade3"></td>
-                                </tr>
-                            </table>
-                        </div>
+                <!-- FOOTER INFO & TOGGLE WA -->
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between border-t border-slate-200 pt-6 mt-6">
+                    <div id="history-info" class="text-xs text-slate-500">
+                        Data rekam medis ditambah oleh <strong id="created_by" class="text-slate-700"></strong><span id="updated_info" class="hidden">, dan diedit oleh <strong id="updated_by" class="text-slate-700"></strong></span>
                     </div>
-
-                    <hr>
-
-                    <div class="form-group mt-3" id="history-info">
-                        <label for="history_created">
-                            Data rekam medis ditambah oleh <strong id="created_by"></strong>
-                            <span id="updated_info">, dan diedit oleh <strong id="updated_by"></strong></span>
+                    <div id="notif-wa" class="mt-4 md:mt-0 flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-lg border border-slate-200">
+                        <span class="text-sm font-medium text-slate-700">Kirim Notifikasi WhatsApp?</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="notifikasi" id="notifikasi-checkbox" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-teal-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
                         </label>
                     </div>
-                    <div class="form-group" id="notif-wa">
-                        <label for="address"> Kirim Notifikasi WhatsApp ? </label> <br>
-                        <div class="custom-switch">
-                            <label class="custom-switch mt-2">
-                                <input type="checkbox" name="notifikasi" class="custom-switch-input"
-                                    id="notifikasi-checkbox" checked>
-                                <span class="custom-switch-indicator"></span>
-                                <span class="custom-switch-description">Ya, Kirim Notifikasi WhatsApp</span>
-                            </label>
-                        </div>
-                    </div>
-
-
                 </div>
-                <div class="modal-footer bg-whitesmoke br">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                    <button type="submit" id="save-button" name="save-button"
-                        class="btn btn-primary">Simpan</button>
-                </div>
+
             </form>
         </div>
-    </div>
-</div>
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h4>Riwayat Kunjungan Pasien</h4>
-                <div class="card-header-action">
-                    <button type="button" class="btn btn-primary" onclick="add()">
-                        <i class="fas fa-plus"></i> Tambah Riwayat
-                    </button>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table id="table-2" class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>No</th>
-                                <th>Keluhan</th>
-                                <th>Rekam Medis</th>
-                                <th>Tanggal</th>
-                                <th>Type</th>
-                                <th class="text-right">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
+
+        <!-- MODAL FOOTER BUTTONS -->
+        <div class="flex items-center justify-end gap-3 border-t border-slate-200 px-6 py-4 bg-slate-50">
+            <button type="button" data-modal-close class="rounded-lg border border-slate-300 bg-white px-5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition">
+                Batal
+            </button>
+            <button type="submit" form="save_data" id="save-button" class="rounded-lg bg-teal-600 px-5 py-2 text-sm font-medium text-white hover:bg-teal-700 transition">
+                Simpan Data
+            </button>
         </div>
     </div>
 </div>
 
-<?= $this->section('scripts') ?>
-<script>
-    // JS Histories
-    $("#table-2").dataTable({
-        "processing": true,
-        "serverSide": true,
-        columns: [{
-                "data": "no",
-                "class": "",
-                "width": "7%",
-                'sortable': true
-            },
-            {
-                "data": "complaint",
-                "class": "",
-                "width": "25%",
-                'sortable': true
-            },
-            {
-                "data": "medhis",
-                "class": "",
-                "width": "25%",
-                'sortable': true
-            },
-            {
-                "data": "date",
-                "class": "",
-                "width": "25%",
-                'sortable': true
-            },
-            {
-                "data": "type",
-                "class": "",
-                "width": "25%",
-                'sortable': true
-            },
-            {
-                "data": "action",
-                "class": "text-center",
-                "width": "30%",
-                'sortable': false
-            },
-        ],
-        "order": [],
-        "ajax": {
-            "url": "<?= site_url('history/fetch/' . $patient->id) ?>",
-            "type": "POST",
-            "data": function(d) {
-                d["<?= csrf_token() ?>"] = "<?= csrf_hash() ?>";
-            },
-            "dataSrc": function(json) {
-                return json.data;
-            }
-        },
-        "rowCallback": function(row, data) {
-            if (data.is_delete === "1") {
-                $(row).css('color', 'red').css('text-decoration', 'line-through');
-            }
-            if (data.kejantanan === "ya") {
-                $(row).css('color', 'black');
-            }
-        }
-    });
+<div id="deleteModal" class="modal-wrapper hidden fixed inset-0 z-[9999] flex items-center justify-center bg-gray-900/40 backdrop-blur-sm transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 relative transform transition-all border border-gray-100">
+        <button type="button" data-modal-close class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors focus:outline-none">
+            <i class="fas fa-times text-lg"></i>
+        </button>
+        <div class="text-center mb-6 mt-2">
+            <div class="w-16 h-16 rounded-full bg-red-50 text-red-500 flex items-center justify-center mx-auto mb-4 text-3xl border border-red-100">
+                <i class="fas fa-trash-alt"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Hapus Riwayat?</h3>
+            <p class="text-gray-500 text-sm px-2">Data riwayat ini akan dihapus permanen. Apakah Anda yakin melanjutkan?</p>
+        </div>
+        <div class="flex items-center justify-center gap-3 mt-6">
+            <button type="button" data-modal-close class="w-1/2 px-4 py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-xl font-semibold transition-colors border border-gray-200 focus:outline-none">
+                Batal
+            </button>
+            <button type="button" id="confirmDeleteButton" class="w-1/2 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition-colors shadow-lg shadow-red-600/30 focus:outline-none flex items-center justify-center">
+                Ya, Hapus
+            </button>
+        </div>
+        
+    </div>
+</div>
 
-    // Ini di nyalakan kalo mau pakai tag 
-
-    // var complaintTagify, medhisTagify, resultTagify;
-    // $(document).ready(function() {
-    //     // Inisialisasi
-    //     complaintTagify = new Tagify(document.querySelector('textarea[name="complaint"]'), {
-    //         originalInputValueFormat: valuesArr => valuesArr.map(item => item.value).join(',')
-    //     });
-
-    //     medhisTagify = new Tagify(document.querySelector('textarea[name="medhis"]'), {
-    //         originalInputValueFormat: valuesArr => valuesArr.map(item => item.value).join(',')
-    //     });
-
-    //     resultTagify = new Tagify(document.querySelector('textarea[name="result"]'), {
-    //         originalInputValueFormat: valuesArr => valuesArr.map(item => item.value).join(',')
-    //     });
-    // });
-
-    function formatDate(dateTime) {
-        const date = new Date(dateTime);
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        return `${day}/${month}/${year}`;
-    }
-
-    function formatDateForInput(dateTime) {
-        const date = new Date(dateTime);
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    }
-
-    var activeTerapis = <?= json_encode($terapis) ?>;
-
-
-    function add() {
-        var modal = $('#exampleModal');
-        var form = $('#save_data'); // Pakai ID form lu yang spesifik
-
-        modal.appendTo('body').modal('show');
-        modal.find('.modal-title').text('Tambah Riwayat Pasien');
-
-        // 2. Reset Form & Set Action (Anti-Error Reset)
-        if (form.length > 0) {
-            form.attr('action', '<?= site_url('history/store') ?>');
-            form[0].reset();
-
-            // Isi ID tersembunyi
-            form.find('input[name="patient_id"]').val('<?= $patient->id ?? "" ?>');
-            form.find('input[name="queue_id"]').val('<?= $queue_id ?? "" ?>');
-
-            // Reset element manual
-            form.find(':input').prop('readonly', false);
-            form.find(':checkbox').prop('disabled', false);
-        }
-
-        // 3. Reset Tagify (Hanya jika variabelnya ada)
-        const tagifyLists = [{
-                obj: typeof complaintTagify !== 'undefined' ? complaintTagify : null
-            },
-            {
-                obj: typeof medhisTagify !== 'undefined' ? medhisTagify : null
-            },
-            {
-                obj: typeof resultTagify !== 'undefined' ? resultTagify : null
-            }
-        ];
-
-        tagifyLists.forEach(item => {
-            if (item.obj) {
-                item.obj.removeAllTags();
-                item.obj.setReadonly(false);
-            }
-        });
-
-        // 4. UI Reset
-        $('#terapi-kejantanan').show();
-        $('#kejantanan').prop('checked', false);
-        $('#history-info').hide();
-        $('#notif-wa').show();
-        $('#date_modified_group').addClass('d-none');
-        $('#region_history').prop('disabled', false);
-
-        // Set Tanggal Hari Ini
-        if (typeof formatDateForInput === 'function') {
-            $('#date').val(formatDateForInput(new Date()));
-        }
-
-        // 5. Reset Select2 Terapis
-        var terapisSelect = $('.terapis');
-        terapisSelect.prop('disabled', false);
-        terapisSelect.empty();
-
-        // Pastikan activeTerapis ada isinya
-        if (typeof activeTerapis !== 'undefined') {
-            activeTerapis.forEach(function(t) {
-                terapisSelect.append(new Option(t.nama, t.id));
-            });
-        }
-
-        terapisSelect.select2({
-            placeholder: "-- Pilih Terapis --",
-            allowClear: true,
-            dropdownParent: modal // Penting biar Select2 gak macet di dalem modal
-        }).val([]).trigger('change');
-
-        $('#save-button').show();
-    }
-    // function add() {
-    //     $('#exampleModal').appendTo('body');
-    //     $('#exampleModal').modal('show');
-
-
-    //     if (typeof complaintTagify !== 'undefined') {
-    //         complaintTagify.removeAllTags();
-    //         complaintTagify.setReadonly(false);
-    //     }
-
-    //     if (typeof medhisTagify !== 'undefined') {
-    //         medhisTagify.removeAllTags();
-    //         medhisTagify.setReadonly(false);
-    //     }
-
-    //     if (typeof resultTagify !== 'undefined') {
-    //         resultTagify.removeAllTags();
-    //         resultTagify.setReadonly(false);
-    //     }
-
-
-    //     $('#history-info').hide();
-
-    //     $('#notif-wa').show();
-
-    //     var today = formatDate(new Date());
-    //     $('#date').val(formatDateForInput(new Date()));
-    //     $('#date_modified_group').addClass('d-none');
-    //     $('#exampleModal form :input').prop('readonly', false);
-    //     $('#exampleModal form :checkbox').prop('disabled', false);
-    //     $('#region_history').prop('disabled', false);
-
-    //     // complaintTagify.removeAllTags();
-    //     // medhisTagify.removeAllTags();
-    //     // resultTagify.removeAllTags();
-
-    //     complaintTagify.setReadonly(false);
-    //     medhisTagify.setReadonly(false);
-    //     resultTagify.setReadonly(false);
-
-    //     $('.terapis').prop('disabled', false);
-    //     $('.terapis').select2({
-    //         placeholder: "-- Pilih Terapis --",
-    //         allowClear: true,
-    //         minimumResultsForSearch: Infinity
-    //     });
-
-    //     $('.terapis').empty();
-
-    //     activeTerapis.forEach(function(t) {
-    //         let option = $('<option>', {
-    //             value: t.id,
-    //             text: t.nama
-    //         });
-    //         $('.terapis').append(option);
-    //     });
-
-    //     $('.terapis').val([]).trigger('change');
-
-    //     $('#exampleModal #save-button').show();
-    // }
-
-
-    $(document).on('click', '#save-button', function(e) {
-        e.preventDefault();
-        const btn = $(this);
-
-        let formData = new FormData();
-        let csrfName = '<?= csrf_token() ?>';
-        let csrfHash = $('meta[name="csrf-token"]').attr('content');
-        formData.append(csrfName, csrfHash);
-
-        $('.modal.show').find('input[name], textarea[name], select[name]').each(function() {
-            let input = $(this);
-            let name = input.attr('name');
-            let value = input.val();
-
-            if (['complaint', 'medhis', 'results', 'result'].includes(name)) return;
-
-            if (input.is(':checkbox')) {
-                if (input.is(':checked')) {
-                    formData.append(name, value);
-                }
-            } else if (input.is(':radio')) {
-                if (input.is(':checked')) {
-                    formData.set(name, value);
-                }
-            } else {
-                formData.set(name, value);
-            }
-        });
-
-        if (typeof complaintTagify !== 'undefined') {
-            formData.set('complaint', JSON.stringify(complaintTagify.value || []));
-        }
-
-        if (typeof medhisTagify !== 'undefined') {
-            formData.set('medhis', JSON.stringify(medhisTagify.value || []));
-        }
-
-        if (typeof resultTagify !== 'undefined') {
-            // Gunakan 'results' (pakai S) sesuai atribut name di HTML lu
-            formData.set('results', JSON.stringify(resultTagify.value || []));
-        }
-
-        // console.log("=== SCANNING COMPLETED ===");
-        // for (let [key, val] of formData.entries()) {
-        //     console.log(key + ": " + val);
-        // }
-
-        $.ajax({
-            url: "<?= site_url('history/store') ?>",
-            type: "POST",
-            data: formData,
-            processData: false,
-            contentType: false,
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-
-
-            beforeSend: function() {
-                btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
-            },
-            success: function(response) {
-                if (response.csrfHash) {
-                    $('meta[name="csrf-token"]').attr('content', response.csrfHash);
-                }
-                if (response.status) {
-                    $('.modal.show').modal('hide');
-                    Swal.fire('Berhasil!', response.message, 'success').then(() => location.reload());
-                } else {
-                    Swal.fire('Gagal!', response.message, 'error');
-                    console.log("Server Error Detail:", response);
-                    btn.prop('disabled', false).text('Simpan');
-                }
-            },
-            error: function(xhr) {
-                let json = xhr.responseJSON;
-                if (json && json.csrfHash) {
-                    $('meta[name="csrf-token"]').attr('content', json.csrfHash);
-                }
-                Swal.fire('Error!', 'Sesi keamanan habis atau terjadi kesalahan sistem.', 'error');
-                btn.prop('disabled', false).text('Simpan');
-            }
-        });
-
-
-    });
-
-    function updateHistoryInfo(data) {
-        $('#created_by').text(data.history_created_by);
-        if (data.history_updated_by && data.history_updated_by.trim() !== '-') {
-            $('#updated_by').text(data.history_updated_by);
-            $('#updated_info').show();
-        } else {
-            $('#updated_info').hide();
-        }
-    }
-
-
-    function show(id) {
-
-        var form = $('#save_data');
-        if (form.length > 0) {
-            form[0].reset();
-        }
-
-        // $('#exampleModal form')[0].reset();
-        $('input[type="checkbox"]').prop('checked', false);
-        $('input[type="radio"]').prop('checked', false);
-
-
-        $.ajax({
-            url: "<?= site_url('history/show/') ?>/" + id,
-            type: "GET",
-            dataType: "JSON",
-            success: function(data) {
-                console.log("Data received from server:", data);
-                $('#exampleModal').appendTo('body').modal('show');
-                $('#exampleModal form').attr('action', '<?= site_url('history/update') ?>');
-                $('#exampleModal .modal-title').text('Detil Riwayat Pasien');
-
-                // Hide the WhatsApp notification section
-                $('#notif-wa').hide();
-
-                $('#exampleModal').modal('show');
-                document.getElementById("terapi-kejantanan").style.display = "block";
-
-                if (data.kejantanan === 'ya') {
-                    document.getElementById('kejantanan').checked = true;
-                } else {
-                    document.getElementById('kejantanan').checked = false;
-                }
-                toggleTerapiForm();
-
-                if (data.ereksi) {
-                    $(`input[name="ereksi"][value="${data.ereksi}"]`).prop('checked', true);
-                }
-                if (data.porno) {
-                    $(`input[name="nonton_porno"][value="${data.porno}"]`).prop('checked', true);
-                }
-                $('textarea[name="complaint"]').val(data.complaint && data.complaint !== '-' ? data.complaint : '');
-                $('textarea[name="medhis"]').val(data.medhis && data.medhis !== '-' ? data.medhis : '');
-
-                if (typeof resultTagify !== 'undefined') {
-                    resultTagify.removeAllTags();
-                    if (data.results && data.results !== '-') {
-                        resultTagify.addTags(data.results.split(', '));
-                    }
-                } else {
-                    $('textarea[name="results"]').val(data.results);
-                }
-
-
-                $('#history-info').show();
-                updateHistoryInfo(data);
-
-                if (data.history_region) {
-                    $('#region_history').val(data.history_region).trigger('change');
-                } else {
-                    $('#region_history').val('');
-                }
-
-                $('.terapis').empty();
-
-                let selectedTerapisIds = data.selected_terapis.map(t => t.id.toString());
-
-                data.active_terapis.forEach(function(t) {
-                    let isSelected = selectedTerapisIds.includes(t.id.toString());
-
-                    let option = $('<option>', {
-                        value: t.id,
-                        text: t.nama,
-                        selected: isSelected
-                    });
-                    $('.terapis').append(option);
-                });
-
-                data.selected_terapis.forEach(function(t) {
-                    let isSelected = selectedTerapisIds.includes(t.id.toString());
-
-                    let option = $('<option>', {
-                        value: t.id,
-                        text: t.nama + ' (Non-Aktif)',
-                        disabled: true,
-                        selected: isSelected
-                    });
-
-                    if (!$('.terapis option[value="' + t.id + '"]').length) {
-                        $('.terapis').append(option);
-                    }
-                });
-
-                $('.terapis').trigger('change');
-
-                $('input[name="processAt"]').val(data.process_at);
-                $('input[name="finishAt"]').val(data.finish_at);
-                $('input[name="timeConsume"]').val(data.time_consume);
-                $('input[name="id"]').val(data.id);
-                $('input[name="patient_id"]').val(data.patient_id);
-                $('input[name="checkup"]').val(data.checkup);
-                $('input[name="cervical"]').val(data.cervical);
-                $('input[name="thoraxal"]').val(data.thoraxal);
-                $('input[name="lumbar"]').val(data.lumbar);
-                $('input[name="sacrum"]').val(data.sacrum);
-                $('input[name="sacral"]').val(data.sacral);
-                $('input[name="pelvis"]').val(data.pelvis);
-                $('input[name="plintiran"]').val(data.plintiran);
-                $('input[name="kompresi"]').val(data.kompresi);
-                $('input[name="verteba"]').val(data.verteba);
-                $('input[name="thorax"]').val(data.thorax);
-                $('input[name="date"]').val(formatDateForInput(data.date));
-                $('input[name="date_modified"]').val(formatDateForInput(data.date_modified));
-                $('input[name="visualfoot"]').val(data.visualfoot);
-                $('textarea[name="other"]').val(data.other);
-                $('textarea[name="results"]').val(data.results);
-                $('textarea[name="measure"]').val(data.measure);
-                $('textarea[name="pubis"]').val(data.pubis);
-                $('input[name="tensi"]').val(data.tensi);
-                $('input[name="power"]').val(data.power);
-                $('input[name="pr"]').val(data.pr);
-                $('textarea[name="ket_vertebrata"]').val(data.keterangan_verteba);
-                $('textarea[name="ket_thorax"]').val(data.keterangan_thorax);
-                $('textarea[name="ket_kompresi"]').val(data.keterangan_kompresi);
-                $('textarea[name="ket_plintiran"]').val(data.keterangan_plintiran);
-                $('textarea[name="ket_viska"]').val(data.keterangan_visualfoot);
-                $('input[name="ereksi"][value="' + data.ereksi + '"]').prop('checked', true);
-                $('input[name="nonton_porno"][value="' + data.porno + '"]').prop('checked', true);
-                $('input[name="sering_onani"][value="' + data.onani + '"]').prop('checked', true);
-                $('input[name="ranjang"][value="' + data.ranjang + '"]').prop('checked', true);
-                $('input[name="frekuensi_ranjang"][value="' + data.frekuensi_ranjang + '"]').prop('checked',
-                    true);
-                $('input[name="obat_kuat"][value="' + data.obat_kuat + '"]').prop('checked', true);
-                $('textarea[name="penyebab"]').val(data.penyebab);
-
-                // Reset checkboxes
-                $('input[type="checkbox"]').prop('checked', false);
-
-                // Set checkboxes based on data
-                var vertebraArray = data.verteba ? data.verteba.split(',') : [];
-                vertebraArray.forEach(function(value) {
-                    $('input[name="vertebra[]"][value="' + value + '"]').prop('checked', true);
-                });
-
-                var thoraxArray = data.thorax ? data.thorax.split(',') : [];
-                thoraxArray.forEach(function(value) {
-                    $('input[name="thorax[]"][value="' + value + '"]').prop('checked', true);
-                });
-
-                var kompresiArray = data.kompresi ? data.kompresi.split(',') : [];
-                kompresiArray.forEach(function(value) {
-                    $('input[name="kompresi[]"][value="' + value + '"]').prop('checked', true);
-                });
-
-                var plintiranArray = data.plintiran ? data.plintiran.split(',') : [];
-                plintiranArray.forEach(function(value) {
-                    $('input[name="plintiran[]"][value="' + value + '"]').prop('checked', true);
-                });
-
-                var visualFootArray = data.visualfoot ? data.visualfoot.split(',') : [];
-                visualFootArray.forEach(function(value) {
-                    $('input[name="visual_kaki[]"][value="' + value + '"]').prop('checked', true);
-                });
-
-                var pubisArray = data.pubis ? data.pubis.split(',') : [];
-                pubisArray.forEach(function(value) {
-                    $('input[name="pubis[]"][value="' + value + '"]').prop('checked', true);
-                });
-
-                var terapiForm = document.getElementById("terapi-form");
-                var kesForm = document.getElementById("pemeriksaan");
-                if (data.kejantanan == 'ya') {
-                    $('#kejantanan').prop('checked', true);
-                    terapiForm.style.display = "block";
-                    kesForm.style.display = "block";
-                } else {
-                    $('#kejantanan').prop('checked', false);
-                    terapiForm.style.display = "none";
-                    kesForm.style.display = "none";
-                }
-
-                //Handle odp kiri
-                var otot_dada_perut_kiri = data.otot_dada_perut_kiri ? data.otot_dada_perut_kiri.split(
-                    ',') : [];
-                if (otot_dada_perut_kiri[0] === 'sakit') {
-                    $('input[name="odp_kiri"]').prop('checked', true);
-                }
-                if (otot_dada_perut_kiri[1]) {
-                    $('input[name="odp_kiri_grade"][value="' + otot_dada_perut_kiri[1] + '"]').prop(
-                        'checked', true);
-                }
-
-                // Handle odp kanan
-                var otot_dada_perut_kanan = data.otot_dada_perut_kanan ? data.otot_dada_perut_kanan.split(
-                    ',') : [];
-                if (otot_dada_perut_kanan[0] === 'sakit') {
-                    $('input[name="odp_kanan"]').prop('checked', true);
-                }
-                if (otot_dada_perut_kanan[1]) {
-                    $('input[name="odp_kanan_grade"][value="' + otot_dada_perut_kanan[1] + '"]').prop(
-                        'checked', true);
-                }
-
-                // Handle vital kiri
-                var vital_kiri = data.vital_kiri ? data.vital_kiri.split(',') : [];
-                if (vital_kiri[0] === 'sakit') {
-                    $('input[name="vital_kiri"]').prop('checked', true);
-                }
-                if (vital_kiri[1]) {
-                    $('input[name="vital_kiri_grade"][value="' + vital_kiri[1] + '"]').prop('checked',
-                        true);
-                }
-
-                // Handle vital kanan
-                var vital_kanan = data.vital_kanan ? data.vital_kanan.split(',') : [];
-                if (vital_kanan[0] === 'sakit') {
-                    $('input[name="vital_kanan"]').prop('checked', true);
-                }
-                if (vital_kanan[1]) {
-                    $('input[name="vital_kanan_grade"][value="' + vital_kanan[1] + '"]').prop('checked',
-                        true);
-                }
-
-                // Handle kelenjar kiri
-                var kelenjar_kiri = data.kelenjar_kiri ? data.kelenjar_kiri.split(',') : [];
-                if (kelenjar_kiri[0] === 'sakit') {
-                    $('input[name="kelenjar_kiri"]').prop('checked', true);
-                }
-                if (kelenjar_kiri[1]) {
-                    $('input[name="kelenjar_kiri_grade"][value="' + kelenjar_kiri[1] + '"]').prop('checked',
-                        true);
-                }
-
-                // Handle kelenjar kanan
-                var kelenjar_kanan = data.kelenjar_kanan ? data.kelenjar_kanan.split(',') : [];
-                if (kelenjar_kanan[0] === 'sakit') {
-                    $('input[name="kelenjar_kanan"]').prop('checked', true);
-                }
-                if (kelenjar_kanan[1]) {
-                    $('input[name="kelenjar_kanan_grade"][value="' + kelenjar_kanan[1] + '"]').prop(
-                        'checked', true);
-                }
-
-                // Handle hormon kiri
-                var hormon_kiri = data.hormon_kiri ? data.hormon_kiri.split(',') : [];
-                if (hormon_kiri[0] === 'sakit') {
-                    $('input[name="hormon_kiri"]').prop('checked', true);
-                }
-                if (hormon_kiri[1]) {
-                    $('input[name="hormon_kiri_grade"][value="' + hormon_kiri[1] + '"]').prop('checked',
-                        true);
-                }
-
-                // Handle hormon kanan
-                var hormon_kanan = data.hormon_kanan ? data.hormon_kanan.split(',') : [];
-                if (hormon_kanan[0] === 'sakit') {
-                    $('input[name="hormon_kanan"]').prop('checked', true);
-                }
-                if (hormon_kanan[1]) {
-                    $('input[name="hormon_kanan_grade"][value="' + hormon_kanan[1] + '"]').prop('checked',
-                        true);
-                }
-
-                //Handle tulang kering kiri
-                var tulang_kering_kiri = data.tulang_kering_kiri ? data.tulang_kering_kiri.split(',') : [];
-                if (tulang_kering_kiri[0] === 'sakit') {
-                    $('input[name="tk_kiri"]').prop('checked', true);
-                }
-                if (tulang_kering_kiri[1]) {
-                    $('input[name="tk_kiri_grade"][value="' + tulang_kering_kiri[1] + '"]').prop('checked',
-                        true);
-                }
-
-                // Handle tulang kering kanan
-                var tulang_kering_kanan = data.tulang_kering_kanan ? data.tulang_kering_kanan.split(',') : [];
-                if (tulang_kering_kanan[0] === 'sakit') {
-                    $('input[name="tk_kanan"]').prop('checked', true);
-                }
-                if (tulang_kering_kanan[1]) {
-                    $('input[name="tk_kanan_grade"][value="' + tulang_kering_kanan[1] + '"]').prop(
-                        'checked', true);
-                }
-
-                //Handle femur dalam kiri
-                var femur_dalam_kiri = data.femur_dalam_kiri ? data.femur_dalam_kiri.split(',') : [];
-                if (femur_dalam_kiri[0] === 'sakit') {
-                    $('input[name="fd_kiri"]').prop('checked', true);
-                }
-                if (femur_dalam_kiri[1]) {
-                    $('input[name="fd_kiri_grade"][value="' + femur_dalam_kiri[1] + '"]').prop('checked',
-                        true);
-                }
-
-                // Handle femur dalam kanan
-                var femur_dalam_kanan = data.femur_dalam_kanan ? data.femur_dalam_kanan.split(',') : [];
-                if (femur_dalam_kanan[0] === 'sakit') {
-                    $('input[name="fd_kanan"]').prop('checked', true);
-                }
-                if (femur_dalam_kanan[1]) {
-                    $('input[name="fd_kanan_grade"][value="' + femur_dalam_kanan[1] + '"]').prop('checked',
-                        true);
-                }
-
-                //Handle lingkar perut atas
-                var lingkar_perut_atas = data.lingkar_perut_atas ? data.lingkar_perut_atas.split(',') : [];
-                if (lingkar_perut_atas[0] === 'sakit') {
-                    $('input[name="lp_atas"]').prop('checked', true);
-                }
-                if (lingkar_perut_atas[1]) {
-                    $('input[name="lp_atas_grade"][value="' + lingkar_perut_atas[1] + '"]').prop('checked',
-                        true);
-                }
-
-                // Handle lingkar perut bawah
-                var lingkar_perut_bawah = data.lingkar_perut_bawah ? data.lingkar_perut_bawah.split(',') : [];
-                if (lingkar_perut_bawah[0] === 'sakit') {
-                    $('input[name="lp_bawah"]').prop('checked', true);
-                }
-                if (lingkar_perut_bawah[1]) {
-                    $('input[name="lp_bawah_grade"][value="' + lingkar_perut_bawah[1] + '"]').prop(
-                        'checked', true);
-                }
-
-                // Handle lingkar perut kiri
-                var lingkar_perut_kiri = data.lingkar_perut_kiri ? data.lingkar_perut_kiri.split(',') : [];
-                if (lingkar_perut_kiri[0] === 'sakit') {
-                    $('input[name="lp_kiri"]').prop('checked', true);
-                }
-                if (lingkar_perut_kiri[1]) {
-                    $('input[name="lp_kiri_grade"][value="' + lingkar_perut_kiri[1] + '"]').prop('checked',
-                        true);
-                }
-
-                // Handle lingkar perut kanan
-                var lingkar_perut_kanan = data.lingkar_perut_kanan ? data.lingkar_perut_kanan.split(',') : [];
-                if (lingkar_perut_kanan[0] === 'sakit') {
-                    $('input[name="lp_kanan"]').prop('checked', true);
-                }
-                if (lingkar_perut_kanan[1]) {
-                    $('input[name="lp_kanan_grade"][value="' + lingkar_perut_kanan[1] + '"]').prop(
-                        'checked', true);
-                }
-
-                // Handle cv4 kiri
-                var cv4_kiri = data.cv4_kiri ? data.cv4_kiri.split(',') : [];
-                if (cv4_kiri[0] === 'sakit') {
-                    $('input[name="cv4_kiri"]').prop('checked', true);
-                }
-                if (cv4_kiri[1]) {
-                    $('input[name="cv4_kiri_grade"][value="' + cv4_kiri[1] + '"]').prop('checked', true);
-                }
-
-                // Handle cv4 kanan
-                var cv4_kanan = data.cv4_kanan ? data.cv4_kanan.split(',') : [];
-                if (cv4_kanan[0] === 'sakit') {
-                    $('input[name="cv4_kanan"]').prop('checked', true);
-                }
-                if (cv4_kanan[1]) {
-                    $('input[name="cv4_kanan_grade"][value="' + cv4_kanan[1] + '"]').prop('checked', true);
-                }
-
-                // Handle cv6 kiri
-                var cv6_kiri = data.cv6_kiri ? data.cv6_kiri.split(',') : [];
-                if (cv6_kiri[0] === 'sakit') {
-                    $('input[name="cv6_kiri"]').prop('checked', true);
-                }
-                if (cv6_kiri[1]) {
-                    $('input[name="cv6_kiri_grade"][value="' + cv6_kiri[1] + '"]').prop('checked', true);
-                }
-
-                // Handle cv4 kanan
-                var cv6_kanan = data.cv6_kanan ? data.cv6_kanan.split(',') : [];
-                if (cv6_kanan[0] === 'sakit') {
-                    $('input[name="cv6_kanan"]').prop('checked', true);
-                }
-                if (cv6_kanan[1]) {
-                    $('input[name="cv6_kanan_grade"][value="' + cv6_kanan[1] + '"]').prop('checked', true);
-                }
-
-                // Handle l1 kiri
-                var l1_kiri = data.l1_kiri ? data.l1_kiri.split(',') : [];
-                if (l1_kiri[0] === 'sakit') {
-                    $('input[name="l1_kiri"]').prop('checked', true);
-                }
-                if (l1_kiri[1]) {
-                    $('input[name="l1_kiri_grade"][value="' + l1_kiri[1] + '"]').prop('checked', true);
-                }
-
-                // Handle cv4 kanan
-                var l1_kanan = data.l1_kanan ? data.l1_kanan.split(',') : [];
-                if (l1_kanan[0] === 'sakit') {
-                    $('input[name="l1_kanan"]').prop('checked', true);
-                }
-                if (l1_kanan[1]) {
-                    $('input[name="l1_kanan_grade"][value="' + l1_kanan[1] + '"]').prop('checked', true);
-                }
-
-                // Handle l3 kiri
-                var l3_kiri = data.l3_kiri ? data.l3_kiri.split(',') : [];
-                if (l3_kiri[0] === 'sakit') {
-                    $('input[name="l3_kiri"]').prop('checked', true);
-                }
-                if (l3_kiri[1]) {
-                    $('input[name="l3_kiri_grade"][value="' + l3_kiri[1] + '"]').prop('checked', true);
-                }
-
-                // Handle l3 kanan
-                var l3_kanan = data.l3_kanan ? data.l3_kanan.split(',') : [];
-                if (l3_kanan[0] === 'sakit') {
-                    $('input[name="l3_kanan"]').prop('checked', true);
-                }
-                if (l3_kanan[1]) {
-                    $('input[name="l3_kanan_grade"][value="' + l3_kanan[1] + '"]').prop('checked', true);
-                }
-
-                // Handle piriformis kiri
-                var piriformis_kiri = data.piriformis_kiri ? data.piriformis_kiri.split(',') : [];
-                if (piriformis_kiri[0] === 'sakit') {
-                    $('input[name="piriformis_kiri"]').prop('checked', true);
-                }
-                if (piriformis_kiri[1]) {
-                    $('input[name="piriformis_kiri_grade"][value="' + piriformis_kiri[1] + '"]').prop(
-                        'checked', true);
-                }
-
-                // Handle piriformis kanan
-                var piriformis_kanan = data.piriformis_kanan ? data.piriformis_kanan.split(',') : [];
-                if (piriformis_kanan[0] === 'sakit') {
-                    $('input[name="piriformis_kanan"]').prop('checked', true);
-                }
-                if (piriformis_kanan[1]) {
-                    $('input[name="piriformis_kanan_grade"][value="' + piriformis_kanan[1] + '"]').prop(
-                        'checked', true);
-                }
-
-                // Handle sendok kiri
-                var sendok_kiri = data.sendok_kiri ? data.sendok_kiri.split(',') : [];
-                if (sendok_kiri[0] === 'sakit') {
-                    $('input[name="sendok_kiri"]').prop('checked', true);
-                }
-                if (sendok_kiri[1]) {
-                    $('input[name="sendok_kiri_grade"][value="' + sendok_kiri[1] + '"]').prop('checked',
-                        true);
-                }
-
-                // Handle sendok kanan
-                var sendok_kanan = data.sendok_kanan ? data.sendok_kanan.split(',') : [];
-                if (sendok_kanan[0] === 'sakit') {
-                    $('input[name="sendok_kanan"]').prop('checked', true);
-                }
-                if (sendok_kanan[1]) {
-                    $('input[name="sendok_kanan_grade"][value="' + sendok_kanan[1] + '"]').prop('checked',
-                        true);
-                }
-
-                function updateFormWithData(data) {
-                    if (!$('input[name="ereksi"]').prop('disabled')) {
-                        if (data.ereksi === 'ya') {
-                            $('input[name="ereksi"][value="ya"]').prop('checked', true);
-                        } else if (data.ereksi === 'tidak') {
-                            $('input[name="ereksi"][value="tidak"]').prop('checked', true);
-                        } else {
-                            $('input[name="ereksi"]').prop('checked', false);
-                        }
-                    }
-
-                    if (!$('input[name="obat_kuat"]').prop('disabled')) {
-                        if (data.obat_kuat === 'ya') {
-                            $('input[name="obat_kuat"][value="ya"]').prop('checked', true);
-                        } else if (data.obat_kuat === 'tidak') {
-                            $('input[name="obat_kuat"][value="tidak"]').prop('checked', true);
-                        } else {
-                            $('input[name="obat_kuat"]').prop('checked', false);
-                        }
-                    }
-
-                    if (!$('input[name="nonton_porno"]').prop('disabled')) {
-                        if (data.porno === 'ya') {
-                            showFrequency('nonton-porn-frequency', true);
-                            $('input[name="nonton_porno"][value="ya"]').prop('checked', true);
-                            $('input[name="frekuensi_nonton_porno"][value="' + data.frekuensi_porno + '"]')
-                                .prop('checked', true);
-                        } else if (data.porno === 'tidak') {
-                            $('input[name="nonton_porno"][value="tidak"]').prop('checked', true);
-                            showFrequency('nonton-porn-frequency', false);
-                        } else {
-                            $('input[name="nonton_porno"]').prop('checked', false);
-                            showFrequency('nonton-porn-frequency', false);
-                        }
-                    }
-
-                    if (!$('input[name="sering_onani"]').prop('disabled')) {
-                        if (data.onani === 'ya') {
-                            showFrequency('onani-frequency', true);
-                            $('input[name="sering_onani"][value="ya"]').prop('checked', true);
-                            $('input[name="frekuensi_onani"][value="' + data.frekuensi_onani + '"]').prop(
-                                'checked', true);
-                        } else if (data.onani === 'tidak') {
-                            $('input[name="sering_onani"][value="tidak"]').prop('checked', true);
-                            showFrequency('onani-frequency', false);
-                        } else {
-                            $('input[name="sering_onani"]').prop('checked', false);
-                            showFrequency('onani-frequency', false);
-                        }
-                    }
-
-                    if (!$('input[name="frekuensi_nonton_porno"]').prop('disabled')) {
-                        toggleLainnyaTextbox('nonton-lainnya-textbox', data.frekuensi_porno === 'lainnya');
-                        $('#nonton-lainnya-textbox').val(data.frekuensi_porno_lain || '');
-                    }
-
-                    if (!$('input[name="frekuensi_onani"]').prop('disabled')) {
-                        toggleLainnyaTextbox('onani-lainnya-textbox', data.frekuensi_onani === 'lainnya');
-                        $('#onani-lainnya-textbox').val(data.frekuensi_onani_lain || '');
-                    }
-
-                    if (!$('input[name="frekuensi_ranjang"]').prop('disabled')) {
-                        toggleLainnyaTextbox('hubungan-lainnya-textbox', data.frekuensi_ranjang ===
-                            'lainnya');
-                        $('#hubungan-lainnya-textbox').val(data.frekuensi_ranjang_lain || '');
-                    }
-                }
-
-                function updateFormStatus(data) {
-                    var currentDate = new Date();
-                    var recordDate = new Date(data.date_modified);
-                    var timeDifference = Math.abs(currentDate - recordDate);
-                    var dayDifference = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
-                    // console.log('testt:' + data.type);
-
-
-                    if (dayDifference > 1 && data.type !== 'draft') {
-                        $('#exampleModal form :input').prop('readonly', true);
-                        $('#exampleModal form :checkbox').prop('disabled', true);
-                        $('#exampleModal form :radio').prop('disabled', true);
-
-                        if (typeof complaintTagify !== 'undefined') complaintTagify.setReadonly(true);
-                        if (typeof medhisTagify !== 'undefined') medhisTagify.setReadonly(true);
-                        if (typeof resultTagify !== 'undefined') resultTagify.setReadonly(true);
-
-                        $('.terapis').prop('disabled', true);
-                        $('.terapis').select2();
-
-                        $('#region_history').prop('disabled', true);
-
-                        $('#exampleModal #save-button').hide();
-                    } else {
-                        $('#exampleModal form :input').prop('readonly', false);
-                        $('#exampleModal form :checkbox').prop('disabled', false);
-
-                        if (typeof complaintTagify !== 'undefined') complaintTagify.setReadonly(false);
-                        if (typeof medhisTagify !== 'undefined') medhisTagify.setReadonly(false);
-                        if (typeof resultTagify !== 'undefined') resultTagify.setReadonly(false);
-
-                        $('.terapis').prop('disabled', false);
-                        $('.terapis').select2();
-
-                        $('#exampleModal #save-button').show();
-                    }
-                }
-                updateFormStatus(data);
-                updateFormWithData(data);
-
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                console.error('Error:', textStatus, errorThrown);
-                alert('Terjadi kesalahan, silahkan coba lagi...');
-            }
-        });
-    }
-
-    function duplicate(id) {
-        // $('#exampleModal form')[0].reset();
-        var form = $('#save_data');
-        if (form.length > 0) {
-            form[0].reset();
-        }
-
-
-
-        // complaintTagify = new Tagify($('textarea[name="complaint"]')[0]);
-        // medhisTagify = new Tagify($('textarea[name="medhis"]')[0]);
-        // resultTagify = new Tagify($('textarea[name="result"]')[0]);
-        $('input[type="checkbox"]').prop('checked', false);
-        $('input[type="radio"]').prop('checked', false);
-        $('#region_history').prop('disabled', false);
-
-
-        $.ajax({
-            url: "<?= site_url('history/show/') ?>/" + id,
-            type: "GET",
-            dataType: "JSON",
-            success: function(data) {
-                // console.log("Data received from server:", data);
-                var modal = $('#exampleModal');
-                var form = $('#save_data');
-
-                $('.modal-backdrop').remove();
-                $('#exampleModal').modal('show');
-                $('#exampleModal').on('shown.bs.modal', function() {
-                    $(this).css('z-index', '1060');
-                    $('.modal-backdrop').css('z-index', '1050');
-                });
-
-                $('#exampleModal form').attr('action', '<?= site_url('history/copy') ?>');
-                $('#exampleModal .modal-title').text('Detil Riwayat Pasien');
-
-                // Hide the WhatsApp notification section
-                $('#notif-wa').show();
-                $('#history-info').hide();
-
-                if (typeof complaintTagify !== 'undefined') {
-                    complaintTagify.removeAllTags();
-                    if (data.complaint && data.complaint !== '-') {
-                        complaintTagify.addTags(data.complaint.split(', '));
-                    }
-                }
-
-                if (typeof medhisTagify !== 'undefined') {
-                    medhisTagify.removeAllTags();
-                    if (data.medhis && data.medhis !== '-') {
-                        medhisTagify.addTags(data.medhis.split(', '));
-                    }
-                }
-
-                if (typeof resultTagify !== 'undefined') {
-                    resultTagify.removeAllTags();
-                    if (data.results && data.results !== '-') {
-                        resultTagify.addTags(data.results.split(', '));
-                    }
-                }
-
-                if (data.history_region) {
-                    $('#region_history').val(data.history_region).trigger('change');
-                } else {
-                    $('#region_history').val('').trigger('change');
-                }
-
-                // $('#history-info').hide();
-
-                $('.terapis').empty();
-
-                let selectedTerapisIds = data.selected_terapis.map(t => t.id.toString());
-
-                data.active_terapis.forEach(function(t) {
-                    let isSelected = selectedTerapisIds.includes(t.id.toString());
-
-                    let option = $('<option>', {
-                        value: t.id,
-                        text: t.nama,
-                        selected: isSelected
-                    });
-                    $('.terapis').append(option);
-                });
-
-                data.selected_terapis.forEach(function(t) {
-                    let isSelected = selectedTerapisIds.includes(t.id.toString());
-
-                    let option = $('<option>', {
-                        value: t.id,
-                        text: t.nama + ' (Non-Aktif)',
-                        selected: isSelected
-                    });
-
-                    if (!$('.terapis option[value="' + t.id + '"]').length) {
-                        $('.terapis').append(option);
-                    }
-                });
-
-                $('.terapis').trigger('change');
-
-                // Fill form fields with data
-                $('input[name="id"]').val(data.id);
-                $('input[name="patient_id"]').val(data.patient_id);
-                $('input[name="checkup"]').val(data.checkup);
-                $('input[name="cervical"]').val(data.cervical);
-                $('input[name="thoraxal"]').val(data.thoraxal);
-                $('input[name="lumbar"]').val(data.lumbar);
-                $('input[name="sacrum"]').val(data.sacrum);
-                $('input[name="sacral"]').val(data.sacral);
-                $('input[name="pelvis"]').val(data.pelvis);
-                $('input[name="plintiran"]').val(data.plintiran);
-                $('input[name="kompresi"]').val(data.kompresi);
-                $('input[name="verteba"]').val(data.verteba);
-                $('input[name="thorax"]').val(data.thorax);
-                $('input[name="date"]').val(formatDateForInput(data.date));
-                $('input[name="date_modified"]').val(formatDateForInput(data.date_modified));
-                $('input[name="visualfoot"]').val(data.visualfoot);
-                $('textarea[name="other"]').val(data.other);
-                $('textarea[name="results"]').val(data.results);
-                $('textarea[name="measure"]').val(data.measure);
-                $('textarea[name="pubis"]').val(data.pubis);
-                $('input[name="tensi"]').val(data.tensi);
-                $('input[name="power"]').val(data.power);
-                $('input[name="pr"]').val(data.pr);
-                $('textarea[name="ket_vertebrata"]').val(data.keterangan_verteba);
-                $('textarea[name="ket_thorax"]').val(data.keterangan_thorax);
-                $('textarea[name="ket_kompresi"]').val(data.keterangan_kompresi);
-                $('textarea[name="ket_plintiran"]').val(data.keterangan_plintiran);
-                $('textarea[name="ket_viska"]').val(data.keterangan_visualfoot);
-                $('input[name="ereksi"][value="' + data.ereksi + '"]').prop('checked', true);
-                $('input[name="nonton_porno"][value="' + data.porno + '"]').prop('checked', true);
-                $('input[name="sering_onani"][value="' + data.onani + '"]').prop('checked', true);
-                $('input[name="ranjang"][value="' + data.ranjang + '"]').prop('checked', true);
-                $('input[name="frekuensi_ranjang"][value="' + data.frekuensi_ranjang + '"]').prop('checked',
-                    true);
-                $('input[name="obat_kuat"][value="' + data.obat_kuat + '"]').prop('checked', true);
-                $('textarea[name="penyebab"]').val(data.penyebab);
-
-                // Reset checkboxes
-                $('input[type="checkbox"]').prop('checked', false);
-
-                // Set checkboxes based on data
-                var vertebraArray = data.verteba ? data.verteba.split(',') : [];
-                vertebraArray.forEach(function(value) {
-                    $('input[name="vertebra[]"][value="' + value + '"]').prop('checked', true);
-                });
-
-                var thoraxArray = data.thorax ? data.thorax.split(',') : [];
-                thoraxArray.forEach(function(value) {
-                    $('input[name="thorax[]"][value="' + value + '"]').prop('checked', true);
-                });
-
-                var kompresiArray = data.kompresi ? data.kompresi.split(',') : [];
-                kompresiArray.forEach(function(value) {
-                    $('input[name="kompresi[]"][value="' + value + '"]').prop('checked', true);
-                });
-
-                var plintiranArray = data.plintiran ? data.plintiran.split(',') : [];
-                plintiranArray.forEach(function(value) {
-                    $('input[name="plintiran[]"][value="' + value + '"]').prop('checked', true);
-                });
-
-                var visualFootArray = data.visualfoot ? data.visualfoot.split(',') : [];
-                visualFootArray.forEach(function(value) {
-                    $('input[name="visual_kaki[]"][value="' + value + '"]').prop('checked', true);
-                });
-
-                var pubisArray = data.pubis ? data.pubis.split(',') : [];
-                pubisArray.forEach(function(value) {
-                    $('input[name="pubis[]"][value="' + value + '"]').prop('checked', true);
-                });
-
-                //Handle odp kiri
-                var otot_dada_perut_kiri = data.otot_dada_perut_kiri ? data.otot_dada_perut_kiri.split(
-                    ',') : [];
-                if (otot_dada_perut_kiri[0] === 'sakit') {
-                    $('input[name="odp_kiri"]').prop('checked', true);
-                }
-                if (otot_dada_perut_kiri[1]) {
-                    $('input[name="odp_kiri_grade"][value="' + otot_dada_perut_kiri[1] + '"]').prop(
-                        'checked', true);
-                }
-
-                // Handle odp kanan
-                var otot_dada_perut_kanan = data.otot_dada_perut_kanan ? data.otot_dada_perut_kanan.split(
-                    ',') : [];
-                if (otot_dada_perut_kanan[0] === 'sakit') {
-                    $('input[name="odp_kanan"]').prop('checked', true);
-                }
-                if (otot_dada_perut_kanan[1]) {
-                    $('input[name="odp_kanan_grade"][value="' + otot_dada_perut_kanan[1] + '"]').prop(
-                        'checked', true);
-                }
-
-                // Handle vital kiri
-                var vital_kiri = data.vital_kiri ? data.vital_kiri.split(',') : [];
-                if (vital_kiri[0] === 'sakit') {
-                    $('input[name="vital_kiri"]').prop('checked', true);
-                }
-                if (vital_kiri[1]) {
-                    $('input[name="vital_kiri_grade"][value="' + vital_kiri[1] + '"]').prop('checked',
-                        true);
-                }
-
-                // Handle vital kanan
-                var vital_kanan = data.vital_kanan ? data.vital_kanan.split(',') : [];
-                if (vital_kanan[0] === 'sakit') {
-                    $('input[name="vital_kanan"]').prop('checked', true);
-                }
-                if (vital_kanan[1]) {
-                    $('input[name="vital_kanan_grade"][value="' + vital_kanan[1] + '"]').prop('checked',
-                        true);
-                }
-
-                // Handle kelenjar kiri
-                var kelenjar_kiri = data.kelenjar_kiri ? data.kelenjar_kiri.split(',') : [];
-                if (kelenjar_kiri[0] === 'sakit') {
-                    $('input[name="kelenjar_kiri"]').prop('checked', true);
-                }
-                if (kelenjar_kiri[1]) {
-                    $('input[name="kelenjar_kiri_grade"][value="' + kelenjar_kiri[1] + '"]').prop('checked',
-                        true);
-                }
-
-                // Handle kelenjar kanan
-                var kelenjar_kanan = data.kelenjar_kanan ? data.kelenjar_kanan.split(',') : [];
-                if (kelenjar_kanan[0] === 'sakit') {
-                    $('input[name="kelenjar_kanan"]').prop('checked', true);
-                }
-                if (kelenjar_kanan[1]) {
-                    $('input[name="kelenjar_kanan_grade"][value="' + kelenjar_kanan[1] + '"]').prop(
-                        'checked', true);
-                }
-
-                // Handle hormon kiri
-                var hormon_kiri = data.hormon_kiri ? data.hormon_kiri.split(',') : [];
-                if (hormon_kiri[0] === 'sakit') {
-                    $('input[name="hormon_kiri"]').prop('checked', true);
-                }
-                if (hormon_kiri[1]) {
-                    $('input[name="hormon_kiri_grade"][value="' + hormon_kiri[1] + '"]').prop('checked',
-                        true);
-                }
-
-                // Handle hormon kanan
-                var hormon_kanan = data.hormon_kanan ? data.hormon_kanan.split(',') : [];
-                if (hormon_kanan[0] === 'sakit') {
-                    $('input[name="hormon_kanan"]').prop('checked', true);
-                }
-                if (hormon_kanan[1]) {
-                    $('input[name="hormon_kanan_grade"][value="' + hormon_kanan[1] + '"]').prop('checked',
-                        true);
-                }
-
-                //Handle tulang kering kiri
-                var tulang_kering_kiri = data.tulang_kering_kiri ? data.tulang_kering_kiri.split(',') : [];
-                if (tulang_kering_kiri[0] === 'sakit') {
-                    $('input[name="tk_kiri"]').prop('checked', true);
-                }
-                if (tulang_kering_kiri[1]) {
-                    $('input[name="tk_kiri_grade"][value="' + tulang_kering_kiri[1] + '"]').prop('checked',
-                        true);
-                }
-
-                // Handle tulang kering kanan
-                var tulang_kering_kanan = data.tulang_kering_kanan ? data.tulang_kering_kanan.split(',') : [];
-                if (tulang_kering_kanan[0] === 'sakit') {
-                    $('input[name="tk_kanan"]').prop('checked', true);
-                }
-                if (tulang_kering_kanan[1]) {
-                    $('input[name="tk_kanan_grade"][value="' + tulang_kering_kanan[1] + '"]').prop(
-                        'checked', true);
-                }
-
-                //Handle femur dalam kiri
-                var femur_dalam_kiri = data.femur_dalam_kiri ? data.femur_dalam_kiri.split(',') : [];
-                if (femur_dalam_kiri[0] === 'sakit') {
-                    $('input[name="fd_kiri"]').prop('checked', true);
-                }
-                if (femur_dalam_kiri[1]) {
-                    $('input[name="fd_kiri_grade"][value="' + femur_dalam_kiri[1] + '"]').prop('checked',
-                        true);
-                }
-
-                // Handle femur dalam kanan
-                var femur_dalam_kanan = data.femur_dalam_kanan ? data.femur_dalam_kanan.split(',') : [];
-                if (femur_dalam_kanan[0] === 'sakit') {
-                    $('input[name="fd_kanan"]').prop('checked', true);
-                }
-                if (femur_dalam_kanan[1]) {
-                    $('input[name="fd_kanan_grade"][value="' + femur_dalam_kanan[1] + '"]').prop('checked',
-                        true);
-                }
-
-                //Handle lingkar perut atas
-                var lingkar_perut_atas = data.lingkar_perut_atas ? data.lingkar_perut_atas.split(',') : [];
-                if (lingkar_perut_atas[0] === 'sakit') {
-                    $('input[name="lp_atas"]').prop('checked', true);
-                }
-                if (lingkar_perut_atas[1]) {
-                    $('input[name="lp_atas_grade"][value="' + lingkar_perut_atas[1] + '"]').prop('checked',
-                        true);
-                }
-
-                // Handle lingkar perut bawah
-                var lingkar_perut_bawah = data.lingkar_perut_bawah ? data.lingkar_perut_bawah.split(',') : [];
-                if (lingkar_perut_bawah[0] === 'sakit') {
-                    $('input[name="lp_bawah"]').prop('checked', true);
-                }
-                if (lingkar_perut_bawah[1]) {
-                    $('input[name="lp_bawah_grade"][value="' + lingkar_perut_bawah[1] + '"]').prop(
-                        'checked', true);
-                }
-
-                // Handle lingkar perut kiri
-                var lingkar_perut_kiri = data.lingkar_perut_kiri ? data.lingkar_perut_kiri.split(',') : [];
-                if (lingkar_perut_kiri[0] === 'sakit') {
-                    $('input[name="lp_kiri"]').prop('checked', true);
-                }
-                if (lingkar_perut_kiri[1]) {
-                    $('input[name="lp_kiri_grade"][value="' + lingkar_perut_kiri[1] + '"]').prop('checked',
-                        true);
-                }
-
-                // Handle lingkar perut kanan
-                var lingkar_perut_kanan = data.lingkar_perut_kanan ? data.lingkar_perut_kanan.split(',') : [];
-                if (lingkar_perut_kanan[0] === 'sakit') {
-                    $('input[name="lp_kanan"]').prop('checked', true);
-                }
-                if (lingkar_perut_kanan[1]) {
-                    $('input[name="lp_kanan_grade"][value="' + lingkar_perut_kanan[1] + '"]').prop(
-                        'checked', true);
-                }
-
-                // Handle cv4 kiri
-                var cv4_kiri = data.cv4_kiri ? data.cv4_kiri.split(',') : [];
-                if (cv4_kiri[0] === 'sakit') {
-                    $('input[name="cv4_kiri"]').prop('checked', true);
-                }
-                if (cv4_kiri[1]) {
-                    $('input[name="cv4_kiri_grade"][value="' + cv4_kiri[1] + '"]').prop('checked', true);
-                }
-
-                // Handle cv4 kanan
-                var cv4_kanan = data.cv4_kanan ? data.cv4_kanan.split(',') : [];
-                if (cv4_kanan[0] === 'sakit') {
-                    $('input[name="cv4_kanan"]').prop('checked', true);
-                }
-                if (cv4_kanan[1]) {
-                    $('input[name="cv4_kanan_grade"][value="' + cv4_kanan[1] + '"]').prop('checked', true);
-                }
-
-                var terapiForm = document.getElementById("terapi-form");
-                var kesForm = document.getElementById("pemeriksaan");
-                if (data.kejantanan == 'ya') {
-                    $('#kejantanan').prop('checked', true);
-                    terapiForm.style.display = "block";
-                    kesForm.style.display = "block";
-                } else {
-                    $('#kejantanan').prop('checked', false);
-                    terapiForm.style.display = "none";
-                    kesForm.style.display = "none";
-                }
-
-                // Handle cv6 kiri
-                var cv6_kiri = data.cv6_kiri ? data.cv6_kiri.split(',') : [];
-                if (cv6_kiri[0] === 'sakit') {
-                    $('input[name="cv6_kiri"]').prop('checked', true);
-                }
-                if (cv6_kiri[1]) {
-                    $('input[name="cv6_kiri_grade"][value="' + cv6_kiri[1] + '"]').prop('checked', true);
-                }
-
-                // Handle cv4 kanan
-                var cv6_kanan = data.cv6_kanan ? data.cv6_kanan.split(',') : [];
-                if (cv6_kanan[0] === 'sakit') {
-                    $('input[name="cv6_kanan"]').prop('checked', true);
-                }
-                if (cv6_kanan[1]) {
-                    $('input[name="cv6_kanan_grade"][value="' + cv6_kanan[1] + '"]').prop('checked', true);
-                }
-
-                // Handle l1 kiri
-                var l1_kiri = data.l1_kiri ? data.l1_kiri.split(',') : [];
-                if (l1_kiri[0] === 'sakit') {
-                    $('input[name="l1_kiri"]').prop('checked', true);
-                }
-                if (l1_kiri[1]) {
-                    $('input[name="l1_kiri_grade"][value="' + l1_kiri[1] + '"]').prop('checked', true);
-                }
-
-                // Handle cv4 kanan
-                var l1_kanan = data.l1_kanan ? data.l1_kanan.split(',') : [];
-                if (l1_kanan[0] === 'sakit') {
-                    $('input[name="l1_kanan"]').prop('checked', true);
-                }
-                if (l1_kanan[1]) {
-                    $('input[name="l1_kanan_grade"][value="' + l1_kanan[1] + '"]').prop('checked', true);
-                }
-
-                // Handle l3 kiri
-                var l3_kiri = data.l3_kiri ? data.l3_kiri.split(',') : [];
-                if (l3_kiri[0] === 'sakit') {
-                    $('input[name="l3_kiri"]').prop('checked', true);
-                }
-                if (l3_kiri[1]) {
-                    $('input[name="l3_kiri_grade"][value="' + l3_kiri[1] + '"]').prop('checked', true);
-                }
-
-                // Handle l3 kanan
-                var l3_kanan = data.l3_kanan ? data.l3_kanan.split(',') : [];
-                if (l3_kanan[0] === 'sakit') {
-                    $('input[name="l3_kanan"]').prop('checked', true);
-                }
-                if (l3_kanan[1]) {
-                    $('input[name="l3_kanan_grade"][value="' + l3_kanan[1] + '"]').prop('checked', true);
-                }
-
-                // Handle piriformis kiri
-                var piriformis_kiri = data.piriformis_kiri ? data.piriformis_kiri.split(',') : [];
-                if (piriformis_kiri[0] === 'sakit') {
-                    $('input[name="piriformis_kiri"]').prop('checked', true);
-                }
-                if (piriformis_kiri[1]) {
-                    $('input[name="piriformis_kiri_grade"][value="' + piriformis_kiri[1] + '"]').prop(
-                        'checked', true);
-                }
-
-                // Handle piriformis kanan
-                var piriformis_kanan = data.piriformis_kanan ? data.piriformis_kanan.split(',') : [];
-                if (piriformis_kanan[0] === 'sakit') {
-                    $('input[name="piriformis_kanan"]').prop('checked', true);
-                }
-                if (piriformis_kanan[1]) {
-                    $('input[name="piriformis_kanan_grade"][value="' + piriformis_kanan[1] + '"]').prop(
-                        'checked', true);
-                }
-
-                // Handle sendok kiri
-                var sendok_kiri = data.sendok_kiri ? data.sendok_kiri.split(',') : [];
-                if (sendok_kiri[0] === 'sakit') {
-                    $('input[name="sendok_kiri"]').prop('checked', true);
-                }
-                if (sendok_kiri[1]) {
-                    $('input[name="sendok_kiri_grade"][value="' + sendok_kiri[1] + '"]').prop('checked',
-                        true);
-                }
-
-                // Handle sendok kanan
-                var sendok_kanan = data.sendok_kanan ? data.sendok_kanan.split(',') : [];
-                if (sendok_kanan[0] === 'sakit') {
-                    $('input[name="sendok_kanan"]').prop('checked', true);
-                }
-                if (sendok_kanan[1]) {
-                    $('input[name="sendok_kanan_grade"][value="' + sendok_kanan[1] + '"]').prop('checked',
-                        true);
-                }
-
-                if (data.ereksi === 'ya') {
-                    $('input[name="ereksi"][value="ya"]').prop('checked', true);
-                    $('input[name="ereksi"][value="tidak"]').prop('checked', false);
-                } else if (data.ereksi === 'tidak') {
-                    $('input[name="ereksi"][value="tidak"]').prop('checked', true);
-                    $('input[name="ereksi"][value="ya"]').prop('checked', false);
-                } else {
-                    $('input[name="ereksi"]').prop('checked', false);
-                }
-
-                if (data.obat_kuat === 'ya') {
-                    $('input[name="obat_kuat"][value="ya"]').prop('checked', true);
-                    $('input[name="obat_kuat"][value="tidak"]').prop('checked', false);
-                } else if (data.obat_kuat === 'tidak') {
-                    $('input[name="obat_kuat"][value="tidak"]').prop('checked', true);
-                    $('input[name="obat_kuat"][value="ya"]').prop('checked', false);
-                } else {
-                    $('input[name="obat_kuat"]').prop('checked', false);
-                }
-
-                if (data.porno === 'ya') {
-                    showFrequency('nonton-porn-frequency', true);
-                    $('input[name="nonton_porno"][value="ya"]').prop('checked', true);
-                    $('input[name="nonton_porno"][value="tidak"]').prop('checked', false);
-                    $('input[name="frekuensi_nonton_porno"][value="' + data.frekuensi_porno + '"]').prop(
-                        'checked', true);
-                } else if (data.porno === 'tidak') {
-                    $('input[name="nonton_porno"][value="tidak"]').prop('checked', true);
-                    $('input[name="nonton_porno"][value="ya"]').prop('checked', false);
-                    showFrequency('nonton-porn-frequency', false);
-                } else {
-                    $('input[name="nonton_porno"]').prop('checked', false);
-                    showFrequency('nonton-porn-frequency', false);
-                }
-
-                if (data.onani === 'ya') {
-                    showFrequency('onani-frequency', true);
-                    $('input[name="sering_onani"][value="ya"]').prop('checked', true);
-                    $('input[name="sering_onani"][value="tidak"]').prop('checked', false);
-                    $('input[name="frekuensi_onani"][value="' + data.frekuensi_onani + '"]').prop('checked',
-                        true);
-                } else if (data.onani === 'tidak') {
-                    $('input[name="sering_onani"][value="tidak"]').prop('checked', true);
-                    $('input[name="sering_onani"][value="ya"]').prop('checked', false);
-                    showFrequency('onani-frequency', false);
-                } else {
-                    $('input[name="sering_onani"]').prop('checked', false);
-                    showFrequency('onani-frequency', false);
-                }
-
-                // Handling the input for "lainnya" in both sections
-                if (data.frekuensi_porno === 'lainnya') {
-                    toggleLainnyaTextbox('nonton-lainnya-textbox', true);
-                    $('#nonton-lainnya-textbox').val(data.frekuensi_porno_lain);
-                }
-
-                if (data.frekuensi_onani === 'lainnya') {
-                    toggleLainnyaTextbox('onani-lainnya-textbox', true);
-                    $('#onani-lainnya-textbox').val(data.frekuensi_onani_lain);
-                }
-
-                if (data.frekuensi_ranjang === 'lainnya') {
-                    toggleLainnyaTextbox('hubungan-lainnya-textbox', true);
-                    $('#hubungan-lainnya-textbox').val(data.frekuensi_ranjang_lain);
-                }
-
-                $('#exampleModal form :input').prop('readonly', false);
-                $('#exampleModal form :checkbox').prop('disabled', false);
-
-                if (typeof complaintTagify !== 'undefined') {
-                    complaintTagify.setReadonly(false);
-                }
-                if (typeof medhisTagify !== 'undefined') {
-                    medhisTagify.setReadonly(false);
-                }
-                if (typeof resultTagify !== 'undefined') {
-                    resultTagify.setReadonly(false);
-                }
-
-                $('.terapis').prop('disabled', false);
-
-                $('#exampleModal #save-button').show();
-
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                console.error('Error:', textStatus, errorThrown);
-                alert('Terjadi kesalahan, silahkan coba lagi...');
-            }
-        });
-    }
-
-    var deleteId = null;
-
-    function destroy(id) {
-        deleteId = id; // Set the ID to delete
-        $('#deleteModal').appendTo('body').modal('show'); // Show the modal
-    }
-
-    $(document).ready(function() {
-        $('#confirmDeleteButton').off('click').on('click', function() {
-            var $btn = $(this);
-
-            if (deleteId !== null) {
-                $.ajax({
-                    url: '<?= site_url('history/destroy') ?>/' + deleteId,
-                    type: 'POST',
-                    dataType: 'json',
-                    data: {
-                        "<?= csrf_token() ?>": "<?= csrf_hash() ?>"
-                    },
-                    beforeSend: function() {
-                        // Matikan tombol agar user tidak klik berkali-kali
-                        $btn.prop('disabled', true).text('Memproses...');
-                    },
-                    success: function(response) {
-                        if (response.status) {
-                            // Handle success
-                            $('#deleteModal').modal('hide');
-
-                            if ($.fn.DataTable.isDataTable('#table-2')) {
-                                $('#table-2').DataTable().ajax.reload(null, false);
-                            } else {
-                                location.reload();
-                            }
-
-                        } else {
-                            // Handle failure
-                            alert('Data gagal dihapus: ' + (response.message || 'Error server'));
-                        }
-                    },
-                    error: function() {
-                        // Handle error
-                        alert('Terjadi kesalahan');
-                    },
-                    complete: function() {
-                        $btn.prop('disabled', false).text('Ya, Hapus');
-                        deleteId = null;
-                    }
-                });
-
-                // $('#deleteModal').modal('hide'); // Hide the modal
-                // deleteId = null; // Clear the ID
-            }
-        });
-
-    })
-
-    var complaintTagify, medhisTagify, resultTagify;
-    document.addEventListener('DOMContentLoaded', function() {
-        var complaintTextarea = document.querySelector('textarea[name="complaint"]');
-        if (complaintTextarea) {
-            complaintTagify = new Tagify(complaintTextarea, {
-                whitelist: []
-            });
-            var controllerC; // Untuk mengontrol fetch call dan bisa membatalkannya
-
-            complaintTagify.on('input', function(e) {
-                var value = e.detail.value; // Nilai input dari Tagify
-                complaintTagify.whitelist = null; // Reset whitelist
-                if (controllerC) controllerC.abort();
-                controllerC = new AbortController();
-                complaintTagify.loading(true);
-                fetch("<?= site_url('complaint/get_tags') ?>?query=" + encodeURIComponent(value), {
-                        signal: controllerC.signal
-                    })
-                    .then(res => res.json())
-                    .then(function(list) {
-                        complaintTagify.whitelist = list;
-                        complaintTagify.loading(false).dropdown.show(value);
-                    }).catch(err => complaintTagify.loading(false));
-            });
-        }
-
-
-    });
-
-    document.addEventListener('DOMContentLoaded', function() {
-        var medhisTextarea = document.querySelector('textarea[name="medhis"]');
-        if (medhisTextarea) {
-            medhisTagify = new Tagify(medhisTextarea, {
-                whitelist: []
-            });
-
-            var controllerM; // Untuk mengontrol fetch call dan bisa membatalkannya
-
-            medhisTagify.on('input', onInput);
-
-            function onInput(e) {
-                var value = e.detail.value; // Nilai input dari Tagify
-                medhisTagify.whitelist = null; // Reset whitelist
-                if (controllerM) controllerM.abort();
-                controllerM = new AbortController();
-                medhisTagify.loading(true);
-                fetch("<?= site_url('medis/get_tags') ?>?query=" + encodeURIComponent(value), {
-                        signal: controllerM.signal
-                    })
-                    .then(res => res.json())
-                    .then(function(list) {
-                        medhisTagify.whitelist = list;
-                        medhisTagify.loading(false).dropdown.show(value);
-                    }).catch(err => medhisTagify.loading(false));
-            }
-        }
-
-
-    });
-    document.addEventListener('DOMContentLoaded', function() {
-        var resultTextarea = document.querySelector('textarea[name="result"]');
-        if (resultTextarea) {
-            resultTagify = new Tagify(resultTextarea, {
-                whitelist: []
-            });
-            var controllerR; // Untuk mengontrol fetch call dan bisa membatalkannya
-
-            resultTagify.on('input', onInput);
-
-            function onInput(e) {
-                var value = e.detail.value; // Nilai input dari Tagify
-                resultTagify.whitelist = null; // Reset whitelist
-
-                // Membatalkan fetch sebelumnya jika ada
-                if (controllerR) controllerR.abort();
-                controllerR = new AbortController();
-
-                resultTagify.loading(true);
-
-                // Mengambil suggestions dari server menggunakan fetch
-                fetch("<?= site_url('result/get_tags') ?>?query=" + encodeURIComponent(value), {
-                        signal: controllerR.signal
-                    })
-                    .then(res => res.json())
-                    .then(function(list) {
-                        resultTagify.whitelist = list;
-                        resultTagify.loading(false).dropdown.show(value);
-                    }).catch(err => resultTagify.loading(false));
-            }
-        }
-
-    });
-
-    function checkGender() {
-        var gender = document.getElementById('gender').value;
-        var terapiKejantanan = document.getElementById('terapi-kejantanan');
-
-        if (gender === 'Man') {
-            terapiKejantanan.style.display = 'block';
-        } else {
-            terapiKejantanan.style.display = 'none';
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        checkGender();
-    });
-
-    document.getElementById('gender').addEventListener('change', checkGender);
-
-    document.addEventListener('DOMContentLoaded', function() {
-        toggleTerapiForm();
-    });
-
-    function toggleTerapiForm() {
-        var checkbox = document.getElementById("kejantanan");
-        var terapiForm = document.getElementById("terapi-form");
-        var pemeriksaan = document.getElementById("pemeriksaan");
-
-        if (checkbox.checked) {
-            terapiForm.style.display = "block";
-            pemeriksaan.style.display = "block";
-        } else {
-            terapiForm.style.display = "none";
-            pemeriksaan.style.display = "none";
-        }
-    }
-
-    function showFrequency(elementId, show) {
-        const element = document.getElementById(elementId);
-        if (show) {
-            element.style.display = 'block';
-        } else {
-            element.style.display = 'none';
-            const radios = element.querySelectorAll('input[type="radio"]');
-            radios.forEach(radio => (radio.checked = false));
-            const textbox = element.querySelector('input[type="text"]');
-            if (textbox) {
-                textbox.value = '';
-                textbox.style.display = 'none';
-            }
-        }
-    }
-
-    function toggleLainnyaTextbox(textboxId, show, retainValue = false) {
-        const textbox = document.getElementById(textboxId);
-        if (textbox) {
-            if (show) {
-                textbox.style.display = 'block';
-            } else {
-                textbox.style.display = 'none';
-                if (!retainValue) {
-                    textbox.value = '';
-                }
-            }
-        }
-    }
-
-    document.addEventListener('change', function(e) {
-        if (e.target.name === 'frekuensi_nonton_porno' && e.target.value !== 'lainnya') {
-            toggleLainnyaTextbox('nonton-lainnya-textbox', false, true);
-        } else if (e.target.name === 'frekuensi_nonton_porno' && e.target.value === 'lainnya') {
-            toggleLainnyaTextbox('nonton-lainnya-textbox', true);
-        }
-
-        if (e.target.name === 'frekuensi_onani' && e.target.value !== 'lainnya') {
-            toggleLainnyaTextbox('onani-lainnya-textbox', false, true);
-        } else if (e.target.name === 'frekuensi_onani' && e.target.value === 'lainnya') {
-            toggleLainnyaTextbox('onani-lainnya-textbox', true);
-        }
-
-        if (e.target.name === 'frekuensi_ranjang' && e.target.value !== 'lainnya') {
-            toggleLainnyaTextbox('hubungan-lainnya-textbox', false, true);
-        } else if (e.target.name === 'frekuensi_ranjang' && e.target.value === 'lainnya') {
-            toggleLainnyaTextbox('hubungan-lainnya-textbox', true);
-        }
-    });
-
-    $(document).ready(function() {
-        function toggleGradeCheckbox(areaPrefix) {
-            var sakitCheckboxKanan = $('input[name="' + areaPrefix + '_kanan"]');
-            var sakitCheckboxKiri = $('input[name="' + areaPrefix + '_kiri"]');
-        }
-
-        function limitOneGrade(areaPrefix) {
-            $('input[name="' + areaPrefix + '_kanan_grade"]').on('change', function() {
-                if ($(this).is(':checked')) {
-                    $('input[name="' + areaPrefix + '_kanan_grade"]').not(this).prop('checked', false);
-                }
-            });
-
-            $('input[name="' + areaPrefix + '_kiri_grade"]').on('change', function() {
-                if ($(this).is(':checked')) {
-                    $('input[name="' + areaPrefix + '_kiri_grade"]').not(this).prop('checked', false);
-                }
-            });
-        }
-
-        var areas = ['odp', 'vital', 'kelenjar', 'hormon', 'tk', 'fd', 'lp_atas', 'lp_bawah', 'lp_kanan',
-            'lp_kiri', 'cv4', 'cv6', 'l1', 'l3', 'piriformis', 'sendok'
-        ];
-
-        areas.forEach(function(area) {
-            toggleGradeCheckbox(area);
-            limitOneGrade(area);
-
-            $('input[name="' + area + '_kanan"], input[name="' + area + '_kiri"]').on('change',
-                function() {
-                    toggleGradeCheckbox(area);
-                });
-        });
-    });
-
-    // Auto open modal when query param ?openModalRiwayat=true
-    $(document).ready(function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('openModalRiwayat') === 'true') {
-            const hId = urlParams.get('history_id');
-
-            if (hId && hId !== 'undefined' && hId !== '') {
-                setTimeout(function() {
-                    show(hId);
-
-                    $('.modal-backdrop').not(':last').remove();
-                    $('.modal').appendTo("body");
-                }, 500);
-            } else {
-                console.warn("History ID tidak ditemukan di URL. Modal tidak otomatis dibuka.");
-            }
-        }
-    });
-</script>
-<?= $this->endSection() ?>

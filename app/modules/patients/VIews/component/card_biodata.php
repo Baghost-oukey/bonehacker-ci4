@@ -1,329 +1,213 @@
-<div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h4 class="mb-0">Biodata</h4>
-        <!-- <button type="submit" class="btn btn-success">Simpan Perubahan</button> -->
-    </div>
-    <div class="card-body">
+<form id="patientForm" action="<?= site_url('patient/update') ?>" method="post" enctype="multipart/form-data">
+    <?= csrf_field() ?>
+    <input type="hidden" name="id" value="<?= $patient_id ?>">
 
-        <?php if (isset($is_suspective) && $is_suspective) : ?>
-            <div class="alert alert-danger alert-has-icon mb-4">
-                <div class="alert-icon"><i class="far fa-lightbulb"></i></div>
-                <div class="alert-body">
-                    <div class="alert-title">Peringatan</div>
-                    Termasuk kategori Pasien Rentan
-                </div>
+    <div class="rounded-2xl bg-white shadow-sm border border-slate-200/50 overflow-hidden">
+        <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+                <h3 class="text-lg font-semibold text-slate-800">Biodata Pasien</h3>
+                <p class="text-sm text-slate-500">Ubah dan perbarui informasi dasar pasien</p>
             </div>
-        <?php endif ?>
+            <button type="submit"
+                class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 transition">
+                <i class="fas fa-save"></i> Simpan Perubahan
+            </button>
+        </div>
 
-        <div class="row">
-            <div class="col-lg-6">
-                <div class="form-group">
-                    <label for="name">Nama Lengkap</label>
-                    <input type="text" class="form-control" name="name" id="name"
-                        value="<?= esc($patient->name) ?>" required>
-                    <div class="invalid-feedback">Nama lengkap tidak boleh kosong</div>
+        <div class="p-6">
+            <?php if (isset($patient->is_suspective) && $patient->is_suspective): ?>
+                <div class="mb-6 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4">
+                    <i class="fas fa-exclamation-triangle text-red-500 mt-0.5"></i>
+                    <div>
+                        <h5 class="text-sm font-semibold text-red-800">Peringatan Kategori</h5>
+                        <p class="text-sm text-red-600">Termasuk kategori Pasien Rentan</p>
+                    </div>
                 </div>
+            <?php endif; ?>
 
-                <div class="form-group">
-                    <label for="gender">Jenis Kelamin</label>
-                    <select class="form-control" name="gender" id="gender" required>
-                        <option value="">-- Pilih Jenis Kelamin --</option>
-                        <option value="Man" <?= ($patient->gender == 'Man') ? 'selected' : '' ?>>Laki-laki</option>
-                        <option value="Woman" <?= ($patient->gender == 'Woman') ? 'selected' : '' ?>>Perempuan</option>
-                    </select>
-                    <div class="invalid-feedback">Jenis kelamin tidak boleh kosong</div>
-                </div>
+            <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <!-- Left Column -->
+                <div class="space-y-4">
+                    <div class="space-y-1">
+                        <label class="text-sm font-medium text-slate-700">Nama Lengkap <span class="text-red-500">*</span></label>
+                        <input type="text" name="name" id="name" value="<?= esc($patient->name) ?>" required
+                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                            placeholder="Masukkan nama lengkap">
+                        <div class="invalid-feedback text-xs text-red-500 mt-1 hidden">Nama lengkap tidak boleh kosong</div>
+                    </div>
 
-                <div class="form-group">
-                    <label for="age">Usia</label>
-                    <input type="number" class="form-control" name="age" id="age"
-                        value="<?= esc($patient->age) ?>" min="1" max="99">
-                </div>
+                    <div class="space-y-1">
+                        <label class="text-sm font-medium text-slate-700">Jenis Kelamin <span class="text-red-500">*</span></label>
+                        <select name="gender" id="gender" required
+                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                            <option value="">-- Pilih --</option>
+                            <option value="Man" <?= ($patient->gender == 'Man') ? 'selected' : '' ?>>Laki-laki</option>
+                            <option value="Woman" <?= ($patient->gender == 'Woman') ? 'selected' : '' ?>>Perempuan</option>
+                        </select>
+                        <div class="invalid-feedback text-xs text-red-500 mt-1 hidden">Jenis kelamin tidak boleh kosong</div>
+                    </div>
 
-                <div class="form-group">
-                    <label for="visit_date">Tanggal Kedatangan</label>
-                    <input type="date" class="form-control" name="visit_date" id="visit_date"
-                        value="<?= isset($created_at) ? date('Y-m-d', strtotime($created_at)) : '' ?>"
-                        required>
-                    <div class="invalid-feedback">Tanggal Kedatangan tidak boleh kosong</div>
-                </div>
+                    <div class="space-y-1">
+                        <label class="text-sm font-medium text-slate-700">Usia</label>
+                        <input type="number" name="age" id="age" value="<?= esc($patient->age) ?>" min="1" max="99"
+                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                            placeholder="Misal: 25">
+                    </div>
 
-                <div class="form-group">
-                    <label for="phone">No. Telepon/WhatsApp</label>
-                    <input type="tel" class="form-control" name="phone" id="phone"
-                        value="<?= esc($patient->phone) ?>" minlength="10" maxlength="14">
-                </div>
+                    <div class="space-y-1">
+                        <label class="text-sm font-medium text-slate-700">Tanggal Kedatangan <span class="text-red-500">*</span></label>
+                        <input type="date" name="visit_date" id="visit_date" 
+                            value="<?= isset($created_at) ? date('Y-m-d', strtotime($created_at)) : '' ?>" required
+                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                        <div class="invalid-feedback text-xs text-red-500 mt-1 hidden">Tanggal kedatangan tidak boleh kosong</div>
+                    </div>
 
-                <div class="form-group">
-                    <label for="address">Alamat Jalan</label>
-                    <textarea rows="3" class="form-control" name="address" id="address"><?= esc($patient->address ?? '') ?></textarea>
-                </div>
+                    <div class="space-y-1">
+                        <label class="text-sm font-medium text-slate-700">No. Telepon/WhatsApp</label>
+                        <input type="tel" name="phone" id="phone" value="<?= esc($patient->phone) ?>"
+                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                            placeholder="0812xxxxx">
+                    </div>
 
-                <div class="form-group">
-                    <label>Termasuk Kelompok Rentan</label> <br>
-                    <div class="custom-switch">
-                        <label class="custom-switch mt-2">
-                            <input type="checkbox" name="is_suspective" class="custom-switch-input"
-                                id="isSuspectiveCheckbox" <?= ($patient->is_suspective ?? false) ? 'checked' : '' ?>>
-                            <span class="custom-switch-indicator"></span>
-                            <span class="custom-switch-description">Ya, Kelompok Rentan</span>
+                    <div class="space-y-1">
+                        <label class="text-sm font-medium text-slate-700">Alamat Jalan</label>
+                        <textarea name="address" id="address" rows="3"
+                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                            placeholder="Masukkan alamat lengkap"><?= esc($patient->address ?? '') ?></textarea>
+                    </div>
+
+                    <!-- Toggle Rentan -->
+                    <div class="flex items-center justify-between rounded-lg border border-slate-200 p-4">
+                        <div>
+                            <label class="text-sm font-medium text-slate-700">Termasuk Kelompok Rentan</label>
+                            <p class="text-xs text-slate-500">Tandai jika pasien membutuhkan penanganan khusus</p>
+                        </div>
+                        <label class="inline-flex cursor-pointer items-center">
+                            <input type="checkbox" name="is_suspective" id="isSuspectiveCheckbox" class="sr-only peer"
+                                <?= ($patient->is_suspective ?? false) ? 'checked' : '' ?>>
+                            <div class="w-9 h-5 bg-slate-200 rounded-full peer peer-checked:bg-teal-500 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all relative"></div>
                         </label>
                     </div>
-                </div>
 
-                <div class="form-group">
-                    <div id="keterangan_rentan" style="display: <?= $patient->is_suspective ? 'block' : 'none' ?>;">
-                        <label for="ket_rentan">Keterangan Rentan</label>
-                        <textarea id="ket_rentan" class="form-control" name="ket_rentan" rows="4"
-                            placeholder="Masukkan keterangan rentan di sini..."><?= esc($patient->ket_suspect) ?></textarea>
+                    <div class="space-y-1 hidden" id="keterangan_rentan">
+                        <label class="text-sm font-medium text-slate-700">Keterangan Rentan</label>
+                        <textarea name="ket_rentan" id="ket_rentan" rows="3"
+                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                            placeholder="Masukkan keterangan rentan"><?= esc($patient->ket_suspect ?? '') ?></textarea>
                     </div>
                 </div>
 
-            </div>
+                <!-- Right Column -->
+                <div class="space-y-4">
+                    <div class="space-y-1">
+                        <label class="text-sm font-medium text-slate-700">Sumber Informasi</label>
+                        <select name="patient_information" id="patient_information"
+                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                            <option value="">Pilih Sumber Informasi</option>
+                            <?php foreach ($resources as $value): ?>
+                                <option value="<?= $value->id ?>" <?= ($patient->patient_information == $value->id) ? 'selected' : '' ?>>
+                                    <?= esc($value->nama) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
 
-            <div class="col-lg-6">
-                <div class="form-group">
-                    <label>Sumber Informasi</label>
-                    <select class="form-control" name="patient_information" id="patient_information">
-                        <option value="">Pilih Sumber Informasi</option>
-                        <?php foreach ($resources as $value) : ?>
-                            <option value="<?= $value->id ?>" <?= ($patient->patient_information == $value->id) ? 'selected' : '' ?>>
-                                <?= esc($value->nama) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
+                    <!-- Toggle Domestik -->
+                    <div class="flex items-center justify-between rounded-lg border border-slate-200 p-4">
+                        <div>
+                            <label class="text-sm font-medium text-slate-700">Domestik</label>
+                            <p class="text-xs text-slate-500">Status domisili pasien</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <label class="inline-flex items-center gap-1 cursor-pointer">
+                                <input type="radio" name="domestic" value="dalam_negeri" class="text-teal-600 focus:ring-teal-500"
+                                    <?= ($patient->domestic == 1 || !isset($patient->domestic)) ? 'checked' : '' ?>>
+                                <span class="text-xs text-slate-600">Dalam Negeri</span>
+                            </label>
+                            <label class="inline-flex items-center gap-1 cursor-pointer">
+                                <input type="radio" name="domestic" value="luar_negeri" class="text-teal-600 focus:ring-teal-500"
+                                    <?= (isset($patient->domestic) && $patient->domestic == 0) ? 'checked' : '' ?>>
+                                <span class="text-xs text-slate-600">Luar Negeri</span>
+                            </label>
+                        </div>
+                    </div>
 
-                <div class="form-group" id="domestic-group">
-                    <label>Dalam Negeri / Luar Negeri</label> <br>
-                    <div class="custom-switch">
-                        <label class="custom-switch mt-2">
-                            <input type="checkbox" name="domestic" class="custom-switch-input"
-                                <?= $patient->domestic ? 'checked' : '' ?>>
-                            <span class="custom-switch-indicator"></span>
-                            <span class="custom-switch-description">Dalam Negeri</span>
-                        </label>
+                    <div class="space-y-1 hidden" id="country-group">
+                        <label class="text-sm font-medium text-slate-700">Negara</label>
+                        <select name="country_id" id="country_id"
+                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                            <option value="">PILIH</option>
+                            <?php foreach ($negara as $value): ?>
+                                <option value="<?= $value->id ?>" <?= ($patient->country_id == $value->id) ? 'selected' : '' ?>>
+                                    <?= esc($value->country) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-sm font-medium text-slate-700">Wilayah</label>
+                        <select name="region_id" id="region_id"
+                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                            <option value="">PILIH</option>
+                            <?php foreach ($wilayah as $value): ?>
+                                <option value="<?= $value->id ?>" <?= ($patient->region_id == $value->id) ? 'selected' : '' ?>>
+                                    <?= esc($value->name ?? $value->nama ?? 'Tanpa Nama') ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-sm font-medium text-slate-700">Pencarian Desa</label>
+                        <select name="desa_id" id="desa_id"
+                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                            <?php if (!empty($address->desa_id)): ?>
+                                <option value="<?= esc($address->desa_id) ?>" selected><?= esc($address->desa_nama) ?></option>
+                            <?php else: ?>
+                                <option value="">Temukan Desa</option>
+                            <?php endif; ?>
+                        </select>
+                    </div>
+
+                    <input type="hidden" name="desa_nama" id="desa_nama" value="<?= esc($address->desa_nama ?? '') ?>">
+                    <input type="hidden" name="kecamatan_id" id="kecamatan_id" value="<?= esc($address->kecamatan_id ?? '') ?>">
+                    <input type="hidden" name="kabupaten_id" id="kabupaten_id" value="<?= esc($address->kabupaten_id ?? '') ?>">
+                    <input type="hidden" name="provinsi_id" id="provinsi_id" value="<?= esc($address->provinsi_id ?? '') ?>">
+
+                    <!-- Info Wilayah Readonly -->
+                    <div class="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-lg border border-slate-100">
+                        <div class="space-y-1">
+                            <label class="text-xs font-medium text-slate-500">Kecamatan</label>
+                            <input type="text" id="kecamatan_nama" value="<?= esc($address->kecamatan_nama ?? '') ?>" readonly
+                                class="w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-1.5 text-xs text-slate-600 cursor-not-allowed">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-xs font-medium text-slate-500">Kabupaten</label>
+                            <input type="text" id="kabupaten_nama" value="<?= esc($address->kabupaten_nama ?? '') ?>" readonly
+                                class="w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-1.5 text-xs text-slate-600 cursor-not-allowed">
+                        </div>
+                        <div class="space-y-1 col-span-2">
+                            <label class="text-xs font-medium text-slate-500">Provinsi</label>
+                            <input type="text" id="provinsi_nama" value="<?= esc($address->provinsi_nama ?? '') ?>" readonly
+                                class="w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-1.5 text-xs text-slate-600 cursor-not-allowed">
+                        </div>
                     </div>
                 </div>
-
-                <div class="form-group" id="country-group">
-                    <label for="country_id">Negara</label>
-                    <select class="form-control" name="country_id" id="country_id">
-                        <option value="">PILIH</option>
-                        <?php foreach ($negara as $value): ?>
-                            <option value="<?= esc($value->id) ?>"
-                                <?= (isset($patient->country_id) && $patient->country_id == $value->id) ? 'selected' : '' ?>>
-                                <?= esc($value->country) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                    <div class="invalid-feedback">Negara tidak boleh kosong</div>
-                </div>
-
-                <div class="form-group" id="region-group">
-                    <label for="region_id">Wilayah</label>
-                    <select class="form-control" name="region_id" id="region_id">
-                        <option value="">PILIH</option>
-                        <?php foreach ($wilayah as $value): ?>
-                            <option value="<?= $value->id ?>"
-                                <?= ($patient->region_id == $value->id) ? 'selected' : '' ?>>
-                                <?= esc($value->name ?? $value->nama ?? 'Tanpa Nama') ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                    <div class="invalid-feedback">Wilayah tidak boleh kosong</div>
-                </div>
-
-                <div class="form-group" id="desa-group">
-                    <label for="desa_id">Pencarian Desa</label>
-                    <select class="form-control" name="desa_id" id="desa_id" style="width: 100%;">
-                        <?php if (!empty($desa_id)): ?>
-                            <option value="<?= esc($desa_id) ?>" selected><?= esc($desa_nama) ?></option>
-                        <?php else: ?>
-                            <option value="">Temukan Desa</option>
-                        <?php endif; ?>
-                    </select>
-                    <div class="invalid-feedback">Desa tidak boleh kosong</div>
-                </div>
-
-                <input type="hidden" name="kecamatan_id" id="kecamatan_id" value="<?= $address->kecamatan_id ?>">
-                <input type="hidden" name="kabupaten_id" id="kabupaten_id" value="<?= $address->kabupaten_id ?>">
-                <input type="hidden" name="provinsi_id" id="provinsi_id" value="<?= $address->provinsi_id ?>">
-
-                <div class="form-group" id="desaa-group">
-                    <label for="desa_nama">Nama Desa</label>
-                    <input type="text" class="form-control" name="desa_nama" id="desa_nama" value="<?= esc($address->desa_nama) ?>" readonly>
-                </div>
-                <div class="form-group" id="kecamatan-group">
-                    <label for="kecamatan_nama">Kecamatan</label>
-                    <input type="text" class="form-control" id="kecamatan_nama" value="<?= esc($address->kecamatan_nama) ?>" readonly>
-                </div>
-                <div class="form-group" id="kabupaten-group">
-                    <label for="kabupaten_nama">Kabupaten</label>
-                    <input type="text" class="form-control" id="kabupaten_nama" value="<?= esc($address->kabupaten_nama) ?>" readonly>
-                </div>
-                <div class="form-group" id="provinsi-group">
-                    <label for="provinsi_nama">Provinsi</label>
-                    <input type="text" class="form-control" id="provinsi_nama" value="<?= esc($address->provinsi_nama) ?>" readonly>
-                </div>
             </div>
-        </div>
-        <hr>
-        <div class="form-group">
-            <label class="created_by">
-                Data pasien ditambah oleh <strong><?= esc($created_by_name) ?></strong> pada <strong><?= $created_at ?></strong>
-                <?php if ($has_updated): ?>
-                    , dan diedit oleh <strong><?= esc($updated_by_name) ?></strong> pada <strong><?= $updated_at ?></strong>
-                <?php endif; ?>
-            </label>
+
+            <!-- Footer Info -->
+            <div class="mt-6 border-t border-slate-100 pt-4">
+                <p class="text-xs text-slate-500">
+                    Data pasien ditambah oleh <span class="font-semibold text-slate-700"><?= esc($created_by_name) ?></span> 
+                    pada <span class="font-medium text-slate-600"><?= $created_at ?></span>
+                    <?php if ($has_updated): ?>
+                        <span class="mx-1.5 text-slate-300">•</span>
+                        Diedit oleh <span class="font-semibold text-slate-700"><?= esc($updated_by_name) ?></span> 
+                        pada <span class="font-medium text-slate-600"><?= $updated_at ?></span>
+                    <?php endif; ?>
+                </p>
+            </div>
         </div>
     </div>
-</div>
-
-<?= $this->section('scripts') ?>
-<script>
-    document.getElementById("isSuspectiveCheckbox").addEventListener("change", function() {
-        const additionalInfo = document.getElementById("keterangan_rentan");
-        if (this.checked) {
-            additionalInfo.style.display = "block";
-        } else {
-            additionalInfo.style.display = "none";
-        }
-    });
-
-    $(document).ready(function() {
-        $('#region_id, #region_history').select2({
-            placeholder: "PILIH",
-        });
-    });
-
-    $(document).ready(function() {
-        var apiUrl = 'https://wilayah.smartsociety.id/public/desa';
-
-        // Inisialisasi Select2
-        $('#desa_id').select2({
-            placeholder: "Temukan Desa",
-            allowClear: true,
-            ajax: {
-                url: apiUrl,
-                dataType: 'json',
-                delay: 250,
-                data: function(params) {
-                    return {
-                        search: params.term,
-                        page: params.page || 1
-                    };
-                },
-                processResults: function(data, params) {
-                    params.page = params.page || 1;
-                    var options = [];
-                    if (data.data && data.data.data) {
-                        $.each(data.data.data, function(index, item) {
-                            var optionText = item.desNama;
-                            if (item.kecamatan && item.kecamatan.kabupaten) {
-                                optionText += '<br><small>Kec. ' + item.kecamatan.kecNama + ', ' + item.kecamatan.kabupaten.kabNama + '</small>';
-                            }
-                            options.push({
-                                id: item.desIdDesa,
-                                text: optionText,
-                                data: {
-                                    desa_nama: item.desNama,
-                                    kecamatan_id: item.kecamatan ? item.kecamatan.kecIdKecamatan : '',
-                                    kecamatan_nama: item.kecamatan ? item.kecamatan.kecNama : '',
-                                    kabupaten_id: item.kecamatan && item.kecamatan.kabupaten ? item.kecamatan.kabupaten.kabIdKabupaten : '',
-                                    kabupaten_nama: item.kecamatan && item.kecamatan.kabupaten ? item.kecamatan.kabupaten.kabNama : '',
-                                    provinsi_id: item.kecamatan && item.kecamatan.kabupaten && item.kecamatan.kabupaten.provinsi ? item.kecamatan.kabupaten.provinsi.provIdProvinsi : '',
-                                    provinsi_nama: item.kecamatan && item.kecamatan.kabupaten && item.kecamatan.kabupaten.provinsi ? item.kecamatan.kabupaten.provinsi.provNama : ''
-                                }
-                            });
-                        });
-                    }
-                    return {
-                        results: options,
-                        pagination: {
-                            more: !!(data.data && data.data.next_page_url)
-                        }
-                    };
-                },
-                cache: true
-            },
-            minimumInputLength: 1,
-            escapeMarkup: function(markup) {
-                return markup;
-            },
-            templateResult: function(item) {
-                return item.text;
-            },
-            templateSelection: function(item) {
-                // Menghilangkan tag HTML saat item dipilih agar tampilan bersih
-                return item.text ? item.text.split('<br>')[0] : item.text;
-            }
-        });
-
-        // Handle selection change
-        $('#desa_id').on('select2:select', function(e) {
-            var data = e.params.data.data;
-            if (data) {
-                $('#desa_nama').val(data.desa_nama);
-                $('#kecamatan_id').val(data.kecamatan_id);
-                $('#kecamatan_nama').val(data.kecamatan_nama);
-                $('#kabupaten_id').val(data.kabupaten_id);
-                $('#kabupaten_nama').val(data.kabupaten_nama);
-                $('#provinsi_id').val(data.provinsi_id);
-                $('#provinsi_nama').val(data.provinsi_nama);
-            }
-        });
-
-        // Disable 'Enter' key for the Select2 search input
-        $(document).on('keypress', '.select2-search__field', function(e) {
-            if (e.which === 13) {
-                e.preventDefault(); // Prevent form submission or any default behavior
-            }
-        });
-
-        function updateVisibility() {
-            var countryId = document.getElementById('country_id').value;
-            var domesticChecked = document.querySelector('input[name="domestic"]').checked;
-
-            var regionGroup = document.getElementById('region-group');
-            var desaGroup = document.getElementById('desa-group');
-            var desaaGroup = document.getElementById('desaa-group');
-            var kecamatanGroup = document.getElementById('kecamatan-group');
-            var kabupatenGroup = document.getElementById('kabupaten-group');
-            var provinsiGroup = document.getElementById('provinsi-group');
-            var countryGroup = document.getElementById('country-group'); // Assuming you have an ID for the country group
-
-            // Show or hide other groups based on domestic checkbox
-            if (domesticChecked) {
-                countryGroup.style.display = 'none'; // Hide the country group
-                regionGroup.style.display = 'block';
-                desaGroup.style.display = 'block';
-                desaaGroup.style.display = 'block';
-                kecamatanGroup.style.display = 'block';
-                kabupatenGroup.style.display = 'block';
-                provinsiGroup.style.display = 'block';
-            } else {
-                countryGroup.style.display = 'block'; // Show the country group
-                regionGroup.style.display = 'none';
-                desaGroup.style.display = 'none';
-                desaaGroup.style.display = 'none';
-                kecamatanGroup.style.display = 'none';
-                kabupatenGroup.style.display = 'none';
-                provinsiGroup.style.display = 'none';
-            }
-        }
-
-        // Event listener for country_id change
-        document.getElementById('country_id').addEventListener('change', updateVisibility);
-
-        // Event listener for domestic checkbox change
-        document.querySelector('input[name="domestic"]').addEventListener('change', updateVisibility);
-
-        // Initialize display based on the default values
-        updateVisibility();
-
-
-
-    });
-</script>
-<?= $this->endSection() ?>
+</form>
