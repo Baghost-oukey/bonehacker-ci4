@@ -354,25 +354,36 @@ class TerapisController extends BaseController
 
     try {
       $terapis_id = trim($this->request->getPost('terapis_id'));
+      $custom_username = trim($this->request->getPost('username'));
+      $custom_password = $this->request->getPost('password');
+
       $terapis = $this->model_terapis->detail($terapis_id);
 
       if (!$terapis) {
         return $this->response->setJSON(['status' => 'error', 'message' => 'Data Terapis tidak ditemukan (ID: ' . $terapis_id . ')', 'csrfHash' => csrf_hash()]);
       }
 
-      // Check if user already exists
+      // Check if user already exists (based on link)
       $existingUser = $this->model_users->where('terapis_id', $terapis->terapis_id)->first();
       if ($existingUser) {
         return $this->response->setJSON(['status' => 'error', 'message' => 'Akun User untuk Terapis ini sudah ada!', 'csrfHash' => csrf_hash()]);
       }
 
-      // Generate password (default: 123456)
-      $defaultPassword = 'password123';
-      $hashedPassword = password_hash($defaultPassword, PASSWORD_DEFAULT);
+      // Final values
+      $username = !empty($custom_username) ? $custom_username : $terapis->terapis_id;
+      $password = !empty($custom_password) ? $custom_password : 'password123';
+
+      // Check if username already taken by anyone
+      $usernameTaken = $this->model_users->where('username', $username)->first();
+      if ($usernameTaken) {
+        return $this->response->setJSON(['status' => 'error', 'message' => 'Username sudah digunakan oleh orang lain!', 'csrfHash' => csrf_hash()]);
+      }
+
+      $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
       $userData = [
         'realname' => $terapis->nama,
-        'username' => $terapis->terapis_id, // NIK as username initially
+        'username' => $username,
         'password' => $hashedPassword,
         'role' => 'user',
         'terapis_id' => $terapis->terapis_id,
@@ -382,7 +393,7 @@ class TerapisController extends BaseController
       if ($this->model_users->insert($userData)) {
         return $this->response->setJSON([
           'status' => 'success',
-          'message' => 'Akun berhasil dibuat. Username: ' . $terapis->terapis_id . ' | Password: ' . $defaultPassword,
+          'message' => 'Akun berhasil dibuat. Username: ' . $username . ' | Password: ' . $password,
           'csrfHash' => csrf_hash()
         ]);
       }

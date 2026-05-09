@@ -254,7 +254,7 @@
                         <p class="text-xs text-slate-500">Terapis ini belum memiliki akun untuk masuk ke sistem</p>
                     </div>
                     <div class="flex flex-wrap items-center justify-center gap-3">
-                        <button type="button" onclick="generateUser('<?= $terapis->terapis_id ?>')"
+                        <button type="button" onclick="openCreateAccountModal()"
                             class="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-amber-600">
                             <i class="fas fa-user-plus"></i>
                             Buat Akun Baru
@@ -318,6 +318,47 @@
                 Hapus
             </button>
         </form>
+    </div>
+</div>
+
+<!-- Modal Create Account -->
+<div id="modalCreateAccount" class="modal-wrapper hidden fixed inset-0 z-50 items-center justify-center bg-black/40 p-4">
+    <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-6 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-lg font-semibold text-slate-800">Buat Akun Login Baru</h3>
+            <button type="button" onclick="closeCreateAccountModal()" class="text-slate-500 hover:text-slate-800 text-2xl">&times;</button>
+        </div>
+        
+        <div class="space-y-4">
+            <p class="text-sm text-slate-500">Buat akun akses sistem untuk terapis <strong><?= esc($terapis->nama) ?></strong>.</p>
+            
+            <div class="space-y-1">
+                <label class="text-xs font-medium text-slate-700">Username <span class="text-red-500">*</span></label>
+                <input type="text" id="new-username" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500" value="<?= esc($terapis->terapis_id) ?>" placeholder="Masukkan username">
+            </div>
+
+            <div class="space-y-1">
+                <label class="text-xs font-medium text-slate-700">Password <span class="text-red-500">*</span></label>
+                <div class="relative">
+                    <input type="password" id="new-password" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500" value="password123" placeholder="Masukkan password">
+                    <button type="button" onclick="togglePasswordVisibility('new-password')" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                        <i class="fas fa-eye text-xs"></i>
+                    </button>
+                </div>
+                <p class="text-[10px] text-slate-400 mt-1">Default: password123</p>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-4 border-t border-slate-100">
+            <button type="button" onclick="closeCreateAccountModal()"
+                class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                Batal
+            </button>
+            <button type="button" onclick="submitCreateAccount()"
+                class="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700">
+                Simpan & Buat Akun
+            </button>
+        </div>
     </div>
 </div>
 
@@ -398,9 +439,12 @@
             allowClear: true
         });
 
-        // Close modal when clicking outside
-        $('#modalLinkAccount').on('click', function(e) {
-            if (e.target === this) closeLinkAccountModal();
+        // Close modals when clicking outside
+        $('#modalLinkAccount, #modalCreateAccount').on('click', function(e) {
+            if (e.target === this) {
+                closeLinkAccountModal();
+                closeCreateAccountModal();
+            }
         });
         
         // Handle all data-modal-close
@@ -409,6 +453,71 @@
             document.body.style.overflow = "";
         });
     });
+
+    function openCreateAccountModal() {
+        $('#modalCreateAccount').removeClass('hidden').addClass('flex');
+        document.body.style.overflow = "hidden";
+    }
+
+    function closeCreateAccountModal() {
+        $('#modalCreateAccount').addClass('hidden').removeClass('flex');
+        document.body.style.overflow = "";
+    }
+
+    function togglePasswordVisibility(id) {
+        const input = document.getElementById(id);
+        const icon = event.currentTarget.querySelector('i');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.replace('fa-eye', 'fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.replace('fa-eye-slash', 'fa-eye');
+        }
+    }
+
+    function submitCreateAccount() {
+        const username = $('#new-username').val().trim();
+        const password = $('#new-password').val();
+
+        if (!username || !password) {
+            alert('Username dan Password wajib diisi');
+            return;
+        }
+
+        if (!confirm('Apakah Anda yakin ingin membuat akun ini?')) {
+            return;
+        }
+
+        $.ajax({
+            url: window.detailTerapisConfig.generateUserUrl,
+            type: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': window.detailTerapisConfig.csrfHash
+            },
+            data: {
+                terapis_id: window.detailTerapisConfig.currentId,
+                username: username,
+                password: password
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.csrfHash) {
+                    window.detailTerapisConfig.csrfHash = response.csrfHash;
+                }
+                
+                if (response.status === 'success') {
+                    alert(response.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            },
+            error: function() {
+                alert('Terjadi kesalahan pada server saat membuat akun.');
+            }
+        });
+    }
 
     function openLinkAccountModal() {
         $('#modalLinkAccount').removeClass('hidden').addClass('flex');
