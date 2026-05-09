@@ -34,10 +34,20 @@
                     <h3 class="text-lg font-semibold text-slate-800">Biodata Terapis</h3>
                     <p class="text-sm text-slate-500">Lengkapi data diri terapis dengan benar</p>
                 </div>
-                <button type="submit" id="btnSimpan" class="inline-flex items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-700">
-                    <i class="fas fa-save"></i>
-                    Simpan Perubahan
-                </button>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="btnEdit" onclick="toggleEditMode(true)" class="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-amber-600">
+                        <i class="fas fa-edit"></i>
+                        Ubah Data
+                    </button>
+                    <button type="button" id="btnBatal" onclick="toggleEditMode(false)" class="hidden inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
+                        <i class="fas fa-times"></i>
+                        Batal
+                    </button>
+                    <button type="submit" id="btnSimpan" class="hidden inline-flex items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-700">
+                        <i class="fas fa-save"></i>
+                        Simpan Perubahan
+                    </button>
+                </div>
             </div>
 
             <!-- Card Body -->
@@ -55,8 +65,8 @@
 
                                 <!-- Overlay -->
                                 <div class="overlay absolute inset-0 bg-black/50 rounded-xl opacity-0 invisible transition-all duration-200 flex items-center justify-center gap-2">
-                                    <button type="button" onclick="triggerEdit()"
-                                        class="h-9 w-9 rounded-lg bg-white text-slate-700 hover:bg-slate-100 flex items-center justify-center">
+                                    <button type="button" onclick="triggerEdit()" id="btnEditPhoto"
+                                        class="hidden h-9 w-9 rounded-lg bg-white text-slate-700 hover:bg-slate-100 flex items-center justify-center">
                                         <i class="fas fa-pen text-sm"></i>
                                     </button>
                                     <button type="button" onclick="previewImageModal()"
@@ -64,8 +74,8 @@
                                         <i class="fas fa-eye text-sm"></i>
                                     </button>
                                     <?php if ($terapis->foto): ?>
-                                    <button type="button" onclick="confirmDeletePhoto()"
-                                        class="h-9 w-9 rounded-lg bg-white text-red-600 hover:bg-red-50 flex items-center justify-center">
+                                    <button type="button" onclick="confirmDeletePhoto()" id="btnDeletePhoto"
+                                        class="hidden h-9 w-9 rounded-lg bg-white text-red-600 hover:bg-red-50 flex items-center justify-center">
                                         <i class="fas fa-trash text-sm"></i>
                                     </button>
                                     <?php endif; ?>
@@ -86,8 +96,8 @@
                             <label class="text-sm font-medium text-slate-700">ID Terapis <span class="text-red-500">*</span></label>
                             <input type="text" name="terapis_id" id="terapis_id"
                                 value="<?= esc($terapis->terapis_id) ?>"
-                                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                required>
+                                class="form-input w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-slate-50 cursor-not-allowed"
+                                required readonly>
                             <div class="id-feedback text-xs mt-1 hidden"></div>
                         </div>
 
@@ -96,8 +106,8 @@
                             <label class="text-sm font-medium text-slate-700">Nama Lengkap <span class="text-red-500">*</span></label>
                             <input type="text" name="nama" id="nama"
                                 value="<?= esc($terapis->nama) ?>"
-                                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                required>
+                                class="form-input w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-slate-50 cursor-not-allowed"
+                                required readonly>
                             <div class="invalid-feedback text-xs text-red-500 mt-1 hidden">Nama lengkap tidak boleh kosong</div>
                         </div>
 
@@ -106,7 +116,8 @@
                             <label class="text-sm font-medium text-slate-700">Tempat Lahir</label>
                             <input type="text" name="tempat_lahir" id="tempat_lahir"
                                 value="<?= esc($terapis->tempat_lahir) ?>"
-                                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                                class="form-input w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-slate-50 cursor-not-allowed"
+                                readonly>
                         </div>
 
                         <!-- Tanggal Lahir -->
@@ -114,14 +125,16 @@
                             <label class="text-sm font-medium text-slate-700">Tanggal Lahir</label>
                             <input type="date" name="tgl_lahir" id="tgl_lahir"
                                 value="<?= $terapis->tanggal_lahir ?>"
-                                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                                class="form-input w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-slate-50 cursor-not-allowed"
+                                readonly>
                         </div>
 
                         <!-- Alamat -->
                         <div class="space-y-1">
                             <label class="text-sm font-medium text-slate-700">Alamat</label>
                             <textarea name="alamat" id="alamat" rows="3"
-                                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"><?= esc($terapis->alamat) ?></textarea>
+                                class="form-input w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-slate-50 cursor-not-allowed"
+                                readonly><?= esc($terapis->alamat) ?></textarea>
                         </div>
                     </div>
 
@@ -131,7 +144,8 @@
                         <div class="space-y-1">
                             <label class="text-sm font-medium text-slate-700">Wilayah Kerja</label>
                             <select name="region_id" id="region_id"
-                                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                                class="form-input w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-slate-50 cursor-not-allowed"
+                                disabled>
                                 <option value="">-- Pilih Wilayah --</option>
                                 <?php foreach ($wilayah as $region): ?>
                                     <option value="<?= $region->id ?>" <?= $region->id == $terapis->region_id ? 'selected' : '' ?>>
@@ -145,7 +159,8 @@
                         <div class="space-y-1">
                             <label class="text-sm font-medium text-slate-700">Jabatan</label>
                             <select name="jabatan_id" id="jabatan_id"
-                                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                                class="form-input w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-slate-50 cursor-not-allowed"
+                                disabled>
                                 <option value="">-- Pilih Jabatan --</option>
                                 <?php foreach ($jabatan as $jab): ?>
                                     <option value="<?= $jab->id ?>" <?= $jab->id == $terapis->jabatan_id ? 'selected' : '' ?>>
@@ -159,7 +174,8 @@
                         <div class="space-y-1">
                             <label class="text-sm font-medium text-slate-700">Rank</label>
                             <select name="rank" id="rank"
-                                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                                class="form-input w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-slate-50 cursor-not-allowed"
+                                disabled>
                                 <option value="">-- Pilih Rank --</option>
                                 <?php $ranks = ['SS', 'S', 'A', 'B', 'C']; ?>
                                 <?php foreach ($ranks as $r): ?>
@@ -171,23 +187,25 @@
                         <!-- Tanggal Mulai Kerja -->
                         <div class="space-y-1">
                             <label class="text-sm font-medium text-slate-700">Tanggal Mulai Kerja</label>
-                            <input type="date" name="tgl_kerja"
+                            <input type="date" name="tgl_kerja" id="tgl_kerja"
                                 value="<?= isset($terapis->tgl_mulai_kerja) ? date('Y-m-d', strtotime($terapis->tgl_mulai_kerja)) : '' ?>"
-                                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                                class="form-input w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-slate-50 cursor-not-allowed"
+                                readonly>
                         </div>
 
                         <!-- Keterangan -->
                         <div class="space-y-1">
                             <label class="text-sm font-medium text-slate-700">Keterangan</label>
                             <textarea name="keterangan" id="keterangan" rows="3"
-                                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"><?= esc($terapis->keterangan) ?></textarea>
+                                class="form-input w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-slate-50 cursor-not-allowed"
+                                readonly><?= esc($terapis->keterangan) ?></textarea>
                         </div>
 
                         <!-- Status -->
                         <div class="space-y-1">
                             <label class="text-sm font-medium text-slate-700">Status</label>
                             <label class="mt-2 inline-flex items-center gap-3 cursor-pointer">
-                                <input type="checkbox" name="status" class="sr-only peer" <?= $terapis->is_active == 1 ? 'checked' : '' ?>>
+                                <input type="checkbox" name="status" id="status_checkbox" class="form-input sr-only peer" <?= $terapis->is_active == 1 ? 'checked' : '' ?> disabled>
                                 <div class="relative w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:inset-s-0.5 after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
                                 <span class="text-sm font-medium text-slate-700">Aktif</span>
                             </label>
@@ -363,6 +381,38 @@
                 alert('Terjadi kesalahan pada server saat membuat akun.');
             }
         });
+    }
+
+    function toggleEditMode(isEdit) {
+        const formInputs = document.querySelectorAll('.form-input');
+        const btnEdit = document.getElementById('btnEdit');
+        const btnBatal = document.getElementById('btnBatal');
+        const btnSimpan = document.getElementById('btnSimpan');
+        const btnEditPhoto = document.getElementById('btnEditPhoto');
+        const btnDeletePhoto = document.getElementById('btnDeletePhoto');
+
+        if (isEdit) {
+            // Enable editing
+            formInputs.forEach(input => {
+                input.removeAttribute('readonly');
+                input.removeAttribute('disabled');
+                input.classList.remove('bg-slate-50', 'cursor-not-allowed');
+                input.classList.add('bg-white');
+            });
+            
+            // Show/Hide buttons
+            btnEdit.classList.add('hidden');
+            btnBatal.classList.remove('hidden');
+            btnSimpan.classList.remove('hidden');
+            
+            if (btnEditPhoto) btnEditPhoto.classList.remove('hidden');
+            if (btnDeletePhoto) btnDeletePhoto.classList.remove('hidden');
+        } else {
+            // Cancel/Read-only
+            if (confirm('Batalkan perubahan? Data yang sudah diubah tidak akan disimpan.')) {
+                location.reload();
+            }
+        }
     }
 </script>
 
