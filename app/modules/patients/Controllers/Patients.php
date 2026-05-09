@@ -236,8 +236,15 @@ class Patients extends BaseController
         // ->where('p.is_delete', 0);
         // ->limit($limit, $start);
 
+        $active_region = session()->get('active_region');
         $region_session = session()->get('region_patient');
-        $region = ($region && $region !== 'all') ? $region : $region_session;
+        
+        // Smart Logic: Jika pencarian kosong, gunakan filter wilayah. Jika sedang mencari, buka akses lintas wilayah.
+        if (empty($search)) {
+            $region = ($region && $region !== 'all') ? $region : ($active_region !== 'all' ? $active_region : $region_session);
+        } else {
+            $region = 'all'; // Cari di seluruh database jika ada keyword
+        }
 
         if (!empty($region) && $region !== 'all') {
             if (is_array($region)) {

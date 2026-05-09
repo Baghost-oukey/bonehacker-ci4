@@ -159,6 +159,8 @@ class AntreanController extends BaseController
             }
         }
 
+        $builder->where('p.is_delete', 0);
+
         return DataTable::of($builder)
             ->filter(function ($builder) use ($request) {
                 $search = $request->getPost('search');
@@ -167,6 +169,7 @@ class AntreanController extends BaseController
                     $builder->groupStart()
                         ->like('p.name', $searchValue, 'both')
                         ->orLike('p.phone', $searchValue, 'both')
+                        ->orLike('p.id', $searchValue, 'both')
                         ->groupEnd();
                 }
             }, true)

@@ -113,7 +113,7 @@ const setupAntreanPage = () => {
         serverSide: true,
         // Ganti baris dom di table-2 menjadi ini:
 dom: 't<"flex items-center justify-between p-4 bg-slate-50/50 border-t border-slate-200"<"text-xs text-slate-500"i><"flex items-end"p>>',
-        language: { search: "", searchPlaceholder: "Ketik Nama, NIK, atau ID...", paginate: { previous: '<i class="fas fa-chevron-left text-[10px]"></i>', next: '<i class="fas fa-chevron-right text-[10px]"></i>' } },
+        language: { search: "", searchPlaceholder: "Ketik Nama atau Nomor WhatsApp...", paginate: { previous: '<i class="fas fa-chevron-left text-[10px]"></i>', next: '<i class="fas fa-chevron-right text-[10px]"></i>' } },
         ajax: {
           url: config.fetchPatientUrl,
           type: "POST",

@@ -14,8 +14,9 @@ class RekamMedisController extends BaseController
         $mPatient = model('App\modules\patients\Models\MPatients');
 
         $role = session()->get('role');
+        $active_region = session()->get('active_region');
         $region_patient = session()->get('region_patient');
-        $filter = $region_patient;
+        $filter = ($active_region !== 'all') ? $active_region : $region_patient;
         $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
 
         $data = [
@@ -28,7 +29,7 @@ class RekamMedisController extends BaseController
             'negara' => $mCountries->getData() ?? [],
             'patient_information' => null,
             'sess_region_name' => session()->get('active_region_name'),
-            'sess_region_id' => session()->get('active_region'),
+            'sess_region_id' => $active_region,
             'sess_role' => $role,
             'filter_region' => $filter,
         ];

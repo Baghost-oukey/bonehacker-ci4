@@ -121,7 +121,7 @@ const setupRekamMedisPage = () => {
   };
 
   const loadTableData = (pageNumber = 1) => {
-    const region = $("#region").length ? $("#region").val() : config.filterRegion;
+    const region = config.filterRegion;
     renderTableState("Memuat data pasien...", true);
 
     $.ajax({
@@ -232,10 +232,6 @@ const setupRekamMedisPage = () => {
     searchHandler($(this).val());
   });
 
-  $("#region").on("change", function () {
-    currentPage = 1;
-    loadTableData(1);
-  });
 
   $("#paginationLength").on("change", function () {
     pageLength = parseInt($(this).val(), 10);

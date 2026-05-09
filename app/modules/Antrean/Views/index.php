@@ -149,7 +149,7 @@
                     <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                     <!-- <i id="iconSearch2" class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm transition-all"></i>
                     <i id="iconSpinner2" class="fas fa-circle-notch fa-spin absolute left-3 top-1/2 -translate-y-1/2 text-teal-600 text-sm hidden transition-all"></i> -->
-                    <input type="text" id="searchPatientList" placeholder="Ketik Nama, NIK, atau ID Pasien..."
+                    <input type="text" id="searchPatientList" placeholder="Ketik Nama atau Nomor WhatsApp..."
                         class="w-full rounded-lg border border-slate-300 pl-9 pr-4 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
                 </div>
 
