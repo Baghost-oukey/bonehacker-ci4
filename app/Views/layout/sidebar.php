@@ -63,6 +63,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                         <span class="truncate">Jurnal</span>
                     </a>
                 </li>
+                <?php if (in_array($role, ['superadmin', 'owner', 'admin'])): ?>
                 <li>
                     <a href="<?= base_url('transaksi') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'transaksi' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                         <i class="fas fa-money-bill-wave w-4 text-center shrink-0"></i>
@@ -75,7 +76,9 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                         <span class="truncate">Kehadiran Karyawan</span>
                     </a>
                 </li>
+                <?php endif; ?>
 
+                <?php if (in_array($role, ['superadmin', 'owner'])): ?>
                 <li>
                     <details class="group" <?= in_array($current_segment, ['gaji', 'transaksi-tunjangan', 'tunjangan-karyawan', 'kasbon']) ? 'open' : '' ?>>
                         <summary class="flex w-full cursor-pointer list-none items-center justify-between rounded-md p-2 text-left text-sm transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 [&::-webkit-details-marker]:hidden">
@@ -113,7 +116,9 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                         </ul>
                     </details>
                 </li>
+                <?php endif; ?>
 
+                <?php if (in_array($role, ['superadmin', 'owner', 'admin'])): ?>
                 <li>
                     <details class="group" <?= $current_segment == 'jasa-pelayanan' ? 'open' : '' ?>>
                         <summary class="flex w-full cursor-pointer list-none items-center justify-between rounded-md p-2 text-left text-sm transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 [&::-webkit-details-marker]:hidden">
@@ -141,6 +146,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                         </ul>
                     </details>
                 </li>
+                <?php endif; ?>
                 <?php endif; ?>
 
             </ul>
