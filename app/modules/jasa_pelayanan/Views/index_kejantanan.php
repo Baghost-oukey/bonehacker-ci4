@@ -102,7 +102,7 @@
         csrfName: "<?= csrf_token() ?>",
         csrfHash: "<?= csrf_hash() ?>",
         fetchUrl: "<?= site_url('jasa-pelayanan/fetchPatients') ?>",
-        showBaseUrl: "<?= site_url('jasa-pelayanan/detail-reguler') ?>",
+        showBaseUrl: "<?= site_url('jasa-pelayanan/detail-kejantanan') ?>",
         kategori: "<?= esc($kategori) ?>"
     };
 </script>

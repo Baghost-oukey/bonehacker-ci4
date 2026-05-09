@@ -214,6 +214,10 @@ class History extends BaseController
             $historyId = $this->model_history->getInsertID();
             unset($data['phone']);
             $this->model_history->updateKejantanan($historyId, $kejantananData, $statusKejantanan);
+
+            // Auto-insert ke tabel jasa_pelayanan
+            $this->insertJasaPelayanan($historyId, $patientId, $statusKejantanan);
+
             $patient = $this->model_patient->find($patientId);
             $whatsappData = $this->model_whatsapp->getMessageAndCredentials();
             if ($this->request->getPost('notifikasi') && $whatsappData && $patient) {
@@ -258,6 +262,10 @@ class History extends BaseController
 
         if ($this->model_history->update($id, $data)) {
             $this->model_history->updateKejantanan($id, $kejantananData, $statusKejantanan);
+
+            // Auto-update ke tabel jasa_pelayanan
+            $this->upsertJasaPelayanan($id, $patientId, $statusKejantanan);
+
             return $this->response->setJSON(['status' => true, 'message' => 'Data pasien berhasil diperbarui']);
         } else {
             return $this->response->setJSON(['status' => false, 'message' => 'Data pasien gagal diperbarui']);
@@ -520,6 +528,11 @@ class History extends BaseController
     {
         $destroy = $this->model_history->delete($id);
         if ($destroy) {
+            // Soft delete jasa_pelayanan yang terkait
+            $this->db->table('jasa_pelayanan')
+                ->where('history_id', $id)
+                ->update(['is_delete' => 1]);
+
             session()->setFlashdata('message', ['success', 'Data riwayat berhasil dihapus']);
             $response = ["status" => true];
         } else {
@@ -527,5 +540,70 @@ class History extends BaseController
             $response = ["status" => false];
         }
         return $this->response->setJSON($response);
+    }
+
+
+    /**
+     * Auto-insert record jasa_pelayanan saat history baru disimpan
+     */
+    private function insertJasaPelayanan($historyId, $patientId, $statusKejantanan)
+    {
+        $terapisPost = $this->request->getPost('terapis');
+        $terapisId = null;
+        if (is_array($terapisPost) && !empty($terapisPost)) {
+            $terapisId = $terapisPost[0];
+        }
+
+        $dateInput = $this->request->getPost('date');
+        $tanggalLayanan = !empty($dateInput) ? $dateInput : date('Y-m-d');
+
+        $this->db->table('jasa_pelayanan')->insert([
+            'history_id'       => $historyId,
+            'patient_id'       => $patientId,
+            'terapis_id'       => $terapisId,
+            'kategori_layanan' => ($statusKejantanan === 'ya') ? 'Kejantanan' : 'Reguler',
+            'tanggal_layanan'  => $tanggalLayanan,
+            'is_delete'        => 0,
+            'created_at'       => date('Y-m-d H:i:s'),
+            'updated_at'       => date('Y-m-d H:i:s'),
+        ]);
+    }
+
+
+    /**
+     * Auto-update/insert record jasa_pelayanan saat history diupdate
+     */
+    private function upsertJasaPelayanan($historyId, $patientId, $statusKejantanan)
+    {
+        $terapisPost = $this->request->getPost('terapis');
+        $terapisId = null;
+        if (is_array($terapisPost) && !empty($terapisPost)) {
+            $terapisId = $terapisPost[0];
+        }
+
+        $existing = $this->db->table('jasa_pelayanan')
+            ->where('history_id', $historyId)
+            ->get()
+            ->getRow();
+
+        $jpData = [
+            'patient_id'       => $patientId,
+            'terapis_id'       => $terapisId,
+            'kategori_layanan' => ($statusKejantanan === 'ya') ? 'Kejantanan' : 'Reguler',
+            'updated_at'       => date('Y-m-d H:i:s'),
+        ];
+
+        if ($existing) {
+            $this->db->table('jasa_pelayanan')
+                ->where('id', $existing->id)
+                ->update($jpData);
+        } else {
+            $dateInput = $this->request->getPost('date');
+            $jpData['history_id']      = $historyId;
+            $jpData['tanggal_layanan'] = !empty($dateInput) ? $dateInput : date('Y-m-d');
+            $jpData['is_delete']       = 0;
+            $jpData['created_at']      = date('Y-m-d H:i:s');
+            $this->db->table('jasa_pelayanan')->insert($jpData);
+        }
     }
 }
