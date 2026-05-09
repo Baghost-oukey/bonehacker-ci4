@@ -86,6 +86,10 @@ class MRegion extends Model
             }
         }
 
+        if (!empty($options['where_in'])) {
+            $builder->whereIn('r.id', $options['where_in']);
+        }
+
         // $sql .= $where;
         // $sql .= " GROUP BY r.id";
         // $sql .= " ORDER BY $order $mode";
@@ -112,6 +116,10 @@ class MRegion extends Model
                 $builder->where($like);
             }
         }
+
+        if (!empty($options['where_in'])) {
+            $builder->whereIn('r.id', $options['where_in']);
+        }
         // $sql = "SELECT COUNT(DISTINCT id) AS total FROM ( ";
         // $sql .= $this->querySql();
         // $sql .= ") AS temp_table WHERE 1 = 1 " . $where_like;
@@ -120,8 +128,12 @@ class MRegion extends Model
         return $builder->countAllResults();
     }
 
-    public function getTotal()
+    public function getTotal($options = [])
     {
-        return $this->countAllResults();
+        $builder = $this->builder();
+        if (!empty($options['where_in'])) {
+            $builder->whereIn('id', $options['where_in']);
+        }
+        return $builder->countAllResults();
     }
 }

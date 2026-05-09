@@ -51,9 +51,21 @@ class RegionController extends BaseController
             ];
         }
 
+        // Role-based filtering
+        $role = session()->get('role');
+        if ($role !== 'superadmin') {
+            $allowed_regions = session()->get('region_patient');
+            if (!empty($allowed_regions)) {
+                $options['where_in'] = $allowed_regions;
+            } else {
+                // If no regions assigned, show nothing (or specific dummy ID to force empty)
+                $options['where_in'] = [0];
+            }
+        }
+
         $dataOutput = $this->model_regions->getListData($options);
         $totalFiltered = $this->model_regions->getTotalData($options);
-        $totalData = $this->model_regions->getTotal();
+        $totalData = $this->model_regions->getTotal($options);
         $no = $options['offset'] + 1;
 
         if (!empty($dataOutput)) {
