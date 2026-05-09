@@ -220,6 +220,10 @@ class JournalController extends BaseController
     // ================= ROUTER EXPORT =================
     public function export_file_journal()
     {
+        if (session()->get('role') !== 'superadmin') {
+            return redirect()->to('journal')->with('error', 'Unauthorized access');
+        }
+
         $format = $this->request->getGet('format_type');
 
         return ($format === 'pdf')

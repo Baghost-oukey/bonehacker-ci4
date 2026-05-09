@@ -32,29 +32,10 @@ class TransaksiController extends BaseController
         }
 
 
-<<<<<<< HEAD:app/modules/transaksi/Controllers/Transaksi.php
-        // --- 1. Saldo Hari Ini (Reset Tiap Hari) ---
-        $todayBuilder = $db->table('transaksi')->selectSum('nominal')->where(['DATE(created_at)' => date('Y-m-d'), 'status' => 'active', 'type' => 'income']);
-        if ($filter_region) $todayBuilder->where('region_id', $filter_region);
-        $inToday = $todayBuilder->get()->getRow()->nominal ?? 0;
-
-        $outTodayBuilder = $db->table('transaksi')->selectSum('nominal')->where(['DATE(created_at)' => date('Y-m-d'), 'status' => 'active', 'type' => 'expense']);
-        if ($filter_region) $outTodayBuilder->where('region_id', $filter_region);
-        $outToday = $outTodayBuilder->get()->getRow()->nominal ?? 0;
-
-        $todayIncome = $inToday - $outToday;
-
-
-        // $todayBuilder->where('DATE(created_at)', date('Y-m-d'));
-        // $todayBuilder->where('status', 'active');
-        // if ($filter_region) $todayBuilder->where('region_id', $filter_region);
-        // $today_balance = $todayBuilder->get()->getRow()->nominal ?? 0;
-
-        $incomeBuilder = $db->table('transaksi')->selectSum('nominal')->where(['status' => 'active', 'type' => 'income']);
-=======
         // Hitung Uang Masuk Hari Ini
         $todayIncomeBuilder = $db->table('transaksi')->selectSum('nominal')
             ->where('DATE(created_at)', date('Y-m-d'))
+            ->where('status', 'active')
             ->where('type', 'income');
         if ($filter_region) $todayIncomeBuilder->where('region_id', $filter_region);
         $in_today = $todayIncomeBuilder->get()->getRow()->nominal ?? 0;
@@ -62,6 +43,7 @@ class TransaksiController extends BaseController
         // Hitung Uang Keluar Hari Ini
         $todayExpenseBuilder = $db->table('transaksi')->selectSum('nominal')
             ->where('DATE(created_at)', date('Y-m-d'))
+            ->where('status', 'active')
             ->where('type', 'expense');
         if ($filter_region) $todayExpenseBuilder->where('region_id', $filter_region);
         $out_today = $todayExpenseBuilder->get()->getRow()->nominal ?? 0;
@@ -69,55 +51,28 @@ class TransaksiController extends BaseController
         // Saldo = Pemasukan - Pengeluaran
         $today_balance = $in_today - $out_today;
 
-
         // --- 2. Total Income (Akumulasi Selamanya) ---
-        $incomeBuilder = $db->table('transaksi')->selectSum('nominal')->where('type', 'income'); 
->>>>>>> fe654b135744f9a939ba7b5d6be0bd0fd70a9aaa:app/modules/transaksi/Controllers/TransaksiController.php
+        $incomeBuilder = $db->table('transaksi')->selectSum('nominal')->where('type', 'income')->where('status', 'active'); 
         if ($filter_region) $incomeBuilder->where('region_id', $filter_region);
         $total_in = $incomeBuilder->get()->getRow()->nominal ?? 0;
 
-<<<<<<< HEAD:app/modules/transaksi/Controllers/Transaksi.php
-        $expenseBuilder = $db->table('transaksi')->selectSum('nominal')->where(['status' => 'active', 'type' => 'expense']);
+        // --- 3. Total Expense (Akumulasi Selamanya) ---
+        $expenseBuilder = $db->table('transaksi')->selectSum('nominal')->where('type', 'expense')->where('status', 'active');
         if ($filter_region) $expenseBuilder->where('region_id', $filter_region);
         $total_out = $expenseBuilder->get()->getRow()->nominal ?? 0;
 
         $total_income = $total_in - $total_out;
-
         $total_expense = $total_out;
-        if ($role === 'superadmin' || $role === 'owner') {
-            // Contoh: Ambil dari tabel pengeluaran jika ada, atau filter type='expense'
-            $total_expense = $db->table('transaksi')->selectSum('nominal')->where('type', 'expense')->where('status', 'active')->get()->getRow()->nominal ?? 0;
-        }
 
         $data = [
             'title'          => 'Dashboard Keuangan',
             'realname'       => session()->get('realname'),
             'role'           => $role,
-            'today_balance'  => $todayIncome,
+            'today_balance'  => $today_balance,
             'total_income'   => $total_income,
             'total_expense'  => $total_expense,
             'active_region'  => $active_region,
             'list_regions'   => $list_regions
-=======
-
-        // --- 3. Total Expense (Akumulasi Selamanya) ---
-        $total_expense = 0;
-        if ($role === 'superadmin' || $role === 'owner') {
-            $expenseBuilder = $db->table('transaksi')->selectSum('nominal')->where('type', 'expense');
-            if ($filter_region) $expenseBuilder->where('region_id', $filter_region); 
-            $total_expense = $expenseBuilder->get()->getRow()->nominal ?? 0;
-        }
-
-        $data = [
-            'title' => 'Transaksi',
-            'realname' => session()->get('realname'),
-            'role' => $role,
-            'today_balance' => $today_balance,
-            'total_income' => $total_income,
-            'total_expense' => $total_expense,
-            'active_region' => $active_region,
-            'list_regions' => $list_regions
->>>>>>> fe654b135744f9a939ba7b5d6be0bd0fd70a9aaa:app/modules/transaksi/Controllers/TransaksiController.php
         ];
         return view('\App\Modules\Transaksi\Views\index', $data);
     }
@@ -136,12 +91,8 @@ class TransaksiController extends BaseController
             'order' => (!empty($order) && !empty($columns)) ? ($columns[$order[0]['column']]['name'] ?: $columns[$order[0]['column']]['data']) : 'created_at',
             'mode' => (!empty($order)) ? $order[0]['dir'] : 'desc',
             'offset' => $start ?? 0,
-<<<<<<< HEAD:app/modules/transaksi/Controllers/Transaksi.php
             'limit'  => $length ?? 10,
             'where'  => []
-=======
-            'limit' => $length ?? 10
->>>>>>> fe654b135744f9a939ba7b5d6be0bd0fd70a9aaa:app/modules/transaksi/Controllers/TransaksiController.php
         ];
 
         if (!empty($date)) {
@@ -153,19 +104,12 @@ class TransaksiController extends BaseController
         }
 
         $dataOutput = $this->model_transaksi->get_list_data($options);
-<<<<<<< HEAD:app/modules/transaksi/Controllers/Transaksi.php
-        // dd($dataOutput);
         $totalData  = $this->model_transaksi->get_total_data($options);
-
-=======
-        $totalData = $this->model_transaksi->get_total_data($options);
->>>>>>> fe654b135744f9a939ba7b5d6be0bd0fd70a9aaa:app/modules/transaksi/Controllers/TransaksiController.php
         $no = ($start ?? 0) + 1;
         foreach ($dataOutput as $value) {
             $value->no = $no++;
             $value->nominal_format = "Rp " . number_format($value->nominal, 0, ',', '.');
             $value->tanggal = date('d/m/Y H:i', strtotime($value->created_at));
-<<<<<<< HEAD:app/modules/transaksi/Controllers/Transaksi.php
             $value->dihapus_oleh = $value->cancelled_by_name ?? '-';
 
             $formatted_nominal = "Rp " . number_format($value->nominal, 0, ',', '.');
@@ -178,18 +122,12 @@ class TransaksiController extends BaseController
                 $value->nominal_format = '<span class="text-dark font-weight-bold">' . $formatted_nominal . '</span>';
             }
 
-
             if ($value->status === 'canceled') {
                 $value->aksi = '<span class="badge badge-secondary"></span>';
             } else {
                 $value->aksi = '
             <button class="btn btn-danger btn-sm btn-delete" data-id="' . $value->id_transaksi . '">
                 <i class="fas fa-ban"></i>
-=======
-            $value->aksi = '
-            <button class="btn btn-danger btn-sm btn-delete" data-id="' . $value->id_transaksi . '">
-                <i class="fas fa-eye"></i>
->>>>>>> fe654b135744f9a939ba7b5d6be0bd0fd70a9aaa:app/modules/transaksi/Controllers/TransaksiController.php
             </button>';
             }
         }
@@ -225,32 +163,19 @@ class TransaksiController extends BaseController
             ]);
         }
 
-<<<<<<< HEAD:app/modules/transaksi/Controllers/Transaksi.php
-  
+        $typeInput = $this->request->getPost('type') ?? 'income';
+        $kategoriAuto = ($typeInput === 'income') ? 'pemasukan' : 'pengeluaran';
 
         $data = [
             'region_id'         => $region_id,
             'nominal'           => $this->request->getPost('nominal'),
-            'type'              => $type,
+            'type'              => $typeInput,
+            'kategori'          => $kategoriAuto,
             'keterangan'        => $this->request->getPost('keterangan'),
             'metode_pembayaran' => $this->request->getPost('metode_pembayaran'),
             'rentang_usia'      => $this->request->getPost('rentang_usia'),
             'created_at'        => date('Y-m-d H:i:s'),
             'created_by'        => session()->get('userId')
-=======
-        $typeInput = $this->request->getPost('type') ?? 'income';
-        $kategoriAuto = ($typeInput === 'income') ? 'pemasukan' : 'pengeluaran';
-
-        $data = [
-            'region_id' => $region_id,
-            'nominal' => $this->request->getPost('nominal'),
-            'type' => $this->request->getPost('type') ?? 'income',
-            'keterangan' => $this->request->getPost('keterangan'),
-            // 'keterangan' => $typeInput,
-            'kategori' =>  $kategoriAuto,
-            'created_at' => date('Y-m-d H:i:s'),
-            'created_by' => session()->get('userId')
->>>>>>> fe654b135744f9a939ba7b5d6be0bd0fd70a9aaa:app/modules/transaksi/Controllers/TransaksiController.php
         ];
 
         try {
@@ -267,35 +192,28 @@ class TransaksiController extends BaseController
     public function delete()
     {
         $id = $this->request->getPost('id_transaksi');
-<<<<<<< HEAD:app/modules/transaksi/Controllers/Transaksi.php
         $reason = $this->request->getPost('reason');
         $userId = session()->get('userId');
-
-
 
         if (!$id) {
             return $this->response->setJSON(['status' => 'error', 'message' => 'ID Transaksi tidak ditemukan']);
         }
 
-        // $this->model_transaksi->update($id, ['deleted_by' => $userId]);
-
         $data = [
             'status'        => 'canceled',
             'cancel_reason' => $reason,
-            'cancelled_by'   => $userId
+            'cancelled_by'  => $userId
         ];
 
-        // Opsi: Tambahkan pengecekan role di sini jika hanya Superadmin yang boleh hapus
         if ($this->model_transaksi->update($id, $data)) {
             return $this->response->setJSON([
                 'status'  => 'success',
-                'message' => 'Transaksi Berhasil Dihapus'
+                'message' => 'Transaksi Berhasil Dibatalkan'
             ]);
         }
 
         return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal memproses pembatalan']);
     }
-
 
     public function export_data()
     {
@@ -323,8 +241,11 @@ class TransaksiController extends BaseController
             $filter_region = $region_session;
         }
 
+        if ($filter_region) {
+            $builder->where('region_id', $filter_region);
+        }
 
-        return $this->model_transaksi->where('status', 'active')->where($filter_region ? ['region_id' => $filter_region] : [])->orderBy('created_at', 'DESC')->findAll();
+        return $builder->orderBy('created_at', 'DESC')->findAll();
     }
 
 
@@ -351,7 +272,6 @@ class TransaksiController extends BaseController
 
         $sheet->getStyle('A1:F1')->applyFromArray($styleHeader);
 
-        // Isi Data
         // Isi Data
         $row = 2;
         foreach ($data as $index => $t) {
@@ -401,11 +321,5 @@ class TransaksiController extends BaseController
         $dompdf->render();
 
         $dompdf->stream("Laporan_Transaksi_" . date('Ymd') . ".pdf", ["Attachment" => 1]);
-=======
-        if ($this->model_transaksi->delete($id)) {
-            return $this->response->setJSON(['status' => 'success', 'message' => 'Transaksi berhasil dihapus']);
-        }
-        return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal menghapus data']);
->>>>>>> fe654b135744f9a939ba7b5d6be0bd0fd70a9aaa:app/modules/transaksi/Controllers/TransaksiController.php
     }
 }

@@ -12,22 +12,10 @@ class MTransaksi extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-<<<<<<< HEAD
-    protected $allowedFields    = ['region_id', 'nominal','type', 'keterangan', 'metode_pembayaran', 'rentang_usia', 'created_at', 'created_by', 'status', 'cancel_reason', 'cancelled_by'];
-=======
     protected $allowedFields    = [
-        'region_id',
-        'nominal',
-        'type',
-        'kategori',
-        'keterangan',
-        'status',
-        'cancel_reason',
-        'created_at',
-        'created_by',
-        'cancelled_by'
+        'region_id', 'nominal', 'type', 'kategori', 'keterangan', 'metode_pembayaran', 
+        'rentang_usia', 'status', 'cancel_reason', 'created_at', 'created_by', 'cancelled_by'
     ];
->>>>>>> fe654b135744f9a939ba7b5d6be0bd0fd70a9aaa
 
     protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;
@@ -62,23 +50,19 @@ class MTransaksi extends Model
     public function get_list_data($options, $kategori = null, $region_id = null)
     {
         $builder = $this->db->table('transaksi t')
-<<<<<<< HEAD
-            ->select('t.id_transaksi, t.created_at, t.nominal, t.type, t.metode_pembayaran, t.rentang_usia, r.name as region_name, t.status, t.cancel_reason, u.realname as cancelled_by_name')
+            ->select('t.id_transaksi, t.created_at, t.nominal, t.type, t.kategori, t.keterangan, t.metode_pembayaran, t.rentang_usia, r.name as region_name, t.status, t.cancel_reason, u_created.username as nama_pembuat, u_cancelled.realname as cancelled_by_name')
             ->join('regions r', 'r.id = t.region_id', 'left')
-            ->join('users u', 'u.id = t.cancelled_by', 'left');
+            ->join('users u_created', 'u_created.id = t.created_by', 'left')
+            ->join('users u_cancelled', 'u_cancelled.id = t.cancelled_by', 'left');
 
         if (!empty($options['where'])) {
             foreach ($options['where'] as $key => $value) {
                 $builder->where($key, $value);
             }
-=======
-            ->select('t.id_transaksi, t.created_at, t.nominal, t.type, t.kategori, t.keterangan, r.name as region_name, u.username as nama_pembuat')
-            ->join('regions r', 'r.id = t.region_id', 'left')
-            ->join('users u', 'u.id = t.created_by', 'left');
+        }
 
         if ($kategori) {
             $builder->where('t.kategori', $kategori);
->>>>>>> fe654b135744f9a939ba7b5d6be0bd0fd70a9aaa
         }
 
         $role = session()->get('role');

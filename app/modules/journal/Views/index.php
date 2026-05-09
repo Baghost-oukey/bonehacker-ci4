@@ -13,11 +13,13 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
+            <?php if (session()->get('role') === 'superadmin'): ?>
             <button type="button" id="btnOpenExport"
                 class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
                 <i class="fas fa-file-export text-slate-500"></i>
                 Export Data
             </button>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -60,9 +62,9 @@
                                 value="<?= date('Y-m-d') ?>">
                         </div>
                     </div> -->
-                    <input type="date" id="start_date" class="rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-600 transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15" value="">
+                    <input type="date" id="start_date" class="rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-600 transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15" value="<?= date('Y-m-d') ?>">
 
-                    <input type="date" id="end_date" class="rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-600 transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15" value="">
+                    <input type="date" id="end_date" class="rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-600 transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15" value="<?= date('Y-m-d') ?>">
                 </div>
 
                 <!-- RIGHT: ACTION BUTTONS -->
