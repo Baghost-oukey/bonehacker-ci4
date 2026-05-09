@@ -30,6 +30,7 @@ class Jasapelayanan extends BaseController
 
         $mRegion = model('App\modules\region\Models\MRegion');
 
+        $role = session()->get('role');
         $region_patient = session()->get('region_patient');
         $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
 
@@ -300,14 +301,15 @@ class Jasapelayanan extends BaseController
         $mCountries = new \App\modules\countries\Models\MCountries();
         $mTerapis = new \App\modules\terapis\Models\MTerapis();
 
-        $regions_patient = json_decode(session()->get('regions_patient') ?? '[]', true);
+        $region_patient = session()->get('region_patient');
+        $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
 
         $data = [
             'title'           => 'Detail Pasien — ' . $kategori,
             'kategori'        => $kategori,
             'patient'         => $patientData,
             'address'         => (object) $addressData,
-            'wilayah'         => $mRegion->asObject()->findAll(),
+            'wilayah'         => $mRegion->getData(null, $allowed_regions) ?? [],
             'negara'          => $mCountries->asObject()->findAll(),
             'terapis'         => $mTerapis->asObject()->findAll(),
             'resources'       => $patientModel->get_resources(),
@@ -321,7 +323,7 @@ class Jasapelayanan extends BaseController
             'updated_by_name' => $this->getUserName($patientData->updated_by ?? null),
             'realname'        => session()->get('realname'),
             'role'            => session()->get('role'),
-            'regions_patient' => [$regions_patient],
+            'regions_patient' => $region_patient,
             'msg'             => session()->getFlashdata('message') ?? ['', '', ''],
         ];
 

@@ -18,7 +18,10 @@ class RegionController extends BaseController
 
     public function index()
     {
-        //
+        if (session()->get('role') !== 'superadmin') {
+            return redirect()->to(base_url('beranda'))->with('message', ['error', 'Akses ditolak.', 'Halaman Cabang hanya dapat diakses oleh Superadmin.']);
+        }
+
         $data = [
             'realname' => session()->get('realname'),
             'role' => session()->get('role'),
@@ -33,6 +36,9 @@ class RegionController extends BaseController
 
     public function fetch()
     {
+        if (session()->get('role') !== 'superadmin') {
+            return $this->response->setStatusCode(403)->setJSON(['status' => 'error', 'message' => 'Akses ditolak.']);
+        }
         $requestData = $this->request->getPost();
         $order = $this->request->getPost('order');
         $column = $this->request->getPost('columns');
@@ -52,21 +58,14 @@ class RegionController extends BaseController
         }
 
         // Role-based filtering
-        $region_patient = session()->get('region_patient');
-        if ($region_patient !== 'all') {
-            if (!empty($region_patient)) {
-                $options['where_in'] = $region_patient;
-            } else {
-                // If no regions assigned, show nothing (or specific dummy ID to force empty)
-                $options['where_in'] = [0];
-            }
-        }
+        // Dihapus karena halaman Cabang hanya bisa diakses oleh superadmin (semua cabang ditampilkan)
 
         $dataOutput = $this->model_regions->getListData($options);
         $totalFiltered = $this->model_regions->getTotalData($options);
         $totalData = $this->model_regions->getTotal($options);
         $no = $options['offset'] + 1;
 
+        $role = session()->get('role');
         if (!empty($dataOutput)) {
             foreach ($dataOutput as $value) {
                 $value->no = $no;
@@ -106,7 +105,8 @@ class RegionController extends BaseController
             "draw" => isset($requestData['draw']) ? intval($requestData['draw']) : 0,
             "recordsTotal" => intval($totalData),
             "recordsFiltered" => intval($totalFiltered),
-            "data" => $dataOutput
+            "data" => $dataOutput,
+            "new_token" => csrf_hash()
         ];
 
 
@@ -115,6 +115,9 @@ class RegionController extends BaseController
 
     public function store()
     {
+        if (session()->get('role') !== 'superadmin') {
+            return $this->response->setStatusCode(403)->setJSON(['status' => 'error', 'message' => 'Akses ditolak.']);
+        }
         $name = strtoupper(trim($this->request->getPost('name')));
         $isExist = $this->model_regions->where('name', $name)->first();
         $csrfToken = csrf_hash();
@@ -147,15 +150,9 @@ class RegionController extends BaseController
 
     public function update($id)
     {
-        // $data = ['name' => $this->request->getPost('name')];
-
-        // if ($this->model_regions->update($id, $data)) {
-        //     session()->setFlashdata('message', ['success', 'Data Cabang berhasil diubah']);
-        // } else {
-        //     session()->setFlashdata('message', ['error', 'Data Cabang gagal diubah']);
-        // }
-
-        // return redirect()->to(base_url('region'));
+        if (session()->get('role') !== 'superadmin') {
+            return $this->response->setStatusCode(403)->setJSON(['status' => 'error', 'message' => 'Akses ditolak.']);
+        }
         $name = strtoupper(trim($this->request->getPost('name')));
         $csrfToken = csrf_hash();
         $isExist = $this->model_regions->where('name', $name)->where('id !=', $id)->first();
@@ -189,6 +186,9 @@ class RegionController extends BaseController
 
     public function destroy($id)
     {
+        if (session()->get('role') !== 'superadmin') {
+            return $this->response->setStatusCode(403)->setJSON(['status' => 'error', 'message' => 'Akses ditolak.']);
+        }
         $csrfToken = csrf_hash();
         $db = \Config\Database::connect();
         $countPatient = $db->table('patients')->where("region_id", $id)->countAllResults();

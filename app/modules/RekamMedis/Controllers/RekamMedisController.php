@@ -27,8 +27,8 @@ class RekamMedisController extends BaseController
             'resources' => $mPatient->get_resources() ?? [],
             'negara' => $mCountries->getData() ?? [],
             'patient_information' => null,
-            'sess_region_name' => session()->get('active_region_name') ?? $sessRegionName,
-            'sess_region_id' => session()->get('active_region') ?? $sessRegionId,
+            'sess_region_name' => session()->get('active_region_name'),
+            'sess_region_id' => session()->get('active_region'),
             'sess_role' => $role,
             'filter_region' => $filter,
         ];

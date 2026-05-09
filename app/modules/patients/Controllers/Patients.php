@@ -147,6 +147,16 @@ class Patients extends BaseController
         // Inisialisasi Query Builder melalui Model
         $builder = $this->patientModel->builder();
 
+        // Logic Filter Wilayah (Region)
+        $region_session = session()->get('region_patient');
+        if ($region_session !== 'all' && !empty($region_session)) {
+            if (is_array($region_session)) {
+                $builder->whereIn('region_id', $region_session);
+            } else {
+                $builder->where('region_id', $region_session);
+            }
+        }
+
         // Logic Pencarian (Search)
         if (!empty($search)) {
             $builder->groupStart()
@@ -359,14 +369,15 @@ class Patients extends BaseController
         $mRegion = new \App\modules\region\Models\MRegion();
         $mTerapis = new \App\modules\terapis\Models\MTerapis();
 
-        $regions_patient = json_decode($this->session->get('regions_patient') ?? '[]', true);
+        $region_patient = session()->get('region_patient');
+        $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
 
         $data = [
             'title' => 'Detil Pasien',
             'patient' => $patientData,
             'address' => (object) $addressData,
             'alamat_patient' => $mAddress->asObject()->findAll(),
-            'wilayah' => $mRegion->asObject()->findAll(),
+            'wilayah' => $mRegion->getData(null, $allowed_regions) ?? [],
             'negara' => $mCountries->asObject()->findAll(),
             'terapis' => $mTerapis->asObject()->findAll(),
             'resources' => $this->patientModel->get_resources(),
@@ -383,7 +394,7 @@ class Patients extends BaseController
             'updated_by_name' => $this->getUserName($patientData->updated_by ?? null),
             'realname' => $this->session->get('realname'),
             'role' => $this->session->get('role'),
-            'regions_patient' => [$regions_patient],
+            'regions_patient' => $region_patient,
             'msg' => $this->session->getFlashdata('message') ?? ['', '', ''],
         ];
 

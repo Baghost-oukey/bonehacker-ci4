@@ -33,7 +33,7 @@ class AntreanController extends BaseController
             'title' => 'Antrean',
             'realname' => session()->get('realname'),
             'role' => session()->get('role'),
-            'regions_patient' => $region_patients,
+            'regions_patient' => $region_patient,
             'wilayah' => $this->regionModel->getData(null, $allowed_regions),
             'negara' => $this->countryModel->findAll(),
             'resources' => $this->patientsModel->get_resources(),

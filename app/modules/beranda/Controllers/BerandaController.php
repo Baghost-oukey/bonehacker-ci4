@@ -100,6 +100,8 @@ class BerandaController extends BaseController
       $filter_region = $region_patients;
     }
 
+    $allowed_regions = ($role === 'superadmin') ? null : $region_patients;
+
     $data = [
       'realname' => $session->get('realname'),
       'role' => $role,
@@ -108,7 +110,7 @@ class BerandaController extends BaseController
       'current_segment' => $this->request->getUri()->getSegment(1),
       'title' => 'Beranda',
       'msg' => $session->getFlashdata('message'),
-      'wilayah' => $this->model_region->getData(),
+      'wilayah' => $this->model_region->getData(null, $allowed_regions),
       'negara' => $this->model_country->getData(),
       'greeting' => $this->getRandomGreeting(),
     ];
