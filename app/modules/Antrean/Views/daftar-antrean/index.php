@@ -101,16 +101,8 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
                                     </div>
                                     <div class="min-w-0">
                                         <p class="truncate text-sm font-semibold text-slate-800"><?= esc($patientName) ?></p>
-                                        <p class="truncate text-xs text-slate-500"><?= esc($patientPhone) ?></p>
                                     </div>
                                 </div>
-                                <?php if ($isHot): ?>
-                                    <span
-                                        class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 text-[10px] font-semibold text-slate-600">
-                                        <i class="fas fa-bolt text-[9px]"></i>
-                                        Prioritas
-                                    </span>
-                                <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
                     <?php else: ?>
@@ -149,7 +141,6 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
                                     </div>
                                     <div class="min-w-0">
                                         <p class="truncate text-sm font-semibold text-slate-800"><?= esc($patientName) ?></p>
-                                        <p class="truncate text-xs text-slate-500"><?= esc($patientPhone) ?></p>
                                     </div>
                                 </div>
                                 <span
@@ -192,7 +183,6 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
                                     </div>
                                     <div class="min-w-0">
                                         <p class="truncate text-sm font-semibold text-slate-800"><?= esc($patientName) ?></p>
-                                        <p class="truncate text-xs text-slate-500"><?= esc($patientPhone) ?></p>
                                     </div>
                                 </div>
                                 <span

@@ -49,18 +49,31 @@ class AntreanController extends BaseController
         $startDate = $request->getPost('start_date');
         $endDate   = $request->getPost('end_date');
 
+        $search = $request->getPost('search');
+        $searchValue = (is_array($search) && isset($search['value'])) ? $search['value'] : $request->getVar('search');
+
         $builder = $this->db->table('patient_queues pq')
-            ->select('pq.id as queue_id, pq.queue_date, p.id as patient_id, p.name as patient_name, p.age as patient_age, p.phone, p.address, pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama, h.id as history_id, h.process_at, h.finish_at')
-            ->select('COUNT(h2.id) AS visit_count')
+            ->select('pq.id as queue_id, pq.queue_number, pq.queue_date, p.id as patient_id, p.name as patient_name, p.age as patient_age, p.phone, p.address, pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama, h.id as history_id, h.process_at, h.finish_at')
+            ->select('(SELECT COUNT(*) FROM histories h_vc WHERE h_vc.patient_id = p.id AND h_vc.is_delete = 0) AS visit_count')
+            ->select('CASE 
+                WHEN h.process_at IS NOT NULL AND h.finish_at IS NULL THEN 1 
+                WHEN h.process_at IS NULL AND h.finish_at IS NULL THEN 2 
+                ELSE 3 
+            END as status_order', false)
             ->join('patients p', 'p.id = pq.patient_id', 'left')
             ->join('patient_address pa', 'pa.patient_id = p.id', 'left')
             ->join('histories h', 'h.patient_queue_id = pq.id', 'left')
-            ->join('histories h2', 'h2.patient_id = p.id AND h2.is_delete = 0', 'left')
-            ->where('h.finish_at', null)
-            ->groupBy('pq.id, pq.queue_date, p.id, p.name, p.age, p.phone, p.address, pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama, h.id, h.process_at, h.finish_at');
+            ->orderBy('status_order', 'ASC')
+            ->orderBy('pq.queue_number', 'ASC');
 
+        $active_region = session()->get('active_region');
         $region_session = session()->get('region_patient');
-        $filter = ($region && $region !== 'all') ? $region : $region_session;
+        $filter = ($region && $region !== 'all') ? $region : ($active_region !== 'all' ? $active_region : $region_session);
+
+        // Smart Search: Jika sedang mencari, abaikan filter wilayah agar lebih mudah menemukan pasien
+        if (!empty($searchValue)) {
+            $filter = 'all';
+        }
 
         if ($filter !== 'all' && !empty($filter)) {
             if (is_array($filter)) {
@@ -76,23 +89,17 @@ class AntreanController extends BaseController
         }
 
         return DataTable::of($builder)
-            ->filter(function ($builder) use ($request) {
-                $search = $request->getPost('search');
-                $searchValue = $search['value'] ?? null;
-                if ($searchValue) {
-                    $builder->groupStart()
-                        ->like('p.name', $searchValue)
-                        ->orLike('p.phone', $searchValue)
-                        ->orLike('pa.kabupaten_nama', $searchValue)
-                        ->orLike('pq.queue_date', $searchValue)
-                        ->groupEnd();
-                }
-            }, true)
+            ->setSearchableColumns(['p.name', 'p.phone', 'pa.kabupaten_nama', 'p.id'])
             ->add('date', function ($row) {
                 return !empty($row->queue_date) ? date('d-m-Y', strtotime($row->queue_date)) : '-';
             })
             ->add('name', function ($row) {
-                return $row->patient_name;
+                $statusPasien = $row->visit_count > 0
+                    ? '<span class="ml-2 inline-flex items-center rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20">Lama</span>'
+                    : '<span class="ml-2 inline-flex items-center rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">Baru</span>';
+                
+                $urlProfile = site_url('patient/show/' . $row->patient_id);
+                return '<div class="flex items-center"><a href="' . $urlProfile . '" target="_blank" rel="noopener noreferrer" class="text-teal-600 hover:text-teal-700 hover:underline transition-colors">' . esc($row->patient_name) . '</a>' . $statusPasien . '</div>';
             })
             ->add('address', function ($row) {
                 return implode(', ', array_filter([$row->address, $row->desa_nama, $row->kecamatan_nama, $row->kabupaten_nama]));
@@ -101,15 +108,21 @@ class AntreanController extends BaseController
                 return $row->patient_age;
             })
             ->add('description', function ($row) {
-                return $row->visit_count > 0
-                    ? '<span class="inline-flex items-center rounded-md bg-amber-50 px-2 py-1 text-[10px] font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20">Lama</span>'
-                    : '<span class="inline-flex items-center rounded-md bg-emerald-50 px-2 py-1 text-[10px] font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">Baru</span>';
+                if ($row->finish_at !== null) {
+                    return '<span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10">Selesai</span>';
+                } else if ($row->process_at !== null) {
+                    return '<span class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-medium text-amber-700 ring-1 ring-inset ring-amber-600/10"><span class="mr-1 h-1.5 w-1.5 rounded-full bg-amber-600 animate-pulse"></span> Diproses</span>';
+                } else {
+                    return '<span class="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/10">Menunggu</span>';
+                }
             })
             ->add('action', function ($row) {
                 $btn = '<div class="flex items-center justify-center gap-2">';
                 $historyId = $row->history_id ?? '';
 
-                if ($row->process_at !== null) {
+                if ($row->finish_at !== null) {
+                    $btn .= '<span class="inline-flex h-8 items-center justify-center rounded-md bg-slate-50 px-3 text-xs font-semibold text-slate-400 border border-slate-200 cursor-not-allowed">Terarsip</span>';
+                } else if ($row->process_at !== null) {
                     $btn .= '<a href="' . site_url('antrean/finishQueue/' . $row->queue_id) . '" class="inline-flex h-8 items-center justify-center rounded-md bg-amber-500 px-3 text-xs font-medium text-white shadow transition hover:bg-amber-600">Selesai</a>';
                 } else {
                     $btn .= '<a href="' . site_url('antrean/procesToQueue/' . $row->queue_id) . '" class="inline-flex h-8 items-center justify-center rounded-md bg-emerald-600 px-3 text-xs font-medium text-white shadow transition hover:bg-emerald-700">Proses</a>';
@@ -133,11 +146,9 @@ class AntreanController extends BaseController
 
         $builder = $this->db->table('patients p')
             ->select('p.id AS patient_id, p.name, p.phone, p.address, p.age, r.name as name_region, pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama, pa.provinsi_nama')
-            ->select('MAX(h.date) AS last_visit_date, COUNT(h.id) AS visit_count')
+            ->select('(SELECT COUNT(*) FROM histories WHERE patient_id = p.id AND is_delete = 0) AS visit_count')
             ->join('regions r', 'r.id = p.region_id', 'left')
-            ->join('patient_address pa', 'pa.patient_id = p.id', 'left')
-            ->join('histories h', 'h.patient_id = p.id AND h.is_delete = 0', 'left')
-            ->groupBy('p.id, p.name, p.phone, p.address, p.age, r.name, pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama, pa.provinsi_nama');
+            ->join('patient_address pa', 'pa.patient_id = p.id', 'left');
 
         $search = $request->getPost('search');
         $searchValue = $search['value'] ?? null;
@@ -177,6 +188,7 @@ class AntreanController extends BaseController
                     $builder->groupStart()
                         ->like('p.name', $searchValue, 'both')
                         ->orLike('p.phone', $searchValue, 'both')
+                        ->orLike('p.address', $searchValue, 'both')
                         ->orLike('p.id', $searchValue, 'both')
                         ->groupEnd();
                 }
@@ -206,15 +218,27 @@ class AntreanController extends BaseController
     {
         $patient = $this->db->table('patients')->where('id', $patientId)->get()->getRow();
 
-        if (!$patient || empty($patient->region_id)) {
-            return redirect()->back()->with('message', ['error', 'Data pasien atau wilayah tidak valid.']);
-        }
+        $active_region = session()->get('active_region');
+        // Gunakan wilayah aktif saat ini. Jika 'all' (superadmin), gunakan wilayah asal pasien sebagai fallback.
+        $target_region = ($active_region !== 'all') ? $active_region : $patient->region_id;
+        $today = date('Y-m-d');
+
+        // Hitung nomor antrean selanjutnya untuk wilayah ini pada hari ini
+        $lastQueue = $this->db->table('patient_queues')
+            ->where('region_id', $target_region)
+            ->where('queue_date', $today)
+            ->orderBy('queue_number', 'DESC')
+            ->limit(1)
+            ->get()
+            ->getRow();
+
+        $nextQueueNumber = ($lastQueue) ? $lastQueue->queue_number + 1 : 1;
 
         $insert = $this->db->table('patient_queues')->insert([
-            'region_id' => $patient->region_id,
-
+            'region_id' => $target_region,
+            'queue_number' => $nextQueueNumber,
             'patient_id' => $patientId,
-            'queue_date' => date('Y-m-d'),
+            'queue_date' => $today,
             'created_at' => date('Y-m-d H:i:s')
         ]);
 

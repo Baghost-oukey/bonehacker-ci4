@@ -44,12 +44,12 @@
 
             <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-                    <div class="flex-1 sm:flex-none sm:w-72">
-                        <!-- <i id="iconSearch1" class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm transition-all"></i>
-                        <i id="iconSpinner1" class="fas fa-circle-notch fa-spin absolute left-3 top-1/2 -translate-y-1/2 text-teal-600 text-sm hidden transition-all"></i> -->
-                        <input type="text" id="searchInput" placeholder="Cari pasien..."
-                            class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15">
-                    </div>
+                        <div class="relative flex-1">
+                            <i id="iconSearch1" class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm transition-all"></i>
+                            <i id="iconSpinner1" class="fas fa-circle-notch fa-spin absolute left-3 top-1/2 -translate-y-1/2 text-teal-600 text-sm transition-all" style="display: none;"></i>
+                            <input type="text" id="searchInput" placeholder="Cari pasien..."
+                                class="w-full rounded-lg border border-slate-200 pl-9 pr-3 py-2 text-sm transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15">
+                        </div>
 
                     <div class="flex items-center gap-2 text-sm">
                         <div class="flex items-center gap-2">
@@ -90,12 +90,11 @@
             <table id="table-1" class="w-full text-sm">
                 <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
                     <tr>
-                        <th class="px-6 py-3.5 text-left font-semibold">ID</th>
+                        <th class="px-6 py-3.5 text-center font-semibold">Antrean</th>
                         <th class="px-6 py-3.5 text-left font-semibold">Tanggal</th>
                         <th class="px-6 py-3.5 text-left font-semibold">Nama</th>
                         <th class="px-6 py-3.5 text-left font-semibold">Usia</th>
                         <th class="px-6 py-3.5 text-left font-semibold">Alamat</th>
-                        <th class="px-6 py-3.5 text-left font-semibold">No. WA</th>
                         <th class="px-6 py-3.5 text-center font-semibold">Status</th>
                         <th class="px-6 py-3.5 text-center font-semibold">
                             <?= session()->get('role') === 'superadmin' ? 'Aksi' : 'Keterangan' ?>
@@ -146,9 +145,8 @@
         <div class="p-5">
             <div class="flex flex-col md:flex-row md:items-center gap-4 mb-4">
                 <div class="relative flex-1">
-                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                    <!-- <i id="iconSearch2" class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm transition-all"></i>
-                    <i id="iconSpinner2" class="fas fa-circle-notch fa-spin absolute left-3 top-1/2 -translate-y-1/2 text-teal-600 text-sm hidden transition-all"></i> -->
+                    <i id="iconSearch2" class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm transition-all"></i>
+                    <i id="iconSpinner2" class="fas fa-circle-notch fa-spin absolute left-3 top-1/2 -translate-y-1/2 text-teal-600 text-sm hidden transition-all"></i>
                     <input type="text" id="searchPatientList" placeholder="Ketik Nama atau Nomor WhatsApp..."
                         class="w-full rounded-lg border border-slate-300 pl-9 pr-4 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
                     <p class="mt-1.5 text-[11px] text-slate-400">

@@ -12,11 +12,9 @@ $viteBrowserUrl = 'http://localhost:5173';
 $shouldUseViteDevServer = false;
 
 if ($isDevEnvironment) {
-    $viteSocket = @fsockopen($viteCheckHost, $vitePort, $errno, $errstr, 0.15);
-    if (is_resource($viteSocket)) {
-        $shouldUseViteDevServer = true;
-        fclose($viteSocket);
-    }
+    // Dipaksa false agar selalu menggunakan aset hasil build (npm run build)
+    // untuk menghindari masalah CORS pada environment Windows/Laragon .test
+    $shouldUseViteDevServer = false;
 }
 ?>
 

@@ -11,6 +11,13 @@ Options -Indexes
 	Options +FollowSymlinks
 	RewriteEngine On
 
+	# Redirect index.php to non-index.php (SEO & Consistency)
+	RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\ /index\.php\ HTTP/
+	RewriteRule ^index\.php$ / [R=301,L]
+
+	RewriteCond %{THE_REQUEST} ^[A-Z]{3,9}\ /index\.php/(.*)\ HTTP/
+	RewriteRule ^index\.php/(.*)$ /$1 [R=301,L]
+
 	# If you installed CodeIgniter in a subfolder, you will need to
 	# change the following line to match the subfolder you need.
 	# http://httpd.apache.org/docs/current/mod/mod_rewrite.html#rewritebase
