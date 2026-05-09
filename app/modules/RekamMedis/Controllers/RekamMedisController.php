@@ -30,9 +30,6 @@ class RekamMedisController extends BaseController
             $filter = $regionProfile;
         }
 
-        $patient_query = $mPatient->getAllData($filter);
-        $patients = $patient_query->getResult();
-
         $data = [
             'realname' => session()->get('realname'),
             'role' => $role,
@@ -41,7 +38,6 @@ class RekamMedisController extends BaseController
             'wilayah' => $mRegion->getData() ?? [],
             'resources' => $mPatient->get_resources() ?? [],
             'negara' => $mCountries->getData() ?? [],
-            'patients' => $patients,
             'patient_information' => null,
             'sess_region_name' => $sessRegionName,
             'sess_region_id' => $sessRegionId,
