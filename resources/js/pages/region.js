@@ -95,7 +95,8 @@ const setupRegionPage = () => {
   };
 
   const renderEmptyState = (message) => {
-    $("#table-region tbody").html(`<tr class="hover:bg-slate-50 transition"><td colspan="5" class="px-6 py-12 text-center text-slate-400 italic text-sm"><i class="fas fa-inbox mr-2 text-slate-300"></i>${message}</td></tr>`);
+    const colCount = config.role === 'superadmin' ? 5 : 4;
+    $("#table-region tbody").html(`<tr class="hover:bg-slate-50 transition"><td colspan="${colCount}" class="px-6 py-12 text-center text-slate-400 italic text-sm"><i class="fas fa-inbox mr-2 text-slate-300"></i>${message}</td></tr>`);
   };
 
   const loadTableData = (pageNumber = 1) => {
@@ -134,7 +135,11 @@ const setupRegionPage = () => {
           tr.append(`<td class="px-6 py-3.5 font-medium text-slate-800">${row.name || "-"}</td>`);
           tr.append(`<td class="px-6 py-3.5 text-slate-500">${row.created_at || "-"}</td>`);
           tr.append(`<td class="px-6 py-3.5 text-slate-500">${row.updated_at || "-"}</td>`);
-          tr.append(`<td class="px-6 py-3.5 text-right">${row.action || "-"}</td>`);
+          
+          if (config.role === 'superadmin') {
+            tr.append(`<td class="px-6 py-3.5 text-right">${row.action || "-"}</td>`);
+          }
+          
           tbody.append(tr);
         });
 

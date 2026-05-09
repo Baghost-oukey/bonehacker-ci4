@@ -25,6 +25,7 @@
             </p>
         </div>
 
+        <?php if ($sess_role === 'superadmin'): ?>
         <div class="flex items-center">
             <button type="button" data-modal-open="modalTambahRegion"
                 class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-700">
@@ -32,6 +33,7 @@
                 Tambah Cabang
             </button>
         </div>
+        <?php endif; ?>
     </div>
 
     <div class="rounded-2xl bg-white shadow-sm border border-slate-200/50 overflow-hidden">
@@ -59,7 +61,9 @@
                         <th class="px-6 py-3.5 text-left font-semibold">Cabang</th>
                         <th class="px-6 py-3.5 text-left font-semibold">Waktu Buat</th>
                         <th class="px-6 py-3.5 text-left font-semibold">Terakhir Diperbarui</th>
+                        <?php if ($sess_role === 'superadmin'): ?>
                         <th class="px-6 py-3.5 text-right font-semibold">Aksi</th>
+                        <?php endif; ?>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-slate-700">
@@ -232,7 +236,8 @@
         csrfHash: "<?= csrf_hash() ?>",
         fetchUrl: "<?= base_url('region/fetch') ?>",
         storeUrl: "<?= site_url('region/store') ?>",
-        baseUrl: "<?= site_url('region') ?>"
+        baseUrl: "<?= site_url('region') ?>",
+        role: "<?= esc($sess_role) ?>"
     };
 </script>
 

@@ -77,23 +77,27 @@ class RegionController extends BaseController
                 $value->created_at = !empty($value->created_at) ? $value->created_at : '-';
                 $value->updated_at = !empty($value->updated_at) ? $value->updated_at : '-';
 
-                $value->action = '
-                    <div class="flex items-center justify-center gap-2">
-                        <button type="button" 
-                            data-name="' . htmlspecialchars($value->name, ENT_QUOTES, 'UTF-8') . '" 
-                            data-href="' . base_url('region/update/' . $value->id) . '" 
-                            title="Edit Data" 
-                            class="group flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 shadow-sm transition-all hover:border-teal-200 hover:bg-teal-50 hover:text-teal-600 btn_edit">
-                            <i class="fas fa-edit text-xs transition-transform group-hover:scale-110"></i>
-                        </button>
+                if ($role === 'superadmin') {
+                    $value->action = '
+                        <div class="flex items-center justify-center gap-2">
+                            <button type="button" 
+                                data-name="' . htmlspecialchars($value->name, ENT_QUOTES, 'UTF-8') . '" 
+                                data-href="' . base_url('region/update/' . $value->id) . '" 
+                                title="Edit Data" 
+                                class="group flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 shadow-sm transition-all hover:border-teal-200 hover:bg-teal-50 hover:text-teal-600 btn_edit">
+                                <i class="fas fa-edit text-xs transition-transform group-hover:scale-110"></i>
+                            </button>
 
-                        <button type="button" 
-                            data-href="' . base_url('region/destroy/' . $value->id) . '" 
-                            title="Hapus Data" 
-                            class="group flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 shadow-sm transition-all hover:border-red-200 hover:bg-red-50 hover:text-red-600 btn_delete">
-                            <i class="fas fa-trash text-xs transition-transform group-hover:scale-110"></i>
-                        </button>
-                    </div>';
+                            <button type="button" 
+                                data-href="' . base_url('region/destroy/' . $value->id) . '" 
+                                title="Hapus Data" 
+                                class="group flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 shadow-sm transition-all hover:border-red-200 hover:bg-red-50 hover:text-red-600 btn_delete">
+                                <i class="fas fa-trash text-xs transition-transform group-hover:scale-110"></i>
+                            </button>
+                        </div>';
+                } else {
+                    $value->action = '-';
+                }
 
                 $no++;
             }
