@@ -115,9 +115,16 @@ class Mgajikaryawan extends Model
 
     public function getDetailPerhitungan($id)
     {
+        $bulan = date('n');
+        $tahun = date('Y');
+        $bulanBagus = str_pad((string)$bulan, 2, '0', STR_PAD_LEFT);
+        $tanggalAwal = "$tahun-$bulanBagus-01";
+        $tanggalAkhir = date('Y-m-t', strtotime($tanggalAwal));
+
         $subQueryTindakan = "(SELECT COUNT(h.id) FROM histories h WHERE FIND_IN_SET(t.id, h.terapis_id))";
         $subQueryKasbon = "(SELECT COALESCE(SUM(nominal), 0) FROM kasbon_karyawan WHERE terapis_id = t.id AND status_potongan IN ('belum_lunas', 'belum_dipotong'))";
         $subQueryTunjangan = "(SELECT COALESCE(SUM(nominal), 0) FROM transaksi_tunjangan WHERE terapis_id = t.id AND status_pembayaran = 'Belum Dibayar')";
+        $subQueryKehadiran = "(SELECT COUNT(*) FROM absensi_karyawan WHERE terapis_id = t.id AND status = 'Hadir' AND tanggal >= '$tanggalAwal' AND tanggal <= '$tanggalAkhir')";
 
         $builder = $this->db->table('terapis t');
         $builder->select(
@@ -127,7 +134,8 @@ class Mgajikaryawan extends Model
             COALESCE(pg.nominal_gaji, 0) as nominal_gaji,
             ' . $subQueryTindakan . ' as jml_tindakan,
             ' . $subQueryKasbon . ' as total_kasbon,
-            ' . $subQueryTunjangan . ' as total_tunjangan'
+            ' . $subQueryTunjangan . ' as total_tunjangan,
+            ' . $subQueryKehadiran . ' as current_kehadiran'
         , false);
         $builder->join('gaji_karyawan pg', 'pg.terapis_id = t.id', 'left');
 

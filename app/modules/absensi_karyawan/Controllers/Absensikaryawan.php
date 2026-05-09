@@ -64,7 +64,7 @@ class Absensikaryawan extends BaseController
         $postAbsen = $this->request->getPost('absen');
         $tanggal   = $this->request->getPost('tanggal');
 
-        if (!$postAbsen || !$tanggal) {
+        if (empty($postAbsen) || empty($tanggal)) {
             return $this->response->setJSON(['status' => 'error', 'message' => 'Data tidak valid.']);
         }
 
@@ -78,17 +78,20 @@ class Absensikaryawan extends BaseController
             ];
         }
 
-        // Hapus data lama di tanggal yang sama agar tidak duplikat/double entry
+        // DATABASE TRANSACTION (BEST PRACTICE)
+        $db = \Config\Database::connect();
+        $db->transStart(); // Mulai proteksi transaksi
         $this->model_absensi->where('tanggal', $tanggal)->delete();
+        $this->model_absensi->insertBatch($dataInsert);
 
-        if ($this->model_absensi->insertBatch($dataInsert)) {
+        $db->transComplete(); 
+        if ($db->transStatus() === true) {
             return $this->response->setJSON([
-                'status'  => 'success',
-                'message' => 'Presensi tanggal ' . date('d M Y', strtotime($tanggal)) . ' berhasil disimpan!',
+                'status'   => 'success',
+                'message'  => 'Presensi tanggal ' . date('d M Y', strtotime($tanggal)) . ' berhasil disimpan!',
                 'csrfHash' => csrf_hash()
             ]);
         }
-
-        return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal menyimpan ke database.']);
+        return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal menyimpan ke database. Sistem telah membatalkan perubahan.']);
     }
 }

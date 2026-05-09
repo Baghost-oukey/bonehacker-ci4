@@ -318,3 +318,13 @@ $routes->group('kehadiran', ['namespace' => 'App\modules\absensi_karyawan\Contro
   $routes->get('detail/(:any)', 'Absensikaryawan::detail/$1');
   $routes->post('simpan_massal', 'Absensikaryawan::simpan_massal'); // Route untuk proses AJAX
 });
+
+
+$routes->group('jasa-pelayanan', ['namespace' => 'App\modules\jasa_pelayanan\Controllers'], function($routes) {
+    $routes->get('reguler', 'Jasapelayanan::reguler');
+    $routes->get('kejantanan', 'Jasapelayanan::kejantanan');
+    $routes->post('fetch', 'Jasapelayanan::fetch');
+    $routes->get('show/(:num)', 'Jasapelayanan::show/$1');
+    $routes->post('destroy/(:num)', 'Jasapelayanan::destroy/$1'); 
+    
+});

@@ -45,16 +45,19 @@ class Mabsensikaryawan extends Model
     protected $afterDelete    = [];
 
 
-    public function getTotalHadir($terapisId, $bulan, $tahun)
+    public function getTotalHadir(int $terapisId, int $bulan, int $tahun): int
     {
+        $bulanBagus = str_pad((string)$bulan, 2, '0', STR_PAD_LEFT);
+        $tanggalAwal = "$tahun-$bulanBagus-01";
+        $tanggalAkhir = date('Y-m-t', strtotime($tanggalAwal));
         return $this->where('terapis_id', $terapisId)
             ->where('status', 'Hadir')
-            ->where('MONTH(tanggal)', $bulan)
-            ->where('YEAR(tanggal)', $tahun)
+            ->where('tanggal >=', $tanggalAwal)
+            ->where('tanggal <=', $tanggalAkhir)
             ->countAllResults();
     }
 
-  public function getRekapHarian()
+    public function getRekapHarian()
     {
         return $this->select('tanggal')
             ->select('SUM(CASE WHEN status = "Hadir" THEN 1 ELSE 0 END) as total_hadir', false)

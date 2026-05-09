@@ -63,7 +63,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                 </li>
                 <li>
                     <a href="<?= base_url('kehadiran') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'transaksi' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
-                        <i class="fas fa-money-bill-wave w-4 text-center shrink-0"></i>
+                        <i class="fa-solid fa-user-clock w-4 text-center shrink-0"></i>
                         <span class="truncate">Kehadiran Karyawan</span>
                     </a>
                 </li>
@@ -97,6 +97,34 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                                 </a>
                             </li>
                             <li><a href="<?= base_url('kasbon') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'log_whatsapp' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Kasbon Karyawan</span></a></li>
+                        </ul>
+                    </details>
+                </li>
+
+                <li>
+                    <details class="group" <?= in_array($current_segment, ['gaji', 'tujangan', 'kasbon']) ? 'open' : '' ?>>
+                        <summary class="flex w-full cursor-pointer list-none items-center justify-between rounded-md p-2 text-left text-sm transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 [&::-webkit-details-marker]:hidden">
+                            <span class="flex items-center gap-2">
+                                <i class="fa-solid fa-hospital-user w-4 text-center shrink-0"></i>
+
+                                <span class="truncate font-medium">Jasa Pelayanan</span>
+                            </span>
+                            <i class="fas fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200 group-open:rotate-180 shrink-0"></i>
+                        </summary>
+                        <ul class="mx-3.5 mt-1 flex min-w-0 translate-x-px flex-col gap-1 border-l border-slate-200 px-2.5 py-0.5">
+                            <li>
+                                <a href="<?= base_url('jasa-pelayanan/reguler') ?>"
+                                    class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= ($current_segment == 'reguler') ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                    <span class="truncate">Pasien Reguler</span>
+                                </a>
+                            </li>
+
+                            <li>
+                                <a href="<?= base_url('jasa-pelayanan/kejantanan') ?>"
+                                    class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= ($current_segment == 'kejantanan') ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                    <span class="truncate">Pasien Kejantanan</span>
+                                </a>
+                            </li>
                         </ul>
                     </details>
                 </li>
@@ -246,33 +274,13 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                             <span class="truncate">Users</span>
                         </a>
                     </li>
-                    <!-- <li>
+                    <li>
                         <a href="<?= base_url('terapis') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'terapis' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                             <i class="fas fa-user-md w-4 text-center shrink-0"></i>
                             <span class="truncate">Karyawan</span>
                         </a>
-                    </li> -->
-
-                    <li>
-                        <details class="group" <?= in_array($current_segment, ['terapis', 'medis']) ? 'open' : '' ?>>
-                            <summary class="flex w-full cursor-pointer list-none items-center justify-between rounded-md p-2 text-left text-sm transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 [&::-webkit-details-marker]:hidden">
-                                <span class="flex items-center gap-2">
-                                    <i class="fas fa-user-md w-4 text-center shrink-0"></i>
-                                    <span class="truncate font-medium">Karyawan</span>
-                                </span>
-                                <i class="fas fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200 group-open:rotate-180 shrink-0"></i>
-                            </summary>
-                            <ul class="mx-3.5 mt-1 flex min-w-0 translate-x-px flex-col gap-1 border-l border-slate-200 px-2.5 py-0.5">
-                                <li>
-                                    <a href="<?= base_url('terapis') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'terapis' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
-                                        <span class="truncate">Karyawan Regular</span>
-                                    </a>
-                                </li>
-                                <li><a href="<?= base_url('tag-rekam-medis') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'tag-rekam-medis' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Karyawan Kejantanan</span></a></li>
-
-                            </ul>
-                        </details>
                     </li>
+
                 </ul>
             </div>
         <?php endif; ?>

@@ -80,13 +80,49 @@ class Gajikaryawan extends BaseController
         $terapisId = (int)$this->request->getPost('terapis_id');
         $totalKehadiran = (int)$this->request->getPost('total_kehadiran');
 
-        $gajiData = $this->db->table('gaji_karyawan')->where('terapis_id', $terapisId)->get()->getRowArray();
+        // --- VALIDASI SERVER-SIDE ---
+        if (empty($terapisId) || $terapisId <= 0) {
+            return redirect()->to('/gaji')->with('error', 'ID terapis tidak valid.');
+        }
+
+        // Pastikan terapis ada dan aktif
+        $terapis = $this->db->table('terapis')
+            ->where('id', $terapisId)
+            ->where('is_active', 1)
+            ->get()
+            ->getRowArray();
+
+        if (empty($terapis)) {
+            return redirect()->to('/gaji')->with('error', 'Terapis tidak ditemukan atau tidak aktif.');
+        }
+
+        // Pastikan gaji sudah di-set
+        $gajiData = $this->db->table('gaji_karyawan')
+            ->where('terapis_id', $terapisId)
+            ->get()
+            ->getRowArray();
+
         if (empty($gajiData) || empty($gajiData['tipe_gaji'])) {
             return redirect()->to('/gaji')->with('error', 'Pengaturan gaji belum diset untuk karyawan ini.');
         }
 
+        // Validasi total kehadiran berdasarkan tipe gaji
         $tipeGaji = $gajiData['tipe_gaji'] ?? 'bulanan';
+        
+        if ($tipeGaji === 'harian' && $totalKehadiran <= 0) {
+            return redirect()->to('/gaji')->with('error', 'Total kehadiran harus lebih dari 0 untuk gaji harian.');
+        }
+
+        if ($totalKehadiran < 0) {
+            return redirect()->to('/gaji')->with('error', 'Total kehadiran tidak boleh negatif.');
+        }
+
+        // --- PERHITUNGAN GAJI ---
         $nominalGaji = isset($gajiData['nominal_gaji']) ? (int)$gajiData['nominal_gaji'] : 0;
+
+        if ($nominalGaji <= 0) {
+            return redirect()->to('/gaji')->with('error', 'Nominal gaji tidak valid.');
+        }
 
         $gajiPokokTotal = ($tipeGaji === 'harian') ? ($nominalGaji * $totalKehadiran) : $nominalGaji;
 
@@ -106,6 +142,11 @@ class Gajikaryawan extends BaseController
 
         $gajiBersih = $gajiPokokTotal + $totalTunjangan - $totalPotongan;
 
+        if ($gajiBersih < 0) {
+            return redirect()->to('/gaji')->with('error', 'Gaji bersih tidak boleh negatif (potongan lebih besar dari gaji pokok + tunjangan).');
+        }
+
+        // --- PROSES PEMBAYARAN ---
         $dataGaji = [
             'terapis_id'       => $terapisId,
             'periode_bulan'    => date('n'),

@@ -32,7 +32,7 @@ const setupGajiPage = () => {
 
     if (!config || typeof window.$ === "undefined") return;
 
-    // --- A. Tab Navigation ---
+    // --- Tab Navigation ---
     const tabBtns = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
 
@@ -53,9 +53,44 @@ const setupGajiPage = () => {
         });
     });
 
-    // --- B. Auto Format Rupiah on Input ---
+    // --- Auto Format Rupiah on Input ---
     $(document).on('keyup', '.input-rupiah', function () {
         this.value = formatRupiah(this.value, 'Rp ');
+    });
+
+    // --- Event Delegation untuk Button Setting ---
+    $(document).on('click', '.btn-setting', function(e) {
+        e.preventDefault();
+        const terapisId = this.dataset.terapisId;
+        const tipeGaji = this.dataset.tipeGaji;
+        const nominal = parseInt(this.dataset.nominal) || 0;
+        window.bukaModalSetting(terapisId, tipeGaji, nominal);
+    });
+
+    // --- Event Delegation untuk Button Proses Gaji ---
+    $(document).on('click', '.btn-proses-gaji', function(e) {
+        e.preventDefault();
+        const terapisId = this.dataset.terapisId;
+        window.bukaOffcanvas(terapisId);
+    });
+
+    // --- Close Button Modal Setting ---
+    $(document).on('click', '.btn-close-modal-setting', function(e) {
+        e.preventDefault();
+        window.tutupModalSetting();
+    });
+
+    // --- Close Button Offcanvas ---
+    $(document).on('click', '.btn-close-offcanvas', function(e) {
+        e.preventDefault();
+        window.tutupOffcanvas();
+    });
+
+    // --- Backdrop Click ---
+    $(document).on('click', '.offcanvas-backdrop', function(e) {
+        if(e.target === this) {
+            window.tutupOffcanvas();
+        }
     });
 
     const formBayarGaji = document.getElementById('formBayarGaji');
@@ -174,11 +209,16 @@ window.bukaOffcanvas = (terapisId) => {
                 const nominalGaji = parseInt(data.nominal_gaji) || 0;
                 const totalKasbon = parseInt(data.total_kasbon) || 0;
                 const totalTunjangan = parseInt(data.total_tunjangan) || 0;
+                const currentKehadiran = parseInt(data.current_kehadiran) || 0;
                 const attendanceInput = document.getElementById('oc_kehadiran');
+                const attendanceGroup = document.getElementById('oc_kehadiran_group');
+                const attendanceLabel = document.getElementById('oc_kehadiran_label');
+                const tipeInfo = document.getElementById('oc_tipe_info');
                 const gajiPokokInput = document.getElementById('oc_gaji_pokok');
                 const tunjanganInput = document.getElementById('oc_tunjangan');
                 const potonganInput = document.getElementById('oc_potongan');
                 const bersihInput = document.getElementById('oc_bersih');
+                const tipeGajiField = document.getElementById('oc_tipe_gaji');
 
                 const renderPayroll = () => {
                     const attendance = parseInt(attendanceInput.value) || 0;
@@ -194,10 +234,29 @@ window.bukaOffcanvas = (terapisId) => {
                     bersihInput.value = formatRupiah(gajiBersih);
                 };
 
-                attendanceInput.addEventListener('input', renderPayroll);
+                const updateFormState = () => {
+                    tipeGajiField.value = tipeGaji;
+                    form.dataset.tipeGaji = tipeGaji;
+
+                    if (tipeGaji === 'harian') {
+                        attendanceGroup.classList.remove('hidden');
+                        attendanceInput.required = true;
+                        attendanceInput.value = currentKehadiran;
+                        attendanceLabel.innerText = 'Total Kehadiran (Hari)';
+                        tipeInfo.innerText = 'Gaji harian dihitung dari kehadiran real karyawan setiap bulan.';
+                    } else {
+                        attendanceGroup.classList.add('hidden');
+                        attendanceInput.required = false;
+                        attendanceInput.value = 0;
+                        attendanceLabel.innerText = 'Kehadiran tidak diperlukan';
+                        tipeInfo.innerText = 'Gaji bulanan tetap sesuai nominal yang sudah diatur.';
+                    }
+                };
+
+                attendanceInput.oninput = renderPayroll;
+                updateFormState();
                 renderPayroll();
 
-                form.dataset.tipeGaji = tipeGaji;
                 loading.classList.add('hidden');
                 form.classList.remove('hidden');
             }

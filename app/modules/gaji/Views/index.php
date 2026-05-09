@@ -12,12 +12,12 @@
     <!-- Alert Notifikasi -->
     <?php if (session()->getFlashdata('success')) : ?>
         <div class="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50 border border-green-200">
-            <?= session()->getFlashdata('success') ?>
+            <?= esc(session()->getFlashdata('success')) ?>
         </div>
     <?php endif; ?>
     <?php if (session()->getFlashdata('error')) : ?>
         <div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 border border-red-200">
-            <?= session()->getFlashdata('error') ?>
+            <?= esc(session()->getFlashdata('error')) ?>
         </div>
     <?php endif; ?>
 
@@ -66,7 +66,10 @@
                                             <span class="text-slate-600 font-medium">Rp <?= number_format($row['nominal_gaji'], 0, ',', '.') ?></span>
                                         <?php endif; ?>
                                         <!-- Tombol Gear Modal Setting -->
-                                        <button onclick="bukaModalSetting(<?= $row['terapis_id'] ?>, '<?= $row['tipe_gaji'] ?>', <?= $row['nominal_gaji'] ?? 0 ?>)" class="text-slate-400 hover:text-blue-600 transition">
+                                        <button class="btn-setting text-slate-400 hover:text-blue-600 transition" 
+                                                data-terapis-id="<?= $row['terapis_id'] ?>" 
+                                                data-tipe-gaji="<?= esc($row['tipe_gaji']) ?>"
+                                                data-nominal="<?= $row['nominal_gaji'] ?? 0 ?>">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -80,7 +83,8 @@
                                     </span>
                                 </td>
                                 <td class="p-4 text-right">
-                                    <button onclick="bukaOffcanvas(<?= $row['terapis_id'] ?>)" class="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-900 text-white rounded-md hover:bg-slate-800 transition text-sm">
+                                    <button class="btn-proses-gaji inline-flex items-center gap-2 px-3 py-1.5 bg-slate-900 text-white rounded-md hover:bg-slate-800 transition text-sm"
+                                            data-terapis-id="<?= $row['terapis_id'] ?>">
                                         Proses Gaji
                                     </button>
                                 </td>
@@ -129,7 +133,7 @@
 <div id="offcanvasProses" class="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-white shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
     <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
         <h3 class="text-lg font-bold text-slate-800">Rincian Penggajian</h3>
-        <button onclick="tutupOffcanvas()" class="text-slate-400 hover:text-slate-600 p-2">&times;</button>
+        <button class="btn-close-offcanvas text-slate-400 hover:text-slate-600 p-2">&times;</button>
     </div>
 
     <div class="flex-1 overflow-y-auto p-6" id="offcanvasContent">
@@ -143,16 +147,19 @@
         <form id="formBayarGaji" action="<?= base_url('gaji/proses_bayar') ?>" method="POST" class="hidden">
             <?= csrf_field() ?>
             <input type="hidden" name="terapis_id" id="oc_terapis_id">
+            <input type="hidden" name="tipe_gaji" id="oc_tipe_gaji" value="bulanan">
 
             <div class="mb-6 p-4 bg-slate-50 rounded-lg border border-slate-100">
                 <p class="text-xs text-slate-500 uppercase tracking-wider mb-1">Penerima</p>
                 <p class="font-bold text-slate-800 text-lg" id="oc_nama_terapis">-</p>
+                <p class="mt-2 text-xs text-slate-500" id="oc_tipe_info">-</p>
             </div>
 
             <!-- Input Dinamis (Admin bisa menyesuaikan hari kehadiran jika perlu) -->
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-slate-700 mb-1">Total Kehadiran (Hari)</label>
+            <div class="mb-4" id="oc_kehadiran_group">
+                <label class="block text-sm font-medium text-slate-700 mb-1" id="oc_kehadiran_label">Total Kehadiran (Hari)</label>
                 <input type="number" name="total_kehadiran" id="oc_kehadiran" value="0" class="w-full border-slate-200 rounded-lg bg-white" required>
+                <p class="mt-2 text-xs text-slate-500">Jika tipe gaji harian, gaji akan dikalkulasi berdasarkan jumlah kehadiran.</p>
             </div>
 
             <hr class="my-6 border-slate-100">
@@ -185,14 +192,14 @@
         </form>
     </div>
 </div>
-<div id="offcanvasBackdrop" class="fixed inset-0 bg-slate-900/20 z-40 hidden transition-opacity" onclick="tutupOffcanvas()"></div>
+<div id="offcanvasBackdrop" class="offcanvas-backdrop fixed inset-0 bg-slate-900/20 z-40 hidden transition-opacity"></div>
 
 <!-- MODAL SETTING GAJI (Posisinya Fixed di atas layar) -->
 <div id="modalSetting" class="fixed inset-0 z-[100] flex items-center justify-center hidden bg-slate-900/50 backdrop-blur-sm transition-opacity">
     <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden transform scale-95 transition-transform" id="modalSettingContent">
         <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
             <h3 class="text-lg font-bold text-slate-800">Atur Gaji Dasar</h3>
-            <button onclick="tutupModalSetting()" type="button" class="text-slate-400 hover:text-red-500 transition-colors">
+            <button type="button" class="btn-close-modal-setting text-slate-400 hover:text-red-500 transition-colors">
                 <i class="fas fa-times text-xl"></i>
             </button>
         </div>
@@ -218,7 +225,7 @@
             </div>
 
             <div class="flex justify-end gap-3">
-                <button type="button" onclick="tutupModalSetting()" class="px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition">Batal</button>
+                <button type="button" class="btn-close-modal-setting px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition">Batal</button>
                 <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition">Simpan Pengaturan</button>
             </div>
         </form>
