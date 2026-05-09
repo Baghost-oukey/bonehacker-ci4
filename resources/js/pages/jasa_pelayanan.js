@@ -1,168 +1,243 @@
 /**
- * Pelayanan Management Page Script (Reguler & Kejantanan)
- * Custom pagination, DataTables Server-Side, and Global Helpers
+ * Jasa Pelayanan - Daftar Pasien (Mirip Rekam Medis)
+ * Custom pagination, Search, dan navigasi ke detail pasien
  */
 
-// ==========================================
-// 1. GLOBAL HELPERS
-// ==========================================
-const MODAL_VISIBLE_CLASS = "flex";
-const MODAL_HIDDEN_CLASS = "hidden";
+const setupJasaPelayananPage = () => {
+    const config = window.jasaPelayananConfig;
+    const page = document.getElementById("jasaPelayananPage");
 
-// Mengambil CSRF Token secara dinamis
-const getCsrfPayload = (config) => {
-    let payload = {};
-    payload[config.csrfName] = config.csrfHash;
-    return payload;
-};
-
-// Fungsi Debounce (Untuk pencarian manual jika diperlukan)
-const debounce = (fn, delay = 400) => {
-    let timerId;
-    return (...args) => {
-        clearTimeout(timerId);
-        timerId = setTimeout(() => fn(...args), delay);
-    };
-};
-
-// Modal Controls
-const openModal = (modal) => {
-    if (!modal) return;
-    modal.classList.remove(MODAL_HIDDEN_CLASS);
-    modal.classList.add(MODAL_VISIBLE_CLASS);
-};
-
-const closeModal = (modal) => {
-    if (!modal) return;
-    modal.classList.remove(MODAL_VISIBLE_CLASS);
-    modal.classList.add(MODAL_HIDDEN_CLASS);
-};
-
-
-// ==========================================
-// 2. MAIN SETUP FUNCTION
-// ==========================================
-const setupPelayananPage = () => {
-    const config = window.pelayananConfig;
-    const page = document.getElementById("pelayananPage");
-    
     // Cegah script berjalan di halaman lain
-    if (!config || !page || typeof window.$ === "undefined") return;
+    if (!config || !page) return;
 
-    const $ = window.$;
-    const swalLib = window.Swal || window.swal;
+    // ==========================================
+    // STATE
+    // ==========================================
+    let currentPage = 1;
+    let pageLength = parseInt(document.getElementById("paginationLength")?.value || 25);
+    let searchQuery = "";
+    let totalRecords = 0;
+    let totalFiltered = 0;
 
-    // Inject Custom Style DataTables agar menyatu dengan Tailwind
-    const injectStyle = () => {
-        const style = document.createElement('style');
-        style.innerHTML = `
-            .dataTables_filter input { border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 0.35rem 0.75rem; height: 2.25rem; font-size: 0.875rem; outline: none; transition: all 0.2s; }
-            .dataTables_filter input:focus { border-color: #4f46e5; box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #c7d2fe; }
-            .dataTables_length select { border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 0.25rem 2rem 0.25rem 0.75rem; height: 2.25rem; font-size: 0.875rem; outline: none; }
-            .dataTables_length select:focus { border-color: #4f46e5; box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #c7d2fe; }
-        `;
-        document.head.appendChild(style);
+    // ==========================================
+    // DOM ELEMENTS
+    // ==========================================
+    const tbody = document.querySelector("#table-JasaPelayanan tbody");
+    const searchInput = document.getElementById("searchInput");
+    const paginationInfo = document.getElementById("paginationInfo");
+    const paginationNumbers = document.getElementById("paginationNumbers");
+    const paginationPrev = document.getElementById("paginationPrev");
+    const paginationNext = document.getElementById("paginationNext");
+    const paginationLength = document.getElementById("paginationLength");
+
+    // ==========================================
+    // DEBOUNCE
+    // ==========================================
+    const debounce = (fn, delay = 400) => {
+        let timerId;
+        return (...args) => {
+            clearTimeout(timerId);
+            timerId = setTimeout(() => fn(...args), delay);
+        };
     };
-    injectStyle();
 
-    // Inisialisasi DataTables Server-Side
-    const tablePelayanan = $('#tablePelayanan').DataTable({
-        "processing": true,
-        "serverSide": true,
-        "responsive": true,
-        "autoWidth": false,
-        "language": {
-            "search": "Cari Pasien/Terapis:",
-            "lengthMenu": "Tampilkan _MENU_ data",
-            "info": "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
-            "infoEmpty": "Tidak ada data tersedia",
-            "paginate": {
-                "first": "Pertama",
-                "last": "Terakhir",
-                "next": "Selanjutnya",
-                "previous": "Sebelumnya"
-            }
-        },
-        "ajax": {
-            "url": config.fetchUrl,
-            "type": "POST",
-            "data": function (d) {
-                // Injeksi Token CSRF dan Kategori Jasa (Reguler/Kejantanan)
-                d[config.csrfName] = config.csrfHash;
-                d.kategori = config.kategori;
-            },
-            "dataSrc": function (json) {
-                // Auto-renew token CSRF dari backend
+    // ==========================================
+    // FETCH DATA
+    // ==========================================
+    const fetchData = () => {
+        const start = (currentPage - 1) * pageLength;
+
+        // Loading state
+        tbody.innerHTML = `
+            <tr class="hover:bg-slate-50 transition">
+                <td colspan="7" class="px-6 py-12 text-center text-slate-400 italic text-sm">
+                    <i class="fas fa-spinner fa-spin mr-2 text-slate-300"></i>
+                    Memuat data pasien...
+                </td>
+            </tr>`;
+
+        const formData = new FormData();
+        formData.append(config.csrfName, config.csrfHash);
+        formData.append("start", start);
+        formData.append("length", pageLength);
+        formData.append("search", searchQuery);
+        formData.append("kategori", config.kategori);
+        formData.append("draw", currentPage);
+
+        fetch(config.fetchUrl, {
+            method: "POST",
+            body: formData,
+        })
+            .then((res) => res.json())
+            .then((json) => {
+                // Auto-renew CSRF token
                 if (json.csrfHash) {
                     config.csrfHash = json.csrfHash;
                 }
-                return json.data;
-            }
-        },
-        "columns": [
-            { "data": "no", "orderable": false, "searchable": false, "className": "p-4 pl-0" },
-            { "data": "tanggal_layanan", "className": "p-4 font-bold text-slate-800" },
-            { "data": "nama_pasien", "className": "p-4 uppercase" },
-            { "data": "nama_terapis", "className": "p-4 uppercase" },
-            { "data": "action", "orderable": false, "searchable": false, "className": "p-4 text-center pr-0" }
-        ],
-        "createdRow": function (row) {
-            $(row).addClass('border-b border-slate-50 hover:bg-slate-50/50 transition-colors');
+
+                totalRecords = json.recordsTotal || 0;
+                totalFiltered = json.recordsFiltered || 0;
+
+                renderTable(json.data || []);
+                renderPagination();
+            })
+            .catch((err) => {
+                console.error("Fetch error:", err);
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="px-6 py-12 text-center text-red-400 italic text-sm">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            Gagal memuat data. Silakan refresh halaman.
+                        </td>
+                    </tr>`;
+            });
+    };
+
+    // ==========================================
+    // RENDER TABLE
+    // ==========================================
+    const renderTable = (data) => {
+        if (!data || data.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="px-6 py-12 text-center text-slate-400 italic text-sm">
+                        <i class="fas fa-inbox mr-2 text-slate-300"></i>
+                        Tidak ada data pasien ditemukan
+                    </td>
+                </tr>`;
+            return;
         }
-    });
+
+        let html = "";
+        data.forEach((row) => {
+            html += `
+                <tr class="hover:bg-slate-50/50 transition-colors group">
+                    <td class="px-6 py-3.5 text-left">
+                        <span class="inline-flex items-center justify-center rounded-md bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-600">
+                            ${row.id}
+                        </span>
+                    </td>
+                    <td class="px-6 py-3.5 text-left font-medium text-slate-800">${row.name}</td>
+                    <td class="px-6 py-3.5 text-left">
+                        <span class="inline-flex items-center gap-1.5 rounded-full bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-700">
+                            <i class="fas fa-map-marker-alt text-teal-400 text-[10px]"></i>
+                            ${row.name_region}
+                        </span>
+                    </td>
+                    <td class="px-6 py-3.5 text-left text-slate-500 max-w-[200px] truncate" title="${row.address}">${row.address}</td>
+                    <td class="px-6 py-3.5 text-center">
+                        <span class="text-xs font-medium text-slate-600">${row.date}</span>
+                    </td>
+                    <td class="px-6 py-3.5 text-center">
+                        <span class="inline-flex items-center justify-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-bold text-indigo-600 min-w-[28px]">
+                            ${row.visit_count}
+                        </span>
+                    </td>
+                    <td class="px-6 py-3.5 text-center">
+                        <div class="flex items-center justify-center gap-2">
+                            <a href="${config.showBaseUrl}/${row.id}"
+                                title="Detail Pasien"
+                                class="group/btn flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 shadow-sm transition-all hover:border-teal-200 hover:bg-teal-50 hover:text-teal-600">
+                                <i class="fas fa-eye text-xs transition-transform group-hover/btn:scale-110"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>`;
+        });
+
+        tbody.innerHTML = html;
+    };
 
     // ==========================================
-    // 3. ACTION HANDLERS (Terpasang ke Window)
+    // RENDER PAGINATION
     // ==========================================
-    
-    window.destroy = (id) => {
-        swalLib.fire({
-            title: 'Hapus data layanan ini?',
-            text: "Data yang dihapus (soft delete) tidak akan tampil lagi di tabel.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#94a3b8',
-            confirmButtonText: 'Ya, Hapus!',
-            cancelButtonText: 'Batal',
-            customClass: { popup: 'rounded-3xl' }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                
-                // Gunakan Helper CSRF!
-                let postData = getCsrfPayload(config);
+    const renderPagination = () => {
+        const total = totalFiltered;
+        const totalPages = Math.ceil(total / pageLength);
+        const start = (currentPage - 1) * pageLength + 1;
+        const end = Math.min(currentPage * pageLength, total);
 
-                $.ajax({
-                    url: config.deleteUrl + id,
-                    type: "POST",
-                    data: postData,
-                    dataType: "json",
-                    success: function(response) {
-                        if (response.new_token) {
-                            config.csrfHash = response.new_token;
-                        }
+        // Info text
+        if (total === 0) {
+            paginationInfo.textContent = "Menampilkan 0 sampai 0 dari 0 data";
+        } else {
+            paginationInfo.textContent = `Menampilkan ${start} sampai ${end} dari ${total} data`;
+        }
 
-                        if (response.status) {
-                            swalLib.fire({
-                                icon: 'success',
-                                title: 'Terhapus!',
-                                text: response.message,
-                                confirmButtonColor: '#4f46e5',
-                                customClass: { popup: 'rounded-3xl' }
-                            });
-                            // Refresh tabel tanpa reload halaman
-                            tablePelayanan.ajax.reload(null, false);
-                        } else {
-                            swalLib.fire('Gagal', 'Terjadi kesalahan saat menghapus data.', 'error');
-                        }
-                    },
-                    error: function() {
-                        swalLib.fire('Error', 'Gagal terhubung ke server.', 'error');
-                    }
-                });
+        // Prev/Next buttons
+        paginationPrev.disabled = currentPage <= 1;
+        paginationNext.disabled = currentPage >= totalPages;
+
+        // Page numbers
+        paginationNumbers.innerHTML = "";
+        const maxVisible = 5;
+        let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+        let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+
+        if (endPage - startPage + 1 < maxVisible) {
+            startPage = Math.max(1, endPage - maxVisible + 1);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            const btn = document.createElement("button");
+            btn.textContent = i;
+            btn.className =
+                i === currentPage
+                    ? "inline-flex h-8 w-8 items-center justify-center rounded-lg bg-teal-600 text-xs font-bold text-white shadow-sm"
+                    : "inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 transition hover:bg-slate-100";
+            btn.addEventListener("click", () => {
+                currentPage = i;
+                fetchData();
+            });
+            paginationNumbers.appendChild(btn);
+        }
+    };
+
+    // ==========================================
+    // EVENT LISTENERS
+    // ==========================================
+    if (searchInput) {
+        searchInput.addEventListener(
+            "input",
+            debounce((e) => {
+                searchQuery = e.target.value.trim();
+                currentPage = 1;
+                fetchData();
+            }, 400)
+        );
+    }
+
+    if (paginationPrev) {
+        paginationPrev.addEventListener("click", () => {
+            if (currentPage > 1) {
+                currentPage--;
+                fetchData();
             }
         });
-    };
+    }
+
+    if (paginationNext) {
+        paginationNext.addEventListener("click", () => {
+            const totalPages = Math.ceil(totalFiltered / pageLength);
+            if (currentPage < totalPages) {
+                currentPage++;
+                fetchData();
+            }
+        });
+    }
+
+    if (paginationLength) {
+        paginationLength.addEventListener("change", (e) => {
+            pageLength = parseInt(e.target.value);
+            currentPage = 1;
+            fetchData();
+        });
+    }
+
+    // ==========================================
+    // INITIAL LOAD
+    // ==========================================
+    fetchData();
 };
 
-document.addEventListener("DOMContentLoaded", setupPelayananPage);
+document.addEventListener("DOMContentLoaded", setupJasaPelayananPage);

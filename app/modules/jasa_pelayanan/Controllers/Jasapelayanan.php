@@ -18,26 +18,184 @@ class Jasapelayanan extends BaseController
         helper(['url', 'form']);
     }
 
-
+    /**
+     * Halaman Jasa Pelayanan - Reguler
+     * Tampil daftar pasien (mirip Rekam Medis)
+     */
     public function reguler()
     {
+        if (!session()->get('isLogin')) {
+            return redirect()->to(base_url('auth'));
+        }
+
+        $mRegion = model('App\modules\region\Models\MRegion');
+
+        $role = session()->get('role');
+        $sessRegionName = session()->get('region_name');
+        $sessRegionId = session()->get('region_id');
+
         $data = [
-            'title'    => 'Jasa Pelayanan - Reguler',
-            'kategori' => 'Reguler' // Kunci pembeda
+            'realname'        => session()->get('realname'),
+            'role'            => $role,
+            'title'           => 'Jasa Pelayanan - Reguler',
+            'kategori'        => 'Reguler',
+            'msg'             => session()->getFlashdata('message'),
+            'wilayah'         => $mRegion->getData() ?? [],
+            'sess_region_name' => $sessRegionName,
+            'sess_region_id'  => $sessRegionId,
+            'sess_role'       => $role,
         ];
-        // Keduanya me-load View yang sama, tapi dikirim 'kategori' yang berbeda
+
         return view('App\modules\jasa_pelayanan\Views\index_regular', $data);
     }
 
+    /**
+     * Halaman Jasa Pelayanan - Kejantanan
+     * Tampil daftar pasien (mirip Rekam Medis)
+     */
     public function kejantanan()
     {
+        if (!session()->get('isLogin')) {
+            return redirect()->to(base_url('auth'));
+        }
+
+        $mRegion = model('App\modules\region\Models\MRegion');
+
+        $role = session()->get('role');
+        $sessRegionName = session()->get('region_name');
+        $sessRegionId = session()->get('region_id');
+
         $data = [
-            'title'    => 'Jasa Pelayanan - Kejantanan',
-            'kategori' => 'Kejantanan' // Kunci pembeda
+            'realname'        => session()->get('realname'),
+            'role'            => $role,
+            'title'           => 'Jasa Pelayanan - Kejantanan',
+            'kategori'        => 'Kejantanan',
+            'msg'             => session()->getFlashdata('message'),
+            'wilayah'         => $mRegion->getData() ?? [],
+            'sess_region_name' => $sessRegionName,
+            'sess_region_id'  => $sessRegionId,
+            'sess_role'       => $role,
         ];
-        return view('App\modules\jasa_pelayanan\Views\index', $data);
+
+        return view('App\modules\jasa_pelayanan\Views\index_kejantanan', $data);
     }
 
+    /**
+     * Fetch daftar pasien berdasarkan kategori layanan (Reguler/Kejantanan)
+     * Format mirip Patients::fetch2() untuk custom pagination
+     */
+    public function fetchPatients()
+    {
+        $request = \Config\Services::request();
+
+        $limit    = $this->request->getPost('length') ?? 10;
+        $start    = $this->request->getPost('start') ?? 0;
+        $search   = $request->getPost('search') ?? '';
+        $kategori = $request->getPost('kategori') ?? 'Reguler';
+
+        $role          = session()->get('role');
+        $activeRegion  = session()->get('active_region');
+        $regionProfile = session()->get('region_patient');
+
+        // Tentukan filter wilayah
+        if ($role === 'owner' || $role === 'superadmin') {
+            $regionFilter = ($activeRegion && $activeRegion !== 'all') ? $activeRegion : null;
+        } else {
+            $regionFilter = $regionProfile;
+        }
+
+        // Tentukan status kejantanan untuk filter
+        $kejantananStatus = ($kategori === 'Kejantanan') ? 'ya' : 'tidak';
+
+        // Query: pasien yang punya riwayat dengan kejantanan = ya/tidak
+        $builder = $this->db->table('patients p')
+            ->select('
+                p.id, p.name, p.phone, p.address, p.region_id,
+                r.name as name_region,
+                pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama, pa.provinsi_nama,
+                COUNT(DISTINCT h.id) AS visit_count,
+                MAX(h.date) AS last_visit_date
+            ')
+            ->join('histories h', 'h.patient_id = p.id AND h.is_delete = 0 AND h.kejantanan = "' . $kejantananStatus . '"', 'inner')
+            ->join('regions r', 'r.id = p.region_id', 'left')
+            ->join('patient_address pa', 'pa.patient_id = p.id', 'left');
+
+        // Filter region
+        if (!empty($regionFilter)) {
+            if (is_array($regionFilter)) {
+                $builder->whereIn('p.region_id', $regionFilter);
+            } else {
+                $builder->where('p.region_id', $regionFilter);
+            }
+        }
+
+        // Search
+        if (!empty($search)) {
+            $builder->groupStart()
+                ->like('p.name', $search)
+                ->orLike('p.phone', $search)
+                ->orLike('p.address', $search)
+                ->orLike('p.id', $search)
+                ->groupEnd();
+        }
+
+        $builder->groupBy([
+            'p.id', 'p.name', 'p.phone', 'p.address', 'p.region_id',
+            'r.name', 'pa.desa_nama', 'pa.kecamatan_nama', 'pa.kabupaten_nama', 'pa.provinsi_nama'
+        ]);
+
+        // Count filtered
+        $tempBuilder = clone $builder;
+        $totalFiltered = $this->db->table('(' . $tempBuilder->getCompiledSelect() . ') AS temp_table')->countAllResults();
+
+        // Get data
+        $data = $builder->orderBy('last_visit_date', 'DESC')
+            ->limit($limit, $start)
+            ->get()
+            ->getResult();
+
+        // Count total (semua pasien yang punya history dengan kategori ini)
+        $totalBuilder = $this->db->table('patients p')
+            ->select('p.id')
+            ->join('histories h', 'h.patient_id = p.id AND h.is_delete = 0 AND h.kejantanan = "' . $kejantananStatus . '"', 'inner')
+            ->groupBy('p.id');
+        $totalData = $this->db->table('(' . $totalBuilder->getCompiledSelect() . ') AS total_table')->countAllResults();
+
+        // Format output
+        $output = [];
+        foreach ($data as $row) {
+            $addressParts = array_filter([
+                $row->address,
+                $row->desa_nama,
+                $row->kecamatan_nama,
+                $row->kabupaten_nama,
+                $row->provinsi_nama
+            ]);
+            $fullAddress = implode(', ', $addressParts);
+
+            $output[] = [
+                "id"           => $row->id,
+                "name"         => $row->name . ' (' . ($row->phone ?? '-') . ')',
+                "name_region"  => $row->name_region ?? '-',
+                "address"      => $fullAddress ?: '-',
+                "date"         => !empty($row->last_visit_date) ? date('d-m-Y', strtotime($row->last_visit_date)) : '-',
+                "visit_count"  => $row->visit_count ?? 0,
+                "phone"        => $row->phone ?? '-',
+            ];
+        }
+
+        return $this->response->setJSON([
+            "draw"            => intval($this->request->getPost('draw')),
+            "recordsTotal"    => $totalData,
+            "recordsFiltered" => $totalFiltered,
+            "data"            => $output,
+            "csrfHash"        => csrf_hash(),
+        ]);
+    }
+
+    /**
+     * Fetch data transaksi layanan (untuk DataTables - dipertahankan sebagai legacy)
+     */
     public function fetch()
     {
         $request = \Config\Services::request();
@@ -101,7 +259,101 @@ class Jasapelayanan extends BaseController
     }
 
 
-    // 3. FUNGSI DETAIL (Melihat Laporan Transaksi Lengkap)
+    /**
+     * Detail Pasien — Reguler (form riwayat tanpa kejantanan)
+     */
+    public function showReguler($id = null)
+    {
+        return $this->renderDetailPage($id, 'Reguler');
+    }
+
+    /**
+     * Detail Pasien — Kejantanan (form riwayat fokus kejantanan)
+     */
+    public function showKejantanan($id = null)
+    {
+        return $this->renderDetailPage($id, 'Kejantanan');
+    }
+
+    /**
+     * Shared logic untuk render halaman detail pasien
+     */
+    private function renderDetailPage($id, $kategori)
+    {
+        if (!session()->get('isLogin')) {
+            return redirect()->to(base_url('auth'));
+        }
+
+        $patientModel = new \App\modules\patients\Models\MPatients();
+        $patientData = $patientModel->find($id);
+
+        if (!$patientData) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound("Pasien dengan ID $id tidak ditemukan.");
+        }
+
+        $addressData = $this->db->table('patient_address')
+            ->where('patient_id', $id)
+            ->get()
+            ->getRowArray() ?? [];
+
+        if (!$addressData) {
+            $addressData = [
+                'desa_id' => '', 'desa_nama' => '',
+                'kecamatan_id' => '', 'kecamatan_nama' => '',
+                'kabupaten_id' => '', 'kabupaten_nama' => '',
+                'provinsi_id' => '', 'provinsi_nama' => '',
+            ];
+        }
+
+        $mRegion  = new \App\modules\region\Models\MRegion();
+        $mCountries = new \App\modules\countries\Models\MCountries();
+        $mTerapis = new \App\modules\terapis\Models\MTerapis();
+
+        $regions_patient = json_decode(session()->get('regions_patient') ?? '[]', true);
+
+        $data = [
+            'title'           => 'Detail Pasien — ' . $kategori,
+            'kategori'        => $kategori,
+            'patient'         => $patientData,
+            'address'         => (object) $addressData,
+            'wilayah'         => $mRegion->asObject()->findAll(),
+            'negara'          => $mCountries->asObject()->findAll(),
+            'terapis'         => $mTerapis->asObject()->findAll(),
+            'resources'       => $patientModel->get_resources(),
+            'patient_id'      => $id,
+            'queue_id'        => $this->request->getGet('queue_id') ?? '',
+            'file_urls'       => json_decode($patientData->url ?? '[]', true),
+            'current_date'    => date('Y-m-d'),
+            'created_at'      => !empty($patientData->created_at) ? date('j F Y H:i', strtotime($patientData->created_at)) : '-',
+            'updated_at'      => !empty($patientData->updated_at) ? date('j F Y H:i', strtotime($patientData->updated_at)) : '-',
+            'created_by_name' => $this->getUserName($patientData->created_by ?? null),
+            'updated_by_name' => $this->getUserName($patientData->updated_by ?? null),
+            'realname'        => session()->get('realname'),
+            'role'            => session()->get('role'),
+            'regions_patient' => [$regions_patient],
+            'msg'             => session()->getFlashdata('message') ?? ['', '', ''],
+        ];
+
+        $data['has_updated'] = ($data['updated_at'] !== '-');
+
+        $viewPath = ($kategori === 'Kejantanan')
+            ? 'App\modules\jasa_pelayanan\Views\detailKejantanan\show'
+            : 'App\modules\jasa_pelayanan\Views\detailRegular\show';
+
+        return view($viewPath, $data);
+    }
+
+    /**
+     * Helper: Ambil nama user berdasarkan ID
+     */
+    private function getUserName($userId)
+    {
+        if (empty($userId)) return '-';
+        $user = $this->db->table('users')->select('realname')->where('id', $userId)->get()->getRow();
+        return $user ? $user->realname : '-';
+    }
+
+    // 3. FUNGSI DETAIL LEGACY (Melihat Laporan Transaksi Lengkap)
     public function show($id)
     {
         $detailLayanan = $this->model_jasapelayanan->showDetail($id);
@@ -129,9 +381,4 @@ class Jasapelayanan extends BaseController
             'new_token' => csrf_hash()
         ]);
     }
-
-    // public function index()
-    // {
-    //     //
-    // }
 }

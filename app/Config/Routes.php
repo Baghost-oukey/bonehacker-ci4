@@ -324,7 +324,10 @@ $routes->group('jasa-pelayanan', ['namespace' => 'App\modules\jasa_pelayanan\Con
     $routes->get('reguler', 'Jasapelayanan::reguler');
     $routes->get('kejantanan', 'Jasapelayanan::kejantanan');
     $routes->post('fetch', 'Jasapelayanan::fetch');
+    $routes->post('fetchPatients', 'Jasapelayanan::fetchPatients');
     $routes->get('show/(:num)', 'Jasapelayanan::show/$1');
+    $routes->get('detail-reguler/(:num)', 'Jasapelayanan::showReguler/$1');
+    $routes->get('detail-kejantanan/(:num)', 'Jasapelayanan::showKejantanan/$1');
     $routes->post('destroy/(:num)', 'Jasapelayanan::destroy/$1'); 
     
 });
