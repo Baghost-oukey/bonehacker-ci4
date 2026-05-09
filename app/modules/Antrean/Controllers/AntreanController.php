@@ -50,11 +50,13 @@ class AntreanController extends BaseController
 
         $builder = $this->db->table('patient_queues pq')
             ->select('pq.id as queue_id, pq.queue_date, p.id as patient_id, p.name as patient_name, p.age as patient_age, p.phone, p.address, pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama, h.id as history_id, h.process_at, h.finish_at')
-            ->select('(SELECT COUNT(h2.id) FROM histories h2 WHERE h2.patient_id = p.id AND h2.is_delete = 0) AS visit_count')
+            ->select('COUNT(h2.id) AS visit_count')
             ->join('patients p', 'p.id = pq.patient_id', 'left')
             ->join('patient_address pa', 'pa.patient_id = p.id', 'left')
             ->join('histories h', 'h.patient_queue_id = pq.id', 'left')
-            ->where('h.finish_at', null);
+            ->join('histories h2', 'h2.patient_id = p.id AND h2.is_delete = 0', 'left')
+            ->where('h.finish_at', null)
+            ->groupBy('pq.id, pq.queue_date, p.id, p.name, p.age, p.phone, p.address, pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama, h.id, h.process_at, h.finish_at');
 
         $role = session()->get('role');
         $active_region = session()->get('active_region');
@@ -137,10 +139,11 @@ class AntreanController extends BaseController
 
         $builder = $this->db->table('patients p')
             ->select('p.id AS patient_id, p.name, p.phone, p.address, p.age, r.name as name_region, pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama, pa.provinsi_nama')
-            ->select('COALESCE((SELECT MAX(date) FROM histories h WHERE h.patient_id = p.id AND h.is_delete = 0), "-") AS last_visit_date')
-            ->select('COALESCE((SELECT COUNT(h2.id) FROM histories h2 WHERE h2.patient_id = p.id AND h2.is_delete = 0), 0) AS visit_count')
+            ->select('MAX(h.date) AS last_visit_date, COUNT(h.id) AS visit_count')
             ->join('regions r', 'r.id = p.region_id', 'left')
-            ->join('patient_address pa', 'pa.patient_id = p.id', 'left');
+            ->join('patient_address pa', 'pa.patient_id = p.id', 'left')
+            ->join('histories h', 'h.patient_id = p.id AND h.is_delete = 0', 'left')
+            ->groupBy('p.id, p.name, p.phone, p.address, p.age, r.name, pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama, pa.provinsi_nama');
 
         $role = session()->get('role');
         $active_region = session()->get('active_region');
@@ -256,12 +259,13 @@ class AntreanController extends BaseController
         $endDate = $this->request->getGet('end_date') ?: date('Y-m-d');
         $builder = $db->table('patient_queues pq')
             ->select('pq.*, h.process_at, h.finish_at, p.id as patient_id, p.name as patient_name, p.address, p.phone as patient_phone, p.age as patient_age, r.name as name_region, pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama, pa.provinsi_nama')
-            ->select('(SELECT MAX(date) FROM histories h WHERE h.patient_id = p.id AND h.is_delete = 0) AS last_visit_date')
-            ->select('(SELECT COUNT(h.id) FROM histories h WHERE h.patient_id = p.id AND h.is_delete = 0) AS visit_count')
+            ->select('MAX(h_visit.date) AS last_visit_date, COUNT(h_visit.id) AS visit_count')
             ->join('histories h', 'h.patient_queue_id = pq.id', 'left')
             ->join('patients p', 'p.id = pq.patient_id', 'left')
             ->join('regions r', 'r.id = p.region_id', 'left')
-            ->join('patient_address pa', 'pa.patient_id = p.id', 'left');
+            ->join('patient_address pa', 'pa.patient_id = p.id', 'left')
+            ->join('histories h_visit', 'h_visit.patient_id = p.id AND h_visit.is_delete = 0', 'left')
+            ->groupBy('pq.id, h.id, p.id, r.id, pa.id'); // pq.* included in group by logic usually requires explicit columns or database config allows it
 
         if (!empty($regionId)) {
             $builder->where('p.region_id', $regionId);
@@ -276,28 +280,23 @@ class AntreanController extends BaseController
             ->orderBy('pq.created_at', 'ASC')
             ->get()->getResult();
 
-        $processedBuilder = $db->table('patient_queues pq')
+        $statsBuilder = $db->table('patient_queues pq')
+            ->select('
+                SUM(CASE WHEN h.process_at IS NOT NULL AND h.finish_at IS NULL THEN 1 ELSE 0 END) as processed,
+                SUM(CASE WHEN h.finish_at IS NOT NULL THEN 1 ELSE 0 END) as finished
+            ')
             ->join('histories h', 'h.patient_queue_id = pq.id AND h.is_delete = 0', 'left')
             ->join('patients p', 'p.id = pq.patient_id', 'left')
-            ->where('h.process_at IS NOT NULL')
-            ->where('h.finish_at IS NULL')
             ->where('DATE(pq.queue_date) >=', $startDate)
             ->where('DATE(pq.queue_date) <=', $endDate);
 
-        if (!empty($regionId))
-            $processedBuilder->where('p.region_id', $regionId);
-        $data['processed_queues'] = $processedBuilder->countAllResults();
+        if (!empty($regionId)) {
+            $statsBuilder->where('p.region_id', $regionId);
+        }
 
-        $finishedBuilder = $db->table('patient_queues pq')
-            ->join('histories h', 'h.patient_queue_id = pq.id AND h.is_delete = 0', 'left')
-            ->join('patients p', 'p.id = pq.patient_id', 'left')
-            ->where('h.finish_at IS NOT NULL')
-            ->where('DATE(pq.queue_date) >=', $startDate)
-            ->where('DATE(pq.queue_date) <=', $endDate);
-
-        if (!empty($regionId))
-            $finishedBuilder->where('p.region_id', $regionId);
-        $data['finished_queues'] = $finishedBuilder->countAllResults();
+        $stats = $statsBuilder->get()->getRow();
+        $data['processed_queues'] = $stats->processed ?? 0;
+        $data['finished_queues'] = $stats->finished ?? 0;
         $data['waiting_queues'] = count($data['patient_queues']) - ($data['processed_queues'] + $data['finished_queues']);
 
         if (!empty($regionId)) {
