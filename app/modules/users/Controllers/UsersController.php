@@ -54,6 +54,28 @@ class UsersController extends BaseController
     $totalData = $this->model_users->countAll();
     $no = $options['offset'] + 1;
 
+    // Optimasi N+1: Ambil semua region ID yang unik terlebih dahulu
+    $all_region_ids = [];
+    foreach ($dataOutput as $value) {
+      if (!($value->role === 'superadmin' || $value->role === 'owner')) {
+        $ids = json_decode($value->regions_patient, true) ?: [];
+        $all_region_ids = array_merge($all_region_ids, $ids);
+      }
+    }
+    $all_region_ids = array_unique(array_filter($all_region_ids));
+
+    $region_map = [];
+    if (!empty($all_region_ids)) {
+      $region_names_query = $this->model_users->db->table('regions')
+        ->select('id, name')
+        ->whereIn('id', $all_region_ids)
+        ->get()
+        ->getResult();
+      foreach ($region_names_query as $r) {
+        $region_map[$r->id] = $r->name;
+      }
+    }
+
     foreach ($dataOutput as $value) {
       $value->no = $no++;
       $value->realname = esc($value->realname);
@@ -65,8 +87,13 @@ class UsersController extends BaseController
         $regions_patient_ids = [];
       } else {
         $regions_patient_ids = json_decode($value->regions_patient, true) ?: [];
-        $regions_patient_names = $this->model_users->get_region_names($regions_patient_ids);
-        $value->region_name = !empty($regions_patient_names) ? implode(', ', $regions_patient_names) : '-';
+        $names = [];
+        foreach ($regions_patient_ids as $rid) {
+          if (isset($region_map[$rid])) {
+            $names[] = $region_map[$rid];
+          }
+        }
+        $value->region_name = !empty($names) ? implode(', ', $names) : '-';
       }
 
       $value->action =
