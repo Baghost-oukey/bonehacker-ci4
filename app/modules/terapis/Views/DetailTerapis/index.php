@@ -253,11 +253,18 @@
                         <p class="text-sm font-medium text-slate-900">Belum Ada Akun User</p>
                         <p class="text-xs text-slate-500">Terapis ini belum memiliki akun untuk masuk ke sistem</p>
                     </div>
-                    <button type="button" onclick="generateUser('<?= $terapis->terapis_id ?>')"
-                        class="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-amber-600">
-                        <i class="fas fa-user-plus"></i>
-                        Buat Akun Login
-                    </button>
+                    <div class="flex flex-wrap items-center justify-center gap-3">
+                        <button type="button" onclick="generateUser('<?= $terapis->terapis_id ?>')"
+                            class="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-amber-600">
+                            <i class="fas fa-user-plus"></i>
+                            Buat Akun Baru
+                        </button>
+                        <button type="button" onclick="openLinkAccountModal()"
+                            class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
+                            <i class="fas fa-link text-slate-500"></i>
+                            Hubungkan Akun Ada
+                        </button>
+                    </div>
                 </div>
             <?php endif; ?>
         </div>
@@ -314,6 +321,41 @@
     </div>
 </div>
 
+<!-- Modal Link Account -->
+<div id="modalLinkAccount" class="modal-wrapper hidden fixed inset-0 z-50 items-center justify-center bg-black/40 p-4">
+    <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-6 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-lg font-semibold text-slate-800">Hubungkan ke Akun User</h3>
+            <button type="button" onclick="closeLinkAccountModal()" class="text-slate-500 hover:text-slate-800 text-2xl">&times;</button>
+        </div>
+        
+        <div class="space-y-4">
+            <p class="text-sm text-slate-500">Pilih akun user yang ingin dihubungkan dengan terapis <strong><?= esc($terapis->nama) ?></strong>. Username akun terpilih akan diubah menjadi ID Terapis.</p>
+            
+            <div class="space-y-1">
+                <label class="text-xs font-medium text-slate-700">Pilih User <span class="text-red-500">*</span></label>
+                <select id="select-user-link" class="w-full" style="width: 100%;">
+                    <option value="">-- Cari Nama atau Username --</option>
+                    <?php foreach ($all_users as $u): ?>
+                        <option value="<?= $u->id ?>"><?= esc($u->realname) ?> (<?= esc($u->username) ?>)</option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-4 border-t border-slate-100">
+            <button type="button" onclick="closeLinkAccountModal()"
+                class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                Batal
+            </button>
+            <button type="button" onclick="submitLinkAccount()"
+                class="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700">
+                Hubungkan Sekarang
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- Modal QR Code -->
 <div id="modalQrPreview" class="modal-wrapper hidden fixed inset-0 z-50 items-center justify-center bg-black/40 p-4">
     <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-6 space-y-4">
@@ -344,9 +386,79 @@
         csrfHash: "<?= csrf_hash() ?>",
         checkIdUrl: "<?= base_url('terapis/checkId') ?>",
         generateUserUrl: "<?= base_url('terapis/generate_user') ?>",
+        linkUserUrl: "<?= base_url('terapis/link_user') ?>",
         currentId: "<?= $terapis->terapis_id ?>",
         terapisId: "<?= $terapis->id ?>"
     };
+
+    $(document).ready(function() {
+        $('#select-user-link').select2({
+            dropdownParent: $('#modalLinkAccount'),
+            placeholder: '-- Cari Nama atau Username --',
+            allowClear: true
+        });
+
+        // Close modal when clicking outside
+        $('#modalLinkAccount').on('click', function(e) {
+            if (e.target === this) closeLinkAccountModal();
+        });
+        
+        // Handle all data-modal-close
+        $('[data-modal-close]').on('click', function() {
+            $(this).closest('.modal-wrapper').addClass('hidden').removeClass('flex');
+            document.body.style.overflow = "";
+        });
+    });
+
+    function openLinkAccountModal() {
+        $('#modalLinkAccount').removeClass('hidden').addClass('flex');
+        document.body.style.overflow = "hidden";
+    }
+
+    function closeLinkAccountModal() {
+        $('#modalLinkAccount').addClass('hidden').removeClass('flex');
+        document.body.style.overflow = "";
+    }
+
+    function submitLinkAccount() {
+        const userId = $('#select-user-link').val();
+        if (!userId) {
+            alert('Silakan pilih user terlebih dahulu');
+            return;
+        }
+
+        if (!confirm('Apakah Anda yakin ingin menghubungkan akun ini? Username akun tersebut akan diubah menjadi ID Terapis ini.')) {
+            return;
+        }
+
+        $.ajax({
+            url: window.detailTerapisConfig.linkUserUrl,
+            type: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': window.detailTerapisConfig.csrfHash
+            },
+            data: {
+                user_id: userId,
+                terapis_id: window.detailTerapisConfig.currentId
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.csrfHash) {
+                    window.detailTerapisConfig.csrfHash = response.csrfHash;
+                }
+                
+                if (response.status === 'success') {
+                    alert(response.message);
+                    location.reload();
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            },
+            error: function() {
+                alert('Terjadi kesalahan pada server saat menghubungkan akun.');
+            }
+        });
+    }
 
     function generateUser(terapis_id) {
         if (!confirm('Apakah Anda yakin ingin membuat akun login untuk Terapis ini?')) {

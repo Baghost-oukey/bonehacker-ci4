@@ -207,6 +207,7 @@ $routes->group('terapis', ['namespace' => 'App\Modules\terapis\Controllers', 'fi
   $routes->get('destroy/(:num)', 'TerapisController::destroy/$1');
   $routes->get('public_info/(:any)', 'TerapisController::public_info/$1');
   $routes->post('generate_user', 'TerapisController::generate_user');
+  $routes->post('link_user', 'TerapisController::link_user');
   $routes->get('profil_saya', 'TerapisController::profil_saya');
 });
 

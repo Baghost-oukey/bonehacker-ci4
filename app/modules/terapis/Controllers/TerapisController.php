@@ -125,6 +125,7 @@ class TerapisController extends BaseController
       'wilayah' => $this->model_region->getData(),
       'jabatan' => $this->model_terapis->get_jabatan(),
       'connected_user' => $this->model_users->where('username', $user_id)->first(),
+      'all_users' => $this->model_users->select('id, username, realname')->orderBy('realname', 'ASC')->findAll(),
     ];
 
     $qrContent = base_url('terapis/public_info/' . $user_id);
@@ -297,6 +298,52 @@ class TerapisController extends BaseController
 
     $this->model_terapis->update($id, ['is_active' => 0]);
     return redirect()->to('terapis');
+  }
+
+  public function link_user()
+  {
+    if (!$this->request->isAJAX()) {
+      return $this->response->setJSON(['status' => 'error', 'message' => 'Invalid request']);
+    }
+
+    try {
+      $user_id = $this->request->getPost('user_id');
+      $terapis_id = trim($this->request->getPost('terapis_id'));
+
+      $terapis = $this->model_terapis->detail($terapis_id);
+      if (!$terapis) {
+        return $this->response->setJSON(['status' => 'error', 'message' => 'Data Terapis tidak ditemukan', 'csrfHash' => csrf_hash()]);
+      }
+
+      $user = $this->model_users->find($user_id);
+      if (!$user) {
+        return $this->response->setJSON(['status' => 'error', 'message' => 'Data User tidak ditemukan', 'csrfHash' => csrf_hash()]);
+      }
+
+      // Cek apakah terapis_id sudah dipakai user lain
+      $checkUsername = $this->model_users->where('username', $terapis_id)->where('id !=', $user_id)->first();
+      if ($checkUsername) {
+        return $this->response->setJSON(['status' => 'error', 'message' => 'ID Terapis ini sudah terhubung dengan akun lain!', 'csrfHash' => csrf_hash()]);
+      }
+
+      // Update user
+      $updateData = [
+        'username' => $terapis_id,
+        'realname' => $terapis->nama,
+      ];
+
+      if ($this->model_users->update($user_id, $updateData)) {
+        return $this->response->setJSON([
+          'status' => 'success',
+          'message' => 'Akun berhasil dihubungkan!',
+          'csrfHash' => csrf_hash()
+        ]);
+      }
+
+      return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal memperbarui data user', 'csrfHash' => csrf_hash()]);
+    } catch (\Exception $e) {
+      return $this->response->setJSON(['status' => 'error', 'message' => 'System Error: ' . $e->getMessage(), 'csrfHash' => csrf_hash()]);
+    }
   }
 
   public function generate_user()
