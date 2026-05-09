@@ -46,6 +46,7 @@ class RekamMedisController extends BaseController
             'sess_region_name' => $sessRegionName,
             'sess_region_id' => $sessRegionId,
             'sess_role' => $role,
+            'filter_region' => $filter,
         ];
 
         return view('App\Modules\RekamMedis\Views\index', $data);

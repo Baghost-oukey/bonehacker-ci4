@@ -97,6 +97,9 @@ class PatientsTable extends Migration
 
         ]);
         $this->forge->addKey('id', true);
+        $this->forge->addKey('region_id');
+        $this->forge->addKey('country_id');
+        $this->forge->addKey('is_delete');
         $this->forge->createTable('patients');
         $this->forge->addForeignKey('region_id', 'regions', 'id', 'SET NULL', 'CASCADE');
 $this->forge->addForeignKey('country_id', 'country', 'id', 'SET NULL', 'CASCADE');

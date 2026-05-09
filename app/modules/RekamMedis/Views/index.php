@@ -37,9 +37,24 @@
             </div>
 
             <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div class="flex-1 sm:flex-none sm:w-72">
-                    <input type="text" id="searchInput" placeholder="Cari pasien..."
-                        class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15">
+                <div class="flex flex-col sm:flex-row gap-3 items-center">
+                    <div class="w-full sm:w-72">
+                        <input type="text" id="searchInput" placeholder="Cari pasien..."
+                            class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15">
+                    </div>
+
+                    <?php if (in_array($role, ['superadmin', 'owner'])): ?>
+                        <div class="w-full sm:w-60">
+                            <select id="region" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15">
+                                <option value="all">Semua Wilayah</option>
+                                <?php foreach ($wilayah as $w): ?>
+                                    <option value="<?= $w->id ?>" <?= (session()->get('active_region') == $w->id) ? 'selected' : '' ?>>
+                                        <?= esc($w->name) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -382,7 +397,8 @@
         checkPhoneUrl: "<?= site_url('patient/check_phone') ?>",
         destroyBaseUrl: "<?= site_url('patient/destroy') ?>",
         dashboardUrl: "<?= site_url('dashboard') ?>",
-        isSuperadmin: <?= isset($role) && $role === 'superadmin' ? 'true' : 'false' ?>
+        isSuperadmin: <?= isset($role) && $role === 'superadmin' ? 'true' : 'false' ?>,
+        filterRegion: <?= json_encode($filter_region) ?>
     };
 </script>
 

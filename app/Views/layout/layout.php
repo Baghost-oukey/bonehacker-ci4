@@ -3,19 +3,19 @@
 
 <?php
 $isDevEnvironment = ENVIRONMENT === 'development';
-$viteDevServer = rtrim((string) (env('vite.devServerUrl') ?? 'http://localhost:5173'), '/');
+// Selalu gunakan 127.0.0.1 untuk cek koneksi (lebih cepat di Windows, hindari DNS overhead)
+$viteCheckHost = '127.0.0.1';
+$vitePort = 5173;
+// URL yang diinject ke browser — gunakan 'localhost' agar dapat diakses dari domain .test
+// (sudah diizinkan oleh cors config di vite.config.js)
+$viteBrowserUrl = 'http://localhost:5173';
 $shouldUseViteDevServer = false;
 
 if ($isDevEnvironment) {
-    $viteHost = (string) parse_url($viteDevServer, PHP_URL_HOST);
-    $vitePort = (int) (parse_url($viteDevServer, PHP_URL_PORT) ?: 5173);
-
-    if ($viteHost !== '') {
-        $viteSocket = @fsockopen($viteHost, $vitePort, $errno, $errstr, 0.15);
-        if (is_resource($viteSocket)) {
-            $shouldUseViteDevServer = true;
-            fclose($viteSocket);
-        }
+    $viteSocket = @fsockopen($viteCheckHost, $vitePort, $errno, $errstr, 0.15);
+    if (is_resource($viteSocket)) {
+        $shouldUseViteDevServer = true;
+        fclose($viteSocket);
     }
 }
 ?>
@@ -36,7 +36,7 @@ if ($isDevEnvironment) {
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
     <link href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css" rel="stylesheet" type="text/css" />
     <?php if ($shouldUseViteDevServer): ?>
-        <link rel="stylesheet" href="<?= $viteDevServer ?>/resources/css/app.css">
+        <link rel="stylesheet" href="<?= $viteBrowserUrl ?>/resources/css/app.css">
     <?php else: ?>
         <link rel="stylesheet"
             href="<?= base_url('build/assets/app.css') . '?v=' . (is_file(FCPATH . 'build/assets/app.css') ? filemtime(FCPATH . 'build/assets/app.css') : time()) ?>">
@@ -115,8 +115,8 @@ if ($isDevEnvironment) {
     <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify"></script>
     <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.polyfills.min.js"></script>
     <?php if ($shouldUseViteDevServer): ?>
-        <script type="module" src="<?= $viteDevServer ?>/@vite/client"></script>
-        <script type="module" src="<?= $viteDevServer ?>/resources/js/app.js"></script>
+        <script type="module" src="<?= $viteBrowserUrl ?>/@vite/client"></script>
+        <script type="module" src="<?= $viteBrowserUrl ?>/resources/js/app.js"></script>
     <?php else: ?>
         <script type="module"
             src="<?= base_url('build/assets/app.js') . '?v=' . (is_file(FCPATH . 'build/assets/app.js') ? filemtime(FCPATH . 'build/assets/app.js') : time()) ?>"></script>
