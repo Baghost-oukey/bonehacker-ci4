@@ -135,6 +135,9 @@ class UsersController extends BaseController
 
     // Cek duplikasi username
     if ($this->model_users->where('username', $post['username'])->first()) {
+      if ($this->request->isAJAX()) {
+        return $this->response->setJSON(['status' => 'error', 'message' => 'Username sudah digunakan', 'csrfHash' => csrf_hash()]);
+      }
       $this->session->setFlashdata('error_message', 'Username sudah digunakan');
       return redirect()->to('users');
     }
@@ -155,11 +158,16 @@ class UsersController extends BaseController
     }
 
     if ($this->model_users->insert($data)) {
+      if ($this->request->isAJAX()) {
+        return $this->response->setJSON(['status' => 'success', 'message' => 'Data berhasil disimpan', 'csrfHash' => csrf_hash()]);
+      }
       $this->session->setFlashdata('message', ['success', 'Data berhasil disimpan']);
     } else {
+      if ($this->request->isAJAX()) {
+        return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal menyimpan data', 'csrfHash' => csrf_hash()]);
+      }
       $this->session->setFlashdata('message', ['danger', 'Gagal menyimpan data']);
     }
-
     return redirect()->to('users');
   }
 
@@ -167,6 +175,9 @@ class UsersController extends BaseController
   {
     $post = $this->request->getPost();
     if ($this->model_users->username_exists_edit($post['username'], $id)) {
+      if ($this->request->isAJAX()) {
+        return $this->response->setJSON(['status' => 'error', 'message' => 'Username sudah digunakan', 'csrfHash' => csrf_hash()]);
+      }
       $this->session->setFlashdata('error_message', 'Username already taken');
       return redirect()->to('users');
     }
@@ -198,16 +209,32 @@ class UsersController extends BaseController
     }
 
     if ($this->model_users->update($id, $data)) {
+      if ($this->request->isAJAX()) {
+        return $this->response->setJSON(['status' => 'success', 'message' => 'Data diperbarui', 'csrfHash' => csrf_hash()]);
+      }
       $this->session->setFlashdata('message', ['success', 'Data diperbarui']);
+    } else {
+      if ($this->request->isAJAX()) {
+        return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal memperbarui data', 'csrfHash' => csrf_hash()]);
+      }
+      $this->session->setFlashdata('message', ['danger', 'Gagal memperbarui data']);
     }
-
+ 
     return redirect()->to('users');
   }
 
   public function destroy($id)
   {
     if ($this->model_users->delete($id)) {
+      if ($this->request->isAJAX()) {
+        return $this->response->setJSON(['status' => 'success', 'message' => 'Data dihapus', 'csrfHash' => csrf_hash()]);
+      }
       $this->session->setFlashdata('message', ['success', 'Data dihapus']);
+    } else {
+      if ($this->request->isAJAX()) {
+        return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal menghapus data', 'csrfHash' => csrf_hash()]);
+      }
+      $this->session->setFlashdata('message', ['danger', 'Gagal menghapus data']);
     }
     return redirect()->to('users');
   }
