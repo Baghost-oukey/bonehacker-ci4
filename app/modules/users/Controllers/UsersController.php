@@ -46,16 +46,8 @@ class UsersController extends BaseController
       'mode' => !empty($order) ? $order[0]['dir'] : 'asc',
       'offset' => $this->request->getPost('start') ?? 0,
       'limit' => $this->request->getPost('length') ?? 10,
-      'where_like' => [],
+      'search' => $search_value,
     ];
-
-    if (!empty($search_value)) {
-      $options['where_like'] = [
-        "u.realname LIKE '%$search_value%'",
-        "u.username LIKE '%$search_value%'",
-        // Kalau mau role gak ikut terfilter 'pe', u.role jangan dimasukin di sini
-      ];
-    }
 
     $dataOutput = $this->model_users->getListData($options);
     $totalFiltered = $this->model_users->getTotalData($options);

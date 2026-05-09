@@ -55,12 +55,11 @@ class MUsers extends Model
     $builder->select('u.id, u.realname, u.username, u.role, u.regions_patient, r.name AS region_name');
     $builder->join('regions r', 'u.regions_patient = r.id', 'left');
 
-    if (!empty($options['where_like'])) {
-      $builder->groupStart();
-      foreach ($options['where_like'] as $like) {
-        $builder->orWhere($like);
-      }
-      $builder->groupEnd();
+    if (!empty($options['search'])) {
+      $builder->groupStart()
+        ->like('u.realname', $options['search'])
+        ->orLike('u.username', $options['search'])
+        ->groupEnd();
     }
 
     $order = $options['order'] ?? 'u.realname';
@@ -72,12 +71,11 @@ class MUsers extends Model
   public function getTotalData($options)
   {
     $builder = $this->db->table($this->table . ' u');
-    if (!empty($options['where_like'])) {
-      $builder->groupStart();
-      foreach ($options['where_like'] as $like) {
-        $builder->orWhere($like);
-      }
-      $builder->groupEnd();
+    if (!empty($options['search'])) {
+      $builder->groupStart()
+        ->like('u.realname', $options['search'])
+        ->orLike('u.username', $options['search'])
+        ->groupEnd();
     }
     return $builder->countAllResults();
   }
