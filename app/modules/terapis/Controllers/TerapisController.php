@@ -124,7 +124,7 @@ class TerapisController extends BaseController
       'terapis' => $this->model_terapis->detail($user_id),
       'wilayah' => $this->model_region->getData(),
       'jabatan' => $this->model_terapis->get_jabatan(),
-      'connected_user' => $this->model_users->where('username', $user_id)->first(),
+      'connected_user' => $this->model_users->where('terapis_id', $user_id)->first(),
       'all_users' => $this->model_users->select('id, username, realname')->orderBy('realname', 'ASC')->findAll(),
     ];
 
@@ -321,14 +321,14 @@ class TerapisController extends BaseController
       }
 
       // Cek apakah terapis_id sudah dipakai user lain
-      $checkUsername = $this->model_users->where('username', $terapis_id)->where('id !=', $user_id)->first();
-      if ($checkUsername) {
+      $checkTerapis = $this->model_users->where('terapis_id', $terapis_id)->where('id !=', $user_id)->first();
+      if ($checkTerapis) {
         return $this->response->setJSON(['status' => 'error', 'message' => 'ID Terapis ini sudah terhubung dengan akun lain!', 'csrfHash' => csrf_hash()]);
       }
 
       // Update user
       $updateData = [
-        'username' => $terapis_id,
+        'terapis_id' => $terapis_id,
         'realname' => $terapis->nama,
       ];
 
@@ -361,7 +361,7 @@ class TerapisController extends BaseController
       }
 
       // Check if user already exists
-      $existingUser = $this->model_users->where('username', $terapis->terapis_id)->first();
+      $existingUser = $this->model_users->where('terapis_id', $terapis->terapis_id)->first();
       if ($existingUser) {
         return $this->response->setJSON(['status' => 'error', 'message' => 'Akun User untuk Terapis ini sudah ada!', 'csrfHash' => csrf_hash()]);
       }
@@ -372,9 +372,10 @@ class TerapisController extends BaseController
 
       $userData = [
         'realname' => $terapis->nama,
-        'username' => $terapis->terapis_id, // NIK as username
+        'username' => $terapis->terapis_id, // NIK as username initially
         'password' => $hashedPassword,
         'role' => 'user',
+        'terapis_id' => $terapis->terapis_id,
         'regions_patient' => json_encode([$terapis->region_id]),
       ];
 
@@ -405,8 +406,14 @@ class TerapisController extends BaseController
 
   public function profil_saya()
   {
-    $username = $this->session->get('username');
-    $terapis = $this->model_terapis->detail($username);
+    $terapis_id = $this->session->get('terapis_id');
+    
+    if (!$terapis_id) {
+        $this->session->setFlashdata('message', ['danger', 'Akun Anda tidak terhubung dengan data Terapis.']);
+        return redirect()->to(base_url('beranda'));
+    }
+
+    $terapis = $this->model_terapis->detail($terapis_id);
 
     if (!$terapis) {
       $this->session->setFlashdata('message', ['danger', 'Data Profil Terapis tidak ditemukan.']);

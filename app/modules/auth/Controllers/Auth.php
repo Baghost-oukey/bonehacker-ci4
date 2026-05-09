@@ -104,10 +104,11 @@ class Auth extends BaseController
                     'region_id'       => $current_region_Id,
                     'region_name'     => $regionDetail ? $regionDetail->name : 'Cabang Tidak Terdeteksi',
                     'region_patient' => $final_region_for_session,
-                    'region_patient_allowed' => $final_region_for_session, // Menyimpan hak akses cabang asli untuk fallback
-                    'list_regions_global' => $get_region, // Untuk isi dropdown
-                    'active_region'       => $defaultActive,        // Default awal saat login
-                    'active_region_name'  => $defaultName
+                    'region_patient_allowed' => $final_region_for_session,
+                    'list_regions_global' => $get_region,
+                    'active_region'       => $defaultActive,
+                    'active_region_name'  => $defaultName,
+                    'terapis_id'      => $user->terapis_id,
 
                 ];
                 session()->set($sessionData);

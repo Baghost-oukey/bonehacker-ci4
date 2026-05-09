@@ -330,7 +330,7 @@
         </div>
         
         <div class="space-y-4">
-            <p class="text-sm text-slate-500">Pilih akun user yang ingin dihubungkan dengan terapis <strong><?= esc($terapis->nama) ?></strong>. Username akun terpilih akan diubah menjadi ID Terapis.</p>
+            <p class="text-sm text-slate-500">Pilih akun user yang ingin dihubungkan dengan terapis <strong><?= esc($terapis->nama) ?></strong>. Setelah dihubungkan, user tersebut akan memiliki akses ke profil terapis ini tanpa mengubah username mereka.</p>
             
             <div class="space-y-1">
                 <label class="text-xs font-medium text-slate-700">Pilih User <span class="text-red-500">*</span></label>
@@ -427,7 +427,7 @@
             return;
         }
 
-        if (!confirm('Apakah Anda yakin ingin menghubungkan akun ini? Username akun tersebut akan diubah menjadi ID Terapis ini.')) {
+        if (!confirm('Apakah Anda yakin ingin menghubungkan akun ini dengan terapis ini?')) {
             return;
         }
 
