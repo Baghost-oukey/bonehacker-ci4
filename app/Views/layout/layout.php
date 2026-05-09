@@ -151,24 +151,17 @@ if ($isDevEnvironment) {
 
     <script>
         (function() {
-            // var metaName = document.querySelector('meta[name="csrf-token-name"]');
-            // var metaHash = document.querySelector('meta[name="csrf-token-hash"]');
-            // var csrfName = metaName ? metaName.getAttribute('content') : null;
             var csrfName = $('meta[name="csrf-token-name"]').attr('content');
-            // var csrfHash = metaHash ? metaHash.getAttribute('content') : null;
 
             function refreshCsrfToken() {
                 $.get('<?= site_url('auth/get_csrf') ?>', function(data) {
                     $('meta[name="csrf-token-hash"]').attr('content', data.token);
-                    // 2. Update semua input hidden yang dibuat pake csrf_field()
                     $('input[name="' + csrfName + '"]').val(data.token);
-                    // 3. Update settingan global JQuery AJAX
                     $.ajaxSetup({
                         data: {
                             [csrfName]: data.token
                         }
                     });
-                    // console.log('CSRF token Berhasil Diperbarui');
                 });
             }
 

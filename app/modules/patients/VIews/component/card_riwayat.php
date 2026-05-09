@@ -56,6 +56,9 @@
                     <span class="hidden sm:inline">Berikutnya</span><i class="fas fa-chevron-right text-xs ml-1"></i>
                 </button>
             </div>
+
+            <form id="save_data" action="<?= site_url('history/store') ?>" method="post" class="needs-validation" novalidate="">
+
         </div>
     </div>
 </div>
@@ -77,6 +80,7 @@
         <!-- MODAL BODY -->
         <div class="flex-1 overflow-y-auto custom-scrollbar p-6 bg-slate-50/30">
             <form id="save_data" action="<?= site_url('history/store') ?>" method="post" class="space-y-8" novalidate>
+
                 <?= csrf_field() ?>
                 <input type="hidden" name="id" id="history_id">
                 <input type="hidden" name="patient_id" id="patient_id" value="<?= $patient_id ?>">
@@ -543,14 +547,14 @@
                                     <td class="p-2 font-medium"><?= $no ?></td>
                                     <td class="p-2 border-r border-slate-200 text-left font-medium"><?= $lbl ?></td>
                                     <td class="p-2"><input type="checkbox" name="<?= $nm ?>_kanan" value="sakit" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"></td>
-                                    <td class="p-2 bg-yellow-50/30"><input type="checkbox" name="<?= $nm ?>_kanan_grade" value="grade1" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"></td>
-                                    <td class="p-2 bg-orange-50/30"><input type="checkbox" name="<?= $nm ?>_kanan_grade" value="grade2" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"></td>
-                                    <td class="p-2 bg-red-50/30 border-r border-slate-200"><input type="checkbox" name="<?= $nm ?>_kanan_grade" value="grade3" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"></td>
+                                    <td class="p-2 bg-yellow-50/30"><input type="radio" name="<?= $nm ?>_kanan_grade" value="grade1" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"></td>
+                                    <td class="p-2 bg-orange-50/30"><input type="radio" name="<?= $nm ?>_kanan_grade" value="grade2" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"></td>
+                                    <td class="p-2 bg-red-50/30 border-r border-slate-200"><input type="radio" name="<?= $nm ?>_kanan_grade" value="grade3" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"></td>
                                     <td class="p-2 border-r border-slate-200 text-left font-medium"><?= $lbl ?></td>
                                     <td class="p-2"><input type="checkbox" name="<?= $nm ?>_kiri" value="sakit" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"></td>
-                                    <td class="p-2 bg-yellow-50/30"><input type="checkbox" name="<?= $nm ?>_kiri_grade" value="grade1" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"></td>
-                                    <td class="p-2 bg-orange-50/30"><input type="checkbox" name="<?= $nm ?>_kiri_grade" value="grade2" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"></td>
-                                    <td class="p-2 bg-red-50/30"><input type="checkbox" name="<?= $nm ?>_kiri_grade" value="grade3" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"></td>
+                                    <td class="p-2 bg-yellow-50/30"><input type="radio" name="<?= $nm ?>_kiri_grade" value="grade1" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"></td>
+                                    <td class="p-2 bg-orange-50/30"><input type="radio" name="<?= $nm ?>_kiri_grade" value="grade2" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"></td>
+                                    <td class="p-2 bg-red-50/30"><input type="radio" name="<?= $nm ?>_kiri_grade" value="grade3" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"></td>
                                 </tr>
                                 <?php endforeach; ?>
                                 
@@ -561,9 +565,9 @@
                                     <?php if($first): ?><td class="p-2 font-medium" rowspan="4">7</td><?php $first=false; endif; ?>
                                     <td class="p-2 border-r border-slate-200 text-left font-medium"><?= $lbl ?></td>
                                     <td class="p-2"><input type="checkbox" name="lp_<?= $suf ?>" value="sakit" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"></td>
-                                    <td class="p-2 bg-yellow-50/30"><input type="checkbox" name="lp_<?= $suf ?>_grade" value="grade1" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"></td>
-                                    <td class="p-2 bg-orange-50/30"><input type="checkbox" name="lp_<?= $suf ?>_grade" value="grade2" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"></td>
-                                    <td class="p-2 bg-red-50/30 border-r border-slate-200"><input type="checkbox" name="lp_<?= $suf ?>_grade" value="grade3" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"></td>
+                                    <td class="p-2 bg-yellow-50/30"><input type="radio" name="lp_<?= $suf ?>_grade" value="grade1" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"></td>
+                                    <td class="p-2 bg-orange-50/30"><input type="radio" name="lp_<?= $suf ?>_grade" value="grade2" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"></td>
+                                    <td class="p-2 bg-red-50/30 border-r border-slate-200"><input type="radio" name="lp_<?= $suf ?>_grade" value="grade3" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500"></td>
                                     <td class="p-2 border-r border-slate-200 bg-slate-50/50"></td><td class="p-2 bg-slate-50/50"></td><td class="p-2 bg-slate-50/50"></td><td class="p-2 bg-slate-50/50"></td><td class="p-2 bg-slate-50/50"></td>
                                 </tr>
                                 <?php endforeach; ?>
@@ -624,3 +628,4 @@
         
     </div>
 </div>
+

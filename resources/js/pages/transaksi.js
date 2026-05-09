@@ -147,9 +147,11 @@ const setupTransaksiPage = () => {
           tr.append(`<td class="px-6 py-3.5">${row.no || "-"}</td>`);
           tr.append(`<td class="px-6 py-3.5 text-slate-600">${row.tanggal || "-"}</td>`);
           tr.append(`<td class="px-6 py-3.5 font-medium text-slate-800">${row.region_name || "-"}</td>`);
-          tr.append(`<td class="px-6 py-3.5">${row.rentang_usia || "-"}</td>`);
-          tr.append(`<td class="px-6 py-3.5">${row.metode_pembayaran || "-"}</td>`);
-
+          tr.append(`<td class="px-6 py-3.5">${row.keterangan || "-"}</td>`);
+          const pembuat = row.nama_pembuat
+            ? `<span class="text-[11px] font-bold px-2 py-1 bg-slate-100 text-slate-600 rounded-md">${row.nama_pembuat}</span>`
+            : `<span class="text-[11px] font-bold px-2 py-1 bg-slate-100 text-slate-600 rounded-md">Sistem</span>`;
+          tr.append(`<td class="px-6 py-3.5 text-center whitespace-nowrap">${pembuat}</td>`);
           const nominalColor = row.type === "expense" ? "text-rose-600" : "text-emerald-600";
           tr.append(`<td class="px-6 py-3.5 font-semibold ${nominalColor}">${row.nominal_format || "-"}</td>`);
           tr.append(`<td class="px-6 py-3.5 text-center">${row.aksi || "-"}</td>`);

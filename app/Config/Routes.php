@@ -122,6 +122,7 @@ $routes->group('jabatan', ['namespace' => 'App\Modules\jabatan\Controllers'], fu
   $routes->post('check_name_exists', 'Jabatan::check_name_exists');
 });
 
+
 // Tag - Complaint(Keluhan)
 $routes->group('tag-keluhan', ['namespace' => 'App\Modules\TagComplaint\Controllers'], function ($routes) {
   $routes->get('', 'TagComplaintController::index');
@@ -131,6 +132,7 @@ $routes->group('tag-keluhan', ['namespace' => 'App\Modules\TagComplaint\Controll
   $routes->post('destroy/(:num)', 'TagComplaintController::destroy/$1');
   $routes->post('check_name_exists', 'TagComplaintController::check_name_exists');
   $routes->get('get_tags', 'TagComplaintController::get_tags');
+
 });
 
 // Tag - Medis(Rekam Medis)
@@ -226,6 +228,7 @@ $routes->group('users', ['namespace' => 'App\Modules\Users\Controllers'], functi
   $routes->post('delete_outside_patient', 'Users::delete_outside_patient');
   $routes->post('send_notif_patients/(:num)', 'Users::send_notif_patients/$1');
   $routes->post('check_username_exists', 'Users::check_username_exists');
+
 });
 
 // Patients - Routes
@@ -246,20 +249,21 @@ $routes->group('patient', ['namespace' => 'App\Modules\patients\Controllers'], f
 });
 
 // Routes - Kas
-$routes->group('kas', ['namespace' => 'App\modules\kas\Controllers'], function($routes) {
-    $routes->get('/', 'Kas::index');
-    $routes->post('get_data_pemasukan', 'Kas::get_data_pemasukan');
-    $routes->post('get_data_pengeluaran', 'Kas::get_data_pengeluaran');
-    $routes->post('get_data_pengeluaran_harian', 'Kas::get_data_pengeluaran_harian');
-    $routes->get('get_master_harian', 'Kas::get_master_harian');
-    $routes->post('simpan_transaksi', 'Kas::simpan_transaksi');
-    $routes->post('bayar_pengeluaran_harian', 'Kas::bayar_pengeluaran_harian');
-    
-    // Grouping untuk CRUD Master Pengeluaran Harian
-    $routes->group('master', function($routes) {
-        $routes->post('simpan', 'Kas::simpan_master_harian');
-        $routes->post('hapus', 'Kas::hapus_master_harian');
-    });
+$routes->group('kas', ['namespace' => 'App\modules\kas\Controllers'], function ($routes) {
+  $routes->get('/', 'Kas::index');
+  $routes->post('get_data_pemasukan', 'Kas::get_data_pemasukan');
+  $routes->post('get_data_pengeluaran', 'Kas::get_data_pengeluaran');
+  $routes->post('get_data_pengeluaran_harian', 'Kas::get_data_pengeluaran_harian');
+  $routes->get('get_master_harian', 'Kas::get_master_harian');
+  $routes->post('simpan_transaksi', 'Kas::simpan_transaksi');
+  $routes->post('bayar_pengeluaran_harian', 'Kas::bayar_pengeluaran_harian');
+  $routes->post('set_filter_region', 'Kas::set_filter_region');
+
+  // Grouping untuk CRUD Master Pengeluaran Harian
+  $routes->group('master', function ($routes) {
+    $routes->post('simpan', 'Kas::simpan_master_harian');
+    $routes->post('hapus', 'Kas::hapus_master_harian');
+  });
 });
 
 // --- API ROUTES FOR MOBILE (Consolidated) ---
@@ -290,4 +294,72 @@ $routes->group('api', ['namespace' => 'App\Modules\api\Controllers'], function (
   $routes->get('medical-records/patient/(:num)', 'History::index/$1');
   $routes->get('medical-records/tags', 'History::tags');
   $routes->post('medical-records/store', 'History::save');
+});
+
+// Routes - Statsitik Keuangan
+$routes->group('statistikkeuangan', ['namespace' => 'App\Modules\StatistikKeuangan\Controllers'], function ($routes) {
+  $routes->get('/', 'StatistikKeuangan::index'); // Gunakan '/' agar terbaca sebagai root grup
+  $routes->get('get_chart_data', 'StatistikKeuangan::get_chart_data');
+});
+
+
+// Routes - Gaji
+$routes->group('gaji', ['namespace' => 'App\modules\gaji\Controllers'], function ($routes) {
+  $routes->get('/', 'Gajikaryawan::index');
+  $routes->post('setting/save', 'Gajikaryawan::saveSetting');
+  $routes->get('detail/(:num)', 'Gajikaryawan::detailEstimasi/$1');
+  $routes->post('proses_bayar', 'Gajikaryawan::prosesBayar');
+});
+
+// Rutes - Kas bon
+$routes->group('kasbon', ['namespace' => 'App\modules\kasbon_karyawan\Controllers'], function ($routes) {
+  $routes->get('/', 'Kasbonkaryawan::index');
+  $routes->post('fetch', 'Kasbonkaryawan::fetchKaryawan');
+  $routes->get('detail/(:num)', 'Kasbonkaryawan::detail/$1');
+  $routes->post('store', 'Kasbonkaryawan::store');
+  $routes->post('bayar', 'Kasbonkaryawan::bayar');
+});
+
+
+// Rotes - tunjangan karyawan
+$routes->group('tunjangan-karyawan', ['namespace' => 'App\modules\tunjangan_karyawan\Controllers'], function ($routes) {
+  $routes->get('/', 'Tunjangankaryawan::index');
+  $routes->post('fetch', 'Tunjangankaryawan::fetch');
+  $routes->post('store', 'Tunjangankaryawan::store');
+  $routes->delete('delete/(:num)', 'Tunjangankaryawan::delete/$1');
+});
+
+// Rutes - transaksi tunjangan
+$routes->group('transaksi-tunjangan', ['namespace' => 'App\modules\transaksi_tunjangan\Controllers'], function ($routes) {
+  $routes->get('/', 'Transaksitunjangan::index');
+  $routes->post('fetch', 'Transaksitunjangan::fetch');
+  $routes->get('detail/(:num)', 'Transaksitunjangan::detail/$1');
+  $routes->post('store', 'Transaksitunjangan::store');
+});
+
+// ROUTES MODUL PENGGAJIAN (PAYROLL)
+// $routes->group('detail-gaji', ['namespace' => 'App\modules\detail_gaji\Controllers'], function($routes) {
+//     $routes->get('/', 'Detailgaji::index');
+//     $routes->get('review/(:num)', 'Detailgaji::review/$1');
+//     $routes->post('proses_simpan', 'Detailgaji::proses_simpan');
+
+// });
+
+// Routes - Kehadruan 
+$routes->group('kehadiran', ['namespace' => 'App\modules\absensi_karyawan\Controllers'], function ($routes) {
+  $routes->get('/', 'Absensikaryawan::index');
+  $routes->get('store/(:any)', 'Absensikaryawan::store/$1');
+  $routes->get('store', 'Absensikaryawan::store'); // Route untuk halaman form Card
+  $routes->get('detail/(:any)', 'Absensikaryawan::detail/$1');
+  $routes->post('simpan_massal', 'Absensikaryawan::simpan_massal'); // Route untuk proses AJAX
+});
+
+
+$routes->group('jasa-pelayanan', ['namespace' => 'App\modules\jasa_pelayanan\Controllers'], function($routes) {
+    $routes->get('reguler', 'Jasapelayanan::reguler');
+    $routes->get('kejantanan', 'Jasapelayanan::kejantanan');
+    $routes->post('fetch', 'Jasapelayanan::fetch');
+    $routes->get('show/(:num)', 'Jasapelayanan::show/$1');
+    $routes->post('destroy/(:num)', 'Jasapelayanan::destroy/$1'); 
+    
 });

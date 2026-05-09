@@ -225,9 +225,16 @@ const PatientHistoryPage = {
   },
 
   setMatrix(name, dataString) {
-    const arr = dataString ? dataString.split(',') : [];
-    if (arr[0] === 'sakit') $(`input[name="${name}"]`).prop('checked', true);
-    if (arr[1]) $(`input[name="${name}_grade"][value="${arr[1]}"]`).prop('checked', true);
+    const arr = dataString ? dataString.split(',').map(item => item.trim()).filter(Boolean) : [];
+    const hasSakit = arr.includes('sakit');
+    const grade = arr.find(item => item.startsWith('grade')) || null;
+
+    if (hasSakit || grade) {
+      $(`input[name="${name}"]`).prop('checked', true);
+    }
+    if (grade) {
+      $(`input[name="${name}_grade"][value="${grade}"]`).prop('checked', true);
+    }
   },
 
   populateForm(data, isDuplicate = false) {
@@ -344,7 +351,7 @@ const PatientHistoryPage = {
         $('#exampleModal form :input').prop('readonly', false);
         $('#exampleModal form :checkbox, #exampleModal form :radio, #region_history, .terapis').prop('disabled', false);
         [complaintTagify, medhisTagify, resultTagify].forEach(t => { if (t) t.setReadonly(false); });
-        $('#save-button').show();
+        $('#save-button').prop('disabled', false).show();
       }
     }
     if (!isDuplicate) {
@@ -384,7 +391,7 @@ const PatientHistoryPage = {
 
     $("#history-info, #terapi-form, #pemeriksaan").hide();
     $('#terapi-kejantanan').show();
-    $("#save-button").show();
+    $("#save-button").prop('disabled', false).html('Simpan Data').show();
     $("#region_history").prop('disabled', false).val("").trigger("change");
     $(".terapis").prop("disabled", false).val([]).trigger("change");
   },
@@ -478,8 +485,8 @@ const PatientHistoryPage = {
             if (window.Swal?.fire) window.Swal.fire({ icon: "success", title: "Berhasil!", text: res.message, timer: 2000, showConfirmButton: false });
           } else {
             if (window.Swal?.fire) window.Swal.fire({ icon: "error", title: "Gagal!", text: res.message });
-            btn.prop("disabled", false).html('Simpan Data');
           }
+          btn.prop("disabled", false).html('Simpan Data');
         },
         error: (xhr) => {
           btn.prop("disabled", false).html('Simpan Data');
@@ -534,8 +541,8 @@ const PatientHistoryPage = {
       if (name.includes('_grade')) {
         if ($(this).is(':checked')) {
           $(`input[name="${name}"]`).not(this).prop('checked', false);
-          // const sakitName = name.replace('_grade', '');
-          // $(`input[name="${sakitName}"]`).prop('checked', true);
+          const baseName = name.replace(/_grade$/, '');
+          $(`input[name="${baseName}"]`).prop('checked', true);
         }
       }
       // Jika yang diklik adalah SAKIT/TIDAK (Kolom pertama)

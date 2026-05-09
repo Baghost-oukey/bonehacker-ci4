@@ -19,7 +19,7 @@ const closeModal = (modal) => {
 
 // --- INIT SCRIPT ---
 const setupKasPage = () => {
-    console.log("%c [JS Check] Kas Module Connected! 🚀", "color: teal; font-weight: bold; font-size: 12px;");
+    // console.log("%c [JS Check] Kas Module Connected! 🚀", "color: teal; font-weight: bold; font-size: 12px;");
 
     const config = window.kasConfig;
     const page = document.getElementById("kasPage");
@@ -42,14 +42,30 @@ const setupKasPage = () => {
             data: "keterangan",
             render: $.fn.dataTable.render.text()
         },
+       {
+            data: "nama_pembuat", 
+            className: "text-center",
+            render: (data) => {
+                const namaUser = data ? data : 'Sistem';
+                return `<span class="inline-flex items-center rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10">${namaUser}</span>`;
+            }
+        },
         {
             data: "nominal",
-            className: "text-right font-medium text-slate-900",
-            render: (data) => new Intl.NumberFormat('id-ID', {
-                style: 'currency',
-                currency: 'IDR',
-                minimumFractionDigits: 0
-            }).format(data)
+            className: "text-right font-medium whitespace-nowrap",
+            render: (data, type, row) => {
+                const formattedNominal = new Intl.NumberFormat('id-ID', {
+                    style: 'currency',
+                    currency: 'IDR',
+                    minimumFractionDigits: 0
+                }).format(Math.floor(Number(data)));
+
+                const textColor = (row.type === 'expense' || row.kategori === 'pengeluaran')
+                    ? 'text-rose-600'
+                    : 'text-emerald-600';
+
+                return `<span class="${textColor}">${formattedNominal}</span>`;
+            }
         },
         {
             data: null,
@@ -58,13 +74,44 @@ const setupKasPage = () => {
             render: function (data, type, row) {
                 return `
                 <div class="flex justify-center gap-2">
-                    <button class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all btn-delete" data-id="${row.id_transaksi}">
-                        <i class="fas fa-trash-alt"></i>
+                    <button class="p-2 text-slate-400 hover:text-teal-500 hover:bg-rose-50 rounded-xl transition-all btn-delete" data-id="${row.id_transaksi}">
+                        <i class="fas fa-eye"></i>
                     </button>
                 </div>`;
             }
         }
     ];
+
+    // --- FILTER WILAYAH ---
+    $('#filterRegionKas').on('change', function () {
+        const regionId = $(this).val();
+        $(this).prop('disabled', true);
+        const csrfName = $('#csrfToken').attr('name');
+        const csrfHash = $('#csrfToken').val();
+
+        let ajaxData = {
+            region_id: regionId
+        };
+        ajaxData[csrfName] = csrfHash;
+
+        // Buat efek loading
+        $(this).prop('disabled', true);
+
+        $.ajax({
+            url: '/kas/set_filter_region',
+            type: 'POST',
+            data: ajaxData,
+            success: function (response) {
+                if (response.status === 'success') {
+                    window.location.reload();
+                }
+            },
+            error: function () {
+                alert('Gagal mengubah wilayah. Silakan coba lagi.');
+                $('#filterRegionKas').prop('disabled', false);
+            }
+        });
+    });
 
     // --- INIT DATATABLE FUNCTION (Enterprise Setup) ---
     const initDataTable = (id, url, columns) => {
@@ -81,7 +128,7 @@ const setupKasPage = () => {
                 dataSrc: (json) => {
                     // Update CSRF Token untuk request selanjutnya
                     if (json.csrfHash) config.csrfHash = json.csrfHash;
-                    console.log(`[Data ${id}] Berhasil ditarik:`, json);
+                    // console.log(`[Data ${id}] Berhasil ditarik:`, json);
                     return json.data || [];
                 }
             },

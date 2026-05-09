@@ -20,42 +20,48 @@ class Log extends BaseController
     }
     public function index()
     {
-
-        $date = $this->request->getGet('date') ?? date('Y-m-d');
-        $logFile = WRITEPATH . 'logs/log-' . $date . '.php';
-
-        if (!$date || !preg_match('/\d{4}-\d{2}-\d{2}/', $date)) {
-            $date = date('Y-m-d');
+        if (!in_array($this->session->get('role'), ['superadmin', 'owner'])) {
+            return redirect()->to('/')->with('message', ['danger', 'Akses ditolak!']);
         }
 
-        // $logFile = WRITEPATH . 'logs/log-' . $date . '.log';
+        $date = $this->request->getGet('date') ?? date('Y-m-d');
+
+        // 1. Coba cari yang .log dulu (karena di folder kamu adanya ini)
+        $logFile = WRITEPATH . 'logs/log-' . $date . '.log';
+
+        // 2. Kalau .log nggak ada, coba cari yang .php
+        if (!file_exists($logFile)) {
+            $logFile = WRITEPATH . 'logs/log-' . $date . '.php';
+        }
+
+        $logContent = "";
 
         if (file_exists($logFile)) {
-            $logContent = file_get_contents($logFile);
-            $logContent = str_replace(["<?php", "defined('COREPATH') || exit('No direct script access allowed');"], "", $logContent);
-            if (!str_contains($logContent, 'ERROR') && !str_contains($logContent, 'CRITICAL')) {
-                $logContent = "No logs found for the selected date: " . $date;
-            } else {
-                $logContent = trim($logContent);
-            }
+            $rawContent = file_get_contents($logFile);
+
+            // Bersihkan header PHP jika ada (buat jaga-jaga kalau filenya .php)
+            $rawContent = str_replace(["<?php", "defined('COREPATH') || exit('No direct script access allowed');"], "", $rawContent);
+
+            $lines = explode("\n", $rawContent);
+            $filteredLines = array_filter($lines, function ($line) {
+                // Kita ambil baris INFO, ERROR, CRITICAL, dan DEBUG
+                return str_contains($line, 'INFO') ||
+                    str_contains($line, 'ERROR') ||
+                    str_contains($line, 'CRITICAL') ||
+                    str_contains($line, 'DEBUG');
+            });
+
+            $logContent = !empty($filteredLines) ? implode("\n", $filteredLines) : "File log ditemukan, tapi tidak ada baris aktivitas (INFO/ERROR).";
         } else {
-            $logFilePhp = WRITEPATH . 'logs/log-' . $date . '.php';
-            if (file_exists($logFilePhp)) {
-                $logContent = file_get_contents($logFilePhp);
-            } else {
-                $logContent = "No logs found for the selected date: " . $date;
-            }
+            $logContent = "Log untuk tanggal $date tidak ditemukan di sistem.";
         }
 
         $data = [
             'role'            => $this->session->get('role'),
             'realname'        => $this->session->get('realname'),
-            'log_content'     => $logContent,
+            'log_content'     => trim($logContent),
             'date'            => $date,
-            'base_url'        => base_url(),
-            'current_segment' => $this->request->getUri()->getSegment(1),
-            'title'           => 'System Logs',
-            'msg'             => $this->session->getFlashdata('message')
+            'title'           => 'Activity Logs',
         ];
 
         return view('App\modules\logs\Views\views_logs', $data);

@@ -15,8 +15,8 @@ $userInitial = strtoupper(substr($realname, 0, 1));
         </a>
     </div>
 
+    <!-- DASHBOAR | ADMIN - SUPERADMIN - OWNER -->
     <div class="no-scrollbar flex min-h-0 flex-1 flex-col gap-0 overflow-auto">
-
         <div class="relative flex w-full min-w-0 flex-col p-2">
             <div class="flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-slate-500/70">
                 Dashboard
@@ -61,52 +61,119 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                         <span class="truncate">Transaksi</span>
                     </a>
                 </li>
-            </ul>
-        </div>
-
-        <div class="relative flex w-full min-w-0 flex-col p-2">
-            <div class="flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-slate-500/70">
-                Kas
-            </div>
-
-            <ul class="flex w-full min-w-0 flex-col gap-1">
                 <li>
-                    <details class="group" <?= in_array($current_segment, ['kas', 'gaji']) ? 'open' : '' ?>>
+                    <a href="<?= base_url('kehadiran') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'transaksi' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
+                        <i class="fa-solid fa-user-clock w-4 text-center shrink-0"></i>
+                        <span class="truncate">Kehadiran Karyawan</span>
+                    </a>
+                </li>
+
+                <li>
+                    <details class="group" <?= in_array($current_segment, ['gaji', 'tujangan', 'kasbon']) ? 'open' : '' ?>>
                         <summary class="flex w-full cursor-pointer list-none items-center justify-between rounded-md p-2 text-left text-sm transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 [&::-webkit-details-marker]:hidden">
                             <span class="flex items-center gap-2">
-                                <i class="fas fa-credit-card w-4 text-center shrink-0"></i>
-                                <span class="truncate font-medium">Keuangan</span>
+                                <i class="fa-solid fa-dollar-sign w-4 text-center shrink-0"></i>
+
+                                <span class="truncate font-medium">Kelola Gaji</span>
                             </span>
                             <i class="fas fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200 group-open:rotate-180 shrink-0"></i>
                         </summary>
-
                         <ul class="mx-3.5 mt-1 flex min-w-0 translate-x-px flex-col gap-1 border-l border-slate-200 px-2.5 py-0.5">
                             <li>
-                                <a href="<?= base_url('kas') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'kas' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>">
-                                    <span class="truncate">Arus Kas</span>
+                                <a href="<?= base_url('gaji') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'users' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                    <span class="truncate">Gaji Karyawan</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="<?= base_url('gaji') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'gaji' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>">
-                                    <span class="truncate">Kelola Gaji</span>
+                                <a href="<?= base_url('transaksi-tunjangan') ?>"
+                                    class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'transaksi-tunjangan' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                    <span class="truncate">Tunjangan Terapis</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="<?= base_url('gaji') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'gaji' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>">
-                                    <span class="truncate">Statistik Keuangan</span>
+                                <a href="<?= base_url('tunjangan-karyawan') ?>"
+                                    class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'tunjangan-karyawan' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                    <span class="truncate">Master Tunjangan</span>
+                                </a>
+                            </li>
+                            <li><a href="<?= base_url('kasbon') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'log_whatsapp' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Kasbon Karyawan</span></a></li>
+                        </ul>
+                    </details>
+                </li>
+
+                <li>
+                    <details class="group" <?= in_array($current_segment, ['gaji', 'tujangan', 'kasbon']) ? 'open' : '' ?>>
+                        <summary class="flex w-full cursor-pointer list-none items-center justify-between rounded-md p-2 text-left text-sm transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 [&::-webkit-details-marker]:hidden">
+                            <span class="flex items-center gap-2">
+                                <i class="fa-solid fa-hospital-user w-4 text-center shrink-0"></i>
+
+                                <span class="truncate font-medium">Jasa Pelayanan</span>
+                            </span>
+                            <i class="fas fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200 group-open:rotate-180 shrink-0"></i>
+                        </summary>
+                        <ul class="mx-3.5 mt-1 flex min-w-0 translate-x-px flex-col gap-1 border-l border-slate-200 px-2.5 py-0.5">
+                            <li>
+                                <a href="<?= base_url('jasa-pelayanan/reguler') ?>"
+                                    class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= ($current_segment == 'reguler') ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                    <span class="truncate">Pasien Reguler</span>
+                                </a>
+                            </li>
+
+                            <li>
+                                <a href="<?= base_url('jasa-pelayanan/kejantanan') ?>"
+                                    class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= ($current_segment == 'kejantanan') ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                    <span class="truncate">Pasien Kejantanan</span>
                                 </a>
                             </li>
                         </ul>
                     </details>
                 </li>
+
             </ul>
         </div>
 
+
+        <!-- KEUANGAN | OWNER -->
+        <?php if ($role === 'superadmin' || $role === 'owner'): ?>
+            <div class="relative flex w-full min-w-0 flex-col p-2">
+                <div class="flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-slate-500/70">
+                    Kas
+                </div>
+
+                <ul class="flex w-full min-w-0 flex-col gap-1">
+                    <li>
+                        <details class="group" <?= in_array($current_segment, ['kas', 'gaji', 'statistikKeuangan']) ? 'open' : '' ?>>
+                            <summary class="flex w-full cursor-pointer list-none items-center justify-between rounded-md p-2 text-left text-sm transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 [&::-webkit-details-marker]:hidden">
+                                <span class="flex items-center gap-2">
+                                    <i class="fas fa-credit-card w-4 text-center shrink-0"></i>
+                                    <span class="truncate font-medium">Keuangan</span>
+                                </span>
+                                <i class="fas fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200 group-open:rotate-180 shrink-0"></i>
+                            </summary>
+
+                            <ul class="mx-3.5 mt-1 flex min-w-0 translate-x-px flex-col gap-1 border-l border-slate-200 px-2.5 py-0.5">
+                                <li>
+                                    <a href="<?= base_url('kas') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'kas' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                        <span class="truncate">Arus Kas</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="<?= base_url('statistikkeuangan') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'gaji' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                        <span class="truncate">Statistik Keuangan</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </details>
+                    </li>
+                </ul>
+            </div>
+        <?php endif; ?>
+
+        <!-- STATISTIK | ADMIN - SUPERADMIN - OWNER -->
         <div class="relative flex w-full min-w-0 flex-col p-2">
             <div class="flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-slate-500/70">
                 Analitik
             </div>
-
             <ul class="flex w-full min-w-0 flex-col gap-1">
                 <li>
                     <details class="group" <?= in_array($current_segment, ['statistiktag', 'statistik', 'statistikresource', 'statistikresult', 'statistikgender', 'statistikdaerah']) ? 'open' : '' ?>>
@@ -155,6 +222,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
             </ul>
         </div>
 
+        <!-- TAGIFY & MANAGAE USER | SUPERADMIN - OWNER -->
         <?php if ($role === 'superadmin' || $role === 'owner'): ?>
             <div class="relative flex w-full min-w-0 flex-col p-2">
                 <div class="flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-slate-500/70">
@@ -179,6 +247,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                         </details>
                     </li>
 
+
                     <li>
                         <details class="group" <?= in_array($current_segment, ['logs', 'whatsapp', 'log_whatsapp', 'jabatan', 'greeting']) ? 'open' : '' ?>>
                             <summary class="flex w-full cursor-pointer list-none items-center justify-between rounded-md p-2 text-left text-sm transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 [&::-webkit-details-marker]:hidden">
@@ -198,40 +267,20 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                         </details>
                     </li>
 
+
                     <li>
                         <a href="<?= base_url('users') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'users' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                             <i class="fas fa-users w-4 text-center shrink-0"></i>
                             <span class="truncate">Users</span>
                         </a>
                     </li>
-                    <!-- <li>
+                    <li>
                         <a href="<?= base_url('terapis') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'terapis' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                             <i class="fas fa-user-md w-4 text-center shrink-0"></i>
                             <span class="truncate">Karyawan</span>
                         </a>
-                    </li> -->
-
-
-                    <li>
-                        <details class="group" <?= in_array($current_segment, ['terapis', 'medis']) ? 'open' : '' ?>>
-                            <summary class="flex w-full cursor-pointer list-none items-center justify-between rounded-md p-2 text-left text-sm transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 [&::-webkit-details-marker]:hidden">
-                                <span class="flex items-center gap-2">
-                                    <i class="fas fa-user-md w-4 text-center shrink-0"></i>
-                                    <span class="truncate font-medium">Karyawan</span>
-                                </span>
-                                <i class="fas fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200 group-open:rotate-180 shrink-0"></i>
-                            </summary>
-                            <ul class="mx-3.5 mt-1 flex min-w-0 translate-x-px flex-col gap-1 border-l border-slate-200 px-2.5 py-0.5">
-                                <li>
-                                    <a href="<?= base_url('terapis') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'terapis' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
-                                        <span class="truncate">Karyawan Regular</span>
-                                    </a>
-                                </li>
-                                <li><a href="<?= base_url('tag-rekam-medis') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'tag-rekam-medis' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Karyawan Kejantanan</span></a></li>
-
-                            </ul>
-                        </details>
                     </li>
+
                 </ul>
             </div>
         <?php endif; ?>

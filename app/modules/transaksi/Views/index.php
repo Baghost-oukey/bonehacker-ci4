@@ -127,6 +127,7 @@
                         <th class="px-6 py-3.5 text-left font-semibold">Tanggal</th>
                         <th class="px-6 py-3.5 text-left font-semibold">Cabang</th>
                         <th class="px-6 py-3.5 text-left font-semibold">Keterangan</th>
+                        <th class="px-6 py-3.5 text-left font-semibold">Ditambahkan Oleh</th>
                         <th class="px-6 py-3.5 text-left font-semibold">Nominal</th>
                         <th class="px-6 py-3.5 text-center font-semibold">Aksi</th>
                     </tr>

@@ -23,6 +23,7 @@
                             </option>
                         <?php endforeach; ?>
                     </select>
+                    <input type="hidden" id="csrfToken" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
                 </div>
             <?php endif; ?>
 
@@ -36,64 +37,66 @@
     </div>
 
     <!-- STATS CARDS GRID -->
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <!-- Saldo Hari Ini -->
-        <div class="flex flex-col justify-between rounded-2xl bg-white p-6 shadow-sm border border-slate-200/60 transition-all hover:shadow-md">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+
+    <!-- CARD PENDAPATAN TODAY -->
+        <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <div class="flex items-center justify-between">
-                <p class="text-xs font-bold uppercase tracking-wider text-slate-400">SALDO HARI INI</p>
-                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50 text-teal-600">
+                <p class="text-xs font-bold text-slate-500 uppercase">Pemasukan Hari Ini</p>
+                <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                    <i class="fas fa-arrow-down"></i>
+                </div>
+            </div>
+            <h3 class="mt-4 text-2xl font-bold text-emerald-600">
+                Rp <?= number_format($today_income, 0, ',', '.') ?>
+            </h3>
+            <p class="mt-1 text-xs text-slate-400">*Total uang masuk hari ini</p>
+        </div>
+
+        <!-- CARD PENGELUARAN TODAY -->
+        <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div class="flex items-center justify-between">
+                <p class="text-xs font-bold text-slate-500 uppercase">Pengeluaran Hari Ini</p>
+                <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-rose-600">
+                    <i class="fas fa-arrow-up"></i>
+                </div>
+            </div>
+            <h3 class="mt-4 text-2xl font-bold text-rose-600">
+                Rp <?= number_format($today_expense, 0, ',', '.') ?>
+            </h3>
+            <p class="mt-1 text-xs text-slate-400">*Total uang keluar hari ini</p>
+        </div>
+
+        <!-- CARD TOTAL SALDO TODAY -->
+        <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div class="flex items-center justify-between">
+                <p class="text-xs font-bold text-slate-500 uppercase">Saldo Hari Ini</p>
+                <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-50 text-teal-600">
                     <i class="fas fa-wallet"></i>
                 </div>
             </div>
-            <div class="mt-4">
-                <h3 class="text-3xl font-bold tracking-tight text-slate-900 truncate" id="todayBalance">
-                    Rp <?= number_format($today_balance, 0, ',', '.') ?>
-                </h3>
-            </div>
-            <p class="mt-4 text-[11px] text-slate-400 font-medium italic">*Akan di-reset otomatis setiap hari</p>
+            <h3 class="mt-4 text-2xl font-bold <?= $today_balance < 0 ? 'text-rose-600' : 'text-slate-800' ?>">
+                Rp <?= number_format($today_balance, 0, ',', '.') ?>
+            </h3>
+            <p class="mt-1 text-xs text-slate-400">*Sisa uang bersih hari ini</p>
         </div>
 
-        <!-- Pengeluaran Global (Owner/Superadmin) -->
-        <?php if (in_array($role, ['superadmin', 'owner'])): ?>
-            <div class="flex flex-col justify-between rounded-2xl bg-white p-6 shadow-sm border border-slate-200/60 transition-all hover:shadow-md">
-                <div class="flex items-center justify-between">
-                    <p class="text-xs font-bold uppercase tracking-wider text-slate-400">PENGELUARAN GLOBAL</p>
-                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 text-rose-600">
-                        <i class="fas fa-exchange-alt"></i>
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <h3 class="text-3xl font-bold tracking-tight text-rose-600 truncate" id="totalExpense">
-                        Rp <?= number_format($total_expense, 0, ',', '.') ?>
-                    </h3>
-                </div>
-                <p class="mt-4 text-[11px] text-slate-400 font-medium">*Akumulasi semua wilayah aktif</p>
-            </div>
-        <?php endif; ?>
-
-        <!-- Total Pendapatan -->
-        <div class="flex flex-col justify-between rounded-2xl bg-white p-6 shadow-sm border border-slate-200/60 transition-all hover:shadow-md">
+        <!-- TOTAL TRANSAKSI ALL TIME -->
+        <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <div class="flex items-center justify-between">
-                <p class="text-xs font-bold uppercase tracking-wider text-slate-400">TOTAL PENDAPATAN</p>
-                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                <p class="text-xs font-bold text-slate-500 uppercase">Total Pendapatan</p>
+                <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
                     <i class="fas fa-chart-line"></i>
                 </div>
             </div>
-            <div class="mt-4">
-                <h3 class="text-3xl font-bold tracking-tight text-slate-900 truncate" id="totalIncome">
-                    Rp <?= number_format($total_income, 0, ',', '.') ?>
-                </h3>
-            </div>
-            <div class="mt-4 flex items-center gap-2">
-                <span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-600" id="percentageChange">
-                    <i class="fas fa-arrow-up mr-1"></i><span id="percentageValue">12.5</span>%
-                </span>
-                <span class="text-xs text-slate-400 font-medium">dari bulan lalu</span>
-            </div>
+            <h3 class="mt-4 text-2xl font-bold text-slate-800">
+                Rp <?= number_format($total_income, 0, ',', '.') ?>
+            </h3>
+            <p class="mt-1 text-xs text-slate-400">*Akumulasi semua wilayah</p>
         </div>
+
     </div>
 
-    <!-- TABS NAVIGATION -->
     <!-- TABS NAVIGATION -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
         <div class="border-b border-slate-100 px-6">
