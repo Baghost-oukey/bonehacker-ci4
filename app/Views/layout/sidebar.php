@@ -62,14 +62,14 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                     </a>
                 </li>
                 <li>
-                    <a href="<?= base_url('kehadiran') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'transaksi' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
+                    <a href="<?= base_url('kehadiran') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'kehadiran' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                         <i class="fa-solid fa-user-clock w-4 text-center shrink-0"></i>
                         <span class="truncate">Kehadiran Karyawan</span>
                     </a>
                 </li>
 
                 <li>
-                    <details class="group" <?= in_array($current_segment, ['gaji', 'tujangan', 'kasbon']) ? 'open' : '' ?>>
+                    <details class="group" <?= in_array($current_segment, ['gaji', 'transaksi-tunjangan', 'tunjangan-karyawan', 'kasbon']) ? 'open' : '' ?>>
                         <summary class="flex w-full cursor-pointer list-none items-center justify-between rounded-md p-2 text-left text-sm transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 [&::-webkit-details-marker]:hidden">
                             <span class="flex items-center gap-2">
                                 <i class="fa-solid fa-dollar-sign w-4 text-center shrink-0"></i>
@@ -80,29 +80,34 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                         </summary>
                         <ul class="mx-3.5 mt-1 flex min-w-0 translate-x-px flex-col gap-1 border-l border-slate-200 px-2.5 py-0.5">
                             <li>
-                                <a href="<?= base_url('gaji') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'users' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                <a href="<?= base_url('gaji') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'gaji' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                                     <span class="truncate">Gaji Karyawan</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="<?= base_url('transaksi-tunjangan') ?>"
-                                    class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'transaksi-tunjangan' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                    class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'transaksi-tunjangan' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                                     <span class="truncate">Tunjangan Terapis</span>
                                 </a>
                             </li>
                             <li>
                                 <a href="<?= base_url('tunjangan-karyawan') ?>"
-                                    class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'tunjangan-karyawan' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                    class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'tunjangan-karyawan' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                                     <span class="truncate">Master Tunjangan</span>
                                 </a>
                             </li>
-                            <li><a href="<?= base_url('kasbon') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'log_whatsapp' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Kasbon Karyawan</span></a></li>
+                            <li>
+                                <a href="<?= base_url('kasbon') ?>" 
+                                    class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'kasbon' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                    <span class="truncate">Kasbon Karyawan</span>
+                                </a>
+                            </li>
                         </ul>
                     </details>
                 </li>
 
                 <li>
-                    <details class="group" <?= in_array($current_segment, ['gaji', 'tujangan', 'kasbon']) ? 'open' : '' ?>>
+                    <details class="group" <?= $current_segment == 'jasa-pelayanan' ? 'open' : '' ?>>
                         <summary class="flex w-full cursor-pointer list-none items-center justify-between rounded-md p-2 text-left text-sm transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 [&::-webkit-details-marker]:hidden">
                             <span class="flex items-center gap-2">
                                 <i class="fa-solid fa-hospital-user w-4 text-center shrink-0"></i>
@@ -114,14 +119,14 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                         <ul class="mx-3.5 mt-1 flex min-w-0 translate-x-px flex-col gap-1 border-l border-slate-200 px-2.5 py-0.5">
                             <li>
                                 <a href="<?= base_url('jasa-pelayanan/reguler') ?>"
-                                    class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= ($current_segment == 'reguler') ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                    class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= ($uri->getTotalSegments() >= 2 && $uri->getSegment(2) == 'reguler') ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                                     <span class="truncate">Pasien Reguler</span>
                                 </a>
                             </li>
 
                             <li>
                                 <a href="<?= base_url('jasa-pelayanan/kejantanan') ?>"
-                                    class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= ($current_segment == 'kejantanan') ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                    class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= ($uri->getTotalSegments() >= 2 && $uri->getSegment(2) == 'kejantanan') ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                                     <span class="truncate">Pasien Kejantanan</span>
                                 </a>
                             </li>
@@ -153,12 +158,12 @@ $userInitial = strtoupper(substr($realname, 0, 1));
 
                             <ul class="mx-3.5 mt-1 flex min-w-0 translate-x-px flex-col gap-1 border-l border-slate-200 px-2.5 py-0.5">
                                 <li>
-                                    <a href="<?= base_url('kas') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'kas' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                    <a href="<?= base_url('kas') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'kas' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                                         <span class="truncate">Arus Kas</span>
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="<?= base_url('statistikkeuangan') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'gaji' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                    <a href="<?= base_url('statistikkeuangan') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'statistikkeuangan' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                                         <span class="truncate">Statistik Keuangan</span>
                                     </a>
                                 </li>
@@ -187,32 +192,32 @@ $userInitial = strtoupper(substr($realname, 0, 1));
 
                         <ul class="mx-3.5 mt-1 flex min-w-0 translate-x-px flex-col gap-1 border-l border-slate-200 px-2.5 py-0.5">
                             <li>
-                                <a href="<?= base_url('statistiktag') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'statistiktag' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                <a href="<?= base_url('statistiktag') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'statistiktag' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                                     <span class="truncate">Keluhan & Medis</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="<?= base_url('statistik') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'statistik' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                <a href="<?= base_url('statistik') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'statistik' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                                     <span class="truncate">Riwayat Pasien</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="<?= base_url('statistikresource') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'statistikresource' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                <a href="<?= base_url('statistikresource') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'statistikresource' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                                     <span class="truncate">Sosial Media</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="<?= base_url('statistikresult') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'statistikresult' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                <a href="<?= base_url('statistikresult') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'statistikresult' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                                     <span class="truncate">Hasil Pemeriksaan</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="<?= base_url('statistikgender') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'statistikgender' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                <a href="<?= base_url('statistikgender') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'statistikgender' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                                     <span class="truncate">Jenis Kelamin</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="<?= base_url('statistikdaerah') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'statistikdaerah' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                <a href="<?= base_url('statistikdaerah') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'statistikdaerah' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                                     <span class="truncate">Daerah</span>
                                 </a>
                             </li>
@@ -240,9 +245,9 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                                 <i class="fas fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200 group-open:rotate-180 shrink-0"></i>
                             </summary>
                             <ul class="mx-3.5 mt-1 flex min-w-0 translate-x-px flex-col gap-1 border-l border-slate-200 px-2.5 py-0.5">
-                                <li><a href="<?= base_url('tag-keluhan') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'tag-keluhan' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Tag Keluhan</span></a></li>
-                                <li><a href="<?= base_url('tag-rekam-medis') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'tag-rekam-medis' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Tag Rekam Medis</span></a></li>
-                                <li><a href="<?= base_url('tag-pemeriksaan') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'tag-pemeriksaan' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Tag Pemeriksaan</span></a></li>
+                                <li><a href="<?= base_url('tag-keluhan') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'tag-keluhan' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Tag Keluhan</span></a></li>
+                                <li><a href="<?= base_url('tag-rekam-medis') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'tag-rekam-medis' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Tag Rekam Medis</span></a></li>
+                                <li><a href="<?= base_url('tag-pemeriksaan') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'tag-pemeriksaan' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Tag Pemeriksaan</span></a></li>
                             </ul>
                         </details>
                     </li>
@@ -258,11 +263,11 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                                 <i class="fas fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200 group-open:rotate-180 shrink-0"></i>
                             </summary>
                             <ul class="mx-3.5 mt-1 flex min-w-0 translate-x-px flex-col gap-1 border-l border-slate-200 px-2.5 py-0.5">
-                                <li><a href="<?= base_url('logs') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'logs' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Logs</span></a></li>
-                                <li><a href="<?= base_url('whatsapp') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'whatsapp' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">WhatsApp</span></a></li>
-                                <li><a href="<?= base_url('log_whatsapp') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'log_whatsapp' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Log WhatsApp</span></a></li>
-                                <li><a href="<?= base_url('jabatan') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'jabatan' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Jabatan</span></a></li>
-                                <li><a href="<?= base_url('greeting') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'greeting' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Greetings</span></a></li>
+                                <li><a href="<?= base_url('logs') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'logs' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Logs</span></a></li>
+                                <li><a href="<?= base_url('whatsapp') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'whatsapp' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">WhatsApp</span></a></li>
+                                <li><a href="<?= base_url('log_whatsapp') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'log_whatsapp' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Log WhatsApp</span></a></li>
+                                <li><a href="<?= base_url('jabatan') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'jabatan' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Jabatan</span></a></li>
+                                <li><a href="<?= base_url('greeting') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'greeting' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Greetings</span></a></li>
                             </ul>
                         </details>
                     </li>
