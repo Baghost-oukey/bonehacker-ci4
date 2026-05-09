@@ -12,7 +12,7 @@ class MRegion extends Model
     protected $returnType       = 'object';
     protected $useSoftDeletes   = true;
     protected $protectFields    = true;
-    protected $allowedFields    = ['name', 'created_at', 'updated_at'];
+    protected $allowedFields    = ['name', 'address', 'phone', 'is_active', 'created_at', 'updated_at'];
 
     protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;
@@ -63,8 +63,20 @@ class MRegion extends Model
             $builder->select($column);
         }
         if (!empty($allowed_regions)) {
-            $builder->whereIn('id', $allowed_regions);
+            if (is_array($allowed_regions)) {
+                if (!empty($allowed_regions)) {
+                    $builder->whereIn('id', $allowed_regions);
+                } else {
+                    // Jika array kosong, kita paksa tidak ada hasil (0) daripada error
+                    $builder->where('id', 0);
+                }
+            } else {
+                if ($allowed_regions !== '[]' && $allowed_regions !== '') {
+                    $builder->where('id', $allowed_regions);
+                }
+            }
         }
+        $builder->where('is_active', 1);
         return $builder->get()->getResult();
     }
 
@@ -77,7 +89,7 @@ class MRegion extends Model
         $mode       = $options['mode'] ?? 'ASC';
 
         $builder    = $this->db->table('regions as r');
-        $builder->select('r.id, r.name, r.created_at, r.updated_at, COUNT(p.id) as jumlah');
+        $builder->select('r.id, r.name, r.address, r.phone, r.is_active, r.created_at, r.updated_at, COUNT(p.id) as jumlah');
         $builder->join('patients as p', 'p.region_id = r.id', 'left');
 
         // $sql = $this->querySql();

@@ -132,7 +132,7 @@ const setupRegionPage = () => {
         response.data.forEach((row) => {
           const tr = $(`<tr class="hover:bg-slate-50 transition border-b border-slate-100"></tr>`);
           tr.append(`<td class="px-6 py-3.5">${row.id || "-"}</td>`);
-          tr.append(`<td class="px-6 py-3.5 font-medium text-slate-800">${row.name || "-"}</td>`);
+          tr.append(`<td class="px-6 py-3.5 text-slate-800">${row.name_view || "-"}</td>`);
           tr.append(`<td class="px-6 py-3.5 text-slate-500">${row.created_at || "-"}</td>`);
           tr.append(`<td class="px-6 py-3.5 text-slate-500">${row.updated_at || "-"}</td>`);
           
@@ -317,8 +317,12 @@ const setupRegionPage = () => {
     e.preventDefault();
     const href = $(this).data("href");
     const name = $(this).data("name");
+    const address = $(this).data("address");
+    const phone = $(this).data("phone");
     $("#formEditRegion").attr("action", href);
     $("#editName").val(name);
+    $("#editAddress").val(address);
+    $("#editPhone").val(phone);
     openModal(document.getElementById("modalEditRegion"));
   });
   // --- Edit region: Submit form edit ---
@@ -544,6 +548,58 @@ const setupRegionPage = () => {
     });
   });
 
+  // --- Reactivate region ---
+  $(document).on("click", ".btn_reactivate", function (e) {
+    e.preventDefault();
+    const href = $(this).data("href");
+    const name = $(this).data("name");
+
+    Swal.fire({
+      title: 'Aktifkan Cabang?',
+      text: `Anda yakin ingin mengaktifkan kembali cabang "${name}"? Seluruh terapis yang terkait juga akan diaktifkan.`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#0d9488', // teal-600
+      cancelButtonColor: '#94a3b8',  // slate-400
+      confirmButtonText: 'Ya, Aktifkan',
+      cancelButtonText: 'Batal'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        $.ajax({
+          url: href,
+          type: "POST",
+          data: getCsrfPayload(config),
+          success: function (res) {
+            if (res.status === "success") {
+              updateCsrf(res.new_token);
+              Swal.fire({
+                title: "Berhasil!",
+                text: res.message,
+                icon: "success",
+                showConfirmButton: false,
+                timer: 1500
+              });
+              loadTableData(currentPage);
+            } else {
+              updateCsrf(res.new_token);
+              Swal.fire({
+                title: "Error",
+                text: res.message,
+                icon: "error"
+              });
+            }
+          },
+          error: function (xhr) {
+            Swal.fire({
+              title: "Error",
+              text: "Terjadi kesalahan pada server",
+              icon: "error"
+            });
+          }
+        });
+      }
+    });
+  });
 
   // Modal handlers
   document.addEventListener("click", (event) => {

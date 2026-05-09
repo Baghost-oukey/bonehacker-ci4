@@ -45,6 +45,10 @@ class Auth extends BaseController
         $user = $this->authModel->where('username', $username)->first();
 
         if ($user) {
+            if (isset($user->is_active) && $user->is_active == 0) {
+                session()->setFlashdata('message', ['error', 'Gagal Login', 'Akun Anda telah dinonaktifkan. Silakan hubungi Administrator.']);
+                return redirect()->to(base_url('auth'));
+            }
             $isPasswordCorrect = false;
             if (password_verify($password, $user->password)) {
                 $isPasswordCorrect = true;
@@ -58,7 +62,7 @@ class Auth extends BaseController
             if ($isPasswordCorrect) {
                 $db = \Config\Database::connect();
                 // Mengambil data berdasarkan berdasarkan superadmin
-                $get_region = $db->table('regions')->select('id, name')->get()->getResultArray();
+                $get_region = $db->table('regions')->select('id, name')->where('is_active', 1)->get()->getResultArray();
                 // Mengambil Data region berdasarkan user
 
                 $user_region = $user->regions_patient;
@@ -82,6 +86,11 @@ class Auth extends BaseController
                         $current_region_Id = $user_region;
                         $final_region_for_session = $user_region;
                     }
+                }
+
+                // Jika superadmin atau owner, paksa akses ke seluruh wilayah
+                if ($user->role === 'superadmin' || $user->role === 'owner') {
+                    $final_region_for_session = 'all';
                 }
 
                 // $regionDetail = $db->table('regions')->where('id', $current_region_Id)->get()->getRow();

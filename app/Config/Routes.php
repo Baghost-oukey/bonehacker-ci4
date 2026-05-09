@@ -52,6 +52,7 @@ $routes->group('region', ['namespace' => 'App\Modules\Region\Controllers', 'filt
   $routes->post('store', 'RegionController::store');
   $routes->post('update/(:num)', 'RegionController::update/$1');
   $routes->post('destroy/(:num)', 'RegionController::destroy/$1');
+  $routes->post('reactivate/(:num)', 'RegionController::reactivate/$1');
 });
 // app/Config/Routes.php
 
