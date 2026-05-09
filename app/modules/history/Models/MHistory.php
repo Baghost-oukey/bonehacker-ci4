@@ -1,6 +1,6 @@
 <?php
 
-namespace App\modules\history\Models;
+namespace App\Modules\history\Models;
 
 use CodeIgniter\Model;
 

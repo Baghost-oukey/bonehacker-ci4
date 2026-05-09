@@ -60,10 +60,11 @@ class Auth extends BaseController
 
             if (!empty($user_region)) {
                 $decoded = json_decode($user_region, true);
-                if (is_array($decoded) && !empty($decoded)) {
-                    $current_region_Id = $decoded[0];
+                if (is_array($decoded)) {
+                    $current_region_Id = !empty($decoded) ? $decoded[0] : null;
                 } else {
-                    $current_region_Id = $user_region;
+                    // Jika bukan JSON array, cek apakah string '[]'
+                    $current_region_Id = ($user_region === '[]') ? null : $user_region;
                 }
             }
 
