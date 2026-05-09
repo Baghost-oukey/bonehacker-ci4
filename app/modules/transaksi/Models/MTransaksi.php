@@ -67,10 +67,24 @@ class MTransaksi extends Model
 
         $role = session()->get('role');
         $aktif_region = session()->get('active_region');
+        $region_patient = session()->get('region_patient');
 
         if ($role !== 'superadmin' && $role !== 'owner') {
+            // Admin atau User
             $builder->where('t.region_id', session()->get('region_id'));
+        } else if ($role === 'owner') {
+            // Owner
+            if ($aktif_region && $aktif_region !== 'all') {
+                $builder->where('t.region_id', $aktif_region);
+            } else if (!empty($region_patient) && is_array($region_patient)) {
+                $builder->whereIn('t.region_id', $region_patient);
+            } else if (!empty($region_patient) && $region_patient !== 'all') {
+                $builder->where('t.region_id', $region_patient);
+            } else {
+                $builder->where('1=0'); // Safety
+            }
         } else {
+            // Superadmin
             if ($aktif_region && $aktif_region !== 'all') {
                 $builder->where('t.region_id', $aktif_region);
             }
@@ -87,9 +101,26 @@ class MTransaksi extends Model
         if ($kategori) {
             $builder->where('t.kategori', $kategori);
         }
+        $role = session()->get('role');
         $aktif_region = session()->get('active_region');
-        if ($aktif_region && $aktif_region !== 'all') {
-            $builder->where('t.region_id', $aktif_region);
+        $region_patient = session()->get('region_patient');
+
+        if ($role !== 'superadmin' && $role !== 'owner') {
+            $builder->where('t.region_id', session()->get('region_id'));
+        } else if ($role === 'owner') {
+            if ($aktif_region && $aktif_region !== 'all') {
+                $builder->where('t.region_id', $aktif_region);
+            } else if (!empty($region_patient) && is_array($region_patient)) {
+                $builder->whereIn('t.region_id', $region_patient);
+            } else if (!empty($region_patient) && $region_patient !== 'all') {
+                $builder->where('t.region_id', $region_patient);
+            } else {
+                $builder->where('1=0');
+            }
+        } else {
+            if ($aktif_region && $aktif_region !== 'all') {
+                $builder->where('t.region_id', $aktif_region);
+            }
         }
 
         if (!empty($options['where_like'])) {
@@ -120,7 +151,11 @@ class MTransaksi extends Model
             ->where('DATE(created_at)', $hari_ini)
             ->where('type', 'expense');
         if ($filter_region && $filter_region !== 'all') {
-            $todayExpenseBuilder->where('region_id', $filter_region);
+            if (is_array($filter_region)) {
+                $todayExpenseBuilder->whereIn('region_id', $filter_region);
+            } else {
+                $todayExpenseBuilder->where('region_id', $filter_region);
+            }
         }
         $out_today = $todayExpenseBuilder->get()->getRow()->nominal ?? 0;
 
@@ -130,14 +165,22 @@ class MTransaksi extends Model
         // --- 4. TOTAL PENDAPATAN (Akumulasi Selamanya) ---
         $incomeBuilder = $db->table($this->table)->selectSum('nominal')->where('type', 'income');
         if ($filter_region && $filter_region !== 'all') {
-            $incomeBuilder->where('region_id', $filter_region);
+            if (is_array($filter_region)) {
+                $incomeBuilder->whereIn('region_id', $filter_region);
+            } else {
+                $incomeBuilder->where('region_id', $filter_region);
+            }
         }
         $total_income = $incomeBuilder->get()->getRow()->nominal ?? 0;
 
         // --- 5. TOTAL PENGELUARAN (Akumulasi Selamanya) ---
         $expenseBuilder = $db->table($this->table)->selectSum('nominal')->where('type', 'expense');
         if ($filter_region && $filter_region !== 'all') {
-            $expenseBuilder->where('region_id', $filter_region);
+            if (is_array($filter_region)) {
+                $expenseBuilder->whereIn('region_id', $filter_region);
+            } else {
+                $expenseBuilder->where('region_id', $filter_region);
+            }
         }
         $total_expense = $expenseBuilder->get()->getRow()->nominal ?? 0;
 
@@ -160,7 +203,11 @@ class MTransaksi extends Model
         $builder->where('created_at >=', $startDate);
 
         if ($regionId && $regionId !== 'all') {
-            $builder->where('region_id', $regionId);
+            if (is_array($regionId)) {
+                $builder->whereIn('region_id', $regionId);
+            } else {
+                $builder->where('region_id', $regionId);
+            }
         }
         $builder->groupBy("DATE(created_at)");
         $builder->orderBy("tanggal", "ASC");
@@ -175,7 +222,11 @@ class MTransaksi extends Model
         $builder->where('type', 'expense');
         $builder->where('created_at >=', date('Y-m-d 00:00:00', strtotime("-$days days")));
         if ($filter_region && $filter_region !== 'all') {
-            $builder->where('region_id', $filter_region);
+            if (is_array($filter_region)) {
+                $builder->whereIn('region_id', $filter_region);
+            } else {
+                $builder->where('region_id', $filter_region);
+            }
         }
         $builder->groupBy("kategori");
         $builder->orderBy("total", "DESC");

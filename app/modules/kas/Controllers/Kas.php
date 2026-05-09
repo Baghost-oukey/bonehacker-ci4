@@ -33,11 +33,15 @@ class Kas extends BaseController
 
 
         // --- VALIDASI USER ROLE ---
-       $filter_region = ($role === 'superadmin' || $role === 'owner') 
-            ? (($active_region !== 'all') ? $active_region : null) 
-            : $region_session;
+        if ($role === 'superadmin') {
+            $filter_region = ($active_region !== 'all') ? $active_region : null;
+        } else if ($role === 'owner') {
+            $filter_region = ($active_region !== 'all') ? $active_region : session()->get('region_patient');
+        } else {
+            $filter_region = $region_session;
+        }
 
-            $stats = $this->mTransaksiKas->get_dashboard_stats($filter_region);
+        $stats = $this->mTransaksiKas->get_dashboard_stats($filter_region);
 
         // // --- SALDO HARI INI ---
         // $todayBuilder = $db->table('transaksi')->selectSum('nominal');

@@ -197,6 +197,57 @@
             </div>
         </div>
     </form>
+
+    <!-- User Account Section -->
+    <div class="rounded-2xl bg-white shadow-sm border border-slate-200/50 overflow-hidden">
+        <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4">
+            <h3 class="text-lg font-semibold text-slate-800">Akun User Terhubung</h3>
+            <p class="text-sm text-slate-500">Informasi login terapis di sistem</p>
+        </div>
+        <div class="p-6">
+            <?php if ($connected_user): ?>
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div class="space-y-1">
+                        <label class="text-xs font-medium text-slate-500">Username</label>
+                        <p class="text-sm font-semibold text-slate-900"><?= esc($connected_user->username) ?></p>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-medium text-slate-500">Role</label>
+                        <p class="text-sm font-semibold text-slate-900">
+                            <span class="inline-flex items-center rounded-md bg-teal-50 px-2 py-1 text-xs font-medium text-teal-700 ring-1 ring-inset ring-teal-600/20">
+                                <?= strtoupper(esc($connected_user->role)) ?>
+                            </span>
+                        </p>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-medium text-slate-500">Status Akun</label>
+                        <p class="text-sm font-semibold text-slate-900">
+                            <?php if ($connected_user->is_active): ?>
+                                <span class="text-emerald-600"><i class="fas fa-check-circle mr-1"></i> Aktif</span>
+                            <?php else: ?>
+                                <span class="text-red-600"><i class="fas fa-times-circle mr-1"></i> Non-aktif</span>
+                            <?php endif; ?>
+                        </p>
+                    </div>
+                </div>
+            <?php else: ?>
+                <div class="flex flex-col items-center justify-center py-6 space-y-4">
+                    <div class="rounded-full bg-slate-100 p-4">
+                        <i class="fas fa-user-shield text-3xl text-slate-400"></i>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-sm font-medium text-slate-900">Belum Ada Akun User</p>
+                        <p class="text-xs text-slate-500">Terapis ini belum memiliki akun untuk masuk ke sistem</p>
+                    </div>
+                    <button type="button" onclick="generateUser('<?= $terapis->terapis_id ?>')"
+                        class="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-amber-600">
+                        <i class="fas fa-user-plus"></i>
+                        Buat Akun Login
+                    </button>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
 </section>
 
 <!-- Modal Error File -->
@@ -278,9 +329,41 @@
         csrfName: "<?= csrf_token() ?>",
         csrfHash: "<?= csrf_hash() ?>",
         checkIdUrl: "<?= base_url('terapis/checkId') ?>",
+        generateUserUrl: "<?= base_url('terapis/generate_user') ?>",
         currentId: "<?= $terapis->terapis_id ?>",
         terapisId: "<?= $terapis->id ?>"
     };
+
+    function generateUser(terapis_id) {
+        if (!confirm('Apakah Anda yakin ingin membuat akun login untuk Terapis ini?')) {
+            return;
+        }
+
+        $.ajax({
+            url: window.detailTerapisConfig.generateUserUrl,
+            type: 'POST',
+            data: {
+                terapis_id: terapis_id,
+                <?= csrf_token() ?>: window.detailTerapisConfig.csrfHash
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.csrfHash) {
+                    window.detailTerapisConfig.csrfHash = response.csrfHash;
+                }
+                
+                if (response.status === 'success') {
+                    alert(response.message);
+                    location.reload(); // Reload to show the user info
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            },
+            error: function() {
+                alert('Terjadi kesalahan pada server saat membuat akun.');
+            }
+        });
+    }
 </script>
 
 <?= $this->endSection() ?>

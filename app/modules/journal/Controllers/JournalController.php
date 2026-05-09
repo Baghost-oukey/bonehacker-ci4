@@ -58,7 +58,13 @@ class JournalController extends BaseController
         // }
 
         if (empty($cabang) || $cabang === 'all') {
-            $cabang = $session->get('active_region') ?? null;
+            $active_region = $session->get('active_region');
+            if ($active_region === 'all') {
+                $role = $session->get('role');
+                $cabang = ($role === 'superadmin') ? 'all' : $session->get('region_patient');
+            } else {
+                $cabang = $active_region ?? null;
+            }
         }
 
         //  QUERY

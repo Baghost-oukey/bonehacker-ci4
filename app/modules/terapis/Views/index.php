@@ -294,7 +294,8 @@
         fetchUrl: "<?= base_url('terapis/fetch') ?>",
         storeUrl: "<?= base_url('terapis/store') ?>",
         checkIdUrl: "<?= base_url('terapis/checkId') ?>",
-        detailUrl: "<?= base_url('terapis/detail') ?>"
+        detailUrl: "<?= base_url('terapis/detail') ?>",
+        generateUserUrl: "<?= base_url('terapis/generate_user') ?>"
     };
 </script>
 
@@ -313,6 +314,36 @@
             output.classList.remove('hidden');
         };
         reader.readAsDataURL(event.target.files[0]);
+    }
+
+    function generateUser(terapis_id) {
+        if (!confirm('Apakah Anda yakin ingin membuat akun login untuk Terapis ini?')) {
+            return;
+        }
+
+        $.ajax({
+            url: window.terapisConfig.generateUserUrl,
+            type: 'POST',
+            data: {
+                terapis_id: terapis_id,
+                <?= csrf_token() ?>: window.terapisConfig.csrfHash
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.csrfHash) {
+                    window.terapisConfig.csrfHash = response.csrfHash;
+                }
+                
+                if (response.status === 'success') {
+                    alert(response.message);
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            },
+            error: function() {
+                alert('Terjadi kesalahan pada server saat membuat akun.');
+            }
+        });
     }
 </script>
 <?= $this->endSection() ?>

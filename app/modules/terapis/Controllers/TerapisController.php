@@ -6,6 +6,7 @@ use App\Controllers\BaseController;
 use App\Modules\jabatan\Models\Mjabatan;
 use App\Modules\Region\Models\MRegion;
 use App\Modules\Terapis\Models\MTerapis;
+use App\Modules\users\Models\MUsers;
 use CodeIgniter\HTTP\ResponseInterface;
 use Endroid\QrCode\Color\Color;
 use Endroid\QrCode\Encoding\Encoding;
@@ -24,11 +25,15 @@ class TerapisController extends BaseController
     $this->model_terapis = new MTerapis();
     $this->model_jabatan = new Mjabatan();
     $this->model_region = new MRegion();
+    $this->model_users = new MUsers();
     $this->session = \Config\Services::session();
 
     $router = service('router');
-    if ($router->methodName() !== 'public_info') {
-      if ($this->session->get('role') !== 'superadmin') {
+    $method = $router->methodName();
+    $role = $this->session->get('role');
+
+    if ($method !== 'public_info' && $method !== 'profil_saya') {
+      if ($role !== 'superadmin' && $role !== 'owner') {
         $this->session->setFlashdata('message', ['danger', 'You do not have access to this page']);
         return redirect()->to(base_url())->send();
       }
@@ -94,7 +99,8 @@ class TerapisController extends BaseController
       return '
             <a href="' .
         base_url('terapis/detail-terapis/' . $row->terapis_id) .
-        '" class="btn btn-primary"><i class="fas fa-eye"></i></a>' .
+        '" class="btn btn-primary btn-sm"><i class="fas fa-eye"></i></a> ' .
+        '<button type="button" onclick="generateUser(\'' . $row->terapis_id . '\')" class="btn btn-warning btn-sm" title="Buat Akun Login"><i class="fas fa-user-plus"></i></button> ' .
         $btn_status;
       // 'button type="button" data-href="' . base_url("terapis/destroy/" . $row->id) . '" class="btn btn-danger btn-sm btn_delete"><i class="fas fa-trash"></i></button>';
     });
@@ -117,6 +123,7 @@ class TerapisController extends BaseController
       'terapis' => $this->model_terapis->detail($user_id),
       'wilayah' => $this->model_region->getData(),
       'jabatan' => $this->model_terapis->get_jabatan(),
+      'connected_user' => $this->model_users->where('username', $user_id)->first(),
     ];
 
     $qrContent = base_url('terapis/public_info/' . $user_id);
@@ -289,5 +296,86 @@ class TerapisController extends BaseController
 
     $this->model_terapis->update($id, ['is_active' => 0]);
     return redirect()->to('terapis');
+  }
+
+  public function generate_user()
+  {
+    if (!$this->request->isAJAX()) {
+      return $this->response->setJSON(['status' => 'error', 'message' => 'Invalid request']);
+    }
+
+    $terapis_id = $this->request->getPost('terapis_id');
+    $terapis = $this->model_terapis->detail($terapis_id);
+
+    if (!$terapis) {
+      return $this->response->setJSON(['status' => 'error', 'message' => 'Data Terapis tidak ditemukan']);
+    }
+
+    // Check if user already exists
+    $existingUser = $this->model_users->where('username', $terapis->terapis_id)->first();
+    if ($existingUser) {
+      return $this->response->setJSON(['status' => 'error', 'message' => 'Akun User untuk Terapis ini sudah ada!']);
+    }
+
+    // Generate password (default: 123456)
+    $defaultPassword = 'password123';
+    $hashedPassword = password_hash($defaultPassword, PASSWORD_DEFAULT);
+
+    $userData = [
+      'realname' => $terapis->nama,
+      'username' => $terapis->terapis_id, // NIK as username
+      'password' => $hashedPassword,
+      'role' => 'user',
+      'regions_patient' => json_encode([$terapis->region_id]),
+      'is_active' => 1
+    ];
+
+    if ($this->model_users->insert($userData)) {
+      return $this->response->setJSON([
+        'status' => 'success',
+        'message' => 'Akun berhasil dibuat. Username: ' . $terapis->terapis_id . ' | Password: ' . $defaultPassword,
+        'csrfHash' => csrf_hash()
+      ]);
+    }
+
+    return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal membuat akun']);
+  }
+
+  public function profil_saya()
+  {
+    $username = $this->session->get('username');
+    $terapis = $this->model_terapis->detail($username);
+
+    if (!$terapis) {
+      $this->session->setFlashdata('message', ['danger', 'Data Profil Terapis tidak ditemukan.']);
+      return redirect()->to(base_url('beranda'));
+    }
+
+    $data = [
+      'realname' => $this->session->get('realname'),
+      'base_url' => base_url(),
+      'current_segment' => $this->request->getUri()->getSegment(1),
+      'title' => 'Profil Saya',
+      'msg' => $this->session->getFlashdata('message'),
+      'role' => $this->session->get('role'),
+      'terapis' => $terapis,
+      'wilayah' => $this->model_region->getData(),
+      'jabatan' => $this->model_terapis->get_jabatan(),
+    ];
+
+    // Generate QR Code as in detail_terapis
+    $qrContent = base_url('terapis/public_info/' . $username);
+    $writer = new PngWriter();
+    $qrCode = QrCode::create($qrContent)
+      ->setEncoding(new Encoding('UTF-8'))
+      ->setSize(300)
+      ->setMargin(10)
+      ->setForegroundColor(new Color(0, 0, 0))
+      ->setBackgroundColor(new Color(255, 255, 255));
+
+    $result = $writer->write($qrCode);
+    $data['qr_code_base64'] = $result->getDataUri();
+
+    return view('App\modules\Terapis\Views\DetailTerapis\index', $data);
   }
 }

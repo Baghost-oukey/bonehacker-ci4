@@ -97,12 +97,14 @@ class Auth extends BaseController
                 $sessionData = [
                     'isLogin'         => true,
                     'userId'          => $user->id,
+                    'username'        => $user->username,
                     'realname'        => $user->realname,
                     'role'            => $user->role,
                     // Untuk Data Pasien
                     'region_id'       => $current_region_Id,
                     'region_name'     => $regionDetail ? $regionDetail->name : 'Cabang Tidak Terdeteksi',
                     'region_patient' => $final_region_for_session,
+                    'region_patient_allowed' => $final_region_for_session, // Menyimpan hak akses cabang asli untuk fallback
                     'list_regions_global' => $get_region, // Untuk isi dropdown
                     'active_region'       => $defaultActive,        // Default awal saat login
                     'active_region_name'  => $defaultName
@@ -144,7 +146,13 @@ class Auth extends BaseController
             session()->set('active_region_name', $displayName);
 
             if ($targetId === 'all') {
-                session()->set('region_patient', 'all');
+                $role = session()->get('role');
+                if ($role === 'superadmin') {
+                    session()->set('region_patient', 'all');
+                } else {
+                    $original_allowed = session()->get('region_patient_allowed');
+                    session()->set('region_patient', $original_allowed);
+                }
             } else {
                 session()->set('region_patient', [(int)$targetId]); 
             }

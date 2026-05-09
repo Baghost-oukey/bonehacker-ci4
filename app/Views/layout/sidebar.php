@@ -29,6 +29,16 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                         <span class="truncate">Beranda</span>
                     </a>
                 </li>
+                <?php if ($role === 'user'): ?>
+                <li>
+                    <a href="<?= base_url('terapis/profil_saya') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'terapis' && $uri->getSegment(2) == 'profil_saya' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
+                        <i class="fas fa-user-circle w-4 text-center shrink-0"></i>
+                        <span class="truncate">Profil Saya</span>
+                    </a>
+                </li>
+                <?php endif; ?>
+                
+                <?php if ($role !== 'user'): ?>
                 <li>
                     <a href="<?= base_url('antrean') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'antrean' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                         <i class="fas fa-pencil-ruler w-4 text-center shrink-0"></i>
@@ -133,6 +143,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                         </ul>
                     </details>
                 </li>
+                <?php endif; ?>
 
             </ul>
         </div>
@@ -180,6 +191,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                 Analitik
             </div>
             <ul class="flex w-full min-w-0 flex-col gap-1">
+                <?php if ($role !== 'user'): ?>
                 <li>
                     <details class="group" <?= in_array($current_segment, ['statistiktag', 'statistik', 'statistikresource', 'statistikresult', 'statistikgender', 'statistikdaerah']) ? 'open' : '' ?>>
                         <summary class="flex w-full cursor-pointer list-none items-center justify-between rounded-md p-2 text-left text-sm transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 [&::-webkit-details-marker]:hidden">
@@ -224,6 +236,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                         </ul>
                     </details>
                 </li>
+                <?php endif; ?>
             </ul>
         </div>
 

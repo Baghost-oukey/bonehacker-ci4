@@ -62,8 +62,10 @@ class AntreanController extends BaseController
         $active_region = session()->get('active_region');
         $region_session = session()->get('region_patient');
 
-        if ($role === 'owner' || $role === 'superadmin') {
+        if ($role === 'superadmin') {
             $filter = ($region && $region !== 'all') ? $region : ($active_region !== 'all' ? $active_region : 'all');
+        } else if ($role === 'owner') {
+            $filter = ($region && $region !== 'all') ? $region : ($active_region !== 'all' ? $active_region : $region_session);
         } else {
             $filter = $region_session;
         }
@@ -149,10 +151,12 @@ class AntreanController extends BaseController
         $active_region = session()->get('active_region');
         $region_session = session()->get('region_patient');
 
-        if ($role === 'user') {
-            $filter = $region_session;
-        } else {
+        if ($role === 'superadmin') {
             $filter = ($region && $region !== 'all') ? $region : ($active_region !== 'all' ? $active_region : 'all');
+        } else if ($role === 'owner') {
+            $filter = ($region && $region !== 'all') ? $region : ($active_region !== 'all' ? $active_region : $region_session);
+        } else {
+            $filter = $region_session;
         }
 
         if ($filter !== 'all' && !empty($filter)) {
@@ -254,7 +258,16 @@ class AntreanController extends BaseController
     {
         $db = \Config\Database::connect();
         $active_region = session()->get('active_region');
-        $regionId = $this->request->getGet('region') ?: ($active_region !== 'all' ? $active_region : null);
+        $role = session()->get('role');
+        $region_session = session()->get('region_patient');
+        
+        if ($role === 'superadmin') {
+            $regionId = $this->request->getGet('region') ?: ($active_region !== 'all' ? $active_region : null);
+        } else if ($role === 'owner') {
+            $regionId = $this->request->getGet('region') ?: ($active_region !== 'all' ? $active_region : $region_session);
+        } else {
+            $regionId = $region_session;
+        }
         $startDate = $this->request->getGet('start_date') ?: date('Y-m-d');
         $endDate = $this->request->getGet('end_date') ?: date('Y-m-d');
         $builder = $db->table('patient_queues pq')

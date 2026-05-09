@@ -92,8 +92,10 @@ class BerandaController extends BaseController
     $active_region = $session->get('active_region');
     $region_patients = $session->get('region_patient');
 
-    if ($role === 'owner' || $role === 'superadmin') {
+    if ($role === 'superadmin') {
       $filter_region = $active_region ?: 'all';
+    } else if ($role === 'owner') {
+      $filter_region = ($active_region && $active_region !== 'all') ? $active_region : $region_patients;
     } else {
       $filter_region = $region_patients;
     }
