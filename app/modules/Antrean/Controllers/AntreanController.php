@@ -26,14 +26,15 @@ class AntreanController extends BaseController
     }
     public function index()
     {
-        $region_patients = json_decode(session()->get('regions_patient'), true);
+        $region_patient = session()->get('region_patient');
+        $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
 
         $data = [
             'title' => 'Antrean',
             'realname' => session()->get('realname'),
             'role' => session()->get('role'),
             'regions_patient' => $region_patients,
-            'wilayah' => $this->regionModel->findAll(),
+            'wilayah' => $this->regionModel->getData(null, $allowed_regions),
             'negara' => $this->countryModel->findAll(),
             'resources' => $this->patientsModel->get_resources(),
         ];
@@ -58,17 +59,8 @@ class AntreanController extends BaseController
             ->where('h.finish_at', null)
             ->groupBy('pq.id, pq.queue_date, p.id, p.name, p.age, p.phone, p.address, pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama, h.id, h.process_at, h.finish_at');
 
-        $role = session()->get('role');
-        $active_region = session()->get('active_region');
         $region_session = session()->get('region_patient');
-
-        if ($role === 'superadmin') {
-            $filter = ($region && $region !== 'all') ? $region : ($active_region !== 'all' ? $active_region : 'all');
-        } else if ($role === 'owner') {
-            $filter = ($region && $region !== 'all') ? $region : ($active_region !== 'all' ? $active_region : $region_session);
-        } else {
-            $filter = $region_session;
-        }
+        $filter = ($region && $region !== 'all') ? $region : $region_session;
 
         if ($filter !== 'all' && !empty($filter)) {
             if (is_array($filter)) {

@@ -21,15 +21,20 @@ class TransaksiController extends BaseController
     public function index()
     {
         $db = \Config\Database::connect();
-        $role = session()->get('role');
-        $active_region = session()->get('active_region');
-        $region_session = session()->get('region_id');
-        $list_regions = $db->table('regions')->select('id, name')->get()->getResultArray();
-        if ($role === 'superadmin' || $role === 'owner') {
-            $filter_region = ($active_region !== 'all') ? $active_region : null;
-        } else {
-            $filter_region = $region_session;
+        $region_patient = session()->get('region_patient');
+        $filter_region = ($region_patient !== 'all' && !empty($region_patient)) ? $region_patient : null;
+        $list_regions = $db->table('regions')->select('id, name');
+        if ($filter_region) {
+            if (is_array($filter_region)) {
+                $list_regions->whereIn('id', $filter_region);
+            } else {
+                $list_regions->where('id', $filter_region);
+            }
         }
+        $list_regions = $list_regions->get()->getResultArray();
+
+        // Normalize filter to scalar for single-region queries
+        $scalar_filter = is_array($filter_region) && count($filter_region) === 1 ? $filter_region[0] : $filter_region;
 
 
         // Hitung Uang Masuk Hari Ini
@@ -37,7 +42,8 @@ class TransaksiController extends BaseController
             ->where('DATE(created_at)', date('Y-m-d'))
             ->where('status', 'active')
             ->where('type', 'income');
-        if ($filter_region) $todayIncomeBuilder->where('region_id', $filter_region);
+        if (is_array($filter_region)) { $todayIncomeBuilder->whereIn('region_id', $filter_region); }
+        elseif ($filter_region) { $todayIncomeBuilder->where('region_id', $filter_region); }
         $in_today = $todayIncomeBuilder->get()->getRow()->nominal ?? 0;
 
         // Hitung Uang Keluar Hari Ini
@@ -45,20 +51,22 @@ class TransaksiController extends BaseController
             ->where('DATE(created_at)', date('Y-m-d'))
             ->where('status', 'active')
             ->where('type', 'expense');
-        if ($filter_region) $todayExpenseBuilder->where('region_id', $filter_region);
+        if (is_array($filter_region)) { $todayExpenseBuilder->whereIn('region_id', $filter_region); }
+        elseif ($filter_region) { $todayExpenseBuilder->where('region_id', $filter_region); }
         $out_today = $todayExpenseBuilder->get()->getRow()->nominal ?? 0;
 
-        // Saldo = Pemasukan - Pengeluaran
         $today_balance = $in_today - $out_today;
 
         // --- 2. Total Income (Akumulasi Selamanya) ---
-        $incomeBuilder = $db->table('transaksi')->selectSum('nominal')->where('type', 'income')->where('status', 'active'); 
-        if ($filter_region) $incomeBuilder->where('region_id', $filter_region);
+        $incomeBuilder = $db->table('transaksi')->selectSum('nominal')->where('type', 'income')->where('status', 'active');
+        if (is_array($filter_region)) { $incomeBuilder->whereIn('region_id', $filter_region); }
+        elseif ($filter_region) { $incomeBuilder->where('region_id', $filter_region); }
         $total_in = $incomeBuilder->get()->getRow()->nominal ?? 0;
 
         // --- 3. Total Expense (Akumulasi Selamanya) ---
         $expenseBuilder = $db->table('transaksi')->selectSum('nominal')->where('type', 'expense')->where('status', 'active');
-        if ($filter_region) $expenseBuilder->where('region_id', $filter_region);
+        if (is_array($filter_region)) { $expenseBuilder->whereIn('region_id', $filter_region); }
+        elseif ($filter_region) { $expenseBuilder->where('region_id', $filter_region); }
         $total_out = $expenseBuilder->get()->getRow()->nominal ?? 0;
 
         $total_income = $total_in - $total_out;
@@ -67,11 +75,11 @@ class TransaksiController extends BaseController
         $data = [
             'title'          => 'Dashboard Keuangan',
             'realname'       => session()->get('realname'),
-            'role'           => $role,
+            'role'           => session()->get('role'),
             'today_balance'  => $today_balance,
             'total_income'   => $total_income,
             'total_expense'  => $total_expense,
-            'active_region'  => $active_region,
+            'active_region'  => session()->get('active_region'),
             'list_regions'   => $list_regions
         ];
         return view('\App\Modules\Transaksi\Views\index', $data);

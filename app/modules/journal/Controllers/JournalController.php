@@ -28,11 +28,13 @@ class JournalController extends BaseController
     public function index()
     {
         $session = session();
+        $region_patient = $session->get('region_patient');
+        $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
 
         return view('App\Modules\Journal\Views\index', [
             'title' => 'Journal Patients',
             'role' => $session->get('role'),
-            'wilayah' => $this->model_regions->findAll(),
+            'wilayah' => $this->model_regions->getData(null, $allowed_regions),
             'current_segment' => 'journal',
             'realname' => $session->get('realname'),
         ]);
@@ -57,14 +59,11 @@ class JournalController extends BaseController
         //     $cabang = $session->get('active_cabang') ?? null;
         // }
 
+        // Use region_patient session as the single source of truth.
+        // If a specific region is posted, use it; otherwise fall back to session.
+        $region_session = $session->get('region_patient');
         if (empty($cabang) || $cabang === 'all') {
-            $active_region = $session->get('active_region');
-            if ($active_region === 'all') {
-                $role = $session->get('role');
-                $cabang = ($role === 'superadmin') ? 'all' : $session->get('region_patient');
-            } else {
-                $cabang = $active_region ?? null;
-            }
+            $cabang = $region_session;
         }
 
         //  QUERY

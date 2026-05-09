@@ -21,15 +21,19 @@ class Gajikaryawan extends BaseController
 
     public function index()
     {
-        $regionId = $this->request->getGet('region_id') ?? 'all';
-        // Filter untuk Tab 2 (Riwayat), default bulan dan tahun saat ini
+        $region_patient = session()->get('region_patient');
+        $sessionRegionId = ($region_patient !== 'all' && !empty($region_patient))
+            ? (is_array($region_patient) ? $region_patient[0] : $region_patient)
+            : 'all';
+
+        $regionId = $this->request->getGet('region_id') ?? $sessionRegionId;
         $bulan = $this->request->getGet('bulan') ?? date('n');
         $tahun = $this->request->getGet('tahun') ?? date('Y');
 
         $data = [
             'title'            => 'Kelola Gaji Karyawan',
-            'estimasi_gaji'    => $this->Mriwayatgaji->getPayrollEstimates($regionId), // Data Tab 1
-            'riwayat_gaji'     => $this->Mriwayatgaji->getPayrollHistory($bulan, $tahun, $regionId), // Data Tab 2
+            'estimasi_gaji'    => $this->Mriwayatgaji->getPayrollEstimates($regionId),
+            'riwayat_gaji'     => $this->Mriwayatgaji->getPayrollHistory($bulan, $tahun, $regionId),
             'filter_region'    => $regionId,
             'filter_bulan'     => $bulan,
             'filter_tahun'     => $tahun

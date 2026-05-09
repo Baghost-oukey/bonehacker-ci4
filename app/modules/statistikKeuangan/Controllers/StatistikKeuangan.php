@@ -21,8 +21,9 @@ class StatistikKeuangan extends BaseController
 
     public function index()
     {
-        $db = \Config\Database::connect();
-        $list_regions = $this->mRegion->asArray()->select('id, name')->findAll();
+        $region_patient = session()->get('region_patient');
+        $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
+        $list_regions = $this->mRegion->getData(null, $allowed_regions);
 
         $data = [
             'title'        => 'Analisis Keuangan',
@@ -34,13 +35,15 @@ class StatistikKeuangan extends BaseController
 
     public function get_chart_data()
     {
-        $role = session()->get('role');
         $days = (int) ($this->request->getGet('days') ?? 7);
         $region_param = $this->request->getGet('region');
-        if ($role === 'superadmin' || $role === 'owner') {
-            $filter_region = ($region_param && $region_param !== 'all') ? $region_param : null;
+        $region_patient = session()->get('region_patient');
+        if ($region_param && $region_param !== 'all') {
+            $filter_region = $region_param;
+        } elseif ($region_patient !== 'all' && !empty($region_patient)) {
+            $filter_region = is_array($region_patient) ? $region_patient[0] : $region_patient;
         } else {
-            $filter_region = session()->get('region_id');
+            $filter_region = null;
         }
 
         $trend = $this->mTransaksi->getFinanceTrend($days, $filter_region);

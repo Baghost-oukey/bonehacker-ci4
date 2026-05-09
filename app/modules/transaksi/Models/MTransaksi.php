@@ -65,28 +65,13 @@ class MTransaksi extends Model
             $builder->where('t.kategori', $kategori);
         }
 
-        $role = session()->get('role');
-        $aktif_region = session()->get('active_region');
         $region_patient = session()->get('region_patient');
 
-        if ($role !== 'superadmin' && $role !== 'owner') {
-            // Admin atau User
-            $builder->where('t.region_id', session()->get('region_id'));
-        } else if ($role === 'owner') {
-            // Owner
-            if ($aktif_region && $aktif_region !== 'all') {
-                $builder->where('t.region_id', $aktif_region);
-            } else if (!empty($region_patient) && is_array($region_patient)) {
+        if ($region_patient !== 'all' && !empty($region_patient)) {
+            if (is_array($region_patient)) {
                 $builder->whereIn('t.region_id', $region_patient);
-            } else if (!empty($region_patient) && $region_patient !== 'all') {
-                $builder->where('t.region_id', $region_patient);
             } else {
-                $builder->where('1=0'); // Safety
-            }
-        } else {
-            // Superadmin
-            if ($aktif_region && $aktif_region !== 'all') {
-                $builder->where('t.region_id', $aktif_region);
+                $builder->where('t.region_id', $region_patient);
             }
         }
 
@@ -101,25 +86,13 @@ class MTransaksi extends Model
         if ($kategori) {
             $builder->where('t.kategori', $kategori);
         }
-        $role = session()->get('role');
-        $aktif_region = session()->get('active_region');
         $region_patient = session()->get('region_patient');
 
-        if ($role !== 'superadmin' && $role !== 'owner') {
-            $builder->where('t.region_id', session()->get('region_id'));
-        } else if ($role === 'owner') {
-            if ($aktif_region && $aktif_region !== 'all') {
-                $builder->where('t.region_id', $aktif_region);
-            } else if (!empty($region_patient) && is_array($region_patient)) {
+        if ($region_patient !== 'all' && !empty($region_patient)) {
+            if (is_array($region_patient)) {
                 $builder->whereIn('t.region_id', $region_patient);
-            } else if (!empty($region_patient) && $region_patient !== 'all') {
-                $builder->where('t.region_id', $region_patient);
             } else {
-                $builder->where('1=0');
-            }
-        } else {
-            if ($aktif_region && $aktif_region !== 'all') {
-                $builder->where('t.region_id', $aktif_region);
+                $builder->where('t.region_id', $region_patient);
             }
         }
 

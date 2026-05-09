@@ -19,17 +19,18 @@ class StatistikResource extends BaseController
 
     public function index()
     {
-        $db = \Config\Database::connect();
         $session = session();
+        $region_patient = $session->get('region_patient');
+        $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
+        $model_region = new \App\modules\region\Models\MRegion();
+
         $data = [
-            'wilayah'         => $db->table('regions')->get()->getResult(),
+            'wilayah'         => $model_region->getData(null, $allowed_regions),
             'title'           => "Statistik Media Sosial",
             'role'            => $session->get('role'),
             'realname'        => $session->get('realname'),
             'current_segment' => 'statistikresource',
         ];
-        $data['wilayah'] = $db->table('regions')->get()->getResult();
-        $data['title'] = "Statistik Media Sosial";
         return view('App\modules\statistikresource\Views\views_statistik_resource', $data);
     }
 

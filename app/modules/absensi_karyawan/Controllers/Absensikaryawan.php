@@ -21,9 +21,21 @@ class Absensikaryawan extends BaseController
 
     public function index()
     {
+        $region_patient = session()->get('region_patient');
+        $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
+
+        $terapisQuery = $this->model_terapis->where('is_active', 1);
+        if (!empty($allowed_regions)) {
+            if (is_array($allowed_regions)) {
+                $terapisQuery->whereIn('region_id', $allowed_regions);
+            } else {
+                $terapisQuery->where('region_id', $allowed_regions);
+            }
+        }
+
         $data = [
             'title'        => 'Presensi Harian',
-            'terapis'      => $this->model_terapis->where('is_active', 1)->findAll(),
+            'terapis'      => $terapisQuery->findAll(),
             'rekap_harian' => $this->model_absensi->getRekapHarian(),
             'tanggal'      => date('Y-m-d')
         ];
@@ -44,9 +56,17 @@ class Absensikaryawan extends BaseController
             $rekapByTanggal[$row['terapis_id']] = $row;
         }
 
+        $region_patient = session()->get('region_patient');
+        $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
+        $terapisQuery = $this->model_terapis->where('is_active', 1);
+        if (!empty($allowed_regions)) {
+            if (is_array($allowed_regions)) { $terapisQuery->whereIn('region_id', $allowed_regions); }
+            else { $terapisQuery->where('region_id', $allowed_regions); }
+        }
+
         $data = [
             'title'            => 'Input Presensi',
-            'terapis'          => $this->model_terapis->where('is_active', 1)->findAll(),
+            'terapis'          => $terapisQuery->findAll(),
             'tanggal'          => $tanggal,
             'rekap_by_tanggal' => $rekapByTanggal
         ];

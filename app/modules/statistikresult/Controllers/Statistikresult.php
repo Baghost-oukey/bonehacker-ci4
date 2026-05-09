@@ -18,18 +18,16 @@ class Statistikresult extends BaseController
     public function index()
     {
         $session = session();
-        $selectedRegionId = $this->request->getGet('region_id');
-        $regionsPatient = $session->get('regions_patient');
-        $regionsPatientDecoded = is_string($regionsPatient) ? json_decode($regionsPatient, true) : $regionsPatient;
+        $region_patient = $session->get('region_patient');
+        $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
+        $model_region = new \App\modules\region\Models\MRegion();
 
         $data = [
             'realname'        => $session->get('realname'),
             'role'            => $session->get('role'),
-            'regions_patient' => $regionsPatientDecoded,
             'base_url'        => base_url(),
             'current_segment' => $this->request->getUri()->getSegment(1),
-            'wilayah'         => $this->model_statistik_result->getRegions(),
-            'selected_region' => $selectedRegionId,
+            'wilayah'         => $model_region->getData(null, $allowed_regions),
             'title'           => 'Statistik Hasil Pemeriksaan',
         ];
 
@@ -42,10 +40,10 @@ class Statistikresult extends BaseController
         $endDate   = $this->request->getGet('end_date');
         $filter    = $this->request->getGet('filter');
         $regionId  = $this->request->getVar('region_id');
-        // $regionId  = (!empty($regionId)) ? (int)$regionId: null;
         if (empty($regionId) || $regionId === 'null') {
-        $regionId = null;
-    }
+            $rp = session()->get('region_patient');
+            $regionId = ($rp !== 'all' && !empty($rp)) ? (is_array($rp) ? $rp[0] : $rp) : null;
+        }
         $data = $this->model_statistik_result->getResultStatistic($startDate, $endDate, $regionId, $filter);
 
         return $this->response->setJSON($data);

@@ -14,29 +14,21 @@ class RekamMedisController extends BaseController
         $mPatient = model('App\modules\patients\Models\MPatients');
 
         $role = session()->get('role');
-        $activeRegion = session()->get('active_region');
-        $regionProfile = session()->get('region_patient');
-        $sessRegionName = session()->get('region_name');
-        $sessRegionId = session()->get('region_id');
-
-        // Tentukan filter wilayah
-        if ($role === 'owner' || $role === 'superadmin') {
-            $filter = ($activeRegion && $activeRegion !== 'all') ? $activeRegion : 'all';
-        } else {
-            $filter = $regionProfile;
-        }
+        $region_patient = session()->get('region_patient');
+        $filter = $region_patient;
+        $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
 
         $data = [
             'realname' => session()->get('realname'),
             'role' => $role,
             'title' => 'Rekam Medis',
             'msg' => session()->getFlashdata('message'),
-            'wilayah' => $mRegion->getData() ?? [],
+            'wilayah' => $mRegion->getData(null, $allowed_regions) ?? [],
             'resources' => $mPatient->get_resources() ?? [],
             'negara' => $mCountries->getData() ?? [],
             'patient_information' => null,
-            'sess_region_name' => $sessRegionName,
-            'sess_region_id' => $sessRegionId,
+            'sess_region_name' => session()->get('active_region_name') ?? $sessRegionName,
+            'sess_region_id' => session()->get('active_region') ?? $sessRegionId,
             'sess_role' => $role,
             'filter_region' => $filter,
         ];

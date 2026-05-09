@@ -21,19 +21,17 @@ class Statistik extends BaseController
     }
     public function index()
     {
-        //
-        $msg = $this->session->get('pesan');
-        $regions_patient = json_decode($this->session->get('regions_patient') ?? '[]', true);
+        $region_patient = $this->session->get('region_patient');
+        $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
 
         $data = [
             'realname'        => $this->session->get('realname'),
             'role'            => $this->session->get('role'),
-            'regions_patient' => $regions_patient,
             'base_url'        => base_url(),
             'current_segment' => $this->request->getUri()->getSegment(1),
             'title'           => 'Statistik',
-            'wilayah'         => $this->model_region->findAll(), // Sesuaikan method di model CI4 Anda
-            'msg'             => $msg ?: $this->session->getFlashdata('message') ?: ['', '', '']
+            'wilayah'         => $this->model_region->getData(null, $allowed_regions),
+            'msg'             => $this->session->getFlashdata('message') ?: ['', '', '']
         ];
 
         return view('App\modules\statistik\Views\views_statistik', $data);
@@ -53,7 +51,12 @@ class Statistik extends BaseController
     {
         $startDate = $this->request->getGet('start_date');
         $endDate   = $this->request->getGet('end_date');
+        // Use URL param if provided, otherwise fall back to session
         $regionId  = $this->request->getGet('region_id');
+        if (!$regionId || $regionId === 'all') {
+            $rp = $this->session->get('region_patient');
+            $regionId = ($rp !== 'all' && !empty($rp)) ? (is_array($rp) ? $rp[0] : $rp) : null;
+        }
         $result = $this->model_statistik->get_analisis($startDate, $endDate, $regionId);
 
         $summary = [

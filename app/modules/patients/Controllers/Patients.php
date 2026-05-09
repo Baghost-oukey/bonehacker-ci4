@@ -226,9 +226,9 @@ class Patients extends BaseController
         // ->where('p.is_delete', 0);
         // ->limit($limit, $start);
 
-        // if (!empty($region)) {
-        //     $builder->where('p.region_id', $region);
-        // }
+        $region_session = session()->get('region_patient');
+        $region = ($region && $region !== 'all') ? $region : $region_session;
+
         if (!empty($region) && $region !== 'all') {
             if (is_array($region)) {
                 $builder->whereIn('p.region_id', $region);

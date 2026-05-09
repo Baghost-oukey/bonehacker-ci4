@@ -28,49 +28,28 @@ class Kas extends BaseController
         if ($role !== 'owner' && $role !== 'superadmin') {
             return redirect()->to('/dashboard')->with('error', 'Akses ditolak. Fitur khusus manajemen.');
         }
-        $active_region = session()->get('active_region');
-        $region_session = session()->get('region_id');
 
-
-        // --- VALIDASI USER ROLE ---
-        if ($role === 'superadmin') {
-            $filter_region = ($active_region !== 'all') ? $active_region : null;
-        } else if ($role === 'owner') {
-            $filter_region = ($active_region !== 'all') ? $active_region : session()->get('region_patient');
-        } else {
-            $filter_region = $region_session;
-        }
+        $region_patient = session()->get('region_patient');
+        $filter_region = ($region_patient !== 'all' && !empty($region_patient)) ? $region_patient : null;
 
         $stats = $this->mTransaksiKas->get_dashboard_stats($filter_region);
 
-        // // --- SALDO HARI INI ---
-        // $todayBuilder = $db->table('transaksi')->selectSum('nominal');
-        // $todayBuilder->where('DATE(created_at)', date('Y-m-d'));
-        // if ($filter_region) $todayBuilder->where('region_id', $filter_region);
-        // $today_balance = $todayBuilder->get()->getRow()->nominal ?? 0;
-
-
-        // // --- TOTAL INCOME ---
-        // $incomeBuilder = $db->table('transaksi')->selectSum('nominal')->where('type', 'income');
-        // if ($filter_region) $incomeBuilder->where('region_id', $filter_region);
-        // $total_income = $incomeBuilder->get()->getRow()->nominal ?? 0;
-
-
-        // // --- TOTAL EXPENSE ---
-        // $expenseBuilder = $db->table('transaksi')->selectSum('nominal')->where('type', 'expense');
-        // if ($filter_region) $expenseBuilder->where('region_id', $filter_region);
-        // $total_expense = $expenseBuilder->get()->getRow()->nominal ?? 0;
-
         $db = \Config\Database::connect();
+        $regionsBuilder = $db->table('regions')->select('id, name');
+        if ($filter_region) {
+            if (is_array($filter_region)) { $regionsBuilder->whereIn('id', $filter_region); }
+            else { $regionsBuilder->where('id', $filter_region); }
+        }
+
         $data = [
             'title'         => 'Manajemen Arus Kas',
             'role'          => $role,
-            'list_regions'  => $db->table('regions')->select('id, name')->get()->getResultArray(), 
+            'list_regions'  => $regionsBuilder->get()->getResultArray(),
             'today_balance' => $stats['today_balance'] ?? 0,
-            'today_income'  => $stats['today_income'] ?? 0,   
+            'today_income'  => $stats['today_income'] ?? 0,
             'today_expense' => $stats['today_expense'] ?? 0,
-            'total_income'  => $stats['total_income'] ?? 0, 
-            'total_expense' => $stats['total_expense'] ?? 0, 
+            'total_income'  => $stats['total_income'] ?? 0,
+            'total_expense' => $stats['total_expense'] ?? 0,
         ];
         return view('\App\modules\kas\Views\index', $data);
     }
