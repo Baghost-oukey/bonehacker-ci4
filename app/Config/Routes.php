@@ -280,6 +280,12 @@ $routes->group('api', ['namespace' => 'App\Modules\api\Controllers'], function (
   $routes->post('patients/upload-file', 'Patients::uploadFile');
   $routes->post('patients/delete-file', 'Patients::deleteFile');
 
+  // Region (Cabang) API
+  $routes->get('regions', 'Region::index');
+  $routes->post('regions/store', 'Region::store');
+  $routes->post('regions/update/(:num)', 'Region::update/$1');
+  $routes->post('regions/delete/(:num)', 'Region::delete/$1');
+
   // History & Medical Records API
   $routes->get('medical-records/patient/(:num)', 'History::index/$1');
   $routes->get('medical-records/tags', 'History::tags');
