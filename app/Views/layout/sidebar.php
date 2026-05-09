@@ -6,8 +6,6 @@ $realname = session()->get('realname') ?? 'User';
 $userInitial = strtoupper(substr($realname, 0, 1));
 ?>
 
-<aside id="appSidebar" class="fixed inset-y-0 left-0 z-40 flex h-svh w-64 -translate-x-full flex-col border-r border-slate-200 bg-white shadow-lg shadow-slate-900/5 backdrop-blur-sm transition-transform duration-300 lg:translate-x-0">
-
     <div class="flex flex-col gap-2 p-2 border-b border-slate-200">
         <a href="<?= base_url() ?>" class="group/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all hover:bg-slate-100 hover:text-slate-900">
             <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-slate-900 text-[11px] font-bold text-white shadow-sm">B</span>
@@ -16,7 +14,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
     </div>
 
     <!-- DASHBOAR | ADMIN - SUPERADMIN - OWNER -->
-    <div class="no-scrollbar flex min-h-0 flex-1 flex-col gap-0 overflow-auto">
+    <div class="no-scrollbar flex min-h-0 flex-1 flex-col gap-0 overflow-y-auto">
         <div class="relative flex w-full min-w-0 flex-col p-2">
             <div class="flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-slate-500/70">
                 Dashboard
@@ -308,5 +306,3 @@ $userInitial = strtoupper(substr($realname, 0, 1));
     <div class="mt-auto border-t border-slate-200 p-2">
         <?= $this->include('App\Views\layout\footer') ?>
     </div>
-
-</aside>
