@@ -78,6 +78,54 @@ function initHeaderPage() {
 			closeAllMenus();
 		}
 	});
+
+	// Initialize Select2 for Global Region Filter
+	if ($('#globalRegionFilter').length) {
+		$('#globalRegionFilter').select2({
+			theme: "classic",
+			width: '100%'
+		}).on('change', function() {
+			const selectedId = $(this).val();
+			const selectedName = $(this).find('option:selected').text().trim();
+			const csrfName = $('meta[name="csrf-token-name"]').attr('content') || 'csrf_test_name';
+			const csrfHash = $('meta[name="csrf-token-hash"]').attr('content') || $('meta[name="csrf-token"]').attr('content');
+
+			Swal.fire({
+				title: 'Mengganti Wilayah...',
+				allowOutsideClick: false,
+				showConfirmButton: false,
+				didOpen: () => { Swal.showLoading(); }
+			});
+
+			let data = {
+				region_id: selectedId,
+				region_name: selectedName
+			};
+			data[csrfName] = csrfHash;
+
+			$.ajax({
+				url: '/auth/switch_region', // Adjust base_url if necessary, but /auth/switch_region usually works if app is at root
+				type: 'POST',
+				data: data,
+				success: function(response) {
+					if (response.status === 'success') {
+						window.location.reload();
+					} else {
+						Swal.fire('Error', response.message || 'Gagal mengganti wilayah', 'error');
+					}
+				},
+				error: function(xhr) {
+					let msg = 'Terjadi kesalahan sistem';
+					if (xhr.responseJSON && xhr.responseJSON.message) {
+						msg = xhr.responseJSON.message;
+					}
+					Swal.fire('Error', msg, 'error');
+					// Revert selection on error
+					$('#globalRegionFilter').val($('#activeRegion').val() || 'all').trigger('change.select2');
+				}
+			});
+		});
+	}
 }
 
 document.addEventListener("DOMContentLoaded", initHeaderPage);

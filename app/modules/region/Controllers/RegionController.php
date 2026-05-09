@@ -52,11 +52,10 @@ class RegionController extends BaseController
         }
 
         // Role-based filtering
-        $role = session()->get('role');
-        if ($role !== 'superadmin') {
-            $allowed_regions = session()->get('region_patient');
-            if (!empty($allowed_regions)) {
-                $options['where_in'] = $allowed_regions;
+        $region_patient = session()->get('region_patient');
+        if ($region_patient !== 'all') {
+            if (!empty($region_patient)) {
+                $options['where_in'] = $region_patient;
             } else {
                 // If no regions assigned, show nothing (or specific dummy ID to force empty)
                 $options['where_in'] = [0];

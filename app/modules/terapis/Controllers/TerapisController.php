@@ -46,7 +46,8 @@ class TerapisController extends BaseController
     //
 
     $role = $this->session->get('role');
-    $allowed_regions = ($role !== 'superadmin') ? $this->session->get('region_patient') : null;
+    $region_patient = $this->session->get('region_patient');
+    $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
 
     $data = [
       'realname' => $this->session->get('realname'),
@@ -67,7 +68,8 @@ class TerapisController extends BaseController
   {
     $region = $this->request->getPost('region');
     $role = $this->session->get('role');
-    $allowed_regions = ($role !== 'superadmin') ? $this->session->get('region_patient') : null;
+    $region_patient = $this->session->get('region_patient');
+    $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
 
     $queryBuilder = $this->model_terapis->getTerapis($region, $allowed_regions);
 
