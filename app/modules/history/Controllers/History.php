@@ -236,7 +236,7 @@ class History extends BaseController
 
             return $this->response->setJSON([
                 'status'  => false,
-                'message' => 'Data riwayat gagal disimpan: ' . implode(', ', $this->model_history->errors())
+                'message' => 'Data riwayat gagal disimpan. Silakan periksa kembali inputan Anda atau hubungi admin.'
             ]);
         }
     }

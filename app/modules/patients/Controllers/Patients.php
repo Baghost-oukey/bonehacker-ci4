@@ -107,10 +107,9 @@ class Patients extends BaseController
                 // session()->setFlashdata('message', ['success', 'Data Berhasil Disimpan']);
                 // return redirect()->to(site_url('dashboard'));
             } else {
-                $errors = implode(', ', $this->patientModel->errors());
                 return $this->response->setJSON([
                     'status' => 'error',
-                    'message' => 'Gagal validasi: ' . $errors,
+                    'message' => 'Gagal menyimpan data pasien. Pastikan data yang dimasukkan valid.',
                     'new_token' => csrf_hash()
                 ]);
                 // return redirect()->back()->with('message', ['error', 'Gagal: ' . $errors]);
@@ -118,7 +117,7 @@ class Patients extends BaseController
         } catch (\Exception $e) {
             return $this->response->setJSON([
                 'status' => 'error',
-                'message' => 'Database Error: ' . $e->getMessage(),
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti.',
                 'new_token' => csrf_hash()
             ]);
         }
