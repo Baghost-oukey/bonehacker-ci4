@@ -239,7 +239,6 @@ class History extends BaseController
                 'message' => 'Data riwayat gagal disimpan: ' . implode(', ', $this->model_history->errors())
             ]);
         }
-        return redirect()->to('patient/show/' . $patientId);
     }
 
     public function update()
@@ -270,15 +269,6 @@ class History extends BaseController
         } else {
             return $this->response->setJSON(['status' => false, 'message' => 'Data pasien gagal diperbarui']);
         }
-        if ($this->model_history->update($id, $data)) {
-            $kejantananData   = $this->mapKejantananData();
-            $statusKejantanan = $this->request->getPost('kejantanan') === 'ya' ? 'ya' : 'tidak';
-            $this->model_history->updateKejantanan($id, $kejantananData, $statusKejantanan);
-            return $this->response->setJSON(['status' => true, 'message' => 'Data pasien berhasil diperbarui']);
-        } else {
-            return $this->response->setJSON(['status' => false, 'message' => 'Data pasien gagal diperbarui']);
-        }
-        return redirect()->to('patient/show/' . $patientId);
     }
 
 
