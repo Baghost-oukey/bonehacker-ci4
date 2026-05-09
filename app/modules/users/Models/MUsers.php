@@ -12,7 +12,7 @@ class MUsers extends Model
   protected $returnType = 'object';
   protected $useSoftDeletes = false;
   protected $protectFields = true;
-  protected $allowedFields = ['realname', 'username', 'password', 'role', 'regions_patient', 'other_patient', 'is_active'];
+  protected $allowedFields = ['realname', 'username', 'password', 'role', 'regions_patient', 'other_patient'];
 
   protected bool $allowEmptyInserts = false;
   protected bool $updateOnlyChanged = true;

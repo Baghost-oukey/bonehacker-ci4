@@ -324,9 +324,11 @@
         $.ajax({
             url: window.terapisConfig.generateUserUrl,
             type: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': window.terapisConfig.csrfHash
+            },
             data: {
-                terapis_id: terapis_id,
-                <?= csrf_token() ?>: window.terapisConfig.csrfHash
+                terapis_id: terapis_id
             },
             dataType: 'json',
             success: function(response) {

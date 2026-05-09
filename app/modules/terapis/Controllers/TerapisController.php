@@ -3,10 +3,10 @@
 namespace App\Modules\Terapis\Controllers;
 
 use App\Controllers\BaseController;
-use App\Modules\jabatan\Models\Mjabatan;
-use App\Modules\Region\Models\MRegion;
-use App\Modules\Terapis\Models\MTerapis;
-use App\Modules\users\Models\MUsers;
+use App\modules\jabatan\Models\Mjabatan;
+use App\modules\Region\Models\MRegion;
+use App\modules\terapis\Models\MTerapis;
+use App\modules\users\Models\MUsers;
 use CodeIgniter\HTTP\ResponseInterface;
 use Endroid\QrCode\Color\Color;
 use Endroid\QrCode\Encoding\Encoding;
@@ -18,6 +18,7 @@ class TerapisController extends BaseController
   protected $model_terapis;
   protected $model_jabatan;
   protected $model_region;
+  protected $model_users;
   protected $session;
 
   public function __construct()
@@ -304,41 +305,55 @@ class TerapisController extends BaseController
       return $this->response->setJSON(['status' => 'error', 'message' => 'Invalid request']);
     }
 
-    $terapis_id = $this->request->getPost('terapis_id');
-    $terapis = $this->model_terapis->detail($terapis_id);
+    try {
+      $terapis_id = trim($this->request->getPost('terapis_id'));
+      $terapis = $this->model_terapis->detail($terapis_id);
 
-    if (!$terapis) {
-      return $this->response->setJSON(['status' => 'error', 'message' => 'Data Terapis tidak ditemukan']);
-    }
+      if (!$terapis) {
+        return $this->response->setJSON(['status' => 'error', 'message' => 'Data Terapis tidak ditemukan (ID: ' . $terapis_id . ')', 'csrfHash' => csrf_hash()]);
+      }
 
-    // Check if user already exists
-    $existingUser = $this->model_users->where('username', $terapis->terapis_id)->first();
-    if ($existingUser) {
-      return $this->response->setJSON(['status' => 'error', 'message' => 'Akun User untuk Terapis ini sudah ada!']);
-    }
+      // Check if user already exists
+      $existingUser = $this->model_users->where('username', $terapis->terapis_id)->first();
+      if ($existingUser) {
+        return $this->response->setJSON(['status' => 'error', 'message' => 'Akun User untuk Terapis ini sudah ada!', 'csrfHash' => csrf_hash()]);
+      }
 
-    // Generate password (default: 123456)
-    $defaultPassword = 'password123';
-    $hashedPassword = password_hash($defaultPassword, PASSWORD_DEFAULT);
+      // Generate password (default: 123456)
+      $defaultPassword = 'password123';
+      $hashedPassword = password_hash($defaultPassword, PASSWORD_DEFAULT);
 
-    $userData = [
-      'realname' => $terapis->nama,
-      'username' => $terapis->terapis_id, // NIK as username
-      'password' => $hashedPassword,
-      'role' => 'user',
-      'regions_patient' => json_encode([$terapis->region_id]),
-      'is_active' => 1
-    ];
+      $userData = [
+        'realname' => $terapis->nama,
+        'username' => $terapis->terapis_id, // NIK as username
+        'password' => $hashedPassword,
+        'role' => 'user',
+        'regions_patient' => json_encode([$terapis->region_id]),
+      ];
 
-    if ($this->model_users->insert($userData)) {
+      if ($this->model_users->insert($userData)) {
+        return $this->response->setJSON([
+          'status' => 'success',
+          'message' => 'Akun berhasil dibuat. Username: ' . $terapis->terapis_id . ' | Password: ' . $defaultPassword,
+          'csrfHash' => csrf_hash()
+        ]);
+      }
+
+      $dbError = $this->model_users->errors();
+      $errorMessage = !empty($dbError) ? implode(', ', (array)$dbError) : 'Gagal menyimpan data ke database';
+
       return $this->response->setJSON([
-        'status' => 'success',
-        'message' => 'Akun berhasil dibuat. Username: ' . $terapis->terapis_id . ' | Password: ' . $defaultPassword,
+        'status' => 'error',
+        'message' => 'Gagal membuat akun: ' . $errorMessage,
+        'csrfHash' => csrf_hash()
+      ]);
+    } catch (\Exception $e) {
+      return $this->response->setJSON([
+        'status' => 'error',
+        'message' => 'Sistem Error: ' . $e->getMessage(),
         'csrfHash' => csrf_hash()
       ]);
     }
-
-    return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal membuat akun']);
   }
 
   public function profil_saya()

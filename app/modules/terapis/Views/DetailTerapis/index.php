@@ -240,11 +240,7 @@
                     <div class="space-y-1">
                         <label class="text-xs font-medium text-slate-500">Status Akun</label>
                         <p class="text-sm font-semibold text-slate-900">
-                            <?php if ($connected_user->is_active): ?>
-                                <span class="text-emerald-600"><i class="fas fa-check-circle mr-1"></i> Aktif</span>
-                            <?php else: ?>
-                                <span class="text-red-600"><i class="fas fa-times-circle mr-1"></i> Non-aktif</span>
-                            <?php endif; ?>
+                            <span class="text-emerald-600"><i class="fas fa-check-circle mr-1"></i> Terhubung</span>
                         </p>
                     </div>
                 </div>
@@ -360,9 +356,11 @@
         $.ajax({
             url: window.detailTerapisConfig.generateUserUrl,
             type: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': window.detailTerapisConfig.csrfHash
+            },
             data: {
-                terapis_id: terapis_id,
-                <?= csrf_token() ?>: window.detailTerapisConfig.csrfHash
+                terapis_id: terapis_id
             },
             dataType: 'json',
             success: function(response) {
