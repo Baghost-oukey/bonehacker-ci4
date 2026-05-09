@@ -54,10 +54,9 @@ if ($isDevEnvironment) {
 
         <!-- ================= SIDEBAR ================= -->
         <aside id="sidebar" class="
-            fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200
-            transform -translate-x-full transition-transform duration-300 ease-in-out
-            lg:sticky lg:top-0 lg:translate-x-0 lg:h-screen lg:shrink-0
-            flex flex-col
+            w-64 bg-white border-r border-slate-200 transition-transform duration-300 ease-in-out flex flex-col
+            fixed inset-y-0 left-0 z-40 -translate-x-full
+            lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:z-10 lg:shrink-0
         ">
             <?= $this->include('App\Views\layout\sidebar') ?>
         </aside>
