@@ -39,11 +39,11 @@
                         <i class="fas fa-edit"></i>
                         Ubah Data
                     </button>
-                    <button type="button" id="btnBatal" onclick="toggleEditMode(false)" class="hidden inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
+                    <button type="button" id="btnBatal" onclick="toggleEditMode(false)" class="hidden items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
                         <i class="fas fa-times"></i>
                         Batal
                     </button>
-                    <button type="submit" id="btnSimpan" class="hidden inline-flex items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-700">
+                    <button type="submit" id="btnSimpan" class="hidden items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-700">
                         <i class="fas fa-save"></i>
                         Simpan Perubahan
                     </button>
@@ -621,8 +621,13 @@
             
             // Show/Hide buttons
             btnEdit.classList.add('hidden');
+            btnEdit.classList.remove('inline-flex');
+
             btnBatal.classList.remove('hidden');
+            btnBatal.classList.add('inline-flex');
+
             btnSimpan.classList.remove('hidden');
+            btnSimpan.classList.add('inline-flex');
             
             if (btnEditPhoto) btnEditPhoto.classList.remove('hidden');
             if (btnDeletePhoto) btnDeletePhoto.classList.remove('hidden');
