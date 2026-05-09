@@ -151,6 +151,9 @@
                     <i id="iconSpinner2" class="fas fa-circle-notch fa-spin absolute left-3 top-1/2 -translate-y-1/2 text-teal-600 text-sm hidden transition-all"></i> -->
                     <input type="text" id="searchPatientList" placeholder="Ketik Nama atau Nomor WhatsApp..."
                         class="w-full rounded-lg border border-slate-300 pl-9 pr-4 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                    <p class="mt-1.5 text-[11px] text-slate-400">
+                        <i class="fas fa-info-circle mr-1"></i> Pencarian otomatis mencakup seluruh wilayah/cabang.
+                    </p>
                 </div>
 
                 <button type="button" data-modal-open="modalnewpatient"

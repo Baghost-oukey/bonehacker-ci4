@@ -139,6 +139,9 @@ class AntreanController extends BaseController
             ->join('histories h', 'h.patient_id = p.id AND h.is_delete = 0', 'left')
             ->groupBy('p.id, p.name, p.phone, p.address, p.age, r.name, pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama, pa.provinsi_nama');
 
+        $search = $request->getPost('search');
+        $searchValue = $search['value'] ?? null;
+
         $role = session()->get('role');
         $active_region = session()->get('active_region');
         $region_session = session()->get('region_patient');
@@ -149,6 +152,11 @@ class AntreanController extends BaseController
             $filter = ($region && $region !== 'all') ? $region : ($active_region !== 'all' ? $active_region : $region_session);
         } else {
             $filter = $region_session;
+        }
+
+        // Smart Logic: Jika sedang mencari, abaikan filter wilayah (lintas wilayah)
+        if (!empty($searchValue)) {
+            $filter = 'all';
         }
 
         if ($filter !== 'all' && !empty($filter)) {
