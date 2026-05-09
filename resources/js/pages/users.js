@@ -408,7 +408,6 @@ const setupUsersPage = () => {
 
         const formData = new FormData(form);
         formData.append(config.csrfName, config.csrfHash);
-        formData.append('_method', 'PUT');
 
         $.ajax({
             url: $form.attr('action'),
@@ -474,7 +473,6 @@ const setupUsersPage = () => {
 
         const formData = new FormData();
         formData.append(config.csrfName, config.csrfHash);
-        formData.append('_method', 'DELETE');
 
         $.ajax({
             url: deleteUrl,

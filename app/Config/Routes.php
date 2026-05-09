@@ -219,7 +219,7 @@ $routes->group('users', ['namespace' => 'App\Modules\Users\Controllers', 'filter
   $routes->post('fetch', 'UsersController::fetch');
   $routes->post('store', 'UsersController::store');
   $routes->post('update/(:num)', 'UsersController::update/$1');
-  $routes->get('destroy/(:num)', 'UsersController::destroy/$1');
+  $routes->post('destroy/(:num)', 'UsersController::destroy/$1');
 
   // Pasien Luar
   $routes->get('view_patient/(:num)', 'Users::view_patient/$1');
