@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="<?= base_url('assets/modules/toastr/css/toastr.min.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/style.min.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/components.min.css') ?>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 
 <body>
@@ -33,8 +34,15 @@
                                     </div>
                                     <div class="form-group">
                                         <label class="control-label">Kata Sandi</label>
-                                        <input type="password" class="form-control" name="password" required>
-                                        <div class="invalid-feedback">Kata sandi tidak boleh kosong</div>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" name="password" id="password" required>
+                                            <div class="input-group-append">
+                                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </div>
+                                            <div class="invalid-feedback">Kata sandi tidak boleh kosong</div>
+                                        </div>
                                     </div>
                                     <div class="form-group">
                                         <button type="submit" class="btn btn-primary btn-lg btn-block">Masuk</button>
@@ -67,6 +75,18 @@
             });
         </script>
     <?php endif; ?>
+
+    <script>
+        $(document).ready(function() {
+            $('#togglePassword').click(function() {
+                const passwordInput = $('#password');
+                const type = passwordInput.attr('type') === 'password' ? 'text' : 'password';
+                passwordInput.attr('type', type);
+                
+                $(this).find('i').toggleClass('fa-eye fa-eye-slash');
+            });
+        });
+    </script>
 
     <script src="<?= base_url('assets/js/scripts.js') ?>"></script>
 </body>
