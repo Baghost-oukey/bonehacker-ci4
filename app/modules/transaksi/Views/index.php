@@ -261,7 +261,7 @@
         storeUrl: "<?= site_url('transaksi/store') ?>",
         deleteUrl: "<?= site_url('transaksi/delete') ?>",
         exportPdfUrl: "<?= site_url('transaksi/export_pdf') ?>",
-        exportExcelUrl: "<?= site_url('transaksi/export_excel') ?>",
+        exportExcelUrl: "<?= site_url('transaksi/export_excell') ?>",
         chartDataUrl: "<?= site_url('transaksi/chart_data') ?>",
         role: "<?= $role ?? '' ?>"
     };

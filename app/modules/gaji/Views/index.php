@@ -99,6 +99,7 @@
         <div id="tab-riwayat" class="tab-content p-6 hidden">
             <!-- Filter Riwayat -->
             <form action="<?= base_url('gaji') ?>" method="GET" class="mb-6 flex flex-wrap items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <input type="hidden" name="tab" value="riwayat">
                 <div class="flex items-center gap-2">
                     <label class="text-xs font-bold text-slate-500 uppercase">Bulan:</label>
                     <select name="bulan" onchange="this.form.submit()" class="text-sm font-bold border-slate-200 rounded-lg focus:ring-blue-500">
@@ -265,5 +266,25 @@
         saveSettingUrl: "<?= base_url('gaji/setting/save') ?>",
         prosesBayarUrl: "<?= base_url('gaji/proses_bayar') ?>"
     };
+
+    // Auto-open active tab based on URL param ?tab=
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const activeTab = urlParams.get('tab');
+        if (activeTab) {
+            const targetContent = document.getElementById('tab-' + activeTab);
+            const targetBtn = document.querySelector('[data-target="tab-' + activeTab + '"]');
+            if (targetContent && targetBtn) {
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+                document.querySelectorAll('.tab-btn').forEach(b => {
+                    b.classList.remove('border-blue-600', 'text-blue-600');
+                    b.classList.add('border-transparent', 'text-slate-500');
+                });
+                targetContent.classList.remove('hidden');
+                targetBtn.classList.add('border-blue-600', 'text-blue-600');
+                targetBtn.classList.remove('border-transparent', 'text-slate-500');
+            }
+        }
+    });
 </script>
 <?= $this->endSection() ?>

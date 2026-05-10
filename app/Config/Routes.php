@@ -75,6 +75,7 @@ $routes->group('transaksi', ['namespace' => 'App\Modules\Transaksi\Controllers',
   $routes->post('delete', 'TransaksiController::delete');
   $routes->get('export_excell', 'TransaksiController::export_excell');
   $routes->get('export_pdf', 'TransaksiController::export_pdf');
+  $routes->get('chart_data', 'TransaksiController::chart_data');
 });
 
 // Statistik
