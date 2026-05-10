@@ -4,7 +4,7 @@ namespace App\Modules\transaksi\Controllers;
 
 use App\Controllers\BaseController;
 use App\Modules\transaksi\Models\MFinanceCategory;
-use App\Modules\region\Models\MRegion;
+use App\modules\region\Models\MRegion;
 
 class FinanceCategoryController extends BaseController
 {
