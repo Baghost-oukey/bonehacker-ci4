@@ -787,8 +787,7 @@ class Patients extends BaseController
 
     public function export_data()
     {
-        $role = session()->get('role');
-        if (!in_array($role, ['superadmin', 'owner', 'admin'])) {
+        if (session()->get('role') !== 'superadmin') {
             return redirect()->to(base_url('beranda'))->with('message', ['error', 'Anda tidak memiliki hak akses untuk ekspor data.']);
         }
         $type = $this->request->getGet('type');

@@ -235,8 +235,7 @@ class JournalController extends BaseController
     // ================= ROUTER EXPORT =================
     public function export_file_journal()
     {
-        $role = session()->get('role');
-        if (!in_array($role, ['superadmin', 'owner', 'admin'])) {
+        if (session()->get('role') !== 'superadmin') {
             return redirect()->to('journal')->with('error', 'Unauthorized access');
         }
 

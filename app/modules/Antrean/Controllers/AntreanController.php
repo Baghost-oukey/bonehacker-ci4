@@ -379,8 +379,7 @@ class AntreanController extends BaseController
 
     public function export_excell_antrean()
     {
-        $role = session()->get('role');
-        if (!in_array($role, ['superadmin', 'owner', 'admin'])) {
+        if (session()->get('role') !== 'superadmin') {
             return redirect()->to('antrean')->with('message', ['error', 'Unauthorized access']);
         }
 
@@ -502,8 +501,7 @@ class AntreanController extends BaseController
 
     public function print_pdf_antrean()
     {
-        $role = session()->get('role');
-        if (!in_array($role, ['superadmin', 'owner', 'admin'])) {
+        if (session()->get('role') !== 'superadmin') {
             return redirect()->to('antrean')->with('message', ['error', 'Unauthorized access']);
         }
 
