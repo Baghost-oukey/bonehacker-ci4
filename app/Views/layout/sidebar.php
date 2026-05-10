@@ -182,6 +182,13 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                                         <span class="truncate">Statistik Keuangan</span>
                                     </a>
                                 </li>
+                                <?php if ($role === 'superadmin' || $role === 'owner'): ?>
+                                <li>
+                                    <a href="<?= base_url('kas/categories') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'categories' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                        <span class="truncate">Master Kategori</span>
+                                    </a>
+                                </li>
+                                <?php endif; ?>
                             </ul>
                         </details>
                     </li>
@@ -270,6 +277,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                     </li>
 
 
+                    <?php if ($role === 'superadmin'): ?>
                     <li>
                         <details class="group" <?= in_array($current_segment, ['logs', 'whatsapp', 'log_whatsapp', 'jabatan', 'greeting']) ? 'open' : '' ?>>
                             <summary class="flex w-full cursor-pointer list-none items-center justify-between rounded-md p-2 text-left text-sm transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 [&::-webkit-details-marker]:hidden">
@@ -288,14 +296,17 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                             </ul>
                         </details>
                     </li>
+                    <?php endif; ?>
 
 
+                    <?php if ($role === 'superadmin'): ?>
                     <li>
                         <a href="<?= base_url('users') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'users' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                             <i class="fas fa-users w-4 text-center shrink-0"></i>
                             <span class="truncate">Users</span>
                         </a>
                     </li>
+                    <?php endif; ?>
                     <li>
                         <a href="<?= base_url('terapis') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'terapis' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                             <i class="fas fa-user-md w-4 text-center shrink-0"></i>

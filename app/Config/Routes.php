@@ -269,6 +269,11 @@ $routes->group('kas', ['namespace' => 'App\modules\kas\Controllers', 'filter' =>
   $routes->post('bayar_pengeluaran_harian', 'Kas::bayar_pengeluaran_harian');
   $routes->post('set_filter_region', 'Kas::set_filter_region');
 
+  // Kategori Keuangan
+  $routes->get('categories', 'FinanceCategoryController::index', ['namespace' => 'App\Modules\transaksi\Controllers']);
+  $routes->post('categories/store', 'FinanceCategoryController::store', ['namespace' => 'App\Modules\transaksi\Controllers']);
+  $routes->get('categories/delete/(:num)', 'FinanceCategoryController::delete/$1', ['namespace' => 'App\Modules\transaksi\Controllers']);
+
   // Grouping untuk CRUD Master Pengeluaran Harian
   $routes->group('master', function ($routes) {
     $routes->post('simpan', 'Kas::simpan_master_harian');

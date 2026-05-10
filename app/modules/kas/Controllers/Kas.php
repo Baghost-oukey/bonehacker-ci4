@@ -41,15 +41,21 @@ class Kas extends BaseController
             else { $regionsBuilder->where('id', $filter_region); }
         }
 
+        $mCategory = new \App\Modules\transaksi\Models\MFinanceCategory();
+        $categories_income  = $mCategory->getCategories('income', $filter_region);
+        $categories_expense = $mCategory->getCategories('expense', $filter_region);
+
         $data = [
-            'title'         => 'Manajemen Arus Kas',
-            'role'          => $role,
-            'list_regions'  => $regionsBuilder->get()->getResultArray(),
-            'today_balance' => $stats['today_balance'] ?? 0,
-            'today_income'  => $stats['today_income'] ?? 0,
-            'today_expense' => $stats['today_expense'] ?? 0,
-            'total_income'  => $stats['total_income'] ?? 0,
-            'total_expense' => $stats['total_expense'] ?? 0,
+            'title'              => 'Manajemen Arus Kas',
+            'role'               => $role,
+            'list_regions'       => $regionsBuilder->get()->getResultArray(),
+            'categories_income'  => $categories_income,
+            'categories_expense' => $categories_expense,
+            'today_balance'      => $stats['today_balance'] ?? 0,
+            'today_income'       => $stats['today_income'] ?? 0,
+            'today_expense'      => $stats['today_expense'] ?? 0,
+            'total_income'       => $stats['total_income'] ?? 0,
+            'total_expense'      => $stats['total_expense'] ?? 0,
         ];
         return view('\App\modules\kas\Views\index', $data);
     }
@@ -115,13 +121,14 @@ class Kas extends BaseController
 
         $type = ($kategori === 'pemasukan') ? 'income' : 'expense';
         $data_simpan = [
-            'region_id'  => $region_id,
-            'type'       => $type,
-            'kategori'   => $kategori,
-            'nominal'    => str_replace(['Rp', '.', ','], '', $nominal),
-            'keterangan' => $keterangan,
-            'status'     => 'active',
-            'created_by' => session()->get('id_user'),
+            'region_id'   => $region_id,
+            'category_id' => $this->request->getPost('category_id'),
+            'type'        => $type,
+            'kategori'    => $kategori,
+            'nominal'     => str_replace(['Rp', '.', ','], '', $nominal),
+            'keterangan'  => $keterangan,
+            'status'      => 'active',
+            'created_by'  => session()->get('id_user'),
         ];
 
         if ($this->mTransaksiKas->insert($data_simpan)) {
