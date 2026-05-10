@@ -130,8 +130,32 @@
                                 <span class="w-4 text-center">:</span>
                                 <div class="flex-1">
                                     <select id="region_history" name="history_region" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-white">
-                                        <option value="">Semua Wilayah</option>
+                                        <option value="">Pilih Wilayah</option>
                                         <?php foreach ($wilayah as $value): ?>
+                                            <?php
+                                            // Prioritas: region_id dari patient (biodata)
+                                            $selected = '';
+                                            if (isset($patient->region_id) && $value->id == $patient->region_id) {
+                                                $selected = 'selected';
+                                            }
+                                            ?>
+                                            <option value="<?= $value->id ?>" <?= $selected ?>><?= esc($value->name) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                            </div>
+                                            <?php
+                                            // Prioritas: region_id dari patient (biodata)
+                                            $selected = '';
+                                            if (isset($patient->region_id) && $value->id == $patient->region_id) {
+                                                $selected = 'selected';
+                                            }
+                                            ?>
+                                            <option value="<?= $value->id ?>" <?= $selected ?>><?= esc($value->name) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                            </div>
                                             <?php
                                             $selected = '';
                                             if (isset($regions_patient[0]) && $value->id == $regions_patient[0]) {
@@ -160,8 +184,8 @@
                         <input type="text" name="finishAt" id="finishAt" disabled class="w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-500">
                     </div>
                     <div class="space-y-1">
-                        <label class="text-sm font-medium text-slate-600">Total Waktu :</label>
-                        <input type="text" name="timeConsume" id="timeConsume" disabled class="w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-500">
+                        <label class="text-sm font-medium text-slate-600">Total Waktu (Menit) :</label>
+                        <input type="text" name="timeConsume" id="timeConsume" readonly class="w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-600 cursor-not-allowed" title="Otomatis dihitung dari waktu mulai dan selesai">
                     </div>
                 </div>
 

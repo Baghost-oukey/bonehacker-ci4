@@ -182,6 +182,7 @@ $routes->group('history', ['namespace' => 'App\Modules\history\Controllers', 'fi
   $routes->post('copy', 'History::copy');
   $routes->post('destroy/(:num)', 'History::destroy/$1');
   $routes->get('show/(:num)', 'History::show/$1');
+  $routes->get('terapis-by-region', 'History::getTerapisByRegion');
 });
 
 // Log - WhatsApp

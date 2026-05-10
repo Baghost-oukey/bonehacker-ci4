@@ -58,6 +58,7 @@ class History extends BaseController
             $value->date = $value->date ? date('d-m-Y', strtotime($value->date)) : '-';
             $value->complaint = !empty($value->complaint_names) ? $value->complaint_names : '-';
             $value->medhis    = !empty($value->medhis_names) ? $value->medhis_names : '-';
+            $value->duration = isset($value->time_consume) ? $value->time_consume . ' mnt' : '-';
             $value->action = '
                 <div class="btn-group">
                     <button type="button" class="btn btn-primary btn-sm" onclick="show(\'' . $value->id . '\')"><i class="fas fa-eye"></i></button>
@@ -122,13 +123,27 @@ class History extends BaseController
     {
         $patientId = $this->request->getPost('patient_id');
         $queueId   = $this->request->getPost('queue_id');
-        if (!empty($queueId)) {
+        $type      = $this->request->getPost('type') ?? 'posted';
+
+        if (!empty($queueId) && $type === 'posted') {
             $queue = $this->db->table('patient_queues')->where('id', $queueId)->get()->getRow();
             if ($queue && $queue->is_stored_history == 1) {
-                return $this->response->setJSON(['status' => false, 'message' => 'Riwayat sudah disimpan sebelumnya']);
+                // Allow update if it's already posted? No, store is for new records.
+                // But if they clicked save twice, we don't want duplicate jasa_pelayanan.
             }
             $this->db->table('patient_queues')->where('id', $queueId)->update(['is_stored_history' => 1]);
         }
+
+        // Validation for processAt and finishAt
+        $processAt = $this->request->getPost('processAt');
+        $finishAt  = $this->request->getPost('finishAt');
+        if ($processAt && $finishAt && strtotime($finishAt) < strtotime($processAt)) {
+            return $this->response->setJSON([
+                'status'  => false,
+                'message' => 'Waktu selesai tidak boleh lebih awal dari waktu mulai.'
+            ]);
+        }
+
         $complaintValues = $this->processTags($this->request->getPost('complaint'), 'complaint_tags');
         $medhisValues    = $this->processTags($this->request->getPost('medhis'), 'medhis_tags');
         $resultValues    = $this->processTags($this->request->getPost('results'), 'result_tags');
@@ -138,32 +153,38 @@ class History extends BaseController
         $data['cervical']   = $this->request->getPost('cervical') ?? "";
         $data['thoraxal']   = $this->request->getPost('thoraxal') ?? "";
         $data['lumbar']     = $this->request->getPost('lumbar') ?? "";
+
         if (isset($data['phone']) && empty($data['phone'])) {
             $data['phone'] = $data['phone'] ?: '-';
         }
+
         $kejantananData = $this->mapKejantananData();
         $statusKejantanan = $this->request->getPost('kejantanan') === 'ya' ? 'ya' : 'tidak';
+
         if ($this->model_history->insert($data)) {
             $historyId = $this->model_history->getInsertID();
             unset($data['phone']);
             $this->model_history->updateKejantanan($historyId, $kejantananData, $statusKejantanan);
 
-            // Auto-insert ke tabel jasa_pelayanan
-            $this->insertJasaPelayanan($historyId, $patientId, $statusKejantanan);
+            if ($type === 'posted') {
+                // Auto-insert ke tabel jasa_pelayanan
+                $this->insertJasaPelayanan($historyId, $patientId, $statusKejantanan);
 
-            $patient = $this->model_patient->find($patientId);
-            $whatsappData = $this->model_whatsapp->getMessageAndCredentials();
-            if ($this->request->getPost('notifikasi') && $whatsappData && $patient) {
-                $rawPhone = $patient->phone ?? "-";
-                $phone = (strpos($rawPhone, '0') === 0) ? '62' . substr($rawPhone, 1) : $rawPhone;
-                $this->sendAndLogWhatsApp($historyId, $patient->name, $phone, $whatsappData);
+                $patient = $this->model_patient->find($patientId);
+                $whatsappData = $this->model_whatsapp->getMessageAndCredentials();
+                if ($this->request->getPost('notifikasi') && $whatsappData && $patient) {
+                    $rawPhone = $patient->phone ?? "-";
+                    $phone = (strpos($rawPhone, '0') === 0) ? '62' . substr($rawPhone, 1) : $rawPhone;
+                    $this->sendAndLogWhatsApp($historyId, $patient->name, $phone, $whatsappData);
+                }
             }
+
             return $this->response->setJSON([
                 'status' => true,
-                'message' => 'Data riwayat berhasil disimpan'
+                'message' => $type === 'draft' ? 'Data riwayat berhasil disimpan sebagai draft' : 'Data riwayat berhasil disimpan'
             ]);
         } else {
-            if (!empty($queueId)) {
+            if (!empty($queueId) && $type === 'posted') {
                 $this->db->table('patient_queues')->where('id', $queueId)->update(['is_stored_history' => 0]);
             }
 
@@ -178,6 +199,18 @@ class History extends BaseController
     {
         $id = $this->request->getPost('id');
         $patientId = $this->request->getPost('patient_id');
+        $queueId   = $this->request->getPost('queue_id');
+        $type      = $this->request->getPost('type') ?? 'posted';
+
+        $processAt = $this->request->getPost('processAt');
+        $finishAt  = $this->request->getPost('finishAt');
+
+        if ($processAt && $finishAt && strtotime($finishAt) < strtotime($processAt)) {
+            return $this->response->setJSON([
+                'status'  => false,
+                'message' => 'Waktu selesai tidak boleh lebih awal dari waktu mulai.'
+            ]);
+        }
 
         $complaintValues = $this->processTags($this->request->getPost('complaint'), 'complaint_tags');
         $medhisValues    = $this->processTags($this->request->getPost('medhis'), 'medhis_tags');
@@ -195,10 +228,28 @@ class History extends BaseController
         if ($this->model_history->update($id, $data)) {
             $this->model_history->updateKejantanan($id, $kejantananData, $statusKejantanan);
 
-            // Auto-update ke tabel jasa_pelayanan
-            $this->upsertJasaPelayanan($id, $patientId, $statusKejantanan);
+            if ($type === 'posted') {
+                // Mark queue as finalized
+                if (!empty($queueId)) {
+                    $this->db->table('patient_queues')->where('id', $queueId)->update(['is_stored_history' => 1]);
+                }
 
-            return $this->response->setJSON(['status' => true, 'message' => 'Data pasien berhasil diperbarui']);
+                // Auto-update/insert ke tabel jasa_pelayanan
+                $this->upsertJasaPelayanan($id, $patientId, $statusKejantanan);
+
+                // WhatsApp Notification if requested and not already sent for this history
+                $patient = $this->model_patient->find($patientId);
+                $whatsappData = $this->model_whatsapp->getMessageAndCredentials();
+                $alreadySent = $this->model_logwa->where('history_id', $id)->where('is_sent', 1)->first();
+
+                if ($this->request->getPost('notifikasi') && $whatsappData && $patient && !$alreadySent) {
+                    $rawPhone = $patient->phone ?? "-";
+                    $phone = (strpos($rawPhone, '0') === 0) ? '62' . substr($rawPhone, 1) : $rawPhone;
+                    $this->sendAndLogWhatsApp($id, $patient->name, $phone, $whatsappData);
+                }
+            }
+
+            return $this->response->setJSON(['status' => true, 'message' => $type === 'draft' ? 'Draft riwayat berhasil diperbarui' : 'Data pasien berhasil diperbarui']);
         } else {
             return $this->response->setJSON(['status' => false, 'message' => 'Data pasien gagal diperbarui']);
         }
@@ -241,11 +292,17 @@ class History extends BaseController
         $data->results   = $this->_getTagNameFromIds($data->results, 'result_tags');
         $data->history_created_by = !empty($data->created_by) ? $this->getRealname($data->created_by) : '-';
         $data->history_updated_by = !empty($data->updated_by) ? $this->getRealname($data->updated_by) : '-';
+        
+        // Ensure camelCase for JS population
+        $data->processAt = $data->process_at;
+        $data->finishAt = $data->finish_at;
+        $data->timeConsume = $data->time_consume;
+
         if (!empty($data->finish_at) && !empty($data->process_at)) {
             $diff = strtotime($data->finish_at) - strtotime($data->process_at);
-            $data->time_consume = round($diff / 3600, 2) . ' jam';
+            $data->time_consume_formatted = round($diff / 60, 0) . ' menit';
         } else {
-            $data->time_consume = null;
+            $data->time_consume_formatted = null;
         }
         return $this->response->setJSON($data);
     }
@@ -266,6 +323,26 @@ class History extends BaseController
 
     private function mapHistoryData($patientId, $complaint, $medhis, $results)
     {
+        $processAt = $this->request->getPost('processAt') ? str_replace('T', ' ', $this->request->getPost('processAt')) : null;
+        $finishAt = $this->request->getPost('finishAt') ? str_replace('T', ' ', $this->request->getPost('finishAt')) : null;
+        $timeConsume = $this->request->getPost('timeConsume');
+
+        // Auto-calculate duration if missing but start/finish are present
+        if (empty($timeConsume) && $processAt && $finishAt) {
+            try {
+                $start = new \DateTime($processAt);
+                $end = new \DateTime($finishAt);
+                if ($end > $start) {
+                    $diff = $start->diff($end);
+                    $timeConsume = ($diff->days * 24 * 60) + ($diff->h * 60) + $diff->i;
+                } else {
+                    $timeConsume = 0;
+                }
+            } catch (\Exception $e) {
+                $timeConsume = null;
+            }
+        }
+
         return [
             'patient_id'            => $patientId,
             'terapis_id'            => is_array($this->request->getPost('terapis')) ? implode(',', $this->request->getPost('terapis')) : "",
@@ -301,7 +378,11 @@ class History extends BaseController
 
 
             'date'                  => $this->request->getPost('date') ? $this->request->getPost('date') . ' ' . date('H:i:s') : date('Y-m-d H:i:s'),
+            'process_at'            => $processAt,
+            'finish_at'             => $finishAt,
+            'time_consume'          => $timeConsume ?: null,
             'kejantanan'            => $this->request->getPost('kejantanan') === 'ya' ? 'ya' : 'tidak',
+            'type'                  => $this->request->getPost('type') ?? 'posted',
             'created_by'            => session()->get('userId'),
         ];
     }
@@ -417,7 +498,7 @@ class History extends BaseController
         $whatsappData = $this->model_whatsapp->getMessageAndCredentials();
         $complaintValues = $this->processTags($this->request->getPost('complaint'), 'complaint_tags');
         $medhisValues    = $this->processTags($this->request->getPost('medhis'), 'medhis_tags');
-        $resultValues    = $this->processTags($this->request->getPost('result'), 'result_tags');
+        $resultValues    = $this->processTags($this->request->getPost('results'), 'result_tags');
         $existingData = $this->model_history->getById($id);
 
         if ($existingData) {
@@ -425,9 +506,14 @@ class History extends BaseController
             $dateInput = $this->request->getPost('date');
             $data['date'] = !empty($dateInput) ? $dateInput . ' ' . date('H:i:s') : date('Y-m-d H:i:s');
             $data['created_by'] = session()->get('userId');
+
+            $statusKejantanan = $this->request->getPost('kejantanan') === 'ya' ? 'ya' : 'tidak';
             $kejantananData = $this->mapKejantananData();
-            $newId = $this->model_history->updateKejantanan($id, $data, $kejantananData);
-            if ($newId) {
+
+            if ($this->model_history->insert($data)) {
+                $newId = $this->model_history->getInsertID();
+                $this->model_history->updateKejantanan($newId, $kejantananData, $statusKejantanan);
+
                 if ($this->request->getPost('notifikasi') && $whatsappData) {
                     $this->sendAndLogWhatsApp($newId, $name, $phone, $whatsappData);
                 }
@@ -523,5 +609,34 @@ class History extends BaseController
             $jpData['created_at']      = date('Y-m-d H:i:s');
             $this->db->table('jasa_pelayanan')->insert($jpData);
         }
+    }
+
+    /**
+     * Get terapis by region - untuk filter dropdown terapis
+     */
+    public function getTerapisByRegion()
+    {
+        $regionId = $this->request->getGet('region_id') ?? $this->request->getPost('region_id');
+        
+        if (empty($regionId)) {
+            return $this->response->setJSON([
+                'status' => false,
+                'message' => 'Region ID is required',
+                'data' => []
+            ]);
+        }
+
+        $terapis = $this->db->table('terapis')
+            ->select('id, nama, is_active')
+            ->where('region_id', $regionId)
+            ->where('is_active', 1)
+            ->orderBy('nama', 'ASC')
+            ->get()
+            ->getResult();
+
+        return $this->response->setJSON([
+            'status' => true,
+            'data' => $terapis
+        ]);
     }
 }

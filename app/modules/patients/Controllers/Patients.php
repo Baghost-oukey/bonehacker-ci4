@@ -36,10 +36,13 @@ class Patients extends BaseController
         if ($files) {
             foreach ($files as $file) {
                 if ($file->isValid() && !$file->hasMoved()) {
-                    $newName = $file->getRandomName();
+                    $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+                    if (in_array($file->getMimeType(), $allowedTypes) && $file->getSizeByUnit('kb') <= 10240) {
+                        $newName = $file->getRandomName();
 
-                    if ($file->move(FCPATH . 'patient_file', $newName)) {
-                        $file_urls[] = $newName;
+                        if ($file->move(FCPATH . 'patient_file', $newName)) {
+                            $file_urls[] = $newName;
+                        }
                     }
                 }
             }
@@ -451,8 +454,8 @@ class Patients extends BaseController
         if ($files) {
             foreach ($files as $file) {
                 if ($file->isValid() && !$file->hasMoved()) {
-                    $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'application/pdf'];
-                    if (in_array($file->getMimeType(), $allowedTypes) && $file->getSizeByUnit('kb') <= 2048) {
+                    $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+                    if (in_array($file->getMimeType(), $allowedTypes) && $file->getSizeByUnit('kb') <= 10240) {
 
                         $newName = $file->getRandomName();
 
@@ -566,9 +569,12 @@ class Patients extends BaseController
             if (isset($imageFiles['userfiles'])) {
                 foreach ($imageFiles['userfiles'] as $img) {
                     if ($img->isValid() && !$img->hasMoved()) {
-                        $newName = $img->getRandomName();
-                        $img->move(FCPATH . 'patient_file', $newName);
-                        $newFileUrls[] = base_url('patient_file/' . $newName);
+                        $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+                        if (in_array($img->getMimeType(), $allowedTypes) && $img->getSizeByUnit('kb') <= 10240) {
+                            $newName = $img->getRandomName();
+                            $img->move(FCPATH . 'patient_file', $newName);
+                            $newFileUrls[] = base_url('patient_file/' . $newName);
+                        }
                     }
                 }
             }

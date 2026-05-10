@@ -51,6 +51,7 @@ class MHistory extends Model
         'patient_queue_id',
         'process_at',
         'finish_at',
+        'time_consume',
         'type'
     ];
 
