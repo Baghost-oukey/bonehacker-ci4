@@ -179,6 +179,27 @@ class TerapisController extends BaseController
     return view('App\modules\terapis\Views\views_info_publik', $data);
   }
 
+  private function uploadPhoto($file)
+  {
+    if ($file && $file->isValid() && !$file->hasMoved()) {
+      $newName = $file->getRandomName();
+      $newName = pathinfo($newName, PATHINFO_FILENAME) . '.webp';
+      $uploadPath = FCPATH . 'foto_terapis/';
+
+      if (!is_dir($uploadPath)) {
+        mkdir($uploadPath, 0777, true);
+      }
+
+      // Gunakan library Image CI4 untuk konversi ke WebP
+      service('image')
+        ->withFile($file->getTempName())
+        ->save($uploadPath . $newName, 80); // Quality 80%
+
+      return $newName;
+    }
+    return null;
+  }
+
   public function store()
   {
     $file = $this->request->getFile('foto');
@@ -197,10 +218,8 @@ class TerapisController extends BaseController
       'keterangan' => $this->request->getPost('keterangan'),
     ];
 
-    if ($file && $file->isValid() && !$file->hasMoved()) {
-      $newName = $file->getRandomName();
-      $file->move(FCPATH . 'foto_terapis/', $newName);
-      $data['foto'] = $newName;
+    if ($foto = $this->uploadPhoto($file)) {
+      $data['foto'] = $foto;
     }
 
     if ($this->model_terapis->store($data)) {
@@ -233,25 +252,23 @@ class TerapisController extends BaseController
       'is_active' => $status,
     ];
 
-    if ($file && $file->isValid() && !$file->hasMoved()) {
+    if ($foto = $this->uploadPhoto($file)) {
       // Hapus foto lama
       $oldData = $this->model_terapis->getById($id);
       if ($oldData && $oldData->foto && file_exists(FCPATH . 'foto_terapis/' . $oldData->foto)) {
         unlink(FCPATH . 'foto_terapis/' . $oldData->foto);
       }
-
-      $newName = $file->getRandomName();
-      $file->move(FCPATH . 'foto_terapis/', $newName);
-      $data['foto'] = $newName;
+      $data['foto'] = $foto;
     }
 
     if ($this->model_terapis->update($id, $data)) {
       $this->session->setFlashdata('message', ['success', 'Data berhasil diperbarui']);
+    } else {
+      $this->session->setFlashdata('message', ['danger', 'Gagal memperbarui data']);
     }
 
-    return redirect()->to('terapis/detail_terapis/' . $terapis_id);
+    return redirect()->back();
   }
-
   public function destroy($id)
   {
     $terapis = $this->model_terapis->getById($id);

@@ -151,10 +151,10 @@ const setupDetailTerapisPage = () => {
             const file = fileInput.files[0];
 
             if (file) {
-                const validFormats = ['image/jpeg', 'image/png', 'image/jpg'];
+                const validFormats = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
                 if (!validFormats.includes(file.type)) {
                     e.preventDefault();
-                    showErrorModal('Format file harus JPG, JPEG, atau PNG.');
+                    showErrorModal('Format file harus JPG, JPEG, PNG, atau WEBP.');
                     return;
                 }
                 if (file.size > 2 * 1024 * 1024) {
