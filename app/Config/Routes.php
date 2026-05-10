@@ -205,6 +205,7 @@ $routes->group('terapis', ['namespace' => 'App\Modules\terapis\Controllers', 'fi
   $routes->post('checkId', 'TerapisController::checkId');
   $routes->post('store', 'TerapisController::store');
   $routes->post('update', 'TerapisController::update');
+  $routes->post('deletefoto', 'TerapisController::deletefoto');
   $routes->get('destroy/(:num)', 'TerapisController::destroy/$1');
   $routes->get('public_info/(:any)', 'TerapisController::public_info/$1');
   $routes->post('generate_user', 'TerapisController::generate_user');

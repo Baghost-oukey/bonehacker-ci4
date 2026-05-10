@@ -103,12 +103,21 @@ class Auth extends BaseController
                 $defaultName   = ($user->role === 'owner' || $user->role === 'superadmin') ? 'Semua Wilayah' : ($regionDetail ? $regionDetail->name : 'Cabang');
 
 
+                $avatarUrl = null;
+                if (!empty($user->terapis_id)) {
+                    $terapis = $db->table('terapis')->select('foto')->where('terapis_id', $user->terapis_id)->get()->getRow();
+                    if ($terapis && $terapis->foto) {
+                        $avatarUrl = base_url('foto_terapis/' . $terapis->foto);
+                    }
+                }
+
                 $sessionData = [
                     'isLogin'         => true,
                     'userId'          => $user->id,
                     'username'        => $user->username,
                     'realname'        => $user->realname,
                     'role'            => $user->role,
+                    'avatar_url'      => $avatarUrl,
                     // Untuk Data Pasien
                     'region_id'       => $current_region_Id,
                     'region_name'     => $regionDetail ? $regionDetail->name : 'Cabang Tidak Terdeteksi',

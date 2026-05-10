@@ -262,6 +262,12 @@ class TerapisController extends BaseController
     }
 
     if ($this->model_terapis->update($id, $data)) {
+      // Jika yang diupdate adalah diri sendiri (terapis yang sedang login), update session
+      if (session()->get('terapis_id') == $terapis_id) {
+        if (isset($data['foto'])) {
+          session()->set('avatar_url', base_url('foto_terapis/' . $data['foto']));
+        }
+      }
       $this->session->setFlashdata('message', ['success', 'Data berhasil diperbarui']);
     } else {
       $this->session->setFlashdata('message', ['danger', 'Gagal memperbarui data']);
@@ -269,6 +275,33 @@ class TerapisController extends BaseController
 
     return redirect()->back();
   }
+
+  public function deletefoto()
+  {
+    $id = $this->request->getPost('id');
+    $terapis_id = $this->request->getPost('terapis_id');
+
+    $terapis = $this->model_terapis->getById($id);
+    if ($terapis && $terapis->foto) {
+      if (file_exists(FCPATH . 'foto_terapis/' . $terapis->foto)) {
+        unlink(FCPATH . 'foto_terapis/' . $terapis->foto);
+      }
+
+      $this->model_terapis->update($id, ['foto' => null]);
+
+      // Update session jika diri sendiri
+      if (session()->get('terapis_id') == $terapis_id) {
+        session()->set('avatar_url', null);
+      }
+
+      $this->session->setFlashdata('message', ['success', 'Foto berhasil dihapus']);
+    } else {
+      $this->session->setFlashdata('message', ['danger', 'Foto tidak ditemukan']);
+    }
+
+    return redirect()->back();
+  }
+
   public function destroy($id)
   {
     $terapis = $this->model_terapis->getById($id);

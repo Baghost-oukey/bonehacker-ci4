@@ -150,3 +150,16 @@ coverage/
 
 # PHP unit runtime cache
 .phpunit.result.cache
+
+#-------------------------
+# User Uploaded Content
+#-------------------------
+public/foto_terapis/*
+!public/foto_terapis/index.html
+!public/foto_terapis/no_profile.png
+
+public/greetings/*
+!public/greetings/index.html
+
+public/patient_file/*
+!public/patient_file/index.html

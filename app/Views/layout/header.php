@@ -24,7 +24,7 @@ $listRegions = session()->get('list_regions_global') ?? [];
                             <?php 
                                 // Only show regions the user is allowed to see, unless superadmin
                                 $allowed = session()->get('region_patient_allowed');
-                                $isAllowed = ($role === 'superadmin') || (is_array($allowed) && in_array($region['id'], $allowed)) || ($allowed == $region['id']);
+                                $isAllowed = in_array($role, ['superadmin', 'owner']) || (is_array($allowed) && in_array($region['id'], $allowed)) || ($allowed == $region['id']);
                                 
                                 if ($isAllowed):
                             ?>
