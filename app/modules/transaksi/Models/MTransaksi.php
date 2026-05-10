@@ -116,7 +116,11 @@ class MTransaksi extends Model
             ->where('DATE(created_at)', $hari_ini)
             ->where('type', 'income');
         if ($filter_region && $filter_region !== 'all') {
-            $todayIncomeBuilder->where('region_id', $filter_region);
+            if (is_array($filter_region)) {
+                $todayIncomeBuilder->whereIn('region_id', $filter_region);
+            } else {
+                $todayIncomeBuilder->where('region_id', $filter_region);
+            }
         }
         $in_today = $todayIncomeBuilder->get()->getRow()->nominal ?? 0;
 
