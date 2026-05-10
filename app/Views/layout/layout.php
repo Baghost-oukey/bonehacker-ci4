@@ -64,6 +64,7 @@ if ($isDevEnvironment) {
     <div id="app" class="min-h-screen flex bg-slate-50 text-slate-900">
 
         <!-- ================= SIDEBAR ================= -->
+        <?php if (!isset($isPublic) || !$isPublic): ?>
         <aside id="sidebar" class="
             w-64 bg-white border-r border-slate-200 transition-transform duration-300 ease-in-out flex flex-col
             fixed inset-y-0 left-0 z-40 -translate-x-full
@@ -71,6 +72,7 @@ if ($isDevEnvironment) {
         ">
             <?= $this->include('App\Views\layout\sidebar') ?>
         </aside>
+        <?php endif; ?>
 
         <!-- ================= BACKDROP ================= -->
         <div id="sidebarBackdrop" class="fixed inset-0 z-20 hidden bg-black/40 lg:hidden"></div>
@@ -79,6 +81,7 @@ if ($isDevEnvironment) {
         <div class="flex flex-col flex-1 min-h-screen">
 
             <!-- HEADER -->
+            <?php if (!isset($isPublic) || !$isPublic): ?>
             <header class="sticky top-0 z-20 bg-white border-b border-slate-200">
 
                 <div class="flex items-center justify-between px-4 h-14">
@@ -96,6 +99,7 @@ if ($isDevEnvironment) {
 
                 </div>
             </header>
+            <?php endif; ?>
 
             <!-- CONTENT -->
             <main class="flex-1 overflow-y-auto p-4 md:p-6">

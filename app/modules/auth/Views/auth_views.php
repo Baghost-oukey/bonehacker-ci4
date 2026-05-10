@@ -29,19 +29,25 @@
 
                                     <div class="form-group">
                                         <label>Nama Pengguna</label>
-                                        <input type="text" class="form-control" name="username" value="<?= old('username') ?>" required autofocus>
+                                        <input type="text" class="form-control" name="username" value="<?= old('username') ?>" required autofocus autocomplete="username">
                                         <div class="invalid-feedback">Nama pengguna tidak boleh kosong</div>
                                     </div>
                                     <div class="form-group">
                                         <label class="control-label">Kata Sandi</label>
                                         <div class="input-group">
-                                            <input type="password" class="form-control" name="password" id="password" required>
+                                            <input type="password" class="form-control" name="password" id="password" required autocomplete="current-password">
                                             <div class="input-group-append">
                                                 <button class="btn btn-outline-secondary" type="button" id="togglePassword">
                                                     <i class="fas fa-eye"></i>
                                                 </button>
                                             </div>
                                             <div class="invalid-feedback">Kata sandi tidak boleh kosong</div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="custom-control custom-checkbox">
+                                            <input type="checkbox" name="ingat_saya" class="custom-control-input" id="remember-me">
+                                            <label class="custom-control-label" for="remember-me">Ingat Saya</label>
                                         </div>
                                     </div>
                                     <div class="form-group">

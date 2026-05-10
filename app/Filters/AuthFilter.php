@@ -26,6 +26,26 @@ class AuthFilter implements FilterInterface
     public function before(RequestInterface $request, $arguments = null)
     {
         if (!session()->get('isLogin')) {
+            // Check Remember Me Cookie
+            helper('cookie');
+            $rememberToken = get_cookie('remember_me');
+
+            if ($rememberToken) {
+                $decoded = base64_decode($rememberToken);
+                if (strpos($decoded, ':') !== false) {
+                    list($userId, $token) = explode(':', $decoded, 2);
+
+                    $authModel = new \App\modules\auth\Models\MAuth();
+                    $user = $authModel->find($userId);
+
+                    if ($user && $user->remember_token && password_verify($token, $user->remember_token)) {
+                        $sessionData = $authModel->getUserSessionData($user);
+                        session()->set($sessionData);
+                        return; // Successfully logged in
+                    }
+                }
+            }
+
             if ($request->isAJAX()) {
                 return service('response')->setStatusCode(401, 'Session Expired');
             }

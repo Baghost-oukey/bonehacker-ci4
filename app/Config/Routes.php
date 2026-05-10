@@ -21,19 +21,21 @@ $routes->group('auth', ['namespace' => 'App\Modules\auth\Controllers'], function
 // Beranda
 $routes->get('beranda', 'BerandaController::index', ['namespace' => 'App\Modules\Beranda\Controllers', 'filter' => 'auth']);
 
+// Antrean Public
+$routes->get('antrean/daftar-antrean', '\App\Modules\Antrean\Controllers\AntreanController::daftarAntrean');
+
 // Antrean
 $routes->group('antrean', ['namespace' => 'App\Modules\Antrean\Controllers', 'filter' => 'auth'], function ($routes) {
-  $routes->get('', 'AntreanController::index');
-  $routes->get('fetchJson', 'AntreanController::fetchJson');
-  $routes->post('fetchDataTable', 'AntreanController::fetchDataTable');
-  $routes->post('fetchPatientDataTables', 'AntreanController::fetchPatientDataTables');
-  $routes->get('addToQueue/(:num)', 'AntreanController::addToQueue/$1');
-  $routes->post('destroy/(:num)', 'AntreanController::destroy/$1');
-  $routes->get('daftar-antrean', 'AntreanController::daftarAntrean');
-  $routes->get('procesToQueue/(:num)', 'AntreanController::procesToQueue/$1');
-  $routes->get('finishQueue/(:num)', 'AntreanController::finishQueue/$1');
-  $routes->get('export_excell_antrean', 'AntreanController::export_excell_antrean');
-  $routes->get('print_pdf_antrean', 'AntreanController::print_pdf_antrean');
+    $routes->get('', 'AntreanController::index');
+    $routes->get('fetchJson', 'AntreanController::fetchJson');
+    $routes->post('fetchDataTable', 'AntreanController::fetchDataTable');
+    $routes->post('fetchPatientDataTables', 'AntreanController::fetchPatientDataTables');
+    $routes->get('addToQueue/(:num)', 'AntreanController::addToQueue/$1');
+    $routes->post('destroy/(:num)', 'AntreanController::destroy/$1');
+    $routes->get('procesToQueue/(:num)', 'AntreanController::procesToQueue/$1');
+    $routes->get('finishQueue/(:num)', 'AntreanController::finishQueue/$1');
+    $routes->get('export_excell_antrean', 'AntreanController::export_excell_antrean');
+    $routes->get('print_pdf_antrean', 'AntreanController::print_pdf_antrean');
 });
 
 // Rekam Medis

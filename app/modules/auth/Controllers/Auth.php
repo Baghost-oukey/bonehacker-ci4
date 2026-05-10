@@ -60,77 +60,22 @@ class Auth extends BaseController
             }
 
             if ($isPasswordCorrect) {
-                $db = \Config\Database::connect();
-                // Mengambil data berdasarkan berdasarkan superadmin
-                $get_region = $db->table('regions')->select('id, name')->where('is_active', 1)->get()->getResultArray();
-                // Mengambil Data region berdasarkan user
+                $this->setSession($user);
+                
+                // Remember Me Logic
+                if ($this->request->getPost('ingat_saya')) {
+                    $token = bin2hex(random_bytes(32));
+                    $rememberToken = password_hash($token, PASSWORD_DEFAULT);
+                    
+                    $this->authModel->update($user->id, [
+                        'remember_token' => $rememberToken
+                    ]);
 
-                $user_region = $user->regions_patient;
-                $final_region_for_session = null;
-                $current_region_Id = null;
-
-                // $current_region_Id = str_contains($user_region, '[')
-                //     ? (json_decode($user_region, true)[0] ?? null)
-                //     : $user_region;
-
-                if (!empty($user_region)) {
-                    // Cek apakah isinya format JSON (misal: ["5"])
-                    $decoded = json_decode($user_region, true);
-
-                    if (is_array($decoded) && !empty($decoded)) {
-                        // Jika dia array ["5"], ambil angka 5-nya saja untuk pencarian detail
-                        $current_region_Id = $decoded[0];
-                        $final_region_for_session = $decoded; // Simpan tetap sebagai array untuk whereIn
-                    } else {
-                        // Jika string biasa (misal: 5), ambil langsung
-                        $current_region_Id = $user_region;
-                        $final_region_for_session = $user_region;
-                    }
+                    // Set cookie for 30 days
+                    // Format: user_id:token
+                    $cookieValue = base64_encode($user->id . ':' . $token);
+                    set_cookie('remember_me', $cookieValue, 3600 * 24 * 30);
                 }
-
-                // Jika superadmin paksa akses ke seluruh wilayah
-                if ($user->role === 'superadmin') {
-                    $final_region_for_session = 'all';
-                }
-
-                // $regionDetail = $db->table('regions')->where('id', $current_region_Id)->get()->getRow();
-                $regionDetail = null;
-                if ($current_region_Id) {
-                    $regionDetail = $db->table('regions')->where('id', $current_region_Id)->get()->getRow();
-                }
-
-                $defaultActive = ($user->role === 'superadmin') ? 'all' : $current_region_Id;
-                $defaultName   = ($user->role === 'superadmin') ? 'Semua Wilayah' : ($regionDetail ? $regionDetail->name : 'Cabang');
-
-
-                $avatarUrl = null;
-                if (!empty($user->terapis_id)) {
-                    $terapis = $db->table('terapis')->select('foto')->where('terapis_id', $user->terapis_id)->get()->getRow();
-                    if ($terapis && $terapis->foto) {
-                        $avatarUrl = base_url('foto_terapis/' . $terapis->foto);
-                    }
-                }
-
-                $sessionData = [
-                    'isLogin'         => true,
-                    'userId'          => $user->id,
-                    'username'        => $user->username,
-                    'realname'        => $user->realname,
-                    'role'            => $user->role,
-                    'avatar_url'      => $avatarUrl,
-                    // Untuk Data Pasien
-                    'region_id'       => $current_region_Id,
-                    'region_name'     => $regionDetail ? $regionDetail->name : 'Cabang Tidak Terdeteksi',
-                    'region_patient' => $final_region_for_session,
-                    'region_patient_allowed' => $final_region_for_session,
-                    'list_regions_global' => $get_region,
-                    'active_region'       => $defaultActive,
-                    'active_region_name'  => $defaultName,
-                    'terapis_id'      => $user->terapis_id,
-
-                ];
-                session()->set($sessionData);
-                session()->regenerate();
 
                 return redirect()->to(base_url('beranda'));
             }
@@ -139,6 +84,13 @@ class Auth extends BaseController
         $params = ['1', 'error', 'Nama pengguna dan kata sandi tidak sesuai', ''];
         session()->setFlashdata('pesan', $params);
         return redirect()->to(base_url('auth'));
+    }
+
+    private function setSession($user)
+    {
+        $sessionData = $this->authModel->getUserSessionData($user);
+        session()->set($sessionData);
+        session()->regenerate();
     }
 
     public function switch_region()
@@ -190,6 +142,12 @@ class Auth extends BaseController
 
     public function destroy(): RedirectResponse
     {
+        $userId = session()->get('userId');
+        if ($userId) {
+            $this->authModel->update($userId, ['remember_token' => null]);
+        }
+        
+        delete_cookie('remember_me');
         session()->destroy();
         return redirect()->to(base_url('auth'));
     }

@@ -8,15 +8,70 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
 ?>
 
 <section id="monitoringPage" class="w-full space-y-6 p-4 md:p-6">
+    <?php if (isset($isPublic) && $isPublic): ?>
+        <script>
+            // Auto refresh every 30 seconds for public/TV display
+            setTimeout(function() {
+                location.reload();
+            }, 30000);
+
+            // Auto Scroll Logic
+            document.addEventListener('DOMContentLoaded', function() {
+                const scrollContainers = document.querySelectorAll('.auto-scroll-list');
+                
+                scrollContainers.forEach(container => {
+                    let scrollSpeed = 1; // pixels per frame
+                    let direction = 1; // 1 for down, -1 for up (if we want bounce)
+                    let isPaused = false;
+
+                    function autoScroll() {
+                        if (isPaused) return;
+
+                        const maxScroll = container.scrollHeight - container.clientHeight;
+                        if (maxScroll <= 0) return;
+
+                        container.scrollTop += scrollSpeed;
+
+                        // If reached bottom
+                        if (container.scrollTop >= maxScroll) {
+                            isPaused = true;
+                            setTimeout(() => {
+                                container.scrollTop = 0; // Reset to top
+                                isPaused = false;
+                            }, 2000); // Wait 2 seconds at the bottom
+                        }
+                    }
+
+                    setInterval(autoScroll, 50); // Adjust frequency for smoothness
+                });
+            });
+        </script>
+    <?php endif; ?>
+
     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
             <h1 class="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-                Monitor Antrean
+                <?= (isset($isPublic) && $isPublic) ? 'Daftar Antrean Pasien' : 'Monitor Antrean' ?>
             </h1>
             <p class="text-sm text-slate-500">
-                Monitoring antrean pasien secara real-time - <?= esc($regionName ?? 'Semua Wilayah') ?>
+                <?= (isset($isPublic) && $isPublic) ? 'Informasi urutan antrean terapi secara real-time' : 'Monitoring antrean pasien secara real-time' ?> - <?= esc($regionName ?? 'Semua Wilayah') ?>
             </p>
         </div>
+        <?php if (isset($isPublic) && $isPublic): ?>
+            <div class="text-right">
+                <p class="text-lg font-bold text-teal-600"><?= $currentDate ?></p>
+                <p id="liveTime" class="text-sm text-slate-500"></p>
+                <script>
+                    function updateTime() {
+                        const now = new Date();
+                        const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                        document.getElementById('liveTime').textContent = timeString + ' WIB';
+                    }
+                    setInterval(updateTime, 1000);
+                    updateTime();
+                </script>
+            </div>
+        <?php endif; ?>
     </div>
 
     <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -84,7 +139,7 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
                             class="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase text-slate-600"><?= count($waitingList) ?></span>
                     </div>
                 </header>
-                <div class="h-80 space-y-3 overflow-y-auto p-4">
+                <div class="h-80 space-y-3 overflow-y-auto p-4 no-scrollbar auto-scroll-list">
                     <?php if (!empty($waitingList)): ?>
                         <?php foreach ($waitingList as $i => $q): ?>
                             <?php
@@ -125,7 +180,7 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
                             class="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase text-slate-600"><?= count($processingList) ?></span>
                     </div>
                 </header>
-                <div class="h-80 space-y-3 overflow-y-auto p-4">
+                <div class="h-80 space-y-3 overflow-y-auto p-4 no-scrollbar auto-scroll-list">
                     <?php if (!empty($processingList)): ?>
                         <?php foreach ($processingList as $q): ?>
                             <?php
@@ -167,7 +222,7 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
                             class="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase text-slate-600"><?= count($finishedList) ?></span>
                     </div>
                 </header>
-                <div class="h-80 space-y-3 overflow-y-auto p-4">
+                <div class="h-80 space-y-3 overflow-y-auto p-4 no-scrollbar auto-scroll-list">
                     <?php if (!empty($finishedList)): ?>
                         <?php foreach ($finishedList as $q): ?>
                             <?php
@@ -201,10 +256,4 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
     </div>
 </section>
 
-<?= $this->endSection() ?>
-
-<?= $this->section('scripts') ?>
-<script type="module">
-    import '@/pages/monitoring.js';
-</script>
 <?= $this->endSection() ?>

@@ -1,6 +1,8 @@
 <?php
-$realname = session()->get('realname') ?? ($realname ?? 'User');
-$avatarUrl = session()->get('avatar_url') ?? '';
+/** @var string $role */
+$role = $role ?? session()->get('role') ?? '';
+$realname = $realname ?? session()->get('realname') ?? 'User';
+$avatarUrl = $avatarUrl ?? session()->get('avatar') ?? session()->get('avatar_url') ?? '';
 $initial = strtoupper(substr(trim($realname), 0, 1));
 if ($initial === '' || $initial === false) {
     $initial = 'U';

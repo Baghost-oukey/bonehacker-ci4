@@ -20,7 +20,7 @@
                 $regionQuery = '?region=' . $val;
             }
             ?>
-            <a href="<?= site_url('antrean/daftar-antrean') . $regionQuery ?>"
+            <a href="<?= site_url('antrean/daftar-antrean') . $regionQuery ?>" target="_blank"
                 class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
                 <i class="fas fa-sync-alt text-slate-500"></i>
                 Lihat Antrean

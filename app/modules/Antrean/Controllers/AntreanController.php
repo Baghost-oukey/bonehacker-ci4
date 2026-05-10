@@ -284,16 +284,28 @@ class AntreanController extends BaseController
     public function daftarAntrean()
     {
         $db = \Config\Database::connect();
-        $active_region = session()->get('active_region');
-        $role = session()->get('role');
-        $region_session = session()->get('region_patient');
+        $isLogin = session()->get('isLogin');
         
-        if ($role === 'superadmin') {
-            $regionId = $this->request->getGet('region') ?: ($active_region !== 'all' ? $active_region : null);
-        } else if ($role === 'owner') {
-            $regionId = $this->request->getGet('region') ?: ($active_region !== 'all' ? $active_region : $region_session);
+        if ($isLogin) {
+            $active_region = session()->get('active_region');
+            $role = session()->get('role');
+            $region_session = session()->get('region_patient');
+            
+            if ($role === 'superadmin') {
+                $regionId = $this->request->getGet('region') ?: ($active_region !== 'all' ? $active_region : null);
+            } else if ($role === 'owner') {
+                $regionId = $this->request->getGet('region') ?: ($active_region !== 'all' ? $active_region : $region_session);
+            } else {
+                $regionId = $region_session;
+            }
         } else {
-            $regionId = $region_session;
+            $regionId = $this->request->getGet('region');
+            $data['isPublic'] = true;
+        }
+
+        // Handle comma separated string from URL
+        if (is_string($regionId) && strpos($regionId, ',') !== false) {
+            $regionId = explode(',', $regionId);
         }
         $startDate = $this->request->getGet('start_date') ?: date('Y-m-d');
         $endDate = $this->request->getGet('end_date') ?: date('Y-m-d');
@@ -308,7 +320,11 @@ class AntreanController extends BaseController
             ->groupBy('pq.id, h.id, p.id, r.id, pa.id'); // pq.* included in group by logic usually requires explicit columns or database config allows it
 
         if (!empty($regionId)) {
-            $builder->where('p.region_id', $regionId);
+            if (is_array($regionId)) {
+                $builder->whereIn('p.region_id', $regionId);
+            } else {
+                $builder->where('p.region_id', $regionId);
+            }
         }
 
         if (!empty($startDate) && !empty($endDate)) {
@@ -331,7 +347,11 @@ class AntreanController extends BaseController
             ->where('DATE(pq.queue_date) <=', $endDate);
 
         if (!empty($regionId)) {
-            $statsBuilder->where('p.region_id', $regionId);
+            if (is_array($regionId)) {
+                $statsBuilder->whereIn('p.region_id', $regionId);
+            } else {
+                $statsBuilder->where('p.region_id', $regionId);
+            }
         }
 
         $stats = $statsBuilder->get()->getRow();
@@ -340,8 +360,13 @@ class AntreanController extends BaseController
         $data['waiting_queues'] = count($data['patient_queues']) - ($data['processed_queues'] + $data['finished_queues']);
 
         if (!empty($regionId)) {
-            $reg = $db->table('regions')->where('id', $regionId)->get()->getRow();
-            $data['regionName'] = $reg ? $reg->name : 'Semua Wilayah';
+            if (is_array($regionId)) {
+                $regs = $db->table('regions')->whereIn('id', $regionId)->get()->getResult();
+                $data['regionName'] = !empty($regs) ? implode(', ', array_column($regs, 'name')) : 'Wilayah Tidak Ditemukan';
+            } else {
+                $reg = $db->table('regions')->where('id', $regionId)->get()->getRow();
+                $data['regionName'] = $reg ? $reg->name : 'Semua Wilayah';
+            }
         } else {
             $data['regionName'] = 'Semua Wilayah';
         }
@@ -357,6 +382,11 @@ class AntreanController extends BaseController
         $startDate = $this->request->getGet('start_date') ?: date('Y-m-d');
         $endDate = $this->request->getGet('end_date') ?: date('Y-m-d');
         $regionId = $this->request->getGet('region');
+        
+        // Handle comma separated string from URL
+        if (is_string($regionId) && strpos($regionId, ',') !== false) {
+            $regionId = explode(',', $regionId);
+        }
 
 
         $builder = $this->db->table('patient_queues pq')
@@ -382,7 +412,11 @@ class AntreanController extends BaseController
             ->where('DATE(pq.queue_date) >=', $startDate)
             ->where('DATE(pq.queue_date) <=', $endDate);
         if (!empty($regionId)) {
-            $builder->where('pq.region_id', $regionId);
+            if (is_array($regionId)) {
+                $builder->whereIn('pq.region_id', $regionId);
+            } else {
+                $builder->where('pq.region_id', $regionId);
+            }
         }
 
         $query = $builder->get();
@@ -462,6 +496,11 @@ class AntreanController extends BaseController
         $endDate = $this->request->getGet('end_date') ?: date('Y-m-d');
         $region = $this->request->getGet('region');
 
+        // Handle comma separated string from URL
+        if (is_string($region) && strpos($region, ',') !== false) {
+            $region = explode(',', $region);
+        }
+
         $builder = $this->db->table('patient_queues pq')
             ->select('pq.queue_date, p.name as patient_name, p.phone, p.address, 
             pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama,
@@ -478,8 +517,13 @@ class AntreanController extends BaseController
             ->where('DATE(pq.queue_date) >=', $startDate)
             ->where('DATE(pq.queue_date) <=', $endDate);
 
-        if (!empty($region))
-            $builder->where('pq.region_id', $region);
+        if (!empty($region)) {
+            if (is_array($region)) {
+                $builder->whereIn('pq.region_id', $region);
+            } else {
+                $builder->where('pq.region_id', $region);
+            }
+        }
         $query = $builder->get();
 
 
