@@ -88,8 +88,8 @@ class Auth extends BaseController
                     }
                 }
 
-                // Jika superadmin atau owner, paksa akses ke seluruh wilayah
-                if ($user->role === 'superadmin' || $user->role === 'owner') {
+                // Jika superadmin paksa akses ke seluruh wilayah
+                if ($user->role === 'superadmin') {
                     $final_region_for_session = 'all';
                 }
 
@@ -99,8 +99,8 @@ class Auth extends BaseController
                     $regionDetail = $db->table('regions')->where('id', $current_region_Id)->get()->getRow();
                 }
 
-                $defaultActive = ($user->role === 'owner' || $user->role === 'superadmin') ? 'all' : $current_region_Id;
-                $defaultName   = ($user->role === 'owner' || $user->role === 'superadmin') ? 'Semua Wilayah' : ($regionDetail ? $regionDetail->name : 'Cabang');
+                $defaultActive = ($user->role === 'superadmin') ? 'all' : $current_region_Id;
+                $defaultName   = ($user->role === 'superadmin') ? 'Semua Wilayah' : ($regionDetail ? $regionDetail->name : 'Cabang');
 
 
                 $avatarUrl = null;

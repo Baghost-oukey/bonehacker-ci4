@@ -16,7 +16,7 @@ $listRegions = session()->get('list_regions_global') ?? [];
                 <!-- Global Region Filter -->
                 <div class="min-w-[180px]">
                     <select id="globalRegionFilter" class="w-full text-sm rounded-md border-slate-300">
-                        <?php if (in_array($role, ['superadmin', 'owner']) && (count($listRegions) > 1 || $role === 'superadmin')): ?>
+                        <?php if ($role === 'superadmin' && (count($listRegions) > 1 || $role === 'superadmin')): ?>
                             <option value="all" <?= $activeRegion === 'all' ? 'selected' : '' ?>>Semua Wilayah</option>
                         <?php endif; ?>
                         
@@ -24,7 +24,7 @@ $listRegions = session()->get('list_regions_global') ?? [];
                             <?php 
                                 // Only show regions the user is allowed to see, unless superadmin
                                 $allowed = session()->get('region_patient_allowed');
-                                $isAllowed = in_array($role, ['superadmin', 'owner']) || (is_array($allowed) && in_array($region['id'], $allowed)) || ($allowed == $region['id']);
+                                $isAllowed = ($role === 'superadmin') || (is_array($allowed) && in_array($region['id'], $allowed)) || ($allowed == $region['id']);
                                 
                                 if ($isAllowed):
                             ?>
