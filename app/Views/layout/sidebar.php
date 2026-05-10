@@ -153,8 +153,8 @@ $userInitial = strtoupper(substr($realname, 0, 1));
         </div>
 
 
-        <!-- KEUANGAN | OWNER -->
-        <?php if ($role === 'superadmin' || $role === 'owner'): ?>
+        <!-- KEUANGAN | OWNER ONLY -->
+        <?php if ($role === 'owner'): ?>
             <div class="relative flex w-full min-w-0 flex-col p-2">
                 <div class="flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-slate-500/70">
                     Kas
@@ -182,13 +182,11 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                                         <span class="truncate">Statistik Keuangan</span>
                                     </a>
                                 </li>
-                                <?php if ($role === 'superadmin' || $role === 'owner'): ?>
                                 <li>
                                     <a href="<?= base_url('kas/categories') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'categories' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                                         <span class="truncate">Master Kategori</span>
                                     </a>
                                 </li>
-                                <?php endif; ?>
                             </ul>
                         </details>
                     </li>
