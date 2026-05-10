@@ -243,6 +243,19 @@ class AntreanController extends BaseController
         ]);
 
         if ($insert) {
+            // Dapatkan ID antrean yang baru dibuat
+            $queueId = $this->db->insertID();
+            
+            // Otomatis buat draft rekam medis yang ter-link dengan antrean
+            $this->db->table('histories')->insert([
+                'patient_queue_id' => $queueId,
+                'patient_id' => $patientId,
+                'history_region' => $target_region,
+                'type' => 'draft',
+                'is_delete' => 0,
+                'created_at' => date('Y-m-d H:i:s')
+            ]);
+
             return $this->response->setJSON([
                 'status' => 'success',
                 'message' => 'Pasien ' . $patient->name . ' berhasil ditambahkan ke antrean.'
@@ -261,19 +274,17 @@ class AntreanController extends BaseController
         if (!$queue)
             return redirect()->back()->with('message', ['error', 'Antrean tidak ditemukan.']);
 
-        $this->db->table('histories')->insert([
-            'patient_queue_id' => $queueId,
-            'patient_id' => $queue->patient_id,
-            'type' => 'draft',
-            'process_at' => date('Y-m-d H:i:s'),
-            'is_delete' => 0
-        ]);
+        // Update waktu mulai terapi di draft rekam medis yang sudah ada
+        $this->db->table('histories')
+            ->where('patient_queue_id', $queueId)
+            ->update(['process_at' => date('Y-m-d H:i:s')]);
 
         return redirect()->to('antrean')->with('message', ['success', 'Terapi dimulai.']);
     }
 
     public function finishQueue($queueId)
     {
+        // Update waktu selesai terapi di draft rekam medis
         $this->db->table('histories')
             ->where('patient_queue_id', $queueId)
             ->update(['finish_at' => date('Y-m-d H:i:s')]);
