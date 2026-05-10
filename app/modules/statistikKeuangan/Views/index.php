@@ -18,7 +18,7 @@
                         <option value="all">Semua Cabang</option>
                         <?php if (!empty($list_regions)): ?>
                             <?php foreach ($list_regions as $r): ?>
-                                <option value="<?= esc($r['id']) ?>"><?= esc($r['name']) ?></option>
+                                <option value="<?= esc($r->id) ?>"><?= esc($r->name) ?></option>
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </select>
