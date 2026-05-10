@@ -4,6 +4,29 @@ function initHeaderPage() {
 		return;
 	}
 
+	// Bersihkan semua backdrop yang mungkin tersisa dari session sebelumnya
+	const cleanupBackdrops = () => {
+		// Hapus Select2 backdrop
+		$('.select2-container--open').removeClass('select2-container--open');
+		$('.select2-dropdown').remove();
+		
+		// Hapus SweetAlert backdrop
+		if (window.Swal && Swal.isVisible()) {
+			Swal.close();
+		}
+		
+		// Hapus semua backdrop yang mungkin tersisa
+		$('.swal2-container').remove();
+		$('.swal2-backdrop-show').remove();
+		
+		// Reset body overflow
+		document.body.style.overflow = '';
+		document.body.style.paddingRight = '';
+	};
+
+	// Jalankan cleanup saat halaman dimuat
+	cleanupBackdrops();
+
 	const sidebar = document.getElementById("appSidebar");
 	const sidebarBackdrop = document.getElementById("sidebarBackdrop");
 
