@@ -43,6 +43,10 @@ class FinanceCategoryController extends BaseController
     public function store()
     {
         $role = session()->get('role');
+        if (!in_array($role, ['superadmin', 'owner'])) {
+            return redirect()->to('/beranda')->with('error', 'Unauthorized access');
+        }
+
         $region_patient = session()->get('region_patient');
 
         $name = $this->request->getPost('name');
@@ -72,6 +76,11 @@ class FinanceCategoryController extends BaseController
 
     public function delete($id)
     {
+        $role = session()->get('role');
+        if (!in_array($role, ['superadmin', 'owner'])) {
+            return redirect()->to('/beranda')->with('error', 'Unauthorized access');
+        }
+
         $category = $this->mCategory->find($id);
         if (!$category) {
             return redirect()->back()->with('error', 'Kategori tidak ditemukan.');
