@@ -111,10 +111,12 @@ function initHeaderPage() {
 					if (response.status === 'success') {
 						window.location.reload();
 					} else {
+						Swal.close(); // Tutup loading sebelum menampilkan error
 						Swal.fire('Error', response.message || 'Gagal mengganti wilayah', 'error');
 					}
 				},
 				error: function(xhr) {
+					Swal.close(); // Tutup loading sebelum menampilkan error
 					let msg = 'Terjadi kesalahan sistem';
 					if (xhr.responseJSON && xhr.responseJSON.message) {
 						msg = xhr.responseJSON.message;
@@ -122,6 +124,14 @@ function initHeaderPage() {
 					Swal.fire('Error', msg, 'error');
 					// Revert selection on error
 					$('#globalRegionFilter').val($('#activeRegion').val() || 'all').trigger('change.select2');
+				},
+				complete: function() {
+					// Pastikan loading tertutup dalam kondisi apapun
+					setTimeout(function() {
+						if (Swal.isVisible()) {
+							Swal.close();
+						}
+					}, 500);
 				}
 			});
 		});
