@@ -185,6 +185,18 @@ if ($isDevEnvironment) {
                 }
 
 
+                // Sembunyikan alert error bawaan DataTables yang mengganggu (Ajax error)
+                if ($.fn.dataTable) {
+                    $.fn.dataTable.ext.errMode = 'none';
+                }
+
+                // Handle jika sesi habis (Unauthorized 401) pada semua request AJAX
+                $(document).ajaxError(function(event, xhr, settings) {
+                    if (xhr.status === 401) {
+                        window.location.href = '<?= base_url('auth') ?>';
+                    }
+                });
+
                 // Jurus Anti-Macet: Setiap request POST selesai, kita minta token baru
                 $(document).ajaxComplete(function(event, xhr, settings) {
                     if (settings.type === 'POST' || settings.type === 'post') {

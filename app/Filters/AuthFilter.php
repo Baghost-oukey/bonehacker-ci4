@@ -25,7 +25,10 @@ class AuthFilter implements FilterInterface
      */
     public function before(RequestInterface $request, $arguments = null)
     {
-        if(!session()->get('isLogin')){
+        if (!session()->get('isLogin')) {
+            if ($request->isAJAX()) {
+                return service('response')->setStatusCode(401, 'Session Expired');
+            }
             return redirect()->to(base_url('auth'));
         }
     }
