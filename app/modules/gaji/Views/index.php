@@ -116,8 +116,13 @@
                         <?php endfor; ?>
                     </select>
                 </div>
-                <div class="ml-auto">
-                    <p class="text-sm text-slate-500">Menampilkan riwayat gaji yang sudah lunas.</p>
+                <div class="ml-auto flex items-center gap-2">
+                    <p class="text-sm text-slate-500 mr-2">Menampilkan riwayat gaji yang sudah lunas.</p>
+                    <a href="<?= base_url('gaji/export?bulan=' . $filter_bulan . '&tahun=' . $filter_tahun . '&region_id=' . $filter_region) ?>" 
+                       class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition text-sm font-medium shadow-sm">
+                        <i class="fas fa-file-excel"></i>
+                        Export Excel
+                    </a>
                 </div>
             </form>
             <table class="w-full text-left border-collapse">

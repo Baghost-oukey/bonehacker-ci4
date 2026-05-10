@@ -69,7 +69,7 @@
                 </div>
 
                 <div class="flex items-center gap-2">
-                    <?php if (session()->get('role') === 'superadmin'): ?>
+                    <?php if (in_array(session()->get('role'), ['superadmin', 'owner', 'admin'])): ?>
                         <button id="btnPdf"
                             class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-medium text-red-600 transition hover:bg-red-50 hover:border-red-300">
                             <i class="fas fa-file-pdf text-sm"></i>

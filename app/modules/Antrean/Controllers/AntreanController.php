@@ -379,9 +379,19 @@ class AntreanController extends BaseController
 
     public function export_excell_antrean()
     {
+        $role = session()->get('role');
+        if (!in_array($role, ['superadmin', 'owner', 'admin'])) {
+            return redirect()->to('antrean')->with('message', ['error', 'Unauthorized access']);
+        }
+
         $startDate = $this->request->getGet('start_date') ?: date('Y-m-d');
         $endDate = $this->request->getGet('end_date') ?: date('Y-m-d');
         $regionId = $this->request->getGet('region');
+        $region_session = session()->get('region_patient');
+
+        if (empty($regionId) || $regionId === 'all') {
+            $regionId = $region_session;
+        }
         
         // Handle comma separated string from URL
         if (is_string($regionId) && strpos($regionId, ',') !== false) {
@@ -492,9 +502,19 @@ class AntreanController extends BaseController
 
     public function print_pdf_antrean()
     {
+        $role = session()->get('role');
+        if (!in_array($role, ['superadmin', 'owner', 'admin'])) {
+            return redirect()->to('antrean')->with('message', ['error', 'Unauthorized access']);
+        }
+
         $startDate = $this->request->getGet('start_date') ?: date('Y-m-d');
         $endDate = $this->request->getGet('end_date') ?: date('Y-m-d');
         $region = $this->request->getGet('region');
+        $region_session = session()->get('region_patient');
+
+        if (empty($region) || $region === 'all') {
+            $region = $region_session;
+        }
 
         // Handle comma separated string from URL
         if (is_string($region) && strpos($region, ',') !== false) {

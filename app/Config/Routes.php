@@ -308,8 +308,10 @@ $routes->group('api', ['namespace' => 'App\Modules\api\Controllers'], function (
 
 // Routes - Statsitik Keuangan
 $routes->group('statistikkeuangan', ['namespace' => 'App\Modules\StatistikKeuangan\Controllers', 'filter' => 'auth'], function ($routes) {
-  $routes->get('/', 'StatistikKeuangan::index'); // Gunakan '/' agar terbaca sebagai root grup
+  $routes->get('/', 'StatistikKeuangan::index'); 
   $routes->get('get_chart_data', 'StatistikKeuangan::get_chart_data');
+  $routes->get('export_excel', 'StatistikKeuangan::export_excel');
+  $routes->get('export_pdf', 'StatistikKeuangan::export_pdf');
 });
 
 
@@ -320,6 +322,7 @@ $routes->group('gaji', ['namespace' => 'App\modules\gaji\Controllers', 'filter' 
   $routes->get('detail/(:num)', 'Gajikaryawan::detailEstimasi/$1');
   $routes->post('proses_bayar', 'Gajikaryawan::prosesBayar');
   $routes->get('fetch_estimasi', 'Gajikaryawan::fetchEstimasi');
+  $routes->get('export', 'Gajikaryawan::export');
 });
 
 // Rutes - Kas bon

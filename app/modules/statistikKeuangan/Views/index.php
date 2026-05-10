@@ -34,6 +34,16 @@
                 <button data-value="30" class="time-filter-btn px-4 py-1.5 text-xs font-bold text-slate-500 rounded-lg transition-all hover:text-slate-700">30 Hari</button>
                 <button data-value="90" class="time-filter-btn px-4 py-1.5 text-xs font-bold text-slate-500 rounded-lg transition-all hover:text-slate-700">3 Bulan</button>
             </div>
+
+            <!-- EXPORT -->
+            <div class="flex gap-2 ml-2">
+                <button id="btnExportPdf" title="Export PDF" class="flex h-10 w-10 items-center justify-center rounded-xl border border-rose-100 bg-rose-50 text-rose-600 transition hover:bg-rose-100 shadow-sm">
+                    <i class="fas fa-file-pdf"></i>
+                </button>
+                <button id="btnExportExcel" title="Export Excel" class="flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-600 transition hover:bg-emerald-100 shadow-sm">
+                    <i class="fas fa-file-excel"></i>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -98,7 +108,9 @@
 <?= $this->section('scripts') ?>
 <script>
     window.financeStatsConfig = {
-        url: '<?= base_url("statistikkeuangan/get_chart_data") ?>'
+        url: '<?= base_url("statistikkeuangan/get_chart_data") ?>',
+        exportExcelUrl: '<?= base_url("statistikkeuangan/export_excel") ?>',
+        exportPdfUrl: '<?= base_url("statistikkeuangan/export_pdf") ?>'
     };
 </script>
 <?= $this->endSection() ?>

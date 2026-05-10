@@ -787,11 +787,17 @@ class Patients extends BaseController
 
     public function export_data()
     {
-        if (session()->get('role') !== 'superadmin') {
+        $role = session()->get('role');
+        if (!in_array($role, ['superadmin', 'owner', 'admin'])) {
             return redirect()->to(base_url('beranda'))->with('message', ['error', 'Anda tidak memiliki hak akses untuk ekspor data.']);
         }
         $type = $this->request->getGet('type');
         $region_id = $this->request->getGet('region_id');
+        $region_session = session()->get('region_patient');
+
+        if (empty($region_id) || $region_id === 'all') {
+            $region_id = $region_session;
+        }
         $periode = $this->request->getGet('periode');
         $start_date = null;
         $end_date = null;
