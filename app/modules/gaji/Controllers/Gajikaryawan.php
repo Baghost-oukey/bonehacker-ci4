@@ -185,4 +185,19 @@ class Gajikaryawan extends BaseController
 
         return redirect()->to('/gaji')->with('success', 'Gaji karyawan berhasil diproses dan dibayarkan.');
     }
+    public function fetchEstimasi()
+    {
+        $region_patient = session()->get('region_patient');
+        $sessionRegionId = ($region_patient !== 'all' && !empty($region_patient))
+            ? (is_array($region_patient) ? $region_patient[0] : $region_patient)
+            : 'all';
+        $regionId = $this->request->getGet('region_id') ?? $sessionRegionId;
+
+        $data = $this->Mriwayatgaji->getPayrollEstimates($regionId);
+        return $this->response->setJSON([
+            'status'   => 'success',
+            'data'     => $data,
+            'csrfHash' => csrf_hash()
+        ]);
+    }
 }

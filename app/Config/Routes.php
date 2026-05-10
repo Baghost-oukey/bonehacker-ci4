@@ -73,6 +73,8 @@ $routes->group('transaksi', ['namespace' => 'App\Modules\Transaksi\Controllers',
   $routes->post('fetch', 'TransaksiController::fetch');
   $routes->post('store', 'TransaksiController::store');
   $routes->post('delete', 'TransaksiController::delete');
+  $routes->get('export_excell', 'TransaksiController::export_excell');
+  $routes->get('export_pdf', 'TransaksiController::export_pdf');
 });
 
 // Statistik
@@ -316,6 +318,7 @@ $routes->group('gaji', ['namespace' => 'App\modules\gaji\Controllers', 'filter' 
   $routes->post('setting/save', 'Gajikaryawan::saveSetting');
   $routes->get('detail/(:num)', 'Gajikaryawan::detailEstimasi/$1');
   $routes->post('proses_bayar', 'Gajikaryawan::prosesBayar');
+  $routes->get('fetch_estimasi', 'Gajikaryawan::fetchEstimasi');
 });
 
 // Rutes - Kas bon
@@ -345,12 +348,11 @@ $routes->group('transaksi-tunjangan', ['namespace' => 'App\modules\transaksi_tun
 });
 
 // ROUTES MODUL PENGGAJIAN (PAYROLL)
-// $routes->group('detail-gaji', ['namespace' => 'App\modules\detail_gaji\Controllers'], function($routes) {
-//     $routes->get('/', 'Detailgaji::index');
-//     $routes->get('review/(:num)', 'Detailgaji::review/$1');
-//     $routes->post('proses_simpan', 'Detailgaji::proses_simpan');
-
-// });
+$routes->group('detail-gaji', ['namespace' => 'App\modules\detail_gaji\Controllers', 'filter' => 'auth'], function($routes) {
+    $routes->get('/', 'Detailgaji::index');
+    $routes->get('review/(:num)', 'Detailgaji::review/$1');
+    $routes->post('proses_simpan', 'Detailgaji::proses_simpan');
+});
 
 // Routes - Kehadruan 
 $routes->group('kehadiran', ['namespace' => 'App\modules\absensi_karyawan\Controllers', 'filter' => 'auth'], function ($routes) {
@@ -359,6 +361,7 @@ $routes->group('kehadiran', ['namespace' => 'App\modules\absensi_karyawan\Contro
   $routes->get('store', 'Absensikaryawan::store'); // Route untuk halaman form Card
   $routes->get('detail/(:any)', 'Absensikaryawan::detail/$1');
   $routes->post('simpan_massal', 'Absensikaryawan::simpan_massal'); // Route untuk proses AJAX
+  $routes->get('export', 'Absensikaryawan::export');
 });
 
 

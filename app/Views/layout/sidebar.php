@@ -162,7 +162,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
 
                 <ul class="flex w-full min-w-0 flex-col gap-1">
                     <li>
-                        <details class="group" <?= in_array($current_segment, ['kas', 'gaji', 'statistikKeuangan']) ? 'open' : '' ?>>
+                        <details class="group" <?= in_array($current_segment, ['kas', 'gaji', 'statistikkeuangan']) ? 'open' : '' ?>>
                             <summary class="flex w-full cursor-pointer list-none items-center justify-between rounded-md p-2 text-left text-sm transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 [&::-webkit-details-marker]:hidden">
                                 <span class="flex items-center gap-2">
                                     <i class="fas fa-credit-card w-4 text-center shrink-0"></i>

@@ -57,14 +57,20 @@ class Mabsensikaryawan extends Model
             ->countAllResults();
     }
 
-    public function getRekapHarian()
+    public function getRekapHarian($bulan = null, $tahun = null)
     {
-        return $this->select('tanggal')
+        $builder = $this->select('tanggal')
             ->select('SUM(CASE WHEN status = "Hadir" THEN 1 ELSE 0 END) as total_hadir', false)
-            ->select('SUM(CASE WHEN status = "Tidak Hadir" THEN 1 ELSE 0 END) as total_tidak_hadir', false)
-            ->groupBy('tanggal')
+            ->select('SUM(CASE WHEN status = "Tidak Hadir" THEN 1 ELSE 0 END) as total_tidak_hadir', false);
+
+        if ($bulan && $tahun) {
+            $builder->where('MONTH(tanggal)', $bulan)
+                    ->where('YEAR(tanggal)', $tahun);
+        }
+
+        return $builder->groupBy('tanggal')
             ->orderBy('tanggal', 'DESC')
-            ->findAll(); // Menggunakan findAll() langsung dari Model
+            ->findAll();
     }
 
     public function getByTanggal(string $tanggal)
