@@ -32,7 +32,12 @@ class MFinanceCategory extends Model
                 ->orWhere('is_default', 1);
         
         if ($regionId && $regionId !== 'all') {
-            $builder->orWhere('region_id', $regionId);
+            // Handle array of region IDs
+            if (is_array($regionId)) {
+                $builder->orWhereIn('region_id', $regionId);
+            } else {
+                $builder->orWhere('region_id', $regionId);
+            }
         }
         $builder->groupEnd();
 
