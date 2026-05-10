@@ -330,4 +330,56 @@ class TransaksiController extends BaseController
 
         $dompdf->stream("Laporan_Transaksi_" . date('Ymd') . ".pdf", ["Attachment" => 1]);
     }
+    public function chart_data()
+    {
+        $date = $this->request->getGet('date');
+        $region_patient = session()->get('region_patient');
+        $filter_region = ($region_patient !== 'all' && !empty($region_patient)) ? $region_patient : null;
+
+        // Build 7-day labels & data around the selected date
+        $referenceDate = !empty($date) ? $date : date('Y-m-d');
+        $startDate = date('Y-m-d', strtotime('-6 days', strtotime($referenceDate)));
+
+        $db = \Config\Database::connect();
+        $builder = $db->table('transaksi')
+            ->select("DATE(created_at) as tanggal")
+            ->selectSum("CASE WHEN type = 'income' THEN nominal ELSE 0 END", 'pemasukan', false)
+            ->selectSum("CASE WHEN type = 'expense' THEN nominal ELSE 0 END", 'pengeluaran', false)
+            ->where("DATE(created_at) >=", $startDate)
+            ->where("DATE(created_at) <=", $referenceDate)
+            ->where('status', 'active');
+
+        if ($filter_region) {
+            if (is_array($filter_region)) {
+                $builder->whereIn('region_id', $filter_region);
+            } else {
+                $builder->where('region_id', $filter_region);
+            }
+        }
+
+        $rows = $builder->groupBy("DATE(created_at)")->orderBy("tanggal", "ASC")->get()->getResultArray();
+
+        $indexed = [];
+        foreach ($rows as $r) {
+            $indexed[$r['tanggal']] = $r;
+        }
+
+        $labels = [];
+        $income = [];
+        $expense = [];
+
+        for ($i = 6; $i >= 0; $i--) {
+            $day = date('Y-m-d', strtotime("-$i days", strtotime($referenceDate)));
+            $labels[] = date('d/m', strtotime($day));
+            $income[]  = (int)($indexed[$day]['pemasukan'] ?? 0);
+            $expense[] = (int)($indexed[$day]['pengeluaran'] ?? 0);
+        }
+
+        return $this->response->setJSON([
+            'labels'  => $labels,
+            'income'  => $income,
+            'expense' => $expense,
+        ]);
+    }
 }
+

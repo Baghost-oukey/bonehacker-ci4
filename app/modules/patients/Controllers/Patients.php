@@ -798,6 +798,11 @@ class Patients extends BaseController
         }
         $type = $this->request->getGet('type');
         $region_id = $this->request->getGet('region_id');
+        $region_session = session()->get('region_patient');
+
+        if (empty($region_id) || $region_id === 'all') {
+            $region_id = $region_session;
+        }
         $periode = $this->request->getGet('periode');
         $start_date = null;
         $end_date = null;

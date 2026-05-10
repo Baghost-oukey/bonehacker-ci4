@@ -21,6 +21,9 @@ class Absensikaryawan extends BaseController
 
     public function index()
     {
+        $bulan = $this->request->getGet('bulan') ?? date('m');
+        $tahun = $this->request->getGet('tahun') ?? date('Y');
+
         $region_patient = session()->get('region_patient');
         $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
 
@@ -36,11 +39,48 @@ class Absensikaryawan extends BaseController
         $data = [
             'title'        => 'Presensi Harian',
             'terapis'      => $terapisQuery->findAll(),
-            'rekap_harian' => $this->model_absensi->getRekapHarian(),
+            'rekap_harian' => $this->model_absensi->getRekapHarian($bulan, $tahun),
+            'filter_bulan' => $bulan,
+            'filter_tahun' => $tahun,
             'tanggal'      => date('Y-m-d')
         ];
 
         return view('App\modules\absensi_karyawan\Views\index', $data);
+    }
+
+    public function export()
+    {
+        $bulan = $this->request->getGet('bulan') ?? date('m');
+        $tahun = $this->request->getGet('tahun') ?? date('Y');
+
+        $rekap = $this->model_absensi->getRekapHarian($bulan, $tahun);
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $sheet->setCellValue('A1', 'No')
+              ->setCellValue('B1', 'Tanggal')
+              ->setCellValue('C1', 'Total Hadir')
+              ->setCellValue('D1', 'Total Tidak Hadir');
+
+        $row = 2;
+        foreach ($rekap as $index => $r) {
+            $sheet->setCellValue('A' . $row, $index + 1)
+                  ->setCellValue('B' . $row, date('d-m-Y', strtotime($r['tanggal'])))
+                  ->setCellValue('C' . $row, $r['total_hadir'])
+                  ->setCellValue('D' . $row, $r['total_tidak_hadir']);
+            $row++;
+        }
+
+        $filename = 'Rekap_Presensi_' . $bulan . '_' . $tahun . '.xlsx';
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
     }
 
     public function store($tanggal = null)

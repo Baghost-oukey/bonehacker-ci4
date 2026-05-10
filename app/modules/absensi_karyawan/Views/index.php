@@ -10,17 +10,27 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-            <div class="bg-white border border-slate-200 rounded-xl px-4 py-2.5 shadow-sm flex items-center gap-2">
-                <i class="fas fa-filter text-slate-400"></i>
-                <select class="bg-transparent border-none text-sm font-bold text-slate-700 focus:ring-0 p-0 cursor-pointer">
-                    <option>Mei 2026</option>
-                    <option>April 2026</option>
-                </select>
-            </div>
+            <form action="<?= base_url('kehadiran') ?>" method="GET" class="flex items-center gap-2">
+                <div class="bg-white border border-slate-200 rounded-xl px-4 py-2.5 shadow-sm flex items-center gap-2">
+                    <i class="fas fa-calendar-alt text-slate-400"></i>
+                    <select name="bulan" onchange="this.form.submit()" class="bg-transparent border-none text-sm font-bold text-slate-700 focus:ring-0 p-0 cursor-pointer">
+                        <?php for ($m = 1; $m <= 12; $m++): ?>
+                            <option value="<?= $m ?>" <?= $filter_bulan == $m ? 'selected' : '' ?>><?= date('F', mktime(0, 0, 0, $m, 1)) ?></option>
+                        <?php endfor; ?>
+                    </select>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-xl px-4 py-2.5 shadow-sm flex items-center gap-2">
+                    <select name="tahun" onchange="this.form.submit()" class="bg-transparent border-none text-sm font-bold text-slate-700 focus:ring-0 p-0 cursor-pointer">
+                        <?php for ($y = date('Y'); $y >= date('Y') - 5; $y--): ?>
+                            <option value="<?= $y ?>" <?= $filter_tahun == $y ? 'selected' : '' ?>><?= $y ?></option>
+                        <?php endfor; ?>
+                    </select>
+                </div>
+            </form>
 
-            <button class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-bold text-sm py-2.5 px-4 rounded-xl transition-all shadow-sm flex items-center gap-2">
+            <a href="<?= base_url('kehadiran/export?bulan=' . $filter_bulan . '&tahun=' . $filter_tahun) ?>" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-bold text-sm py-2.5 px-4 rounded-xl transition-all shadow-sm flex items-center gap-2">
                 <i class="fas fa-file-excel text-emerald-600"></i> Export
-            </button>
+            </a>
 
             <a href="<?= base_url('kehadiran/store') ?>" class="bg-indigo-600 hover:bg-indigo-700 text-white font-black text-sm uppercase tracking-widest py-2.5 px-6 rounded-xl transition-all shadow-lg shadow-indigo-200 flex items-center gap-2">
                 <i class="fas fa-plus"></i> Input Hari Ini
@@ -84,7 +94,7 @@
         </div>
 
         <div class="p-5 border-t border-slate-100 flex justify-between items-center text-sm font-bold text-slate-500">
-            <span>Menampilkan 2 hari kerja</span>
+            <span>Menampilkan <?= count($rekap_harian) ?> hari kerja</span>
         </div>
     </div>
 

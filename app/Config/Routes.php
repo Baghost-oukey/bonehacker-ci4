@@ -73,6 +73,9 @@ $routes->group('transaksi', ['namespace' => 'App\Modules\Transaksi\Controllers',
   $routes->post('fetch', 'TransaksiController::fetch');
   $routes->post('store', 'TransaksiController::store');
   $routes->post('delete', 'TransaksiController::delete');
+  $routes->get('export_excell', 'TransaksiController::export_excell');
+  $routes->get('export_pdf', 'TransaksiController::export_pdf');
+  $routes->get('chart_data', 'TransaksiController::chart_data');
 });
 
 // Statistik
@@ -267,6 +270,11 @@ $routes->group('kas', ['namespace' => 'App\modules\kas\Controllers', 'filter' =>
   $routes->post('bayar_pengeluaran_harian', 'Kas::bayar_pengeluaran_harian');
   $routes->post('set_filter_region', 'Kas::set_filter_region');
 
+  // Kategori Keuangan
+  $routes->get('categories', 'FinanceCategoryController::index', ['namespace' => 'App\Modules\transaksi\Controllers']);
+  $routes->post('categories/store', 'FinanceCategoryController::store', ['namespace' => 'App\Modules\transaksi\Controllers']);
+  $routes->get('categories/delete/(:num)', 'FinanceCategoryController::delete/$1', ['namespace' => 'App\Modules\transaksi\Controllers']);
+
   // Grouping untuk CRUD Master Pengeluaran Harian
   $routes->group('master', function ($routes) {
     $routes->post('simpan', 'Kas::simpan_master_harian');
@@ -306,8 +314,10 @@ $routes->group('api', ['namespace' => 'App\Modules\api\Controllers'], function (
 
 // Routes - Statsitik Keuangan
 $routes->group('statistikkeuangan', ['namespace' => 'App\Modules\StatistikKeuangan\Controllers', 'filter' => 'auth'], function ($routes) {
-  $routes->get('/', 'StatistikKeuangan::index'); // Gunakan '/' agar terbaca sebagai root grup
+  $routes->get('/', 'StatistikKeuangan::index'); 
   $routes->get('get_chart_data', 'StatistikKeuangan::get_chart_data');
+  $routes->get('export_excel', 'StatistikKeuangan::export_excel');
+  $routes->get('export_pdf', 'StatistikKeuangan::export_pdf');
 });
 
 
@@ -317,6 +327,8 @@ $routes->group('gaji', ['namespace' => 'App\modules\gaji\Controllers', 'filter' 
   $routes->post('setting/save', 'Gajikaryawan::saveSetting');
   $routes->get('detail/(:num)', 'Gajikaryawan::detailEstimasi/$1');
   $routes->post('proses_bayar', 'Gajikaryawan::prosesBayar');
+  $routes->get('fetch_estimasi', 'Gajikaryawan::fetchEstimasi');
+  $routes->get('export', 'Gajikaryawan::export');
 });
 
 // Rutes - Kas bon
@@ -346,12 +358,11 @@ $routes->group('transaksi-tunjangan', ['namespace' => 'App\modules\transaksi_tun
 });
 
 // ROUTES MODUL PENGGAJIAN (PAYROLL)
-// $routes->group('detail-gaji', ['namespace' => 'App\modules\detail_gaji\Controllers'], function($routes) {
-//     $routes->get('/', 'Detailgaji::index');
-//     $routes->get('review/(:num)', 'Detailgaji::review/$1');
-//     $routes->post('proses_simpan', 'Detailgaji::proses_simpan');
-
-// });
+$routes->group('detail-gaji', ['namespace' => 'App\modules\detail_gaji\Controllers', 'filter' => 'auth'], function($routes) {
+    $routes->get('/', 'Detailgaji::index');
+    $routes->get('review/(:num)', 'Detailgaji::review/$1');
+    $routes->post('proses_simpan', 'Detailgaji::proses_simpan');
+});
 
 // Routes - Kehadruan 
 $routes->group('kehadiran', ['namespace' => 'App\modules\absensi_karyawan\Controllers', 'filter' => 'auth'], function ($routes) {
@@ -360,6 +371,7 @@ $routes->group('kehadiran', ['namespace' => 'App\modules\absensi_karyawan\Contro
   $routes->get('store', 'Absensikaryawan::store'); // Route untuk halaman form Card
   $routes->get('detail/(:any)', 'Absensikaryawan::detail/$1');
   $routes->post('simpan_massal', 'Absensikaryawan::simpan_massal'); // Route untuk proses AJAX
+  $routes->get('export', 'Absensikaryawan::export');
 });
 
 

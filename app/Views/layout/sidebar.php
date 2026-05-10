@@ -153,8 +153,8 @@ $userInitial = strtoupper(substr($realname, 0, 1));
         </div>
 
 
-        <!-- KEUANGAN | OWNER -->
-        <?php if ($role === 'superadmin' || $role === 'owner'): ?>
+        <!-- KEUANGAN | OWNER & SUPERADMIN -->
+        <?php if ($role === 'owner' || $role === 'superadmin'): ?>
             <div class="relative flex w-full min-w-0 flex-col p-2">
                 <div class="flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-slate-500/70">
                     Kas
@@ -162,7 +162,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
 
                 <ul class="flex w-full min-w-0 flex-col gap-1">
                     <li>
-                        <details class="group" <?= in_array($current_segment, ['kas', 'gaji', 'statistikKeuangan']) ? 'open' : '' ?>>
+                        <details class="group" <?= in_array($current_segment, ['kas', 'gaji', 'statistikkeuangan']) || ($current_segment == 'kas' && $uri->getSegment(2) == 'categories') ? 'open' : '' ?>>
                             <summary class="flex w-full cursor-pointer list-none items-center justify-between rounded-md p-2 text-left text-sm transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 [&::-webkit-details-marker]:hidden">
                                 <span class="flex items-center gap-2">
                                     <i class="fas fa-credit-card w-4 text-center shrink-0"></i>
@@ -172,14 +172,21 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                             </summary>
 
                             <ul class="mx-3.5 mt-1 flex min-w-0 translate-x-px flex-col gap-1 border-l border-slate-200 px-2.5 py-0.5">
+                                <?php if ($role === 'owner'): ?>
                                 <li>
-                                    <a href="<?= base_url('kas') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'kas' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                    <a href="<?= base_url('kas') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'kas' && $uri->getSegment(2) == '' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                                         <span class="truncate">Arus Kas</span>
                                     </a>
                                 </li>
                                 <li>
                                     <a href="<?= base_url('statistikkeuangan') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'statistikkeuangan' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                                         <span class="truncate">Statistik Keuangan</span>
+                                    </a>
+                                </li>
+                                <?php endif; ?>
+                                <li>
+                                    <a href="<?= base_url('kas/categories') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'kas' && $uri->getSegment(2) == 'categories' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                        <span class="truncate">Master Kategori</span>
                                     </a>
                                 </li>
                             </ul>
@@ -244,7 +251,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
             </ul>
         </div>
 
-        <!-- TAGIFY & MANAGAE USER | SUPERADMIN - OWNER -->
+        <!-- TAGIFY & MANAGE USER | SUPERADMIN - OWNER -->
         <?php if ($role === 'superadmin' || $role === 'owner'): ?>
             <div class="relative flex w-full min-w-0 flex-col p-2">
                 <div class="flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-slate-500/70">
@@ -270,6 +277,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                     </li>
 
 
+                    <?php if ($role === 'superadmin'): ?>
                     <li>
                         <details class="group" <?= in_array($current_segment, ['logs', 'whatsapp', 'log_whatsapp', 'jabatan', 'greeting']) ? 'open' : '' ?>>
                             <summary class="flex w-full cursor-pointer list-none items-center justify-between rounded-md p-2 text-left text-sm transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 [&::-webkit-details-marker]:hidden">
@@ -288,14 +296,17 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                             </ul>
                         </details>
                     </li>
+                    <?php endif; ?>
 
 
+                    <?php if ($role === 'superadmin'): ?>
                     <li>
                         <a href="<?= base_url('users') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'users' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                             <i class="fas fa-users w-4 text-center shrink-0"></i>
                             <span class="truncate">Users</span>
                         </a>
                     </li>
+                    <?php endif; ?>
                     <li>
                         <a href="<?= base_url('terapis') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'terapis' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                             <i class="fas fa-user-md w-4 text-center shrink-0"></i>

@@ -360,7 +360,7 @@ class Jasapelayanan extends BaseController
             'layanan' => $detailLayanan
         ];
 
-        return view('App\modules\jasa_pelayanan\Views\index_regular', $data);
+        return view('App\modules\jasa_pelayanan\Views\detailRegular\show', $data);
     }
 
     // 4. FUNGSI HAPUS DATA (Soft Delete)

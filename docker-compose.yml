@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bonehacker_app
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      CI_ENVIRONMENT: production
+    volumes:
+      - .:/var/www/html
+      - /var/www/html/vendor
+      - /var/www/html/node_modules
+    depends_on:
+      - db
+    networks:
+      - bonehacker_net
+
+  db:
+    image: mysql:8.0
+    container_name: bonehacker_db
+    restart: always
+    environment:
+      MYSQL_DATABASE: bonehacker_db
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_USER: user_bonehacker
+      MYSQL_PASSWORD: user_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - bonehacker_db_data:/var/lib/mysql
+    networks:
+      - bonehacker_net
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: bonehacker_pma
+    restart: always
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: root_password
+    ports:
+      - "8081:80"
+    depends_on:
+      - db
+    networks:
+      - bonehacker_net
+
+networks:
+  bonehacker_net:
+    driver: bridge
+
+volumes:
+  bonehacker_db_data:

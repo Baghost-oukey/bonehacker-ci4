@@ -136,6 +136,27 @@ if ($isDevEnvironment) {
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
+            // Cleanup backdrop yang mungkin tersisa
+            const cleanupBackdrops = () => {
+                // Hapus semua SweetAlert backdrop
+                document.querySelectorAll('.swal2-container').forEach(el => el.remove());
+                document.querySelectorAll('.swal2-backdrop-show').forEach(el => el.remove());
+                
+                // Hapus Select2 backdrop
+                document.querySelectorAll('.select2-dropdown').forEach(el => el.remove());
+                document.querySelectorAll('.select2-container--open').forEach(el => {
+                    el.classList.remove('select2-container--open');
+                });
+                
+                // Reset body
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+                document.body.classList.remove('swal2-shown', 'swal2-height-auto');
+            };
+            
+            // Jalankan cleanup
+            cleanupBackdrops();
+            
             const sidebar = document.getElementById("sidebar");
             const backdrop = document.getElementById("sidebarBackdrop");
             const toggle = document.getElementById("sidebarToggle");

@@ -4,6 +4,29 @@ function initHeaderPage() {
 		return;
 	}
 
+	// Bersihkan semua backdrop yang mungkin tersisa dari session sebelumnya
+	const cleanupBackdrops = () => {
+		// Hapus Select2 backdrop
+		$('.select2-container--open').removeClass('select2-container--open');
+		$('.select2-dropdown').remove();
+		
+		// Hapus SweetAlert backdrop
+		if (window.Swal && Swal.isVisible()) {
+			Swal.close();
+		}
+		
+		// Hapus semua backdrop yang mungkin tersisa
+		$('.swal2-container').remove();
+		$('.swal2-backdrop-show').remove();
+		
+		// Reset body overflow
+		document.body.style.overflow = '';
+		document.body.style.paddingRight = '';
+	};
+
+	// Jalankan cleanup saat halaman dimuat
+	cleanupBackdrops();
+
 	const sidebar = document.getElementById("appSidebar");
 	const sidebarBackdrop = document.getElementById("sidebarBackdrop");
 
@@ -111,10 +134,12 @@ function initHeaderPage() {
 					if (response.status === 'success') {
 						window.location.reload();
 					} else {
+						Swal.close(); // Tutup loading sebelum menampilkan error
 						Swal.fire('Error', response.message || 'Gagal mengganti wilayah', 'error');
 					}
 				},
 				error: function(xhr) {
+					Swal.close(); // Tutup loading sebelum menampilkan error
 					let msg = 'Terjadi kesalahan sistem';
 					if (xhr.responseJSON && xhr.responseJSON.message) {
 						msg = xhr.responseJSON.message;
@@ -122,6 +147,14 @@ function initHeaderPage() {
 					Swal.fire('Error', msg, 'error');
 					// Revert selection on error
 					$('#globalRegionFilter').val($('#activeRegion').val() || 'all').trigger('change.select2');
+				},
+				complete: function() {
+					// Pastikan loading tertutup dalam kondisi apapun
+					setTimeout(function() {
+						if (Swal.isVisible()) {
+							Swal.close();
+						}
+					}, 500);
 				}
 			});
 		});

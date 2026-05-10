@@ -148,7 +148,12 @@ class JournalController extends BaseController
         set_time_limit(300);
         ini_set('memory_limit', '512M');
 
-       $cabang = $this->request->getGet('region') ?? $this->request->getGet('cabang_id');
+        $cabang = $this->request->getGet('region') ?? $this->request->getGet('cabang_id');
+        $region_session = session()->get('region_patient');
+        if (empty($cabang) || $cabang === 'all') {
+            $cabang = $region_session;
+        }
+
         $start_date = $this->request->getGet('start_date');
         $end_date = $this->request->getGet('end_date');
 
@@ -179,7 +184,12 @@ class JournalController extends BaseController
     // ================= EXPORT EXCEL =================
     public function export_excell()
     {
-    $cabang = $this->request->getGet('region') ?? $this->request->getGet('cabang_id');
+        $cabang = $this->request->getGet('region') ?? $this->request->getGet('cabang_id');
+        $region_session = session()->get('region_patient');
+        if (empty($cabang) || $cabang === 'all') {
+            $cabang = $region_session;
+        }
+
         $start_date = $this->request->getGet('start_date');
         $end_date = $this->request->getGet('end_date');
 
