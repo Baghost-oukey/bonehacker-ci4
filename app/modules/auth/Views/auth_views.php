@@ -23,13 +23,13 @@
                         </div>
                         <div class="card card-primary">
                             <div class="card-body">
-                                <form action="<?= site_url('auth/validate'); ?>" method="post" class="needs-validation" novalidate="">
+                                <form action="<?= site_url('auth/validate'); ?>" method="post" class="needs-validation" novalidate="" id="loginForm">
 
                                     <?= csrf_field() ?>
 
                                     <div class="form-group">
                                         <label>Nama Pengguna</label>
-                                        <input type="text" class="form-control" name="username" value="<?= old('username') ?>" required autofocus autocomplete="username">
+                                        <input type="text" class="form-control" name="username" id="username" value="" required autofocus autocomplete="username">
                                         <div class="invalid-feedback">Nama pengguna tidak boleh kosong</div>
                                     </div>
                                     <div class="form-group">
@@ -84,12 +84,41 @@
 
     <script>
         $(document).ready(function() {
+            // Toggle password visibility
             $('#togglePassword').click(function() {
                 const passwordInput = $('#password');
                 const type = passwordInput.attr('type') === 'password' ? 'text' : 'password';
                 passwordInput.attr('type', type);
                 
                 $(this).find('i').toggleClass('fa-eye fa-eye-slash');
+            });
+
+            // Auto-fill username dari localStorage
+            const savedUsername = localStorage.getItem('saved_username');
+            const rememberChecked = localStorage.getItem('remember_me_checked');
+            
+            if (savedUsername) {
+                $('#username').val(savedUsername);
+                // Auto-focus ke password jika username sudah terisi
+                $('#password').focus();
+            }
+            
+            if (rememberChecked === 'true') {
+                $('#remember-me').prop('checked', true);
+            }
+
+            // Simpan username ke localStorage saat submit form
+            $('#loginForm').on('submit', function() {
+                const username = $('#username').val();
+                const rememberMe = $('#remember-me').is(':checked');
+                
+                // Selalu simpan username untuk auto-fill
+                if (username) {
+                    localStorage.setItem('saved_username', username);
+                }
+                
+                // Simpan status checkbox
+                localStorage.setItem('remember_me_checked', rememberMe);
             });
         });
     </script>

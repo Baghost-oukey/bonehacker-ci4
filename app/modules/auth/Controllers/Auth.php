@@ -14,14 +14,42 @@ class Auth extends BaseController
     public function __construct()
     {
         $this->authModel = new MAuth();
+        helper('cookie'); // Load cookie helper
     }
 
 
     public function index()
     {
-        //
+        // Cek apakah sudah login
         if (session()->get('isLogin')) {
             return redirect()->to(base_url('beranda'));
+        }
+
+        // Auto-login jika ada cookie "remember_me"
+        $rememberCookie = get_cookie('remember_me');
+        if ($rememberCookie) {
+            $decoded = base64_decode($rememberCookie);
+            $parts = explode(':', $decoded);
+            
+            if (count($parts) === 2) {
+                $userId = $parts[0];
+                $token = $parts[1];
+                
+                // Ambil user dari database
+                $user = $this->authModel->find($userId);
+                
+                if ($user && $user->is_active == 1 && !empty($user->remember_token)) {
+                    // Verifikasi token
+                    if (password_verify($token, $user->remember_token)) {
+                        // Token valid, auto-login
+                        $this->setSession($user);
+                        return redirect()->to(base_url('beranda'));
+                    }
+                }
+                
+                // Token tidak valid, hapus cookie
+                delete_cookie('remember_me');
+            }
         }
 
         $data = [
@@ -62,7 +90,19 @@ class Auth extends BaseController
             if ($isPasswordCorrect) {
                 $this->setSession($user);
                 
-                // Remember Me Logic
+                // Selalu simpan username untuk auto-fill form (60 hari)
+                $cookie = [
+                    'name'   => 'saved_username',
+                    'value'  => $username,
+                    'expire' => 3600 * 24 * 60, // 60 hari
+                    'path'   => '/',
+                    'secure' => false,
+                    'httponly' => false, // Biar bisa diakses JavaScript jika perlu
+                    'samesite' => 'Lax'
+                ];
+                $this->response->setCookie($cookie);
+                
+                // Remember Me Logic (Auto-login)
                 if ($this->request->getPost('ingat_saya')) {
                     $token = bin2hex(random_bytes(32));
                     $rememberToken = password_hash($token, PASSWORD_DEFAULT);
@@ -74,7 +114,16 @@ class Auth extends BaseController
                     // Set cookie for 30 days
                     // Format: user_id:token
                     $cookieValue = base64_encode($user->id . ':' . $token);
-                    set_cookie('remember_me', $cookieValue, 3600 * 24 * 30);
+                    $rememberCookie = [
+                        'name'   => 'remember_me',
+                        'value'  => $cookieValue,
+                        'expire' => 3600 * 24 * 30, // 30 hari
+                        'path'   => '/',
+                        'secure' => false,
+                        'httponly' => true,
+                        'samesite' => 'Lax'
+                    ];
+                    $this->response->setCookie($rememberCookie);
                 }
 
                 return redirect()->to(base_url('beranda'));
@@ -147,6 +196,7 @@ class Auth extends BaseController
             $this->authModel->update($userId, ['remember_token' => null]);
         }
         
+        // Hapus cookie auto-login, tapi JANGAN hapus saved_username (untuk auto-fill)
         delete_cookie('remember_me');
         session()->destroy();
         return redirect()->to(base_url('auth'));

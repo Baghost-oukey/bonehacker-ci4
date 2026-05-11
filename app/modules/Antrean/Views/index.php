@@ -382,6 +382,12 @@
 </div>
 
 <!-- MODAL REKAM MEDIS -->
+<style>
+/* Sembunyikan section riwayat kunjungan pasien di halaman antrean */
+#antreanPage #patientHistoryContainer {
+    display: none !important;
+}
+</style>
 <?= $this->include('App\modules\patients\Views\component\card_riwayat') ?>
 
 <?= $this->endSection() ?>
