@@ -90,6 +90,7 @@
                         <th class="px-6 py-3.5 text-left font-semibold">Tanggal</th>
                         <th class="px-6 py-3.5 text-left font-semibold">Nama Pasien</th>
                         <th class="px-6 py-3.5 text-center font-semibold">Status</th>
+                        <th class="px-6 py-3.5 text-center font-semibold">Rekam Medis</th>
                         <th class="px-6 py-3.5 text-left font-semibold">Alamat</th>
                         <th class="px-6 py-3.5 text-left font-semibold">Hasil Pemeriksaan</th>
                         <th class="px-6 py-3.5 text-left font-semibold">Tindakan</th>
@@ -98,7 +99,7 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-slate-700">
                     <tr class="hover:bg-slate-50 transition">
-                        <td colspan="8" class="px-6 py-12 text-center text-slate-400 italic text-sm">
+                        <td colspan="9" class="px-6 py-12 text-center text-slate-400 italic text-sm">
                             <i class="fas fa-spinner fa-spin mr-2 text-slate-300"></i>
                             Memuat data jurnal pemeriksaan...
                         </td>
@@ -332,7 +333,7 @@
     let currentPatientInfo = {};
 
     /**
-     * Membuka modal list rekam medis hari ini dari tabel jurnal
+     * Langsung buka rekam medis spesifik dari tabel jurnal (berdasarkan historyId)
      */
     function openJournalMedicalRecord(btn) {
         const raw = btn.getAttribute('data-medis');
@@ -345,28 +346,30 @@
             return;
         }
 
-        const {
-            patientId,
-            historyId,
-            patientName,
-            patientPhone,
-            patientAddress,
-            patientAge
-        } = info;
+        const { patientId, historyId, patientName, patientPhone, patientAddress, patientAge } = info;
         currentPatientInfo = info;
 
-        // Populate header info di modal list
-        const modal = document.getElementById('modalListRiwayatHariIni');
-        modal.querySelector('#modal-list-name').textContent = patientName || '-';
-        modal.querySelector('#modal-list-phone').textContent = patientPhone || '-';
-        modal.querySelector('#modal-list-address').textContent = patientAddress || '-';
+        if (!historyId || !patientId) return;
 
-        // Fetch data rekam medis hari ini
-        const now = new Date();
-        const today = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
-        fetchTodayHistory(patientId, today);
+        // Set patientConfig agar modal rekam medis tahu konteksnya
+        window.patientConfig.patientId = patientId;
+        window.patientConfig.queueId   = null;
 
-        openModal(modal);
+        // Isi header modal
+        const nameEl    = document.getElementById('modal-patient-name');
+        const ageEl     = document.getElementById('modal-patient-age');
+        const addressEl = document.getElementById('modal-patient-address');
+        const phoneEl   = document.getElementById('modal-patient-phone');
+        if (nameEl)    nameEl.textContent    = patientName    || '-';
+        if (ageEl)     ageEl.textContent     = patientAge     || '-';
+        if (addressEl) addressEl.textContent = patientAddress || '-';
+        if (phoneEl)   phoneEl.textContent   = patientPhone   || '-';
+
+        // Langsung buka detail history yang spesifik
+        if (window.PatientHistoryPage) {
+            window.PatientHistoryPage.config.patientId = patientId;
+            window.PatientHistoryPage.show(historyId);
+        }
     }
 
     function fetchTodayHistory(patientId, date) {

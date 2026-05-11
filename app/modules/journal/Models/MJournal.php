@@ -64,9 +64,12 @@ class MJournal extends Model
             'p.age as usia',
             'h.id as history_id',
             'h.date as tanggal',
+            'h.type as type',
             'h.measure AS measures',
-            "'-' as result_names",
-            // '(SELECT IF(COUNT(h2.id) > 1, "Pasien Lama", "Pasien Baru") FROM histories h2 WHERE h2.patient_id = p.id AND h2.is_delete = 0) as status',
+            'h.kejantanan as kejantanan',
+            '(SELECT GROUP_CONCAT(DISTINCT rt.name ORDER BY rt.name SEPARATOR ", ")
+              FROM result_tags rt
+              WHERE FIND_IN_SET(rt.id, h.results)) as result_names',
             '(SELECT IF(COUNT(h2.id) > 1, "Pasien Lama", "Pasien Baru") 
           FROM histories h2 
           WHERE h2.patient_id = p.id AND h2.is_delete = 0 AND h2.date <= h.date) as status',
@@ -109,6 +112,7 @@ class MJournal extends Model
             'p.name',
             'p.phone',
             'h.date',
+            'h.type',
             'h.measure',
             'p.address',
             'pa.desa_nama',

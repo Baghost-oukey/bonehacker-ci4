@@ -67,7 +67,7 @@ class AntreanController extends BaseController
             END as status_order', false)
             ->join('patients p', 'p.id = pq.patient_id', 'left')
             ->join('patient_address pa', 'pa.patient_id = p.id', 'left')
-            ->join('histories h', 'h.patient_queue_id = pq.id', 'left')
+            ->join('histories h', 'h.id = (SELECT id FROM histories WHERE patient_queue_id = pq.id ORDER BY id DESC LIMIT 1)', 'left')
             ->orderBy('status_order', 'ASC')
             ->orderBy('pq.queue_number', 'ASC');
 

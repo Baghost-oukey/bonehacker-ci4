@@ -146,16 +146,16 @@
 
 <!-- TABLE 2 MODAL -->
 <div id="exampleModal" class="modal-wrapper hidden fixed inset-0 z-50 items-center justify-center bg-black/40 p-4">
-    <div class="w-full max-w-5xl overflow-hidden rounded-2xl bg-white shadow-xl">
-        <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-            <h5 class="text-lg font-semibold text-slate-800">Tambah Pasien Ke Antrian</h5>
+    <div class="w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
+        <div class="flex items-center justify-between border-b border-slate-200 px-5 py-3 shrink-0">
+            <h5 class="text-base font-semibold text-slate-800">Tambah Pasien Ke Antrian</h5>
             <button type="button" data-modal-close
                 class="rounded-md p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800">&times;</button>
         </div>
 
-        <div class="p-5">
-            <div class="flex flex-col gap-1.5 mb-4">
-                <div class="flex flex-col md:flex-row gap-4">
+        <div class="p-4 overflow-y-auto flex-1">
+            <div class="flex flex-col gap-1.5 mb-3">
+                <div class="flex flex-col md:flex-row gap-3">
                     <div class="relative flex-1">
                         <i id="iconSearch2" class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm transition-all"></i>
                         <input type="text" id="searchPatientList" placeholder="Ketik Nama atau Nomor WhatsApp..."
@@ -174,7 +174,7 @@
 
             <div id="patient-selection-container">
                 <!-- Mobile Card List (Shown on Mobile) -->
-                <div id="mobile-patient-list" class="md:hidden flex flex-col divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-y-auto max-h-[50vh] bg-white no-scrollbar mb-4">
+                <div id="mobile-patient-list" class="md:hidden flex flex-col divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-y-auto max-h-[40vh] bg-white no-scrollbar mb-4">
                     <div class="p-8 text-center text-slate-400 italic text-sm">
                         <i class="fas fa-spinner fa-spin mr-2 text-slate-300"></i>
                         Memuat data pasien...

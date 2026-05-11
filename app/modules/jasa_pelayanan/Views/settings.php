@@ -45,6 +45,24 @@
                     <p class="text-xs text-slate-500">Pilih cabang untuk mengatur jaspel</p>
                 </div>
 
+                <!-- Tipe Jaspel -->
+                <div class="space-y-2">
+                    <label class="text-sm font-semibold text-slate-800">Tipe Jaspel <span class="text-red-500">*</span></label>
+                    <div class="flex gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="tipe" value="reguler" checked
+                                class="text-teal-600 focus:ring-teal-500">
+                            <span class="text-sm text-slate-700 font-medium">Reguler</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="tipe" value="kejantanan"
+                                class="text-teal-600 focus:ring-teal-500">
+                            <span class="text-sm text-slate-700 font-medium">Kejantanan</span>
+                        </label>
+                    </div>
+                    <p class="text-xs text-slate-500">Reguler dan Kejantanan memiliki nominal yang berbeda</p>
+                </div>
+
                 <!-- Nominal Per Pasien -->
                 <div class="space-y-2">
                     <label class="text-sm font-semibold text-slate-800">Nominal Per Pasien <span class="text-red-500">*</span></label>
@@ -98,14 +116,16 @@
         </div>
     </div>
 
-    <!-- Daftar Pengaturan Yang Sudah Ada -->
+    <!-- Daftar Pengaturan Reguler -->
     <?php if (!empty($settings)): ?>
     <div class="rounded-2xl bg-white shadow-sm border border-slate-200/50 overflow-hidden">
-        <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4">
-            <h3 class="text-lg font-semibold text-slate-800">Pengaturan Yang Sudah Dibuat</h3>
-            <p class="text-sm text-slate-500">Daftar pengaturan jaspel per cabang</p>
+        <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4 flex items-center gap-3">
+            <span class="inline-flex items-center rounded-full bg-teal-100 px-3 py-1 text-xs font-bold text-teal-700">Reguler</span>
+            <div>
+                <h3 class="text-lg font-semibold text-slate-800">Pengaturan Jaspel Reguler</h3>
+                <p class="text-sm text-slate-500">Nominal untuk terapi reguler per cabang</p>
+            </div>
         </div>
-
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
@@ -118,10 +138,7 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-slate-700">
                     <?php foreach ($settings as $setting): ?>
-                        <?php 
-                            $terapisIds = json_decode($setting->terapis_ids, true) ?? [];
-                            $jumlahTerapis = count($terapisIds);
-                        ?>
+                        <?php $jumlahTerapis = count(json_decode($setting->terapis_ids, true) ?? []); ?>
                         <tr class="hover:bg-slate-50 transition">
                             <td class="px-6 py-4 font-medium"><?= esc($setting->region_name) ?></td>
                             <td class="px-6 py-4 text-right font-semibold text-teal-600">
@@ -129,10 +146,52 @@
                             </td>
                             <td class="px-6 py-4 text-center"><?= $jumlahTerapis ?> orang</td>
                             <td class="px-6 py-4 text-center">
-                                <button type="button" onclick="editSetting(<?= $setting->region_id ?>)"
+                                <button type="button" onclick="editSetting(<?= $setting->region_id ?>, 'reguler')"
                                     class="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-100">
-                                    <i class="fas fa-edit"></i>
-                                    Edit
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <!-- Daftar Pengaturan Kejantanan -->
+    <?php if (!empty($settings_kejantanan)): ?>
+    <div class="rounded-2xl bg-white shadow-sm border border-slate-200/50 overflow-hidden">
+        <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4 flex items-center gap-3">
+            <span class="inline-flex items-center rounded-full bg-purple-100 px-3 py-1 text-xs font-bold text-purple-700">Kejantanan</span>
+            <div>
+                <h3 class="text-lg font-semibold text-slate-800">Pengaturan Jaspel Kejantanan</h3>
+                <p class="text-sm text-slate-500">Nominal untuk terapi kejantanan per cabang</p>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
+                    <tr>
+                        <th class="px-6 py-3.5 text-left font-semibold">Cabang</th>
+                        <th class="px-6 py-3.5 text-right font-semibold">Nominal/Pasien</th>
+                        <th class="px-6 py-3.5 text-center font-semibold">Jumlah Terapis</th>
+                        <th class="px-6 py-3.5 text-center font-semibold">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-700">
+                    <?php foreach ($settings_kejantanan as $setting): ?>
+                        <?php $jumlahTerapis = count(json_decode($setting->terapis_ids, true) ?? []); ?>
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="px-6 py-4 font-medium"><?= esc($setting->region_name) ?></td>
+                            <td class="px-6 py-4 text-right font-semibold text-purple-600">
+                                Rp <?= number_format($setting->nominal_per_pasien, 0, ',', '.') ?>
+                            </td>
+                            <td class="px-6 py-4 text-center"><?= $jumlahTerapis ?> orang</td>
+                            <td class="px-6 py-4 text-center">
+                                <button type="button" onclick="editSetting(<?= $setting->region_id ?>, 'kejantanan')"
+                                    class="inline-flex items-center gap-1 rounded-lg bg-purple-50 px-3 py-1.5 text-xs font-medium text-purple-600 hover:bg-purple-100">
+                                    <i class="fas fa-edit"></i> Edit
                                 </button>
                             </td>
                         </tr>
@@ -149,18 +208,17 @@
 <?= $this->section('scripts') ?>
 <script>
     const allTerapis = <?= json_encode($all_terapis) ?>;
-    const existingSettings = <?= json_encode($settings) ?>;
+    const existingSettings = <?= json_encode(array_merge($settings ?? [], $settings_kejantanan ?? [])) ?>;
 
     $(document).ready(function() {
-        // Load terapis when region selected
-        $('#region_id').on('change', function() {
-            const regionId = $(this).val();
+        // Load terapis when region or tipe changes
+        $('#region_id, input[name="tipe"]').on('change', function() {
+            const regionId = $('#region_id').val();
             if (!regionId) {
                 $('#terapisList').html('<p class="text-sm text-slate-400 italic">Pilih cabang terlebih dahulu</p>');
                 $('#nominal_per_pasien').val('');
                 return;
             }
-
             loadTerapisByRegion(regionId);
             loadExistingSettings(regionId);
         });
@@ -169,11 +227,11 @@
         $('#formJaspelSettings').on('submit', function(e) {
             e.preventDefault();
 
-            const regionId = $('#region_id').val();
-            const nominal = $('#nominal_per_pasien').val();
+            const regionId  = $('#region_id').val();
+            const nominal   = $('#nominal_per_pasien').val();
+            const tipe      = $('input[name="tipe"]:checked').val();
             const terapisIds = [];
 
-            // Collect checked terapis
             $('input[name="terapis_ids[]"]:checked').each(function() {
                 terapisIds.push($(this).val());
             });
@@ -183,7 +241,6 @@
                 return;
             }
 
-            // Disable button
             $('#btnSave').prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i>Menyimpan...');
 
             $.ajax({
@@ -192,6 +249,7 @@
                 data: {
                     region_id: regionId,
                     nominal_per_pasien: nominal,
+                    tipe: tipe,
                     terapis_ids: terapisIds,
                     <?= csrf_token() ?>: $('input[name="<?= csrf_token() ?>"]').val()
                 },
@@ -200,7 +258,6 @@
                     if (response.csrfHash) {
                         $('input[name="<?= csrf_token() ?>"]').val(response.csrfHash);
                     }
-
                     if (response.status === 'success') {
                         alert(response.message);
                         window.location.reload();
@@ -239,14 +296,21 @@
         });
 
         $('#terapisList').html(html);
+
+        // Load existing settings setelah terapis di-render
+        loadExistingSettings(regionId);
     }
 
     function loadExistingSettings(regionId) {
-        const setting = existingSettings.find(s => s.region_id == regionId);
-        
+        const tipe    = $('input[name="tipe"]:checked').val();
+        const setting = existingSettings.find(s => s.region_id == regionId && s.tipe == tipe);
+
+        // Reset dulu
+        $('#nominal_per_pasien').val('');
+        $('input[name="terapis_ids[]"]').prop('checked', false);
+
         if (setting) {
             $('#nominal_per_pasien').val(setting.nominal_per_pasien);
-            
             const terapisIds = JSON.parse(setting.terapis_ids || '[]');
             terapisIds.forEach(id => {
                 $(`input[name="terapis_ids[]"][value="${id}"]`).prop('checked', true);
@@ -254,7 +318,8 @@
         }
     }
 
-    function editSetting(regionId) {
+    function editSetting(regionId, tipe) {
+        $(`input[name="tipe"][value="${tipe}"]`).prop('checked', true);
         $('#region_id').val(regionId).trigger('change');
         $('html, body').animate({ scrollTop: 0 }, 500);
     }

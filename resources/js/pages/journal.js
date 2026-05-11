@@ -92,10 +92,7 @@ const setupJournalPage = () => {
     // --- LOAD DAN RENDER DATA TABLE ---
     const renderEmptyState = (message) => {
         const icon = '<i class="fas fa-inbox mr-2 text-slate-300"></i>';
-        // Desktop table state
-        $("#table-journal tbody").html('<tr class="hover:bg-slate-50 transition"><td colspan="8" class="px-6 py-12 text-center text-slate-400 italic text-sm">' + icon + message + '</td></tr>');
-        
-        // Mobile container state
+        $("#table-journal tbody").html('<tr class="hover:bg-slate-50 transition"><td colspan="9" class="px-6 py-12 text-center text-slate-400 italic text-sm">' + icon + message + '</td></tr>');
         $("#mobile-journal-container").html('<div class="p-12 text-center text-slate-400 italic text-sm">' + icon + message + '</div>');
     };
     const loadTableData = (pageNumber) => {
@@ -142,6 +139,12 @@ const setupJournalPage = () => {
                     return;
                 }
                 response.data.forEach(function (row) {
+                    const isKejantanan = row.kejantanan === 'ya';
+                    const rowClass = isKejantanan
+                        ? 'hover:bg-blue-200 transition border-b border-blue-200 bg-blue-100'
+                        : 'hover:bg-slate-50 transition border-b border-slate-100';
+                    const tr = $('<tr class="' + rowClass + '"></tr>');
+
                     // 1. POLESAN BADGE STATUS
                     let statusBadge = '-';
                     if (row.status === 'Pasien Baru') {
@@ -152,10 +155,17 @@ const setupJournalPage = () => {
                         statusBadge = row.status || '-';
                     }
 
-                    let hasilPemeriksaan = '-';
-                    if (!row.result_names || row.result_names === '-' || row.result_names.trim() === '') {
-                        hasilPemeriksaan = '<span class="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-1 text-[10px] font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20"><i class="fas fa-clock"></i> Menunggu</span>';
+                    let typeBadge = '';
+                    if (row.type === 'draft') {
+                        typeBadge = '<span class="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20"><i class="fas fa-pencil-alt text-[10px]"></i> Draft</span>';
+                    } else if (row.type === 'posted') {
+                        typeBadge = '<span class="inline-flex items-center gap-1 rounded-md bg-teal-50 px-2 py-1 text-xs font-medium text-teal-700 ring-1 ring-inset ring-teal-600/20"><i class="fas fa-check text-[10px]"></i> Diterbitkan</span>';
                     } else {
+                        typeBadge = '<span class="text-slate-400 text-xs">-</span>';
+                    }
+
+                    let hasilPemeriksaan = '-';
+                    if (row.result_names && row.result_names !== '-' && row.result_names.trim() !== '') {
                         hasilPemeriksaan = '<div class="max-w-37.5 truncate" title="' + row.result_names + '">' + row.result_names + '</div>';
                     }
 
@@ -165,11 +175,11 @@ const setupJournalPage = () => {
                     }
 
                     // --- RENDER DESKTOP TABLE ---
-                    const tr = $('<tr class="hover:bg-slate-50 transition border-b border-slate-100"></tr>');
                     tr.append('<td class="px-6 py-3.5 text-center text-xs text-slate-500">' + (row.no || "-") + '</td>');
                     tr.append('<td class="px-6 py-3.5 text-xs text-slate-600 font-medium">' + (row.tanggal || "-") + '</td>');
                     tr.append('<td class="px-6 py-3.5 font-semibold text-slate-800 text-xs uppercase">' + (row.nama || "-") + '</td>');
                     tr.append('<td class="px-6 py-3.5 text-center">' + statusBadge + '</td>');
+                    tr.append('<td class="px-6 py-3.5 text-center">' + typeBadge + '</td>');
                     tr.append('<td class="px-6 py-3.5 text-xs text-slate-500 max-w-37.5 truncate" title="' + (row.alamat || "-") + '">' + (row.alamat || "-") + '</td>');
                     tr.append('<td class="px-6 py-3.5 text-xs text-slate-600">' + hasilPemeriksaan + '</td>');
                     tr.append('<td class="px-6 py-3.5 text-xs text-slate-600">' + tindakan + '</td>');

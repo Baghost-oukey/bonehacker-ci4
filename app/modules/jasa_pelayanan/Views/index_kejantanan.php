@@ -8,88 +8,90 @@
                 <?= esc($title) ?>
             </h1>
             <p class="text-sm text-slate-500">
-                Kelola data pasien dan jasa pelayanan <?= esc($kategori) ?> secara efisien
+                Laporan komisi jasa pelayanan kejantanan per hari untuk terapis
             </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+            <a href="<?= site_url('jasa-pelayanan/settings') ?>" 
+                class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
+                <i class="fas fa-cog text-slate-500"></i>
+                Pengaturan Jaspel
+            </a>
         </div>
     </div>
 
     <div class="rounded-2xl bg-white shadow-sm border border-slate-200/50 overflow-hidden">
         <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4">
             <div class="mb-4">
-                <h3 class="text-lg font-semibold text-slate-800">Data Pasien <?= esc($kategori) ?></h3>
-                <p class="text-sm text-slate-500">Daftar pasien yang memiliki riwayat layanan <?= esc($kategori) ?></p>
+                <h3 class="text-lg font-semibold text-slate-800">Data Jaspel Kejantanan Per Hari</h3>
+                <p class="text-sm text-slate-500">Komisi dibagikan kepada terapis yang hadir — hanya pasien dengan terapi kejantanan aktif</p>
             </div>
 
             <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div class="flex-1 sm:flex-none sm:w-72">
-                    <input type="text" id="searchInput" placeholder="Cari pasien..."
-                        class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+                    <?php if ($sess_role === 'superadmin'): ?>
+                        <div class="flex items-center gap-2">
+                            <label class="text-sm font-medium text-slate-600">Cabang:</label>
+                            <select id="regionFilter" class="rounded-lg border border-slate-200 px-3 py-2 text-sm transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15">
+                                <option value="">Pilih Cabang</option>
+                                <?php foreach ($wilayah as $region): ?>
+                                    <option value="<?= $region->id ?>" <?= ($region->id == $sess_region_id && $sess_region_id !== 'all') ? 'selected' : '' ?>>
+                                        <?= esc($region->name) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    <?php else: ?>
+                        <input type="hidden" id="regionFilter" value="<?= $sess_region_id ?>">
+                        <div class="text-sm font-medium text-slate-700">
+                            <i class="fas fa-map-marker-alt text-teal-600 mr-2"></i>
+                            Cabang: <span class="font-semibold"><?= esc($sess_region_name) ?></span>
+                        </div>
+                    <?php endif; ?>
+
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm font-medium text-slate-600">Bulan:</label>
+                        <input type="month" id="monthFilter" value="<?= $current_month ?>" 
+                            class="rounded-lg border border-slate-200 px-3 py-2 text-sm transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15">
+                    </div>
+
+                    <button type="button" id="btnFilter" 
+                        class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-700">
+                        <i class="fas fa-filter"></i>
+                        Tampilkan
+                    </button>
                 </div>
             </div>
         </div>
 
         <div class="overflow-x-auto">
-            <table id="table-JasaPelayanan" class="w-full text-sm">
+            <table id="table-JaspelKejantanan" class="w-full text-sm">
                 <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
                     <tr>
-                        <th class="px-6 py-3.5 text-left font-semibold">ID Pasien</th>
-                        <th class="px-6 py-3.5 text-left font-semibold">Nama</th>
-                        <th class="px-6 py-3.5 text-left font-semibold">Wilayah</th>
-                        <th class="px-6 py-3.5 text-left font-semibold">Alamat</th>
-                        <th class="px-6 py-3.5 text-center font-semibold">Kunjungan Terakhir</th>
-                        <th class="px-6 py-3.5 text-center font-semibold">Jumlah Kunjungan</th>
-                        <th class="px-6 py-3.5 text-center font-semibold">Aksi</th>
+                        <th class="px-6 py-3.5 text-center font-semibold w-12">No</th>
+                        <th class="px-6 py-3.5 text-left font-semibold">Tanggal</th>
+                        <th class="px-6 py-3.5 text-center font-semibold">Total Pasien</th>
+                        <th class="px-6 py-3.5 text-center font-semibold">Terapis Hadir</th>
+                        <th class="px-6 py-3.5 text-left font-semibold">Nama Terapis</th>
+                        <th class="px-6 py-3.5 text-right font-semibold">Total Jaspel</th>
+                        <th class="px-6 py-3.5 text-right font-semibold">Jaspel/Terapis</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-slate-700">
                     <tr class="hover:bg-slate-50 transition">
                         <td colspan="7" class="px-6 py-12 text-center text-slate-400 italic text-sm">
-                            <i class="fas fa-spinner fa-spin mr-2 text-slate-300"></i>
-                            Memuat data pasien...
+                            <i class="fas fa-info-circle mr-2 text-slate-300"></i>
+                            Pilih cabang dan bulan, lalu klik "Tampilkan"
                         </td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
-        <!-- PAGINATION -->
-        <div class="border-t border-slate-100 bg-slate-50/50 px-6 py-4">
-            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-                    <div class="flex items-center gap-2">
-                        <label class="text-xs font-medium text-slate-600">Tampilkan</label>
-                        <select id="paginationLength"
-                            class="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15">
-                            <option value="10">10</option>
-                            <option value="25" selected>25</option>
-                            <option value="50">50</option>
-                            <option value="100">100</option>
-                        </select>
-                        <span class="text-xs font-medium text-slate-600">data per halaman</span>
-                    </div>
-                    <div class="text-xs font-medium text-slate-600 sm:ml-auto">
-                        <span id="paginationInfo">Menampilkan 0 sampai 0 dari 0 data</span>
-                    </div>
-                </div>
-
-                <div class="flex items-center justify-center gap-1.5 sm:justify-end">
-                    <button id="paginationPrev"
-                        class="inline-flex h-8 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:border-slate-400 disabled:opacity-50 disabled:cursor-not-allowed">
-                        <i class="fas fa-chevron-left text-xs mr-1"></i>
-                        <span class="hidden sm:inline">Sebelumnya</span>
-                    </button>
-                    <div id="paginationNumbers" class="flex items-center gap-1"></div>
-                    <button id="paginationNext"
-                        class="inline-flex h-8 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:border-slate-400 disabled:opacity-50 disabled:cursor-not-allowed">
-                        <span class="hidden sm:inline">Berikutnya</span>
-                        <i class="fas fa-chevron-right text-xs ml-1"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-
         <div class="border-t border-slate-100 bg-slate-50/30 px-6 py-3 text-xs text-slate-400">
-            Data ditampilkan berdasarkan riwayat layanan <?= esc($kategori) ?>
+            <i class="fas fa-info-circle mr-1"></i>
+            Hanya menghitung pasien yang rekam medisnya memiliki terapi kejantanan aktif dan sudah selesai
         </div>
     </div>
 </section>
@@ -98,13 +100,84 @@
 
 <?= $this->section('scripts') ?>
 <script>
-    window.jasaPelayananConfig = {
-        csrfName: "<?= csrf_token() ?>",
-        csrfHash: "<?= csrf_hash() ?>",
-        fetchUrl: "<?= site_url('jasa-pelayanan/fetchPatients') ?>",
-        showBaseUrl: "<?= site_url('jasa-pelayanan/detail-kejantanan') ?>",
-        kategori: "<?= esc($kategori) ?>"
-    };
+    $(document).ready(function() {
+        let table;
+
+        $('#btnFilter').on('click', function() {
+            const regionId = $('#regionFilter').val();
+            const bulan = $('#monthFilter').val();
+
+            if (!regionId) {
+                alert('Pilih cabang terlebih dahulu');
+                return;
+            }
+
+            if (!bulan) {
+                alert('Pilih bulan terlebih dahulu');
+                return;
+            }
+
+            if ($.fn.DataTable.isDataTable('#table-JaspelKejantanan')) {
+                $('#table-JaspelKejantanan').DataTable().destroy();
+            }
+
+            table = $('#table-JaspelKejantanan').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: '<?= site_url('jasa-pelayanan/getJaspelKejantananPerHari') ?>',
+                    type: 'POST',
+                    data: function(d) {
+                        d.region_id = regionId;
+                        d.bulan = bulan;
+                        d.<?= csrf_token() ?> = '<?= csrf_hash() ?>';
+                    },
+                    dataSrc: function(json) {
+                        if (json.csrfHash) {
+                            $('input[name="<?= csrf_token() ?>"]').val(json.csrfHash);
+                        }
+                        return json.data;
+                    },
+                    error: function(xhr, error, thrown) {
+                        console.error('Error:', error);
+                        alert('Terjadi kesalahan saat memuat data');
+                    }
+                },
+                columns: [
+                    { data: 'no', className: 'text-center' },
+                    { data: 'tanggal' },
+                    { data: 'total_pasien', className: 'text-center' },
+                    { data: 'terapis_hadir', className: 'text-center' },
+                    { data: 'nama_terapis' },
+                    { data: 'total_jaspel', className: 'text-right font-semibold text-teal-600' },
+                    { data: 'jaspel_per_terapis', className: 'text-right font-semibold text-emerald-600' }
+                ],
+                pageLength: 25,
+                lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+                language: {
+                    processing: '<i class="fas fa-spinner fa-spin"></i> Memuat data...',
+                    lengthMenu: 'Tampilkan _MENU_ data per halaman',
+                    zeroRecords: 'Tidak ada data untuk ditampilkan',
+                    info: 'Menampilkan _START_ sampai _END_ dari _TOTAL_ data',
+                    infoEmpty: 'Tidak ada data',
+                    infoFiltered: '(difilter dari _MAX_ total data)',
+                    search: 'Cari:',
+                    paginate: {
+                        first: 'Pertama',
+                        last: 'Terakhir',
+                        next: 'Selanjutnya',
+                        previous: 'Sebelumnya'
+                    }
+                },
+                order: [[1, 'desc']]
+            });
+        });
+
+        // Auto load untuk non-superadmin
+        <?php if ($sess_role !== 'superadmin' && $sess_region_id !== 'all'): ?>
+            $('#btnFilter').trigger('click');
+        <?php endif; ?>
+    });
 </script>
 
 <?= $this->endSection() ?>

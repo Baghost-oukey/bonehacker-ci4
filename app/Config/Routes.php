@@ -383,6 +383,7 @@ $routes->group('jasa-pelayanan', ['namespace' => 'App\modules\jasa_pelayanan\Con
     $routes->get('settings', 'Jasapelayanan::settings');
     $routes->post('saveSettings', 'Jasapelayanan::saveSettings');
     $routes->post('getJaspelPerHari', 'Jasapelayanan::getJaspelPerHari');
+    $routes->post('getJaspelKejantananPerHari', 'Jasapelayanan::getJaspelKejantananPerHari');
     $routes->post('fetch', 'Jasapelayanan::fetch');
     $routes->post('fetchPatients', 'Jasapelayanan::fetchPatients');
     $routes->get('show/(:num)', 'Jasapelayanan::show/$1');
