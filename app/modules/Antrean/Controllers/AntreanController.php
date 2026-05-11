@@ -37,6 +37,11 @@ class AntreanController extends BaseController
             'wilayah' => $this->regionModel->getData(null, $allowed_regions),
             'negara' => $this->countryModel->findAll(),
             'resources' => $this->patientsModel->get_resources(),
+            // Variabel untuk card_riwayat.php (akan diisi via JavaScript)
+            'patient_id' => null,
+            'queue_id' => null,
+            'patient' => (object)['region_id' => null],
+            'file_urls' => []
         ];
 
         return view('App\Modules\Antrean\Views\index', $data);
