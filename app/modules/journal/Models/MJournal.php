@@ -61,6 +61,7 @@ class MJournal extends Model
             'p.id as patient_id',
             'p.name as nama',
             'p.phone as nowa',
+            'p.age as usia',
             'h.id as history_id',
             'h.date as tanggal',
             'h.measure AS measures',

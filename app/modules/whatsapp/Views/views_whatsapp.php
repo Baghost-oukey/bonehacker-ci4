@@ -44,11 +44,15 @@
                             <tr class="hover:bg-slate-50/50 transition-colors group">
                                 <td class="px-6 py-4 text-sm text-slate-500 font-mono"><?= esc($record->id) ?></td>
                                 <td class="px-6 py-4 text-sm font-semibold text-slate-700"><?= esc($record->url_api) ?></td>
-                                <td class="px-6 py-4 text-xs font-mono text-slate-500 bg-slate-50 rounded-lg inline-block mt-3">
-                                    <?= esc(substr($record->instance_id, 0, 4)) . '****' ?>
+                                <td class="px-6 py-4">
+                                    <span class="text-xs font-mono text-slate-500 bg-slate-50 rounded-lg inline-block px-2 py-1">
+                                        <?= esc(substr($record->instance_id, 0, 4)) . '****' ?>
+                                    </span>
                                 </td>
-                                <td class="px-6 py-4 text-xs font-mono text-slate-500">
-                                    <?= esc(substr($record->token, 0, 5)) . '****************' ?>
+                                <td class="px-6 py-4">
+                                    <span class="text-xs font-mono text-slate-500 bg-slate-50 rounded-lg inline-block px-2 py-1">
+                                        <?= esc(substr($record->token, 0, 5)) . '****************' ?>
+                                    </span>
                                 </td>
                                 <td class="px-6 py-4 text-xs text-slate-500 max-w-xs truncate"><?= esc($record->message) ?></td>
                                 <td class="px-6 py-4 text-right">

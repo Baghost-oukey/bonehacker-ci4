@@ -300,6 +300,7 @@
                         <label class="text-sm font-medium text-slate-700">Tanggal Kedatangan <span
                                 class="text-red-500">*</span></label>
                         <input type="datetime-local" name="visit_date" required
+                            value="<?= date('Y-m-d\TH:i') ?>"
                             class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm transition-colors focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
                         <div class="invalid-feedback mt-1 hidden items-center gap-1.5 text-xs text-red-500">
                             <i class="fas fa-exclamation-circle"></i> Tanggal kedatangan wajib diisi

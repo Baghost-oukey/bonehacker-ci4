@@ -98,13 +98,14 @@ class JournalController extends BaseController
 
         $datatables->addColumn('nama', function ($row) {
             $name = esc($row->nama);
+            // Click name goes to full profile (bio, files, history)
             $url = site_url('patient/show/' . $row->patient_id);
 
             $phone = !empty($row->nowa)
-                ? '<br><small>(' . esc($row->nowa) . ')</small>'
+                ? '<br><small class="text-slate-400">(' . esc($row->nowa) . ')</small>'
                 : '';
 
-            return '<a href="' . $url . '" target="_blank"><strong>' . $name . '</strong></a>' . $phone;
+            return '<a href="' . $url . '" class="text-teal-600 hover:text-teal-700 font-bold hover:underline transition-all">' . $name . '</a>' . $phone;
         });
 
         $datatables->addColumn('alamat', function ($row) {
@@ -120,10 +121,20 @@ class JournalController extends BaseController
         });
 
         $datatables->addColumn('action', function ($row) {
-            return '<a href="' . site_url('patient/history/' . $row->patient_id) . '" 
+            // Data for modal rekam medis
+            $medisData = htmlspecialchars(json_encode([
+                'patientId' => $row->patient_id,
+                'historyId' => $row->history_id,
+                'patientName' => $row->nama,
+                'patientPhone' => $row->nowa ?? '-',
+                'patientAddress' => $row->alamat ?? '-',
+                'patientAge' => $row->usia ?? '-'
+            ]), ENT_QUOTES, 'UTF-8');
+
+            return '<button type="button" data-medis=\'' . $medisData . '\' onclick="openJournalMedicalRecord(this)" 
                         class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:bg-slate-100 hover:text-teal-600">
                         <i class="fas fa-eye"></i>
-                    </a>';
+                    </button>';
         });
 
         //  RESPONSE AMAN
@@ -147,14 +158,29 @@ class JournalController extends BaseController
         set_time_limit(300);
         ini_set('memory_limit', '512M');
 
-        $cabang = $this->request->getGet('region') ?? $this->request->getGet('cabang_id');
+        $cabang = $this->request->getGet('region_id') ?? $this->request->getGet('region') ?? $this->request->getGet('cabang_id');
         $region_session = session()->get('region_patient');
         if (empty($cabang) || $cabang === 'all') {
             $cabang = $region_session;
         }
 
+        $period = $this->request->getGet('period');
         $start_date = $this->request->getGet('start_date');
         $end_date = $this->request->getGet('end_date');
+
+        if ($period === 'today') {
+            $start_date = date('Y-m-d');
+            $end_date = date('Y-m-d');
+        } elseif ($period === 'yesterday') {
+            $start_date = date('Y-m-d', strtotime('-1 day'));
+            $end_date = date('Y-m-d', strtotime('-1 day'));
+        } elseif ($period === 'last_month') {
+            $start_date = date('Y-m-01', strtotime('-1 month'));
+            $end_date = date('Y-m-t', strtotime('-1 month'));
+        } elseif ($period === 'last_year') {
+            $start_date = date('Y-01-01', strtotime('-1 year'));
+            $end_date = date('Y-12-31', strtotime('-1 year'));
+        }
 
         $journals = $this->model_journal->get_query_for_Journal(
             $cabang,
@@ -183,14 +209,29 @@ class JournalController extends BaseController
     // ================= EXPORT EXCEL =================
     public function export_excell()
     {
-        $cabang = $this->request->getGet('region') ?? $this->request->getGet('cabang_id');
+        $cabang = $this->request->getGet('region_id') ?? $this->request->getGet('region') ?? $this->request->getGet('cabang_id');
         $region_session = session()->get('region_patient');
         if (empty($cabang) || $cabang === 'all') {
             $cabang = $region_session;
         }
 
+        $period = $this->request->getGet('period');
         $start_date = $this->request->getGet('start_date');
         $end_date = $this->request->getGet('end_date');
+
+        if ($period === 'today') {
+            $start_date = date('Y-m-d');
+            $end_date = date('Y-m-d');
+        } elseif ($period === 'yesterday') {
+            $start_date = date('Y-m-d', strtotime('-1 day'));
+            $end_date = date('Y-m-d', strtotime('-1 day'));
+        } elseif ($period === 'last_month') {
+            $start_date = date('Y-m-01', strtotime('-1 month'));
+            $end_date = date('Y-m-t', strtotime('-1 month'));
+        } elseif ($period === 'last_year') {
+            $start_date = date('Y-01-01', strtotime('-1 year'));
+            $end_date = date('Y-12-31', strtotime('-1 year'));
+        }
 
         $data = $this->model_journal->get_query_for_Journal(
             $cabang,

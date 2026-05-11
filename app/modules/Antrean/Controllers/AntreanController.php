@@ -102,7 +102,7 @@ class AntreanController extends BaseController
                 $statusPasien = $row->visit_count > 0
                     ? '<span class="ml-2 inline-flex items-center rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20">Lama</span>'
                     : '<span class="ml-2 inline-flex items-center rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">Baru</span>';
-                
+
                 $urlProfile = site_url('patient/show/' . $row->patient_id);
                 return '<div class="flex items-center"><a href="' . $urlProfile . '" target="_blank" rel="noopener noreferrer" class="text-teal-600 hover:text-teal-700 hover:underline transition-colors">' . esc($row->patient_name) . '</a>' . $statusPasien . '</div>';
             })
@@ -258,7 +258,7 @@ class AntreanController extends BaseController
         if ($insert) {
             // Dapatkan ID antrean yang baru dibuat
             $queueId = $this->db->insertID();
-            
+
             // Otomatis buat draft rekam medis yang ter-link dengan antrean
             $this->db->table('histories')->insert([
                 'patient_queue_id' => $queueId,
@@ -308,12 +308,12 @@ class AntreanController extends BaseController
     {
         $db = \Config\Database::connect();
         $isLogin = session()->get('isLogin');
-        
+
         if ($isLogin) {
             $active_region = session()->get('active_region');
             $role = session()->get('role');
             $region_session = session()->get('region_patient');
-            
+
             if ($role === 'superadmin') {
                 $regionId = $this->request->getGet('region') ?: ($active_region !== 'all' ? $active_region : null);
             } else if ($role === 'owner') {

@@ -10,7 +10,7 @@ class MRegion extends Model
     protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
     protected $returnType       = 'object';
-    protected $useSoftDeletes   = true;
+    protected $useSoftDeletes   = false;
     protected $protectFields    = true;
     protected $allowedFields    = ['name', 'address', 'phone', 'is_active', 'created_at', 'updated_at'];
 

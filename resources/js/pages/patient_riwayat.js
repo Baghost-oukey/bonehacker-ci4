@@ -40,7 +40,7 @@ const PatientHistoryPage = {
     this.currentCsrfHash = this.config.csrfHash || "";
     const page = document.getElementById("patientHistoryContainer");
     if (!page || typeof window.$ === "undefined") return;
-    
+
     // DEBUG: Log config untuk memastikan patientRegionId ada
 
 
@@ -48,13 +48,13 @@ const PatientHistoryPage = {
 
     this.initTagify();
     this.initEventListeners();
-    
+
     if (this.config.patientId) {
       this.loadTableData(1);
     }
-    
+
     this.checkUrlParams();
-    
+
     // Init biodata read-only mode
     this.initBiodataMode();
   },
@@ -89,10 +89,10 @@ const PatientHistoryPage = {
   initBiodataMode() {
     const biodataContent = document.getElementById('biodata-content');
     if (!biodataContent) return;
-    
+
     // Set semua input ke readonly saat pertama kali load
     this.setBiodataReadOnly(true);
-    
+
     // Event listener untuk tombol Edit
     $('#btn-edit-biodata').on('click', () => {
       this.setBiodataReadOnly(false);
@@ -100,7 +100,7 @@ const PatientHistoryPage = {
       $('#btn-cancel-edit, #btn-save-biodata').show();
       $('#biodata-subtitle').text('Ubah dan perbarui informasi dasar pasien');
     });
-    
+
     // Event listener untuk tombol Batal
     $('#btn-cancel-edit').on('click', () => {
       // Reset form ke nilai awal
@@ -114,13 +114,13 @@ const PatientHistoryPage = {
   setBiodataReadOnly(isReadOnly) {
     const form = document.getElementById('patientForm');
     if (!form) return;
-    
+
     if (isReadOnly) {
       // Set semua input, select, textarea ke readonly/disabled
-      $(form).find('input:not([type="hidden"]), select, textarea').each(function() {
+      $(form).find('input:not([type="hidden"]), select, textarea').each(function () {
         const $el = $(this);
         const tagName = this.tagName.toLowerCase();
-        
+
         if (tagName === 'select' || this.type === 'checkbox' || this.type === 'radio') {
           $el.prop('disabled', true);
           $el.addClass('cursor-not-allowed opacity-60');
@@ -129,17 +129,17 @@ const PatientHistoryPage = {
           $el.addClass('bg-slate-50 cursor-not-allowed');
         }
       });
-      
+
       // Hide tombol save & cancel, show tombol edit
       $('#btn-save-biodata, #btn-cancel-edit').hide();
       $('#btn-edit-biodata').show();
       $('#biodata-subtitle').text('Informasi dasar pasien (Mode Lihat)');
     } else {
       // Remove readonly/disabled dari semua input
-      $(form).find('input:not([type="hidden"]), select, textarea').each(function() {
+      $(form).find('input:not([type="hidden"]), select, textarea').each(function () {
         const $el = $(this);
         const tagName = this.tagName.toLowerCase();
-        
+
         if (tagName === 'select' || this.type === 'checkbox' || this.type === 'radio') {
           $el.prop('disabled', false);
           $el.removeClass('cursor-not-allowed opacity-60');
@@ -148,7 +148,7 @@ const PatientHistoryPage = {
           $el.removeClass('bg-slate-50 cursor-not-allowed');
         }
       });
-      
+
       // Hide tombol edit, show tombol save & cancel
       $('#btn-edit-biodata').hide();
       $('#btn-save-biodata, #btn-cancel-edit').show();
@@ -438,7 +438,7 @@ const PatientHistoryPage = {
 
     if (data.processAt) $('input[name="processAt"]').val(this.formatDateTimeForInput(data.processAt));
     if (data.finishAt) $('input[name="finishAt"]').val(this.formatDateTimeForInput(data.finishAt));
-    
+
     // Hitung durasi otomatis dan pastikan field readonly
     this.calculateDuration();
     $('#timeConsume').prop('readonly', true);
@@ -537,6 +537,7 @@ const PatientHistoryPage = {
         $('#save-button').hide();
       } else {
         $('#modalRiwayatPasien form :input').prop('readonly', false);
+        $('#processAt, #finishAt, #timeConsume').prop('readonly', true);
         $('#modalRiwayatPasien form :checkbox, #modalRiwayatPasien form :radio, #region_history, .terapis').prop('disabled', false);
         [complaintTagify, medhisTagify, resultTagify].forEach(t => { if (t) t.setReadonly(false); });
         $('#save-button').prop('disabled', false).show();
@@ -559,7 +560,7 @@ const PatientHistoryPage = {
 
   // --- ADD RIWAYAT ---
   add() {
-
+    this.setFormReadOnly(false);
     const modal = document.getElementById("modalRiwayatPasien");
     const form = document.getElementById("save_data");
     if (!modal || !form) {
@@ -570,7 +571,7 @@ const PatientHistoryPage = {
     openModal(modal);
     modal.querySelector(".modal-title").textContent = "Tambah Riwayat Pasien";
     form.setAttribute("action", this.config.urls.historyStore);
-    
+
     // Reset form KECUALI select region
     form.querySelector('input[name="id"]').value = '';
     form.querySelector('input[name="patient_id"]').value = this.config.patientId;
@@ -584,11 +585,11 @@ const PatientHistoryPage = {
 
     form.querySelector('input[name="processAt"]').value = processAtValue;
     form.querySelector('input[name="finishAt"]').value = finishAtValue;
-    
+
     // Clear all inputs except region
     $(form).find('input[type="text"]:not(#timeConsume), textarea').val('');
     $(form).find('input[type="checkbox"], input[type="radio"]').prop('checked', false);
-    
+
     // Set wilayah periksa dari biodata pasien
 
 
@@ -602,7 +603,7 @@ const PatientHistoryPage = {
         regionSelect.value = this.config.patientRegionId;
 
       }
-      
+
       // Set via jQuery
       $('#region_history').val(this.config.patientRegionId);
 
@@ -615,7 +616,7 @@ const PatientHistoryPage = {
     } else {
 
     }
-    
+
     // Hitung durasi otomatis LANGSUNG setelah set waktu
 
     setTimeout(() => {
@@ -624,9 +625,9 @@ const PatientHistoryPage = {
 
     $(form).find(":input").prop("readonly", false);
     $(form).find(":checkbox, :radio").prop("disabled", false);
-    
-    // Pastikan timeConsume tetap readonly
-    $('#timeConsume').prop('readonly', true);
+
+    // Pastikan field waktu dan timeConsume tetap readonly (otomatis)
+    $('#processAt, #finishAt, #timeConsume').prop('readonly', true);
 
     [complaintTagify, medhisTagify, resultTagify].forEach((t) => { if (t) { t.removeAllTags(); t.setReadonly(false); } });
 
@@ -641,7 +642,7 @@ const PatientHistoryPage = {
 
 
   // --- SHOW DETAIL RIWAYAT ---
-  show(id, isDuplicate = false) {
+  show(id, isDuplicate = false, isReadOnly = false) {
     const self = this;
     // Build show URL: replace 'fetch' with 'show' in base, append id
     const baseUrl = (this.config.urls.historyFetchBase || this.config.urls.historyFetch.replace(/\/\d+$/, '')).replace(/\/$/, '');
@@ -655,14 +656,55 @@ const PatientHistoryPage = {
         const modal = document.getElementById("modalRiwayatPasien");
         openModal(modal);
 
-        modal.querySelector(".modal-title").textContent = isDuplicate ? "Duplikat Riwayat Pasien" : "Detail Riwayat Pasien";
+        let title = "Detail Riwayat Pasien";
+        if (isDuplicate) title = "Duplikat Riwayat Pasien";
+        if (isReadOnly) title = "Keterangan Rekam Medis";
+
+        modal.querySelector(".modal-title").textContent = title;
         const formAction = isDuplicate ? self.config.urls.historyStore.replace('store', 'copy') : self.config.urls.historyStore.replace('store', 'update');
         document.getElementById("save_data").setAttribute("action", formAction);
 
         self.populateForm(data, isDuplicate);
+
+        // Handle ReadOnly mode
+        self.setFormReadOnly(isReadOnly);
       },
       error: () => alert("Gagal memuat data detail riwayat")
     });
+  },
+
+  setFormReadOnly(isReadOnly) {
+    const form = $("#save_data");
+    const saveBtn = $("#save-button");
+    const draftBtn = $("#save-draft-button");
+    const cancelBtn = $("[data-modal-close]").filter(".bg-white"); // The "Batal" button in footer
+
+    if (isReadOnly) {
+      modal.addClass("modal-readonly");
+      form.find(":input").prop("disabled", true);
+      saveBtn.hide();
+      draftBtn.hide();
+      cancelBtn.text("Tutup").addClass("bg-teal-600 text-white hover:bg-teal-700").removeClass("bg-white text-slate-700 border-slate-300");
+
+      // Disable tagify
+      [complaintTagify, medhisTagify, resultTagify].forEach(t => {
+        if (t) t.setReadonly(true);
+      });
+    } else {
+      modal.removeClass("modal-readonly");
+      form.find(":input").prop("disabled", false);
+      saveBtn.show();
+      draftBtn.show();
+      cancelBtn.text("Batal").removeClass("bg-teal-600 text-white hover:bg-teal-700").addClass("bg-white text-slate-700 border-slate-300");
+
+      // Enable tagify
+      [complaintTagify, medhisTagify, resultTagify].forEach(t => {
+        if (t) t.setReadonly(false);
+      });
+
+      // Re-enforce some readonly fields (time)
+      $('#processAt, #finishAt, #timeConsume').prop('readonly', true).prop('disabled', false);
+    }
   },
 
   // --- HAPUS RIWAYAT ---
@@ -685,23 +727,23 @@ const PatientHistoryPage = {
 
 
     const self = this;
-    
+
     // Show loading state
     $('.terapis').empty().append('<option value="">Memuat terapis...</option>').trigger('change');
-    
+
     $.ajax({
       url: self.config.urls.terapisByRegion,
       type: 'GET',
       data: { region_id: regionId },
       dataType: 'json',
-      success: function(response) {
+      success: function (response) {
 
         $('.terapis').empty();
-        
+
         if (response.status && response.data && response.data.length > 0) {
           $('.terapis').append('<option value="">Pilih Terapis</option>');
-          
-          response.data.forEach(function(terapis) {
+
+          response.data.forEach(function (terapis) {
             $('.terapis').append(
               $('<option>', {
                 value: terapis.id,
@@ -714,10 +756,10 @@ const PatientHistoryPage = {
           $('.terapis').append('<option value="">Tidak ada terapis di wilayah ini</option>');
 
         }
-        
+
         $('.terapis').trigger('change');
       },
-      error: function(xhr, status, error) {
+      error: function (xhr, status, error) {
 
 
         $('.terapis').empty().append('<option value="">Error memuat terapis</option>').trigger('change');
@@ -735,14 +777,14 @@ const PatientHistoryPage = {
       const id = $(this).data('id');
       const modalHapus = document.getElementById("deleteModal");
       if (!modalHapus) {
-        return; 
+        return;
       }
       self.destroy(id);
     });
     $("#region_history, .terapis").select2({ dropdownParent: $("#modalRiwayatPasien"), width: "100%" });
 
     // Event listener untuk perubahan wilayah periksa - update dropdown terapis
-    $(document).on('change', '#region_history', function() {
+    $(document).on('change', '#region_history', function () {
       const regionId = $(this).val();
 
 
@@ -755,7 +797,7 @@ const PatientHistoryPage = {
     });
 
     // Auto check/uncheck Sakit/Tidak berdasarkan Grade
-    $(document).on('change', '#pemeriksaan input[type="radio"][name$="_grade"]', function() {
+    $(document).on('change', '#pemeriksaan input[type="radio"][name$="_grade"]', function () {
       if ($(this).is(':checked')) {
         const checkboxName = $(this).attr('name').replace('_grade', '');
         $(`#pemeriksaan input[type="checkbox"][name="${checkboxName}"]`).prop('checked', true);
@@ -763,7 +805,7 @@ const PatientHistoryPage = {
     });
 
     // Auto clear Grade jika Sakit/Tidak di-uncheck
-    $(document).on('change', '#pemeriksaan input[type="checkbox"][value="sakit"]', function() {
+    $(document).on('change', '#pemeriksaan input[type="checkbox"][value="sakit"]', function () {
       if (!$(this).is(':checked')) {
         const radioName = $(this).attr('name') + '_grade';
         $(`#pemeriksaan input[type="radio"][name="${radioName}"]`).prop('checked', false);
@@ -812,16 +854,16 @@ const PatientHistoryPage = {
 
     // --- THERAPY DURATION (Auto-calculate, field is readonly) ---
     // Gunakan event delegation untuk memastikan event tetap bekerja
-    $(document).on('change', '#processAt, #finishAt', function() {
+    $(document).on('change', '#processAt, #finishAt', function () {
 
 
       self.calculateDuration();
       // Pastikan field timeConsume tetap readonly setelah perhitungan
       $('#timeConsume').prop('readonly', true);
     });
-    
+
     // Tambahan: trigger saat user mengetik (untuk real-time update)
-    $(document).on('input', '#processAt, #finishAt', function() {
+    $(document).on('input', '#processAt, #finishAt', function () {
 
       self.calculateDuration();
       $('#timeConsume').prop('readonly', true);
@@ -995,13 +1037,13 @@ if (document.readyState === "loading") {
 }
 
 // Expose fungsi global untuk dipanggil dari halaman lain (seperti antrean)
-window.loadHistoryData = function(historyId) {
+window.loadHistoryData = function (historyId) {
   if (PatientHistoryPage && typeof PatientHistoryPage.editHistory === 'function') {
     PatientHistoryPage.editHistory(historyId);
   }
 };
 
-window.resetHistoryForm = function() {
+window.resetHistoryForm = function () {
   const form = document.getElementById('formRiwayat');
   if (form) {
     form.reset();
@@ -1009,7 +1051,7 @@ window.resetHistoryForm = function() {
     if (complaintTagify) complaintTagify.removeAllTags();
     if (medhisTagify) medhisTagify.removeAllTags();
     if (resultTagify) resultTagify.removeAllTags();
-    
+
     // Set mode tambah
     document.getElementById('history_id').value = '';
     document.getElementById('modalRiwayatLabel').textContent = 'Tambah Rekam Medis';

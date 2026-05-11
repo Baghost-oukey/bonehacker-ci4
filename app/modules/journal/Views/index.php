@@ -14,11 +14,11 @@
 
         <div class="flex flex-wrap items-center gap-3">
             <?php if (session()->get('role') === 'superadmin'): ?>
-            <button type="button" id="btnOpenExport"
-                class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
-                <i class="fas fa-file-export text-slate-500"></i>
-                Export Data
-            </button>
+                <button type="button" id="btnOpenExport"
+                    class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
+                    <i class="fas fa-file-export text-slate-500"></i>
+                    Export Data
+                </button>
             <?php endif; ?>
         </div>
     </div>
@@ -185,8 +185,9 @@
         <form action="<?= site_url('journal/export_file_journal') ?>" method="GET" target="_blank" class="space-y-4 p-5">
             <div class="space-y-1">
                 <label class="text-sm font-medium text-slate-700">Periode Laporan</label>
-                <select id="period_picker"
+                <select id="period_picker" name="period"
                     class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                    <option value="today">Hari Ini</option>
                     <option value="all">Seluruh Data</option>
                     <option value="yesterday">Kemarin</option>
                     <option value="last_month">Bulan Lalu</option>
@@ -249,6 +250,72 @@
     </div>
 </div>
 
+<!-- MODAL LIST REKAM MEDIS HARI INI -->
+<div id="modalListRiwayatHariIni" class="modal-wrapper hidden fixed inset-0 z-50 items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 transition-opacity">
+    <div class="w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+        <!-- HEADER -->
+        <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4 bg-white">
+            <div>
+                <h5 class="text-xl font-bold text-slate-800">Riwayat Kunjungan Hari Ini</h5>
+                <p class="text-sm text-slate-500">Daftar rekam medis pasien untuk tanggal hari ini</p>
+            </div>
+            <button type="button" data-modal-close class="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+        </div>
+
+        <!-- PATIENT INFO STRIP -->
+        <div class="bg-slate-50 border-b border-slate-200 px-6 py-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Nama Pasien</label>
+                    <p id="modal-list-name" class="text-sm font-bold text-slate-700">-</p>
+                </div>
+                <div>
+                    <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Kontak</label>
+                    <p id="modal-list-phone" class="text-sm font-medium text-slate-600">-</p>
+                </div>
+                <div>
+                    <label class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Alamat</label>
+                    <p id="modal-list-address" class="text-sm text-slate-600 truncate">-</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABLE BODY -->
+        <div class="flex-1 overflow-y-auto p-6 bg-white">
+            <div class="rounded-xl border border-slate-200 overflow-hidden">
+                <table id="table-list-hari-ini" class="w-full text-sm">
+                    <thead class="bg-slate-50 text-slate-500 text-[11px] uppercase tracking-wider font-bold border-b border-slate-200">
+                        <tr>
+                            <th class="px-4 py-3 text-center w-12">No</th>
+                            <th class="px-4 py-3 text-left">Keluhan</th>
+                            <th class="px-4 py-3 text-left">Rekam Medis</th>
+                            <th class="px-4 py-3 text-left">Tanggal</th>
+                            <th class="px-4 py-3 text-center">Durasi</th>
+                            <th class="px-4 py-3 text-center">Status</th>
+                            <th class="px-4 py-3 text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <!-- Data injected via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="border-t border-slate-200 px-6 py-4 bg-slate-50 flex justify-end">
+            <button type="button" data-modal-close class="rounded-lg border border-slate-300 bg-white px-5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition">
+                Tutup
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL REKAM MEDIS DETAIL -->
+<?= $this->include('App\modules\patients\Views\component\card_riwayat') ?>
+
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
@@ -260,6 +327,142 @@
         fetchUrl: "<?= site_url('journal/fetch') ?>",
         exportUrl: "<?= site_url('journal/export_file_journal') ?>"
     };
+
+    // Konfigurasi untuk modal rekam medis (digunakan oleh card_riwayat.php)
+    window.patientConfig = {
+        patientId: null,
+        queueId: null,
+        patientRegionId: null,
+        csrfTokenName: '<?= csrf_token() ?>',
+        csrfHash: '<?= csrf_hash() ?>',
+        urls: {
+            historyFetchBase: '<?= site_url("history/fetch") ?>',
+            historyFetch: '<?= site_url("history/fetch") ?>/',
+            historyStore: '<?= site_url("history/store") ?>',
+            historyDestroy: '<?= site_url("history/destroy") ?>',
+            complaintTags: '<?= site_url("tag-keluhan/get_tags") ?>',
+            medisTags: '<?= site_url("tag-rekam-medis/tags") ?>',
+            resultTags: '<?= site_url("tag-pemeriksaan/get_tags") ?>',
+            terapisByRegion: '<?= site_url("history/terapis-by-region") ?>'
+        }
+    };
+
+    // Store current patient info for detail modal
+    let currentPatientInfo = {};
+
+    /**
+     * Membuka modal list rekam medis hari ini dari tabel jurnal
+     */
+    function openJournalMedicalRecord(btn) {
+        const raw = btn.getAttribute('data-medis');
+        if (!raw) return;
+
+        let info;
+        try {
+            info = JSON.parse(raw);
+        } catch (e) {
+            return;
+        }
+
+        const {
+            patientId,
+            historyId,
+            patientName,
+            patientPhone,
+            patientAddress,
+            patientAge
+        } = info;
+        currentPatientInfo = info;
+
+        // Populate header info di modal list
+        const modal = document.getElementById('modalListRiwayatHariIni');
+        modal.querySelector('#modal-list-name').textContent = patientName || '-';
+        modal.querySelector('#modal-list-phone').textContent = patientPhone || '-';
+        modal.querySelector('#modal-list-address').textContent = patientAddress || '-';
+
+        // Fetch data rekam medis hari ini
+        const now = new Date();
+        const today = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+        fetchTodayHistory(patientId, today);
+
+        openModal(modal);
+    }
+
+    function fetchTodayHistory(patientId, date) {
+        const tbody = document.querySelector('#table-list-hari-ini tbody');
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-slate-400 italic"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat data...</td></tr>';
+
+        $.ajax({
+            url: window.patientConfig.urls.historyFetchBase + '/' + patientId,
+            type: "POST",
+            dataType: "json",
+            data: {
+                [window.patientConfig.csrfTokenName]: window.patientConfig.csrfHash,
+                draw: 1,
+                start: 0,
+                length: 100,
+                filter_date: date
+            },
+            success: function(response) {
+                const freshToken = response.new_token || response.csrf_hash;
+                if (freshToken) {
+                    window.patientConfig.csrfHash = freshToken;
+                    window.journalConfig.csrfHash = freshToken;
+                }
+
+                tbody.innerHTML = '';
+                if (!response.data || response.data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-slate-400 italic">Tidak ada data rekam medis hari ini</td></tr>';
+                    return;
+                }
+
+                response.data.forEach((row, index) => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-slate-50 transition border-b border-slate-100';
+                    tr.innerHTML = `
+                        <td class="px-4 py-3 text-center text-xs">${index + 1}</td>
+                        <td class="px-4 py-3 text-xs">${row.complaint || '-'}</td>
+                        <td class="px-4 py-3 text-xs">${row.medhis || '-'}</td>
+                        <td class="px-4 py-3 text-xs text-slate-600">${row.date || '-'}</td>
+                        <td class="px-4 py-3 text-center text-xs">${row.duration || '-'}</td>
+                        <td class="px-4 py-3 text-center text-xs">
+                            <span class="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-medium ${row.type === 'draft' ? 'bg-amber-50 text-amber-700' : 'bg-teal-50 text-teal-700'} uppercase">${row.type || "-"}</span>
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            <div class="flex items-center justify-center gap-2">
+                                <button type="button" onclick="viewDetailHistory('${row.id}', '${patientId}')" class="text-teal-600 hover:bg-teal-50 p-1.5 rounded transition" title="Lihat Detail"><i class="fas fa-eye"></i></button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            },
+            error: () => {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-red-400 italic">Gagal memuat data</td></tr>';
+            }
+        });
+    }
+
+    function viewDetailHistory(historyId, patientId) {
+        if (window.PatientHistoryPage && historyId) {
+            // Tutup modal list dulu
+            closeModal(document.getElementById('modalListRiwayatHariIni'));
+
+            // Populate header detail modal (card_riwayat.php elements)
+            const nameEl = document.getElementById('modal-patient-name');
+            const ageEl = document.getElementById('modal-patient-age');
+            const addressEl = document.getElementById('modal-patient-address');
+            const phoneEl = document.getElementById('modal-patient-phone');
+
+            if (nameEl) nameEl.textContent = currentPatientInfo.patientName || '-';
+            if (ageEl) ageEl.textContent = currentPatientInfo.patientAge || '-';
+            if (addressEl) addressEl.textContent = currentPatientInfo.patientAddress || '-';
+            if (phoneEl) phoneEl.textContent = currentPatientInfo.patientPhone || '-';
+
+            window.PatientHistoryPage.config.patientId = patientId;
+            window.PatientHistoryPage.show(historyId, false, true);
+        }
+    }
 </script>
 
 <?= $this->endSection() ?>

@@ -9,16 +9,17 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
 ?>
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitor Antrean | Bone Hacker</title>
-    
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
-    
+
     <?php if ($shouldUseViteDevServer): ?>
         <link rel="stylesheet" href="<?= $viteBrowserUrl ?>/resources/css/app.css">
     <?php else: ?>
@@ -26,9 +27,15 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
     <?php endif; ?>
 
     <style>
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
         body {
             margin: 0;
             padding: 0;
@@ -39,22 +46,64 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
             color: #f1f5f9;
         }
 
-        .glow-orange { box-shadow: 0 0 15px rgba(249, 115, 22, 0.4), inset 0 0 10px rgba(249, 115, 22, 0.2); border: 1px solid rgba(249, 115, 22, 0.6); }
-        .glow-blue { box-shadow: 0 0 15px rgba(6, 182, 212, 0.4), inset 0 0 10px rgba(6, 182, 212, 0.2); border: 1px solid rgba(6, 182, 212, 0.6); }
-        .glow-green { box-shadow: 0 0 15px rgba(16, 185, 129, 0.4), inset 0 0 10px rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.6); }
+        .glow-orange {
+            box-shadow: 0 0 15px rgba(249, 115, 22, 0.4), inset 0 0 10px rgba(249, 115, 22, 0.2);
+            border: 1px solid rgba(249, 115, 22, 0.6);
+        }
 
-        .glow-text-orange { text-shadow: 0 0 10px rgba(249, 115, 22, 0.8); }
-        .glow-text-blue { text-shadow: 0 0 10px rgba(6, 182, 212, 0.8); }
-        .glow-text-green { text-shadow: 0 0 10px rgba(16, 185, 129, 0.8); }
+        .glow-blue {
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.4), inset 0 0 10px rgba(6, 182, 212, 0.2);
+            border: 1px solid rgba(6, 182, 212, 0.6);
+        }
 
-        .dark-card { background: linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%); backdrop-filter: blur(10px); }
-        .dark-column { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px); border: 1px solid rgba(51, 65, 85, 0.5); }
-        
-        .list-card-orange { background: linear-gradient(90deg, rgba(249, 115, 22, 0.1) 0%, rgba(15, 23, 42, 0.8) 100%); border: 1px solid rgba(249, 115, 22, 0.4); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .list-card-blue { background: linear-gradient(90deg, rgba(6, 182, 212, 0.1) 0%, rgba(15, 23, 42, 0.8) 100%); border: 1px solid rgba(6, 182, 212, 0.4); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .list-card-green { background: linear-gradient(90deg, rgba(16, 185, 129, 0.1) 0%, rgba(15, 23, 42, 0.8) 100%); border: 1px solid rgba(16, 185, 129, 0.4); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .glow-green {
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.4), inset 0 0 10px rgba(16, 185, 129, 0.2);
+            border: 1px solid rgba(16, 185, 129, 0.6);
+        }
+
+        .glow-text-orange {
+            text-shadow: 0 0 10px rgba(249, 115, 22, 0.8);
+        }
+
+        .glow-text-blue {
+            text-shadow: 0 0 10px rgba(6, 182, 212, 0.8);
+        }
+
+        .glow-text-green {
+            text-shadow: 0 0 10px rgba(16, 185, 129, 0.8);
+        }
+
+        .dark-card {
+            background: linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+            backdrop-filter: blur(10px);
+        }
+
+        .dark-column {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(51, 65, 85, 0.5);
+        }
+
+        .list-card-orange {
+            background: linear-gradient(90deg, rgba(249, 115, 22, 0.1) 0%, rgba(15, 23, 42, 0.8) 100%);
+            border: 1px solid rgba(249, 115, 22, 0.4);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .list-card-blue {
+            background: linear-gradient(90deg, rgba(6, 182, 212, 0.1) 0%, rgba(15, 23, 42, 0.8) 100%);
+            border: 1px solid rgba(6, 182, 212, 0.4);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .list-card-green {
+            background: linear-gradient(90deg, rgba(16, 185, 129, 0.1) 0%, rgba(15, 23, 42, 0.8) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
     </style>
 </head>
+
 <body class="flex flex-col p-4 md:p-6 gap-6 text-slate-100">
 
     <?php if (isset($isPublic) && $isPublic): ?>
@@ -76,7 +125,7 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
                 </p>
             </div>
         </div>
-        
+
         <div class="text-right flex flex-col items-end mt-4 md:mt-0">
             <div class="glow-orange rounded-xl px-6 py-2 flex flex-col items-end justify-center dark-card">
                 <div class="flex items-center gap-4">
@@ -98,7 +147,7 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
                 <i class="fas fa-hourglass-half"></i>
             </div>
         </div>
-        
+
         <!-- Terapi -->
         <div class="dark-card glow-blue rounded-xl p-6 flex flex-col items-center justify-center relative overflow-hidden">
             <span class="text-6xl md:text-7xl font-black text-white drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)] z-10"><?= count($processingList) ?></span>
@@ -107,7 +156,7 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
                 <i class="fas fa-stethoscope"></i>
             </div>
         </div>
-        
+
         <!-- Selesai -->
         <div class="dark-card glow-green rounded-xl p-6 flex flex-col items-center justify-center relative overflow-hidden">
             <span class="text-6xl md:text-7xl font-black text-white drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)] z-10"><?= count($finishedList) ?></span>
@@ -120,7 +169,7 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
 
     <!-- 3 COLUMNS -->
     <div id="queue-columns" class="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-[40vh]">
-        
+
         <!-- KOLOM MENUNGGU -->
         <div class="dark-column rounded-xl overflow-hidden flex flex-col">
             <div class="py-4 text-center border-b border-orange-500/30">
@@ -209,13 +258,13 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
 
     <!-- MARQUEE BOTTOM BAR -->
     <?php if (isset($isPublic) && $isPublic): ?>
-    <div class="dark-card border border-slate-700/50 py-3 px-6 rounded-xl mt-auto flex items-center overflow-hidden">
-        <marquee behavior="scroll" direction="left" scrollamount="6" class="text-sm md:text-base font-semibold text-slate-300 w-full whitespace-nowrap">
-            <span class="text-cyan-400 font-black tracking-widest">PURBALINGGA:</span> RT 3/RW 2, Dusun Parung Bongas, Desa Kradenan &nbsp;&nbsp;&nbsp;&nbsp; <span class="text-slate-600">|</span> &nbsp;&nbsp;&nbsp;&nbsp;
-            <span class="text-cyan-400 font-black tracking-widest">PEMALANG:</span> Jl. Banjarsari, Bojongnangka &nbsp;&nbsp;&nbsp;&nbsp; <span class="text-slate-600">|</span> &nbsp;&nbsp;&nbsp;&nbsp;
-            <span class="text-cyan-400 font-black tracking-widest">PURWOKERTO:</span> Jl. Dr. Gumbreg, Kel. Mersi, Kec. Purwokerto Timur
-        </marquee>
-    </div>
+        <div class="dark-card border border-slate-700/50 py-3 px-6 rounded-xl mt-auto flex items-center overflow-hidden">
+            <marquee behavior="scroll" direction="left" scrollamount="6" class="text-sm md:text-base font-semibold text-slate-300 w-full whitespace-nowrap">
+                <span class="text-cyan-400 font-black tracking-widest">PURBALINGGA:</span> RT 3/RW 2, Dusun Parung Bongas, Desa Kradenan &nbsp;&nbsp;&nbsp;&nbsp; <span class="text-slate-600">|</span> &nbsp;&nbsp;&nbsp;&nbsp;
+                <span class="text-cyan-400 font-black tracking-widest">PEMALANG:</span> Jl. Banjarsari, Bojongnangka &nbsp;&nbsp;&nbsp;&nbsp; <span class="text-slate-600">|</span> &nbsp;&nbsp;&nbsp;&nbsp;
+                <span class="text-cyan-400 font-black tracking-widest">PURWOKERTO:</span> Jl. Dr. Gumbreg, Kel. Mersi, Kec. Purwokerto Timur
+            </marquee>
+        </div>
     <?php endif; ?>
 
     <!-- Load Vite App JS if needed -->
@@ -226,4 +275,5 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
         <script type="module" src="<?= base_url('build/assets/app.js') . '?v=' . (is_file(FCPATH . 'build/assets/app.js') ? filemtime(FCPATH . 'build/assets/app.js') : time()) ?>"></script>
     <?php endif; ?>
 </body>
+
 </html>

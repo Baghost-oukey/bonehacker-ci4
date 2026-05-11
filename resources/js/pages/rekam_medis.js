@@ -328,7 +328,11 @@ const setupRekamMedisPage = () => {
 
     if (!form[0].checkValidity()) {
       form.addClass("was-validated");
-      form.find(".invalid-feedback").removeClass("hidden");
+      // Hide all first, then show only for invalid fields
+      form.find(".invalid-feedback").addClass("hidden");
+      form.find("input:invalid, select:invalid, textarea:invalid").each(function () {
+        $(this).siblings(".invalid-feedback").removeClass("hidden");
+      });
       return;
     }
 
@@ -341,17 +345,23 @@ const setupRekamMedisPage = () => {
       });
     }
 
+    const formData = new FormData(form[0]);
+
     $.ajax({
       url: form.attr("action"),
       type: "POST",
-      data: form.serialize(),
+      data: formData,
+      processData: false,
+      contentType: false,
       dataType: "json",
       success: (res) => {
+        if (res.new_token) updateCsrf(res.new_token);
         if (swalLib) swalLib.close();
         if (res.success || res.status === "success") {
           closeModal(document.getElementById("exampleModal"));
           form[0].reset();
           form.removeClass("was-validated");
+          form.find(".invalid-feedback").addClass("hidden");
           loadTableData(currentPage);
           if (swalLib?.fire) {
             swalLib.fire({
