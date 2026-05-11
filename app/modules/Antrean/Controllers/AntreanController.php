@@ -331,11 +331,11 @@ class AntreanController extends BaseController
             ->join('histories h_visit', 'h_visit.patient_id = p.id AND h_visit.is_delete = 0', 'left')
             ->groupBy('pq.id, h.id, p.id, r.id, pa.id'); // pq.* included in group by logic usually requires explicit columns or database config allows it
 
-        if (!empty($regionId)) {
+        if (!empty($regionId) && $regionId !== 'all') {
             if (is_array($regionId)) {
-                $builder->whereIn('p.region_id', $regionId);
+                $builder->whereIn('pq.region_id', $regionId);
             } else {
-                $builder->where('p.region_id', $regionId);
+                $builder->where('pq.region_id', $regionId);
             }
         }
 
@@ -358,11 +358,11 @@ class AntreanController extends BaseController
             ->where('DATE(pq.queue_date) >=', $startDate)
             ->where('DATE(pq.queue_date) <=', $endDate);
 
-        if (!empty($regionId)) {
+        if (!empty($regionId) && $regionId !== 'all') {
             if (is_array($regionId)) {
-                $statsBuilder->whereIn('p.region_id', $regionId);
+                $statsBuilder->whereIn('pq.region_id', $regionId);
             } else {
-                $statsBuilder->where('p.region_id', $regionId);
+                $statsBuilder->where('pq.region_id', $regionId);
             }
         }
 
@@ -371,7 +371,7 @@ class AntreanController extends BaseController
         $data['finished_queues'] = $stats->finished ?? 0;
         $data['waiting_queues'] = count($data['patient_queues']) - ($data['processed_queues'] + $data['finished_queues']);
 
-        if (!empty($regionId)) {
+        if (!empty($regionId) && $regionId !== 'all') {
             if (is_array($regionId)) {
                 $regs = $db->table('regions')->whereIn('id', $regionId)->get()->getResult();
                 $data['regionName'] = !empty($regs) ? implode(', ', array_column($regs, 'name')) : 'Wilayah Tidak Ditemukan';

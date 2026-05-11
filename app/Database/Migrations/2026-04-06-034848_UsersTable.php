@@ -32,6 +32,16 @@ class UsersTable extends Migration
                 'constraint' => ['superadmin', 'user'],
                 'default'    => 'user',
             ],
+            'is_active' => [
+                'type'       => 'TINYINT',
+                'constraint' => 1,
+                'default'    => 1,
+            ],
+            'remember_token' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 255,
+                'null'       => true,
+            ],
             'regions_patient' => [
                 'type' => 'LONGTEXT',
                 'null' => true,

@@ -1,259 +1,234 @@
-<?= $this->extend('layout/layout') ?>
-<?= $this->section('content') ?>
-
 <?php
+$isDevEnvironment = ENVIRONMENT === 'development';
+$viteBrowserUrl = 'http://localhost:5173';
+$shouldUseViteDevServer = false;
+
 $waitingList = array_values(array_filter($patient_queues ?? [], static fn($q) => empty($q->process_at) && empty($q->finish_at)));
 $processingList = array_values(array_filter($patient_queues ?? [], static fn($q) => !empty($q->process_at) && empty($q->finish_at)));
 $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) => !empty($q->finish_at)));
 ?>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor Antrean | Bone Hacker</title>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Load CSS from Vite/Build -->
+    <?php if ($shouldUseViteDevServer): ?>
+        <link rel="stylesheet" href="<?= $viteBrowserUrl ?>/resources/css/app.css">
+    <?php else: ?>
+        <link rel="stylesheet" href="<?= base_url('build/assets/app.css') . '?v=' . (is_file(FCPATH . 'build/assets/app.css') ? filemtime(FCPATH . 'build/assets/app.css') : time()) ?>">
+    <?php endif; ?>
 
-<section id="monitoringPage" class="w-full space-y-6 p-4 md:p-6">
+    <style>
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        
+        /* Ensure body takes full screen with gradient */
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5dec5 0%, #e2e8f0 50%, #b2d4eb 100%);
+        }
+    </style>
+</head>
+<body class="flex flex-col p-4 md:p-8 gap-6 md:gap-8 text-slate-800">
+
     <?php if (isset($isPublic) && $isPublic): ?>
         <script>
-            // Auto refresh every 30 seconds for public/TV display
-            setTimeout(function() {
-                location.reload();
-            }, 30000);
+            setTimeout(function() { location.reload(); }, 30000); // 30s auto refresh
 
-            // Auto Scroll Logic
             document.addEventListener('DOMContentLoaded', function() {
                 const scrollContainers = document.querySelectorAll('.auto-scroll-list');
-                
                 scrollContainers.forEach(container => {
-                    let scrollSpeed = 1; // pixels per frame
-                    let direction = 1; // 1 for down, -1 for up (if we want bounce)
+                    let scrollSpeed = 1; 
                     let isPaused = false;
-
                     function autoScroll() {
                         if (isPaused) return;
-
                         const maxScroll = container.scrollHeight - container.clientHeight;
                         if (maxScroll <= 0) return;
-
                         container.scrollTop += scrollSpeed;
-
-                        // If reached bottom
                         if (container.scrollTop >= maxScroll) {
                             isPaused = true;
-                            setTimeout(() => {
-                                container.scrollTop = 0; // Reset to top
-                                isPaused = false;
-                            }, 2000); // Wait 2 seconds at the bottom
+                            setTimeout(() => { container.scrollTop = 0; isPaused = false; }, 2000);
                         }
                     }
-
-                    setInterval(autoScroll, 50); // Adjust frequency for smoothness
+                    setInterval(autoScroll, 50); 
                 });
             });
         </script>
     <?php endif; ?>
 
-    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <!-- HEADER -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center px-2">
         <div>
-            <h1 class="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-                <?= (isset($isPublic) && $isPublic) ? 'Daftar Antrean Pasien' : 'Monitor Antrean' ?>
+            <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 uppercase drop-shadow-sm">
+                MONITOR ANTRIAN
             </h1>
-            <p class="text-sm text-slate-500">
-                <?= (isset($isPublic) && $isPublic) ? 'Informasi urutan antrean terapi secara real-time' : 'Monitoring antrean pasien secara real-time' ?> - <?= esc($regionName ?? 'Semua Wilayah') ?>
+            <p class="text-lg md:text-xl font-bold text-slate-600 mt-2">
+                Bone Hacker - <?= esc($regionName ?? 'Semua Wilayah') ?>
             </p>
         </div>
-        <?php if (isset($isPublic) && $isPublic): ?>
-            <div class="text-right">
-                <p class="text-lg font-bold text-teal-600"><?= $currentDate ?></p>
-                <p id="liveTime" class="text-sm text-slate-500"></p>
-                <script>
-                    function updateTime() {
-                        const now = new Date();
-                        const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                        document.getElementById('liveTime').textContent = timeString + ' WIB';
-                    }
-                    setInterval(updateTime, 1000);
-                    updateTime();
-                </script>
-            </div>
-        <?php endif; ?>
-    </div>
-
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-
-        <div class="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div class="h-12 w-12 flex items-center justify-center rounded-xl bg-slate-100 text-slate-600">
-                <i class="fas fa-clock text-lg"></i>
-            </div>
-            <div>
-                <p class="text-xs text-slate-500">Menunggu</p>
-                <p class="text-3xl font-bold text-slate-900"><?= esc($waiting_queues ?? 0) ?></p>
-            </div>
-        </div>
-
-        <div class="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div class="h-12 w-12 flex items-center justify-center rounded-xl bg-slate-100 text-slate-600">
-                <i class="fas fa-user-md text-lg"></i>
-            </div>
-            <div>
-                <p class="text-xs text-slate-500">Sedang Terapi</p>
-                <p class="text-3xl font-bold text-slate-900"><?= esc($processed_queues ?? 0) ?></p>
-            </div>
-        </div>
-
-        <div class="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div class="h-12 w-12 flex items-center justify-center rounded-xl bg-slate-100 text-slate-600">
-                <i class="fas fa-check-circle text-lg"></i>
-            </div>
-            <div>
-                <p class="text-xs text-slate-500">Selesai</p>
-                <p class="text-3xl font-bold text-slate-900"><?= esc($finished_queues ?? 0) ?></p>
-            </div>
-        </div>
-
-    </div>
-
-    <div class="rounded-2xl bg-white shadow-sm border border-slate-200/50 overflow-hidden">
-        <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4">
-            <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <div>
-                    <h3 class="text-lg font-semibold text-slate-800">
-                        Monitoring Status Antrean
-                    </h3>
-                    <p class="text-sm text-slate-500">
-                        Tampilan daftar pasien yang sedang menunggu, diproses, dan selesai
-                    </p>
-                </div>
-                <div
-                    class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 shadow-sm">
-                    <span class="h-2 w-2 rounded-full bg-slate-400"></span>
-                    <?= esc($regionName ?? 'Semua Wilayah') ?>
+        
+        <div class="text-right flex flex-col items-end mt-4 md:mt-0">
+            <div class="flex items-center gap-3">
+                <div id="liveTime" class="text-5xl md:text-7xl font-black text-blue-600 tracking-wider font-mono drop-shadow-md"></div>
+                <div class="h-12 w-12 flex items-center justify-center rounded-full bg-white/60 backdrop-blur-sm text-slate-600 shadow-sm border border-white/60">
+                    <i class="fas fa-sun text-2xl"></i>
                 </div>
             </div>
-        </div>
-
-        <div class="grid grid-cols-1 gap-6 p-6 lg:grid-cols-3">
-            <article class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                <header class="border-b border-slate-100 bg-slate-50 px-5 py-3">
-                    <div class="flex items-center justify-between">
-                        <h2 class="flex items-center gap-2 text-sm font-semibold uppercase text-slate-600">
-                            <i class="fas fa-clock text-slate-400"></i>
-                            Menunggu
-                        </h2>
-                        <span
-                            class="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase text-slate-600"><?= count($waitingList) ?></span>
-                    </div>
-                </header>
-                <div class="h-80 space-y-3 overflow-y-auto p-4 no-scrollbar auto-scroll-list">
-                    <?php if (!empty($waitingList)): ?>
-                        <?php foreach ($waitingList as $i => $q): ?>
-                            <?php
-                            $isHot = $i < 3;
-                            $patientName = $q->patient_name ?? '-';
-                            $patientPhone = $q->patient_phone ?? ($q->phone ?? '-');
-                            ?>
-                            <div
-                                class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3 transition hover:border-slate-300 hover:bg-slate-50">
-                                <div class="flex min-w-0 items-center gap-3">
-                                    <div
-                                        class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-700 text-xs font-bold text-white">
-                                        <?= str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT) ?>
-                                    </div>
-                                    <div class="min-w-0">
-                                        <p class="truncate text-sm font-semibold text-slate-800"><?= esc($patientName) ?></p>
-                                    </div>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <div class="flex h-full flex-col items-center justify-center text-center text-slate-500">
-                            <p class="text-base font-semibold">Kosong</p>
-                            <p class="text-sm">Tidak ada pasien menunggu</p>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </article>
-
-            <article class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                <header class="border-b border-slate-100 bg-slate-50 px-5 py-3">
-                    <div class="flex items-center justify-between">
-                        <h2 class="flex items-center gap-2 text-sm font-semibold uppercase text-slate-600">
-                            <i class="fas fa-user-md text-slate-400"></i>
-                            Sedang Terapi
-                        </h2>
-                        <span
-                            class="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase text-slate-600"><?= count($processingList) ?></span>
-                    </div>
-                </header>
-                <div class="h-80 space-y-3 overflow-y-auto p-4 no-scrollbar auto-scroll-list">
-                    <?php if (!empty($processingList)): ?>
-                        <?php foreach ($processingList as $q): ?>
-                            <?php
-                            $patientName = $q->patient_name ?? '-';
-                            $patientPhone = $q->patient_phone ?? ($q->phone ?? '-');
-                            ?>
-                            <div
-                                class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3 transition hover:border-slate-300 hover:bg-slate-50">
-                                <div class="flex min-w-0 items-center gap-3">
-                                    <div
-                                        class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-600">
-                                        <i class="fas fa-spinner animate-spin text-sm"></i>
-                                    </div>
-                                    <div class="min-w-0">
-                                        <p class="truncate text-sm font-semibold text-slate-800"><?= esc($patientName) ?></p>
-                                    </div>
-                                </div>
-                                <span
-                                    class="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-slate-400 border-t-transparent"></span>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <div class="flex h-full flex-col items-center justify-center text-center text-slate-500">
-                            <p class="text-base font-semibold">Tidak ada aktivitas</p>
-                            <p class="text-sm">Belum ada pasien yang sedang terapi</p>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </article>
-
-            <article class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                <header class="border-b border-slate-100 bg-slate-50 px-5 py-3">
-                    <div class="flex items-center justify-between">
-                        <h2 class="flex items-center gap-2 text-sm font-semibold uppercase text-slate-600">
-                            <i class="fas fa-check-circle text-slate-400"></i>
-                            Selesai
-                        </h2>
-                        <span
-                            class="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase text-slate-600"><?= count($finishedList) ?></span>
-                    </div>
-                </header>
-                <div class="h-80 space-y-3 overflow-y-auto p-4 no-scrollbar auto-scroll-list">
-                    <?php if (!empty($finishedList)): ?>
-                        <?php foreach ($finishedList as $q): ?>
-                            <?php
-                            $patientName = $q->patient_name ?? '-';
-                            $patientPhone = $q->patient_phone ?? ($q->phone ?? '-');
-                            ?>
-                            <div
-                                class="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3 transition hover:border-slate-300 hover:bg-slate-50">
-                                <div class="flex min-w-0 items-center gap-3">
-                                    <div
-                                        class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-600">
-                                        <i class="fas fa-check text-sm"></i>
-                                    </div>
-                                    <div class="min-w-0">
-                                        <p class="truncate text-sm font-semibold text-slate-800"><?= esc($patientName) ?></p>
-                                    </div>
-                                </div>
-                                <span
-                                    class="inline-flex items-center rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase text-slate-600">Selesai</span>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <div class="flex h-full flex-col items-center justify-center text-center text-slate-500">
-                            <p class="text-base font-semibold">Belum ada yang selesai</p>
-                            <p class="text-sm">Tunggu pasien menyelesaikan terapi</p>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </article>
+            <p id="liveDate" class="text-base md:text-lg font-bold text-slate-500 uppercase tracking-widest mt-2"></p>
+            
+            <script>
+                function updateTime() {
+                    const now = new Date();
+                    const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':');
+                    document.getElementById('liveTime').textContent = timeString;
+                    
+                    const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+                    const dateString = now.toLocaleDateString('id-ID', options);
+                    document.getElementById('liveDate').textContent = dateString;
+                }
+                setInterval(updateTime, 1000);
+                updateTime();
+            </script>
         </div>
     </div>
-</section>
 
-<?= $this->endSection() ?>
+    <!-- STATS ROW (Single White Box) -->
+    <div class="bg-white/90 backdrop-blur-md rounded-3xl shadow-lg border border-white p-6 flex justify-around items-center divide-x-2 divide-slate-200">
+        <!-- Menunggu -->
+        <div class="flex flex-col items-center justify-center w-1/3 text-center">
+            <span class="text-6xl md:text-8xl font-black text-orange-500 drop-shadow-sm leading-none"><?= count($waitingList) ?></span>
+            <span class="text-base md:text-lg font-extrabold text-slate-500 uppercase tracking-widest mt-3">Menunggu</span>
+        </div>
+        <!-- Sedang Terapi -->
+        <div class="flex flex-col items-center justify-center w-1/3 text-center">
+            <span class="text-6xl md:text-8xl font-black text-blue-500 drop-shadow-sm leading-none"><?= count($processingList) ?></span>
+            <span class="text-base md:text-lg font-extrabold text-slate-500 uppercase tracking-widest mt-3">Terapi</span>
+        </div>
+        <!-- Selesai -->
+        <div class="flex flex-col items-center justify-center w-1/3 text-center">
+            <span class="text-6xl md:text-8xl font-black text-green-600 drop-shadow-sm leading-none"><?= count($finishedList) ?></span>
+            <span class="text-base md:text-lg font-extrabold text-slate-500 uppercase tracking-widest mt-3">Selesai</span>
+        </div>
+    </div>
+
+    <!-- 3 COLUMNS -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 flex-1 min-h-[45vh]">
+        
+        <!-- KOLOM MENUNGGU -->
+        <div class="bg-orange-50/60 backdrop-blur-sm rounded-3xl shadow-lg border border-white overflow-hidden flex flex-col">
+            <div class="bg-white/95 border-t-8 border-orange-500 py-4 text-center shadow-sm z-10 border-b border-orange-100">
+                <h2 class="text-xl font-black text-orange-600 uppercase tracking-[0.2em]">Menunggu</h2>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 md:p-5 space-y-4 auto-scroll-list no-scrollbar bg-white/40">
+                <?php if (!empty($waitingList)): ?>
+                    <?php foreach ($waitingList as $i => $q): ?>
+                        <div class="flex items-center gap-4 bg-white/95 rounded-2xl p-4 shadow-sm border border-slate-100 transform transition-transform hover:scale-[1.02]">
+                            <div class="h-14 w-14 shrink-0 flex items-center justify-center rounded-xl bg-white shadow-inner border border-slate-100">
+                                <span class="text-3xl font-black text-slate-900"><?= esc($q->queue_number ?? '-') ?></span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xl font-bold text-slate-900 uppercase truncate"><?= esc($q->patient_name ?? '-') ?></p>
+                            </div>
+                            <div class="text-right pr-2">
+                                <span class="text-xl font-black text-orange-500">#<?= $i + 1 ?></span>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="h-full flex items-center justify-center">
+                        <p class="text-slate-400 font-bold text-xl">KOSONG</p>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- KOLOM SEDANG TERAPI -->
+        <div class="bg-blue-50/60 backdrop-blur-sm rounded-3xl shadow-lg border border-white overflow-hidden flex flex-col">
+            <div class="bg-white/95 border-t-8 border-blue-500 py-4 text-center shadow-sm z-10 border-b border-blue-100">
+                <h2 class="text-xl font-black text-blue-600 uppercase tracking-[0.2em]">Sedang Terapi</h2>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 md:p-5 space-y-4 auto-scroll-list no-scrollbar bg-white/40">
+                <?php if (!empty($processingList)): ?>
+                    <?php foreach ($processingList as $i => $q): ?>
+                        <div class="flex items-center gap-4 bg-white/95 rounded-2xl p-4 shadow-sm border border-slate-100 transform transition-transform hover:scale-[1.02]">
+                            <div class="h-14 w-14 shrink-0 flex items-center justify-center rounded-xl bg-white shadow-inner border border-slate-100">
+                                <span class="text-3xl font-black text-slate-900"><?= esc($q->queue_number ?? '-') ?></span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xl font-bold text-slate-900 uppercase truncate"><?= esc($q->patient_name ?? '-') ?></p>
+                            </div>
+                            <div class="text-right pr-2">
+                                <i class="fas fa-spinner animate-spin text-blue-500 text-2xl"></i>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="h-full flex items-center justify-center">
+                        <p class="text-slate-400 font-bold text-xl">KOSONG</p>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- KOLOM SELESAI -->
+        <div class="bg-green-50/60 backdrop-blur-sm rounded-3xl shadow-lg border border-white overflow-hidden flex flex-col">
+            <div class="bg-white/95 border-t-8 border-green-500 py-4 text-center shadow-sm z-10 border-b border-green-100">
+                <h2 class="text-xl font-black text-green-600 uppercase tracking-[0.2em]">Selesai</h2>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 md:p-5 space-y-4 auto-scroll-list no-scrollbar bg-white/40">
+                <?php if (!empty($finishedList)): ?>
+                    <?php foreach ($finishedList as $i => $q): ?>
+                        <div class="flex items-center gap-4 bg-white/95 rounded-2xl p-4 shadow-sm border border-slate-100 opacity-80">
+                            <div class="h-14 w-14 shrink-0 flex items-center justify-center rounded-xl bg-white shadow-inner border border-slate-100">
+                                <span class="text-3xl font-black text-slate-900"><?= esc($q->queue_number ?? '-') ?></span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xl font-bold text-slate-900 uppercase truncate"><?= esc($q->patient_name ?? '-') ?></p>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="h-full flex items-center justify-center">
+                        <p class="text-slate-400 font-bold text-xl">KOSONG</p>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MARQUEE BOTTOM BAR -->
+    <?php if (isset($isPublic) && $isPublic): ?>
+    <div class="bg-white/90 backdrop-blur-md py-4 px-6 rounded-2xl border border-white shadow-md mt-auto flex items-center overflow-hidden">
+        <marquee behavior="scroll" direction="left" scrollamount="6" class="text-base md:text-lg font-semibold text-slate-700 w-full whitespace-nowrap">
+            <span class="text-blue-600 font-black italic">PURBALINGGA:</span> RT 3/RW 2, Dusun Parung Bongas, Desa Kradenan &nbsp;&nbsp;&nbsp;&nbsp; | &nbsp;&nbsp;&nbsp;&nbsp;
+            <span class="text-blue-600 font-black italic">PEMALANG:</span> Jl. Banjarsari, Bojongnangka &nbsp;&nbsp;&nbsp;&nbsp; | &nbsp;&nbsp;&nbsp;&nbsp;
+            <span class="text-blue-600 font-black italic">PURWOKERTO:</span> Jl. Dr. Gumbreg, Kel. Mersi, Kec. Purwokerto Timur
+        </marquee>
+    </div>
+    <?php endif; ?>
+
+    <!-- Load Vite App JS if needed -->
+    <?php if ($shouldUseViteDevServer): ?>
+        <script type="module" src="<?= $viteBrowserUrl ?>/@vite/client"></script>
+        <script type="module" src="<?= $viteBrowserUrl ?>/resources/js/app.js"></script>
+    <?php else: ?>
+        <script type="module" src="<?= base_url('build/assets/app.js') . '?v=' . (is_file(FCPATH . 'build/assets/app.js') ? filemtime(FCPATH . 'build/assets/app.js') : time()) ?>"></script>
+    <?php endif; ?>
+</body>
+</html>

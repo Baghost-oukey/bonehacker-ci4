@@ -19,6 +19,20 @@ class RegionTable extends Migration
                 'type'       => 'VARCHAR',
                 'constraint' => '100',
             ],
+            'address' => [
+                'type' => 'TEXT',
+                'null' => true,
+            ],
+            'phone' => [
+                'type'       => 'VARCHAR',
+                'constraint' => '20',
+                'null'       => true,
+            ],
+            'is_active' => [
+                'type'       => 'TINYINT',
+                'constraint' => 1,
+                'default'    => 1,
+            ],
             'created_at' => [
                 'type' => 'TIMESTAMP',
                 'null' => true,

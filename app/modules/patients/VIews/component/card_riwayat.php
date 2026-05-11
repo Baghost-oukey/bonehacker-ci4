@@ -98,7 +98,7 @@
                                 <label class="w-1/3 font-medium text-slate-500">Tanggal Dibuat</label>
                                 <span class="w-4 text-center">:</span>
                                 <div class="flex-1">
-                                    <input type="date" name="date" id="date" value="<?= esc($current_date) ?>" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-white">
+                                    <input type="date" name="date" id="date" value="<?= esc($current_date ?? date('Y-m-d')) ?>" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-white">
                                 </div>
                             </div>
                             <div class="flex items-center">
@@ -391,7 +391,7 @@
                         <label class="text-sm font-semibold text-slate-800">Terapis :</label>
                         <!-- Biarkan select2 menangani style-nya, pastikan class .terapis tetap ada -->
                         <select class="terapis w-full" name="terapis[]" multiple="multiple">
-                            <?php foreach ($terapis as $t): ?>
+                            <?php foreach ($terapis ?? [] as $t): ?>
                                 <option value="<?= esc($t->id) ?>"><?= esc($t->nama ?? $t->name ?? 'Tanpa Nama') ?></option>
                             <?php endforeach; ?>
                         </select>
