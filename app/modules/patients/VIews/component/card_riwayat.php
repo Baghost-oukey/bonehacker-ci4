@@ -5,10 +5,12 @@
             <h3 class="text-lg font-semibold text-slate-800">Riwayat Kunjungan Pasien</h3>
             <p class="text-sm text-slate-500">Daftar rekam medis dan histori terapi</p>
         </div>
+        <?php if (!isset($hide_add_button) || !$hide_add_button): ?>
         <button id="btn-add-history" type="button" data-modal-open="modalRiwayatPasien"
             class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 transition">
             <i class="fas fa-plus"></i> Tambah Riwayat
         </button>
+        <?php endif; ?>
     </div>
 
     <!-- TABLE RIWAYAT -->
@@ -83,8 +85,8 @@
 
                 <?= csrf_field() ?>
                 <input type="hidden" name="id" id="history_id">
-                <input type="hidden" name="patient_id" id="patient_id" value="<?= $patient_id ?>">
-                <input type="hidden" name="queue_id" id="queue_id" value="<?= $queue_id ?>">
+                <input type="hidden" name="patient_id" id="patient_id" value="<?= $patient_id ?? '' ?>">
+                <input type="hidden" name="queue_id" id="queue_id" value="<?= $queue_id ?? '' ?>">
                 <input type="hidden" name="type" id="history-type" value="posted">
 
                 <!-- SECTION 1: HEADER INFO PASIEN (Mirip Screenshot) -->
@@ -104,17 +106,17 @@
                             <div class="flex items-center">
                                 <label class="w-1/3 font-medium text-slate-500">Nama</label>
                                 <span class="w-4 text-center">:</span>
-                                <div class="flex-1 font-semibold text-slate-800"><?= esc($patient->name ?? '-') ?></div>
+                                <div id="modal-patient-name" class="flex-1 font-semibold text-slate-800"><?= esc($patient->name ?? '-') ?></div>
                             </div>
                             <div class="flex items-center">
                                 <label class="w-1/3 font-medium text-slate-500">Usia</label>
                                 <span class="w-4 text-center">:</span>
-                                <div class="flex-1 font-semibold text-slate-800"><?= esc($patient->age ?? '-') ?> Tahun</div>
+                                <div class="flex-1 font-semibold text-slate-800"><span id="modal-patient-age"><?= esc($patient->age ?? '-') ?></span> Tahun</div>
                             </div>
                             <div class="flex items-start">
                                 <label class="w-1/3 font-medium text-slate-500 mt-1">Alamat</label>
                                 <span class="w-4 text-center mt-1">:</span>
-                                <div class="flex-1 text-slate-800 mt-1">
+                                <div id="modal-patient-address" class="flex-1 text-slate-800 mt-1">
                                     <?php
                                     $parts = [];
                                     if (!empty($patient->address)) $parts[] = $patient->address;
@@ -128,7 +130,7 @@
                             <div class="flex items-center">
                                 <label class="w-1/3 font-medium text-slate-500">No. WA</label>
                                 <span class="w-4 text-center">:</span>
-                                <div class="flex-1 text-slate-800"><?= esc($patient->phone ?? '-') ?></div>
+                                <div id="modal-patient-phone" class="flex-1 text-slate-800"><?= esc($patient->phone ?? '-') ?></div>
                             </div>
                             <div class="flex items-center">
                                 <label class="w-1/3 font-medium text-slate-500">Wilayah Periksa</label>

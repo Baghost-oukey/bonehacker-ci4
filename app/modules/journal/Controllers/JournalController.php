@@ -120,9 +120,8 @@ class JournalController extends BaseController
         });
 
         $datatables->addColumn('action', function ($row) {
-            return '<a href="' . site_url('patient/show/' . $row->patient_id) . '" 
-                        target="_blank"
-                        class="btn btn-primary btn-sm">
+            return '<a href="' . site_url('patient/history/' . $row->patient_id) . '" 
+                        class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:bg-slate-100 hover:text-teal-600">
                         <i class="fas fa-eye"></i>
                     </a>';
         });

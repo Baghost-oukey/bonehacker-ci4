@@ -249,6 +249,7 @@ $routes->group('patient', ['namespace' => 'App\Modules\patients\Controllers', 'f
   $routes->post('fetch', 'Patients::fetch');
   $routes->post('fetch2', 'Patients::fetch2');
   $routes->get('show/(:any)', 'Patients::show/$1');
+  $routes->get('history/(:any)', 'Patients::history/$1');
   $routes->get('export', 'Patients::export');
   $routes->get('print_pdf', 'Patients::print_pdf');
   $routes->post('store', 'Patients::store');
