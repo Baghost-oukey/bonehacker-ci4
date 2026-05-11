@@ -134,7 +134,7 @@
                     <!-- SHOW ENTRIES -->
                     <div class="flex items-center gap-2">
                         <label class="text-xs font-medium text-slate-600">Tampilkan</label>
-                        <select id="paginationLength"
+                        <select id="journalPaginationLength"
                             class="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15">
                             <option value="10">10</option>
                             <option value="25" selected>25</option>
@@ -146,19 +146,19 @@
 
                     <!-- INFO TEXT -->
                     <div class="text-xs font-medium text-slate-600 sm:ml-auto">
-                        <span id="paginationInfo">Menampilkan 0 sampai 0 dari 0 data</span>
+                        <span id="journalPaginationInfo">Menampilkan 0 sampai 0 dari 0 data</span>
                     </div>
                 </div>
 
                 <!-- RIGHT: PAGINATION BUTTONS -->
                 <div class="flex items-center justify-center gap-1.5 sm:justify-end">
-                    <button id="paginationPrev"
+                    <button id="journalPaginationPrev"
                         class="inline-flex h-8 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:border-slate-400 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-slate-300">
                         <i class="fas fa-chevron-left text-xs mr-1"></i>
                         <span class="hidden sm:inline">Sebelumnya</span>
                     </button>
-                    <div id="paginationNumbers" class="flex items-center gap-1"></div>
-                    <button id="paginationNext"
+                    <div id="journalPaginationNumbers" class="flex items-center gap-1"></div>
+                    <button id="journalPaginationNext"
                         class="inline-flex h-8 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:border-slate-400 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-slate-300">
                         <span class="hidden sm:inline">Berikutnya</span>
                         <i class="fas fa-chevron-right text-xs ml-1"></i>

@@ -413,6 +413,50 @@ class Patients extends BaseController
         return view('App\modules\patients\Views\show', $data);
     }
 
+    public function history($id = null)
+    {
+        $patientData = $this->patientModel->find($id);
+
+        if (!$patientData) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound("Pasien dengan ID $id tidak ditemukan.");
+        }
+        $addressData = $this->db->table('patient_address')
+            ->where('patient_id', $id)
+            ->get()
+            ->getRowArray() ?? [];
+
+        $mRegion = new \App\modules\region\Models\MRegion();
+        $mCountries = new \App\modules\countries\Models\MCountries();
+        $mTerapis = new \App\modules\terapis\Models\MTerapis();
+
+        $region_patient = session()->get('region_patient');
+        $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
+
+        $data = [
+            'title' => 'Riwayat Kunjungan: ' . esc($patientData->name),
+            'patient' => $patientData,
+            'address' => (object) $addressData,
+            'wilayah' => $mRegion->getData(null, $allowed_regions) ?? [],
+            'negara' => $mCountries->asObject()->findAll(),
+            'terapis' => $mTerapis->asObject()->findAll(),
+            'resources' => $this->patientModel->get_resources(),
+            'patient_id' => $id,
+            'queue_id' => '',
+            'hide_add_button' => true,
+            'role' => $this->session->get('role'),
+            'realname' => $this->session->get('realname'),
+            'current_date' => date("Y-m-d"),
+            'created_at' => !empty($patientData->created_at) ? date("j F Y H:i", strtotime($patientData->created_at)) : '-',
+            'updated_at' => !empty($patientData->updated_at) ? date("j F Y H:i", strtotime($patientData->updated_at)) : '-',
+            'created_by_name' => $this->getUserName($patientData->created_by ?? null),
+            'updated_by_name' => $this->getUserName($patientData->updated_by ?? null),
+        ];
+
+        $data['has_updated'] = ($data['updated_at'] !== '-');
+
+        return view('App\modules\patients\Views\history', $data);
+    }
+
     public function update_files()
     {
         $id = $this->request->getPost('id');

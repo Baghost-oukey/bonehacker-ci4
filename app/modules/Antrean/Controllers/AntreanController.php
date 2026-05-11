@@ -134,7 +134,18 @@ class AntreanController extends BaseController
                 }
 
                 // Tombol Medis - langsung buka modal rekam medis
-                $btn .= '<button type="button" onclick="openMedicalRecordModal(' . $row->patient_id . ', ' . ($historyId ?: 'null') . ', ' . $row->queue_id . ', ' . ($row->region_id ?: 'null') . ')" class="inline-flex h-8 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-100 hover:text-slate-900"><i class="fas fa-file-medical mr-1.5 text-slate-400"></i> Medis</button>';
+                $fullAddress = implode(', ', array_filter([$row->address ?? '', $row->desa_nama ?? '', $row->kecamatan_nama ?? '', $row->kabupaten_nama ?? '']));
+                $patientData = htmlspecialchars(json_encode([
+                    'patientId' => $row->patient_id,
+                    'historyId' => $historyId ?: null,
+                    'queueId' => $row->queue_id,
+                    'regionId' => $row->region_id ?: null,
+                    'patientName' => $row->patient_name ?? '-',
+                    'patientAge' => $row->patient_age ?? '-',
+                    'patientPhone' => $row->phone ?? '-',
+                    'patientAddress' => $fullAddress,
+                ]), ENT_QUOTES, 'UTF-8');
+                $btn .= '<button type="button" data-medis=\'' . $patientData . '\' onclick="openMedicalRecordModal(this)" class="inline-flex h-8 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-100 hover:text-slate-900"><i class="fas fa-file-medical mr-1.5 text-slate-400"></i> Medis</button>';
                 $btn .= '</div>';
                 return $btn;
             })

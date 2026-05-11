@@ -420,17 +420,47 @@
     };
 
     /**
-     * Membuka dan menampilkan rekam medis pasien di bawah tabel antrean
-     * @param {number|string} patientId ID Pasien
-     * @param {number|string|null} historyId ID History (jika ada)
-     * @param {number|string} queueId ID Antrean
-     * @param {number|string|null} regionId ID Wilayah
+     * Membuka langsung modal Tambah Riwayat Pasien dari halaman antrean
+     * @param {HTMLElement} btn Tombol yang diklik (berisi data-medis)
      */
-    function openMedicalRecordModal(patientId, historyId, queueId, regionId) {
-        if (window.PatientHistoryPage && typeof window.PatientHistoryPage.loadPatient === 'function') {
-            window.PatientHistoryPage.loadPatient(patientId, queueId, regionId);
-        } else {
-            console.error('[PatientHistoryPage] Module is not loaded or missing loadPatient method.');
+    function openMedicalRecordModal(btn) {
+        const raw = btn.getAttribute('data-medis');
+        if (!raw) return;
+
+        let info;
+        try { info = JSON.parse(raw); } catch(e) { return; }
+
+        const { patientId, historyId, queueId, regionId, patientName, patientAge, patientPhone, patientAddress } = info;
+
+        // Update patientConfig supaya PatientHistoryPage menggunakan data yang benar
+        window.patientConfig.patientId = patientId;
+        window.patientConfig.queueId = queueId;
+        window.patientConfig.patientRegionId = regionId;
+
+        // Populate header info di modal
+        const nameEl = document.getElementById('modal-patient-name');
+        const ageEl = document.getElementById('modal-patient-age');
+        const addressEl = document.getElementById('modal-patient-address');
+        const phoneEl = document.getElementById('modal-patient-phone');
+        if (nameEl) nameEl.textContent = patientName || '-';
+        if (ageEl) ageEl.textContent = patientAge || '-';
+        if (addressEl) addressEl.textContent = patientAddress || '-';
+        if (phoneEl) phoneEl.textContent = patientPhone || '-';
+
+        // Jika sudah ada history → buka detail, jika belum → buka tambah baru
+        if (window.PatientHistoryPage) {
+            // Set config terlebih dahulu
+            window.PatientHistoryPage.config.patientId = patientId;
+            window.PatientHistoryPage.config.queueId = queueId;
+            if (regionId) window.PatientHistoryPage.config.patientRegionId = regionId;
+
+            if (historyId) {
+                // Ada history → edit/lihat detail
+                window.PatientHistoryPage.show(historyId);
+            } else {
+                // Belum ada history → langsung tambah baru
+                window.PatientHistoryPage.add();
+            }
         }
     }
 </script>

@@ -643,7 +643,9 @@ const PatientHistoryPage = {
   // --- SHOW DETAIL RIWAYAT ---
   show(id, isDuplicate = false) {
     const self = this;
-    const fetchUrl = this.config.urls.historyFetch.replace(/\/\d+$/, "/" + id).replace("fetch", "show");
+    // Build show URL: replace 'fetch' with 'show' in base, append id
+    const baseUrl = (this.config.urls.historyFetchBase || this.config.urls.historyFetch.replace(/\/\d+$/, '')).replace(/\/$/, '');
+    const fetchUrl = baseUrl.replace('fetch', 'show') + '/' + id;
 
     $.ajax({
       url: fetchUrl,

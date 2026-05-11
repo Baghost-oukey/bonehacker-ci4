@@ -47,24 +47,24 @@ const setupJournalPage = () => {
     // --- UPDATE PAGINATION ---
     const updatePaginationInfo = () => {
         if (filteredRecords <= 0) {
-            $("#paginationInfo").text("Menampilkan 0 sampai 0 dari 0 data");
+            $("#journalPaginationInfo").text("Menampilkan 0 sampai 0 dari 0 data");
             return;
         }
         const start = (currentPage - 1) * pageLength + 1;
         const end = Math.min(currentPage * pageLength, filteredRecords);
-        $("#paginationInfo").text("Menampilkan " + start + " sampai " + end + " dari " + filteredRecords + " data");
+        $("#journalPaginationInfo").text("Menampilkan " + start + " sampai " + end + " dari " + filteredRecords + " data");
     };
 
     const updatePaginationUI = () => {
         const totalPages = Math.max(1, Math.ceil(filteredRecords / pageLength));
-        const container = $("#paginationNumbers");
+        const container = $("#journalPaginationNumbers");
         container.empty();
 
         const startPage = Math.max(1, currentPage - 2);
         const endPage = Math.min(totalPages, currentPage + 2);
 
         if (startPage > 1) {
-            container.append('<button class="pagination-btn inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:border-slate-400" data-page="1">1</button>');
+            container.append('<button class="journal-pagination-btn inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:border-slate-400" data-page="1">1</button>');
             if (startPage > 2) {
                 container.append('<span class="px-1 text-slate-300">...</span>');
             }
@@ -74,18 +74,18 @@ const setupJournalPage = () => {
             const activeClass = pageNum === currentPage
                 ? "bg-teal-600 border-teal-600 text-white font-semibold shadow-md shadow-teal-600/30"
                 : "border border-slate-300 bg-white text-slate-700 font-semibold transition hover:bg-slate-100 hover:border-slate-400";
-            container.append('<button class="pagination-btn inline-flex h-8 w-8 items-center justify-center rounded-lg ' + activeClass + ' text-xs" data-page="' + pageNum + '">' + pageNum + '</button>');
+            container.append('<button class="journal-pagination-btn inline-flex h-8 w-8 items-center justify-center rounded-lg ' + activeClass + ' text-xs" data-page="' + pageNum + '">' + pageNum + '</button>');
         }
 
         if (endPage < totalPages) {
             if (endPage < totalPages - 1) {
                 container.append('<span class="px-1 text-slate-300">...</span>');
             }
-            container.append('<button class="pagination-btn inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:border-slate-400" data-page="' + totalPages + '">' + totalPages + '</button>');
+            container.append('<button class="journal-pagination-btn inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:border-slate-400" data-page="' + totalPages + '">' + totalPages + '</button>');
         }
 
-        $("#paginationPrev").prop("disabled", currentPage <= 1);
-        $("#paginationNext").prop("disabled", currentPage >= totalPages);
+        $("#journalPaginationPrev").prop("disabled", currentPage <= 1);
+        $("#journalPaginationNext").prop("disabled", currentPage >= totalPages);
     };
 
 
@@ -194,7 +194,6 @@ const setupJournalPage = () => {
         $('#customSearch').on('keyup', function () {
             clearTimeout(searchTimer);
             searchTimer = setTimeout(function () {
-                console.log("Mencari data untuk:", $('#customSearch').val());
                 currentPage = 1;
                 loadTableData(1);
             }, 800);
@@ -205,27 +204,27 @@ const setupJournalPage = () => {
             loadTableData(1);
         });
 
-        $('#paginationLength').on('change', function () {
+        $('#journalPaginationLength').on('change', function () {
             pageLength = parseInt($(this).val(), 10);
             currentPage = 1;
             loadTableData(1);
         });
 
         // --- EVENT LISTENER PAGINATION ---
-        $(document).on('click', '.pagination-btn', function () {
+        $(document).on('click', '.journal-pagination-btn', function () {
             const pageNum = parseInt($(this).data('page'), 10);
             if (!isNaN(pageNum)) {
                 loadTableData(pageNum);
             }
         });
 
-        $('#paginationPrev').on('click', function () {
+        $('#journalPaginationPrev').on('click', function () {
             if (currentPage > 1) {
                 loadTableData(currentPage - 1);
             }
         });
 
-        $('#paginationNext').on('click', function () {
+        $('#journalPaginationNext').on('click', function () {
             const totalPages = Math.max(1, Math.ceil(filteredRecords / pageLength));
             if (currentPage < totalPages) {
                 loadTableData(currentPage + 1);
@@ -242,7 +241,7 @@ const setupJournalPage = () => {
             $('#region').val('').trigger('change');
             currentPage = 1;
             pageLength = 25;
-            $('#paginationLength').val(25);
+            $('#journalPaginationLength').val(25);
             loadTableData(1);
         });
 
