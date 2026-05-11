@@ -103,7 +103,7 @@ class MTerapis extends Model
 
     public function get_regions($allowed_regions = null)
     {
-        $builder = $this->db->table('regions')->select('id, name');
+        $builder = $this->db->table('regions')->select('id, name')->where('is_active', 1);
         if (!empty($allowed_regions)) {
             $builder->whereIn('id', $allowed_regions);
         }

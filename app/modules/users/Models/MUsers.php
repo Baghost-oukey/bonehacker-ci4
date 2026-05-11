@@ -82,7 +82,7 @@ class MUsers extends Model
 
   public function get_regions()
   {
-    return $this->db->table('regions')->select('id, name')->get()->getResult();
+    return $this->db->table('regions')->select('id, name')->where('is_active', 1)->get()->getResult();
   }
 
   public function get_patients_by_user_region($user_id, $export = false)

@@ -23,7 +23,7 @@ class TransaksiController extends BaseController
         $db = \Config\Database::connect();
         $region_patient = session()->get('region_patient');
         $filter_region = ($region_patient !== 'all' && !empty($region_patient)) ? $region_patient : null;
-        $list_regions = $db->table('regions')->select('id, name');
+        $list_regions = $db->table('regions')->select('id, name')->where('is_active', 1);
         if ($filter_region) {
             if (is_array($filter_region)) {
                 $list_regions->whereIn('id', $filter_region);

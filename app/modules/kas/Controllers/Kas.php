@@ -35,7 +35,7 @@ class Kas extends BaseController
         $stats = $this->mTransaksiKas->get_dashboard_stats($filter_region);
 
         $db = \Config\Database::connect();
-        $regionsBuilder = $db->table('regions')->select('id, name');
+        $regionsBuilder = $db->table('regions')->select('id, name')->where('is_active', 1);
         if ($filter_region) {
             if (is_array($filter_region)) { $regionsBuilder->whereIn('id', $filter_region); }
             else { $regionsBuilder->where('id', $filter_region); }
