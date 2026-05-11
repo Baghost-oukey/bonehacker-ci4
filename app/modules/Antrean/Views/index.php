@@ -44,11 +44,11 @@
 
             <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-                        <div class="relative flex-1">
-                            <i id="iconSearch1" class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm transition-all"></i>
-                            <input type="text" id="searchInput" placeholder="Cari pasien..."
-                                class="w-full rounded-lg border border-slate-200 pl-9 pr-3 py-2 text-sm transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15">
-                        </div>
+                    <div class="relative flex-1">
+                        <i id="iconSearch1" class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm transition-all"></i>
+                        <input type="text" id="searchInput" placeholder="Cari pasien..."
+                            class="w-full rounded-lg border border-slate-200 pl-9 pr-3 py-2 text-sm transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15">
+                    </div>
 
                     <div class="flex items-center gap-2 text-sm">
                         <div class="flex items-center gap-2">
@@ -403,9 +403,22 @@
         if (!raw) return;
 
         let info;
-        try { info = JSON.parse(raw); } catch(e) { return; }
+        try {
+            info = JSON.parse(raw);
+        } catch (e) {
+            return;
+        }
 
-        const { patientId, historyId, queueId, regionId, patientName, patientAge, patientPhone, patientAddress } = info;
+        const {
+            patientId,
+            historyId,
+            queueId,
+            regionId,
+            patientName,
+            patientAge,
+            patientPhone,
+            patientAddress
+        } = info;
 
         // Update patientConfig supaya PatientHistoryPage menggunakan data yang benar
         window.patientConfig.patientId = patientId;

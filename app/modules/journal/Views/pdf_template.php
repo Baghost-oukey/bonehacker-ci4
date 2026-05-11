@@ -14,8 +14,9 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 8pt;
-            table-layout: fixed; /* JURUS KUNCI: Biar Dompdf gak capek ngitung */
-        word-wrap: break-word;
+            table-layout: fixed;
+            /* JURUS KUNCI: Biar Dompdf gak capek ngitung */
+            word-wrap: break-word;
         }
 
         th,

@@ -96,6 +96,11 @@ class MHistory extends Model
         $builder->join('medhis_tags mt', "FIND_IN_SET(mt.id, h.medhis) > 0", 'left');
         $builder->where('h.patient_id', $id);
         $builder->where('h.is_delete', 0);
+
+        if (!empty($options['filter_date'])) {
+            $builder->where('DATE(h.date)', $options['filter_date']);
+        }
+
         if (!empty($options['where_like'])) {
             $builder->groupStart();
             foreach ($options['where_like'] as $like) {

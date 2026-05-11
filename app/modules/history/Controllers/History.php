@@ -49,6 +49,10 @@ class History extends BaseController
                 "mt.name LIKE '%$searchValue%'"
             ];
         }
+
+        if (!empty($requestData['filter_date'])) {
+            $options['filter_date'] = $requestData['filter_date'];
+        }
         $dataOutput    = $this->model_history->getListData($id, $options);
         $totalFiltered = $this->model_history->getTotalData($id, $options);
         $totalData     = $this->model_history->countAllResults(); // Total tanpa filter

@@ -67,6 +67,41 @@
 
 
 <!-- MODAL TAMBAH/EDIT RIWAYAT -->
+<style>
+    .modal-readonly .modal-title {
+        color: #0d9488 !important;
+    }
+    .modal-readonly input, 
+    .modal-readonly textarea, 
+    .modal-readonly select,
+    .modal-readonly .select2-container--default .select2-selection--single,
+    .modal-readonly .tagify {
+        border: none !important;
+        background-color: transparent !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        pointer-events: none !important;
+        box-shadow: none !important;
+        color: #1e293b !important;
+        font-weight: 600 !important;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+    }
+    .modal-readonly .select2-selection__arrow {
+        display: none !important;
+    }
+    .modal-readonly .tagify__tag > div::before {
+        display: none !important;
+    }
+    .modal-readonly .tagify__tag__removeBtn {
+        display: none !important;
+    }
+    .modal-readonly .tagify__tag {
+        background: #f1f5f9 !important;
+        border-radius: 6px !important;
+    }
+</style>
 <div id="modalRiwayatPasien" class="modal-wrapper hidden fixed inset-0 z-60 items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 transition-opacity">
     <!-- Diperlebar menjadi max-w-6xl karena isi form sangat banyak -->
     <div class="w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
@@ -159,11 +194,11 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 border-y border-slate-200 py-6">
                     <div class="space-y-1">
                         <label class="text-sm font-medium text-slate-600">Waktu mulai terapi :</label>
-                        <input type="datetime-local" name="processAt" id="processAt" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                        <input type="datetime-local" name="processAt" id="processAt" readonly class="w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-600 cursor-not-allowed focus:outline-none" title="Otomatis diisi">
                     </div>
                     <div class="space-y-1">
                         <label class="text-sm font-medium text-slate-600">Waktu selesai terapi :</label>
-                        <input type="datetime-local" name="finishAt" id="finishAt" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                        <input type="datetime-local" name="finishAt" id="finishAt" readonly class="w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-600 cursor-not-allowed focus:outline-none" title="Otomatis diisi">
                     </div>
                     <div class="space-y-1">
                         <label class="text-sm font-medium text-slate-600">Total Waktu (Menit) :</label>
@@ -403,7 +438,7 @@
                 <hr class="border-slate-200">
 
                 <!-- TERAPI KEJANTANAN -->
-                <div id="terapi-kejantanan" class="bg-slate-50/50 border border-slate-200 rounded-xl p-5" style="display: none;">
+                <div id="terapi-kejantanan" class="bg-slate-50/50 border border-slate-200 rounded-xl p-5">
                     <label class="inline-flex items-center gap-3 cursor-pointer mb-4">
                         <input type="checkbox" id="kejantanan" name="kejantanan" value="ya" onchange="toggleTerapiForm()" class="rounded border-slate-300 text-teal-600 focus:ring-teal-500 w-5 h-5">
                         <span class="text-base font-semibold text-slate-800">Aktifkan Terapi Kejantanan</span>
