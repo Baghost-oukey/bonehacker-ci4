@@ -167,7 +167,7 @@
                     <option value="">-- Pilih Role --</option>
                     <option value="owner">Owner</option>
                     <option value="superadmin">Super Admin</option>
-                    <option value="user">User</option>
+                    <option value="user">Admin</option>
                 </select>
                 <div class="invalid-feedback text-xs text-red-500 mt-1 hidden">Role harus dipilih</div>
             </div>
@@ -239,7 +239,7 @@
                     required>
                     <option value="superadmin">Super Admin</option>
                     <option value="owner">Owner</option>
-                    <option value="user">User</option>
+                    <option value="user">Admin</option>
                 </select>
                 <div class="invalid-feedback text-xs text-red-500 mt-1 hidden">Role harus dipilih</div>
             </div>

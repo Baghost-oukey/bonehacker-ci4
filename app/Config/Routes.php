@@ -216,14 +216,14 @@ $routes->group('users', ['namespace' => 'App\Modules\Users\Controllers'], functi
   $routes->get('destroy/(:num)', 'UsersController::destroy/$1');
 
   // Pasien Luar
-  $routes->get('view_patient/(:num)', 'Users::view_patient/$1');
-  $routes->post('fetch_patients', 'Users::fetch_patients');
-  $routes->post('add_outside_patient', 'Users::add_outside_patient');
-  $routes->post('fetch_patients_luar', 'Users::fetch_patients_luar');
-  $routes->post('get_outside_patients_select', 'Users::get_outside_patients_select');
-  $routes->post('delete_outside_patient', 'Users::delete_outside_patient');
-  $routes->post('send_notif_patients/(:num)', 'Users::send_notif_patients/$1');
-  $routes->post('check_username_exists', 'Users::check_username_exists');
+  $routes->get('view_patient/(:num)', 'UsersController::view_patient/$1');
+  $routes->post('fetch_patients', 'UsersController::fetch_patients');
+  $routes->post('add_outside_patient', 'UsersController::add_outside_patient');
+  $routes->post('fetch_patients_luar', 'UsersController::fetch_patients_luar');
+  $routes->post('get_outside_patients_select', 'UsersController::get_outside_patients_select');
+  $routes->post('delete_outside_patient', 'UsersController::delete_outside_patient');
+  $routes->post('send_notif_patients/(:num)', 'UsersController::send_notif_patients/$1');
+  $routes->post('check_username_exists', 'UsersController::check_username_exists');
 });
 
 // Patients - Routes

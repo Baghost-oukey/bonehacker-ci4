@@ -8,7 +8,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
 
 <aside id="appSidebar" class="fixed inset-y-0 left-0 z-40 flex h-svh w-64 -translate-x-full flex-col border-r border-slate-200 bg-white shadow-lg shadow-slate-900/5 backdrop-blur-sm transition-transform duration-300 lg:translate-x-0">
 
-    <div class="flex flex-col gap-2 p-2 border-b border-slate-200">
+    <div class="sticky top-0 z-20 flex flex-col gap-2 p-2 border-b border-slate-200 bg-white">
         <a href="<?= base_url() ?>" class="group/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all hover:bg-slate-100 hover:text-slate-900">
             <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-slate-900 text-[11px] font-bold text-white shadow-sm">B</span>
             <span class="truncate font-semibold tracking-tight text-slate-900">Bonehacker</span>
@@ -18,7 +18,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
     <!-- DASHBOAR | ADMIN - SUPERADMIN - OWNER -->
     <div class="no-scrollbar flex min-h-0 flex-1 flex-col gap-0 overflow-auto">
         <div class="relative flex w-full min-w-0 flex-col p-2">
-            <div class="flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-slate-500/70">
+            <div class="sticky top-0 z-10 flex h-8 shrink-0 items-center bg-white px-2 text-xs font-bold uppercase tracking-wider text-slate-500/80">
                 Dashboard
             </div>
 
@@ -41,7 +41,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                         <span class="truncate">Rekam Medis</span>
                     </a>
                 </li>
-                <?php if ($role === 'superadmin' || $role === 'owner'): ?>
+                <?php if (in_array($role, ['superadmin', 'owner', 'user'])): ?>
                     <li>
                         <a href="<?= base_url('region') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'region' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                             <i class="fas fa-map w-4 text-center shrink-0"></i>
@@ -55,16 +55,20 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                         <span class="truncate">Jurnal</span>
                     </a>
                 </li>
+                <?php if ($role === 'superadmin' || $role === 'owner'): ?>
+                <li>
+                    <a href="<?= base_url('kehadiran') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'kehadiran' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
+                        <i class="fa-solid fa-user-clock w-4 text-center shrink-0"></i>
+                        <span class="truncate">Kehadiran Karyawan</span>
+                    </a>
+                </li>
+                <?php endif; ?>
+
+                <?php if ($role === 'owner'): ?>
                 <li>
                     <a href="<?= base_url('transaksi') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'transaksi' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                         <i class="fas fa-money-bill-wave w-4 text-center shrink-0"></i>
                         <span class="truncate">Transaksi</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="<?= base_url('kehadiran') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'transaksi' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
-                        <i class="fa-solid fa-user-clock w-4 text-center shrink-0"></i>
-                        <span class="truncate">Kehadiran Karyawan</span>
                     </a>
                 </li>
 
@@ -80,7 +84,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                         </summary>
                         <ul class="mx-3.5 mt-1 flex min-w-0 translate-x-px flex-col gap-1 border-l border-slate-200 px-2.5 py-0.5">
                             <li>
-                                <a href="<?= base_url('gaji') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'users' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                <a href="<?= base_url('gaji') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'gaji' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                                     <span class="truncate">Gaji Karyawan</span>
                                 </a>
                             </li>
@@ -96,13 +100,15 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                                     <span class="truncate">Master Tunjangan</span>
                                 </a>
                             </li>
-                            <li><a href="<?= base_url('kasbon') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'log_whatsapp' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Kasbon Karyawan</span></a></li>
+                            <li><a href="<?= base_url('kasbon') ?>" class="flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sm transition-all <?= $current_segment == 'kasbon' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Kasbon Karyawan</span></a></li>
                         </ul>
                     </details>
                 </li>
+                <?php endif; ?>
+
 
                 <li>
-                    <details class="group" <?= in_array($current_segment, ['gaji', 'tujangan', 'kasbon']) ? 'open' : '' ?>>
+                    <details class="group" <?= in_array($current_segment, ['jasa-pelayanan', 'reguler', 'kejantanan']) ? 'open' : '' ?>>
                         <summary class="flex w-full cursor-pointer list-none items-center justify-between rounded-md p-2 text-left text-sm transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 [&::-webkit-details-marker]:hidden">
                             <span class="flex items-center gap-2">
                                 <i class="fa-solid fa-hospital-user w-4 text-center shrink-0"></i>
@@ -136,7 +142,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
         <!-- KEUANGAN | OWNER -->
         <?php if ($role === 'superadmin' || $role === 'owner'): ?>
             <div class="relative flex w-full min-w-0 flex-col p-2">
-                <div class="flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-slate-500/70">
+                <div class="sticky top-0 z-10 flex h-8 shrink-0 items-center bg-white px-2 text-xs font-bold uppercase tracking-wider text-slate-500/80">
                     Kas
                 </div>
 
@@ -171,7 +177,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
 
         <!-- STATISTIK | ADMIN - SUPERADMIN - OWNER -->
         <div class="relative flex w-full min-w-0 flex-col p-2">
-            <div class="flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-slate-500/70">
+            <div class="sticky top-0 z-10 flex h-8 shrink-0 items-center bg-white px-2 text-xs font-bold uppercase tracking-wider text-slate-500/80">
                 Analitik
             </div>
             <ul class="flex w-full min-w-0 flex-col gap-1">
@@ -225,7 +231,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
         <!-- TAGIFY & MANAGAE USER | SUPERADMIN - OWNER -->
         <?php if ($role === 'superadmin' || $role === 'owner'): ?>
             <div class="relative flex w-full min-w-0 flex-col p-2">
-                <div class="flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-slate-500/70">
+                <div class="sticky top-0 z-10 flex h-8 shrink-0 items-center bg-white px-2 text-xs font-bold uppercase tracking-wider text-slate-500/80">
                     Manajemen
                 </div>
 
@@ -287,7 +293,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
 
     </div>
 
-    <div class="mt-auto border-t border-slate-200 p-2">
+    <div class="sticky bottom-0 z-20 mt-auto border-t border-slate-200 bg-white p-2">
         <?= $this->include('App\Views\layout\footer') ?>
     </div>
 

@@ -167,7 +167,7 @@ const setupUsersPage = () => {
     // Toggle region field based on role
     const toggleRegionField = (roleSelect, targetField) => {
         const role = $(roleSelect).val();
-        if (role === 'user') {
+        if (role === 'user' || role === 'owner') {
             $(targetField).fadeIn().removeClass('hidden');
             $(targetField).find('select').attr('required', true);
         } else {
@@ -178,18 +178,25 @@ const setupUsersPage = () => {
 
     // Check username availability
     const checkUsername = (username, feedbackElement, submitBtn, currentUsername = null) => {
+        const inputField = $(feedbackElement).siblings('input');
+
         if (username.length < 3) {
             $(feedbackElement).addClass('hidden');
             $(submitBtn).prop('disabled', false);
+            inputField.removeClass('border-red-500 border-teal-500');
             return;
         }
 
         // Skip check if editing and username hasn't changed
-        if (currentUsername && username === currentUsername) {
-            $(feedbackElement).removeClass('hidden').text('Username valid').css('color', 'green');
+        if (currentUsername && username.toLowerCase() === currentUsername.toLowerCase()) {
+            $(feedbackElement).removeClass('hidden').text('Username saat ini').css('color', '#64748b');
+            inputField.removeClass('border-red-500').addClass('border-teal-500');
             $(submitBtn).prop('disabled', false);
             return;
         }
+
+        $(feedbackElement).removeClass('hidden').text('Memeriksa...').css('color', '#64748b');
+        inputField.removeClass('border-red-500 border-teal-500');
 
         $.ajax({
             url: config.checkUsernameUrl,
@@ -202,14 +209,17 @@ const setupUsersPage = () => {
             success: function(res) {
                 if (res.exists === true || res.exists === "true") {
                     $(feedbackElement).removeClass('hidden').text('Username sudah digunakan').css('color', '#ef4444');
+                    inputField.addClass('border-red-500').removeClass('border-teal-500');
                     $(submitBtn).prop('disabled', true);
                 } else {
                     $(feedbackElement).removeClass('hidden').text('Username tersedia').css('color', '#10b981');
+                    inputField.removeClass('border-red-500').addClass('border-teal-500');
                     $(submitBtn).prop('disabled', false);
                 }
             },
             error: function() {
                 $(feedbackElement).removeClass('hidden').text('Gagal memeriksa username').css('color', '#ef4444');
+                inputField.addClass('border-red-500').removeClass('border-teal-500');
                 $(submitBtn).prop('disabled', true);
             }
         });
