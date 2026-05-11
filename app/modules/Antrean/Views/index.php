@@ -357,6 +357,9 @@
     </div>
 </div>
 
+<!-- MODAL REKAM MEDIS -->
+<?= $this->include('App\modules\patients\Views\component\card_riwayat') ?>
+
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
@@ -372,5 +375,50 @@
         checkPhoneUrl: "<?= site_url('patient/check_phone') ?>",
         patientHistoryUrl: "<?= site_url('patient/show') ?>"
     };
+
+    // Konfigurasi untuk modal rekam medis (digunakan oleh card_riwayat.php)
+    window.patientConfig = {
+        patientId: null, // Akan diisi saat buka modal
+        queueId: null,
+        patientRegionId: null,
+        csrfTokenName: '<?= csrf_token() ?>',
+        csrfHash: '<?= csrf_hash() ?>',
+        urls: {
+            historyFetch: '<?= site_url("history/fetch") ?>/',
+            historyStore: '<?= site_url("history/store") ?>',
+            historyDestroy: '<?= site_url("history/destroy") ?>',
+            complaintTags: '<?= site_url("tag-keluhan/get_tags") ?>',
+            medisTags: '<?= site_url("tag-rekam-medis/tags") ?>',
+            resultTags: '<?= site_url("tag-pemeriksaan/get_tags") ?>',
+            terapisByRegion: '<?= site_url("history/terapis-by-region") ?>'
+        }
+    };
+
+    // Fungsi untuk membuka modal rekam medis dari tombol Medis
+    function openMedicalRecordModal(patientId, historyId, queueId) {
+        // Update config dengan data pasien
+        window.patientConfig.patientId = patientId;
+        window.patientConfig.queueId = queueId;
+        
+        // Buka modal
+        const modal = document.getElementById('modalRiwayat');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            // Jika ada historyId, load data rekam medis
+            if (historyId) {
+                // Trigger load data rekam medis
+                if (typeof window.loadHistoryData === 'function') {
+                    window.loadHistoryData(historyId);
+                }
+            } else {
+                // Reset form untuk rekam medis baru
+                if (typeof window.resetHistoryForm === 'function') {
+                    window.resetHistoryForm();
+                }
+            }
+        }
+    }
 </script>
 <?= $this->endSection() ?>

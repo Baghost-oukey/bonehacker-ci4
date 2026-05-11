@@ -912,3 +912,25 @@ if (document.readyState === "loading") {
 } else {
   PatientHistoryPage.init();
 }
+
+// Expose fungsi global untuk dipanggil dari halaman lain (seperti antrean)
+window.loadHistoryData = function(historyId) {
+  if (PatientHistoryPage && typeof PatientHistoryPage.editHistory === 'function') {
+    PatientHistoryPage.editHistory(historyId);
+  }
+};
+
+window.resetHistoryForm = function() {
+  const form = document.getElementById('formRiwayat');
+  if (form) {
+    form.reset();
+    // Reset tagify
+    if (complaintTagify) complaintTagify.removeAllTags();
+    if (medhisTagify) medhisTagify.removeAllTags();
+    if (resultTagify) resultTagify.removeAllTags();
+    
+    // Set mode tambah
+    document.getElementById('history_id').value = '';
+    document.getElementById('modalRiwayatLabel').textContent = 'Tambah Rekam Medis';
+  }
+};

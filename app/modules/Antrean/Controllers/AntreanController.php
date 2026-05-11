@@ -128,11 +128,8 @@ class AntreanController extends BaseController
                     $btn .= '<a href="' . site_url('antrean/procesToQueue/' . $row->queue_id) . '" class="inline-flex h-8 items-center justify-center rounded-md bg-emerald-600 px-3 text-xs font-medium text-white shadow transition hover:bg-emerald-700">Proses</a>';
                 }
 
-                $urlHistory = site_url('patient/show/' . $row->patient_id) . '?openModalRiwayat=true';
-                if (!empty($historyId)) $urlHistory .= '&history_id=' . $historyId;
-                $urlHistory .= '&queue_id=' . $row->queue_id;
-
-                $btn .= '<a href="' . $urlHistory . '" class="inline-flex h-8 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-100 hover:text-slate-900"><i class="fas fa-file-medical mr-1.5 text-slate-400"></i> Medis</a>';
+                // Tombol Medis - langsung buka modal rekam medis
+                $btn .= '<button type="button" onclick="openMedicalRecordModal(' . $row->patient_id . ', ' . ($historyId ?: 'null') . ', ' . $row->queue_id . ')" class="inline-flex h-8 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-100 hover:text-slate-900"><i class="fas fa-file-medical mr-1.5 text-slate-400"></i> Medis</button>';
                 $btn .= '</div>';
                 return $btn;
             })
