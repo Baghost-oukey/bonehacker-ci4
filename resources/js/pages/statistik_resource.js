@@ -7,7 +7,9 @@ if (window.$) {
         let myChart = null;
 
         moment.locale('id');
-        $('#filter_region').select2();
+        $('#filter_region').select2({
+            width: '100%'
+        });
 
         let start = moment().startOf('month');
         let end = moment().endOf('month');
@@ -89,11 +91,14 @@ if (window.$) {
             if (response.details && response.details.length > 0 && totalAll > 0) {
                 $('#chart-container').removeClass('d-none hidden').addClass('d-block block');
                 $('#no-data-message').removeClass('d-flex flex').addClass('d-none hidden');
+                let mTableHtml = '';
                 response.details.forEach(item => {
                     let label = item.saluran || 'Lainnya';
                     let percent = totalAll > 0 ? ((item.total_pasien / totalAll) * 100).toFixed(1) : 0;
                     labels.push(label);
                     values.push(item.total_pasien);
+                    
+                    // --- RENDER DESKTOP ROW ---
                     tableHtml += `
                     <tr class="hover:bg-slate-50 transition border-b border-slate-50 last:border-0">
                         <td class="px-6 py-3.5">
@@ -101,20 +106,41 @@ if (window.$) {
                                 <div class="w-5 text-center shrink-0 text-lg">
                                     ${getSocialIcon(label)}
                                 </div>
-                                <span class="font-medium text-slate-800 text-[13px] uppercase tracking-wide">${label}</span>
+                                <span class="font-bold text-slate-800 text-[13px] uppercase tracking-wide">${label}</span>
                             </div>
                         </td>
-                        <td class="px-6 py-3.5 text-center text-slate-500 text-[13px]">
+                        <td class="px-6 py-3.5 text-center text-slate-900 font-black text-[13px]">
                             ${item.total_pasien} Pasien
                         </td>
                         <td class="px-6 py-3.5 text-center">
-                            <span class="inline-flex items-center justify-center px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 text-[11px] font-bold tracking-wide">
+                            <span class="inline-flex items-center justify-center px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 text-[11px] font-black tracking-wide">
                                 ${percent}%
-                            </span>
+                             </span>
                         </td>
                     </tr>`;
+
+                    // --- RENDER MOBILE CARD ---
+                    mTableHtml += `
+                        <div class="p-4 flex items-center justify-between gap-4 bg-white">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 border border-slate-100 shrink-0 text-xl shadow-sm">
+                                    ${getSocialIcon(label)}
+                                </div>
+                                <div class="flex flex-col min-w-0">
+                                    <span class="text-[13px] font-black text-slate-900 uppercase tracking-tight truncate">${label}</span>
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">${item.total_pasien} Pasien</span>
+                                </div>
+                            </div>
+                            <div class="shrink-0">
+                                <span class="inline-flex items-center justify-center px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-100 text-[11px] font-black tracking-wide">
+                                    ${percent}%
+                                </span>
+                            </div>
+                        </div>
+                    `;
                 });
                 $('#table-marketing-body').html(tableHtml);
+                $('#mobile-marketing-container').html(mTableHtml);
                 updateChart(labels, values);
             } else {
                 renderEmptyState();
@@ -126,14 +152,22 @@ if (window.$) {
             $('#chart-container').removeClass('d-block block').addClass('d-none hidden');
             $('#no-data-message').removeClass('d-none hidden').addClass('d-flex flex');
 
-            $('#table-marketing-body').html(`
-            <tr class="hover:bg-slate-50 transition">
-                <td colspan="3" class="px-6 py-12 text-center text-slate-400 italic text-sm">
+            const emptyRow = `
+                <tr class="hover:bg-slate-50 transition">
+                    <td colspan="3" class="px-6 py-12 text-center text-slate-400 italic text-sm">
+                        <i class="fas fa-inbox mr-2 text-slate-300"></i>
+                        Belum ada data efektivitas saluran.
+                    </td>
+                </tr>
+            `;
+            const mEmptyCard = `
+                <div class="px-6 py-12 text-center text-slate-400 italic text-sm">
                     <i class="fas fa-inbox mr-2 text-slate-300"></i>
-                    Belum ada data efektivitas saluran.
-                </td>
-            </tr>
-            `);
+                    Belum ada data.
+                </div>
+            `;
+            $('#table-marketing-body').html(emptyRow);
+            $('#mobile-marketing-container').html(mEmptyCard);
             if (myChart) {
                 myChart.destroy();
                 myChart = null;

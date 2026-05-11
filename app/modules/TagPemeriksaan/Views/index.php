@@ -1,7 +1,7 @@
 <?= $this->extend('layout/layout') ?>
 <?= $this->section('content') ?>
 
-<section id="resultPage" class="w-full space-y-6 p-4 md:p-6">
+<section id="resultPage" class="w-full px-4 py-4 md:py-6 space-y-6 overflow-x-hidden">
     <!-- Header -->
     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
@@ -13,9 +13,9 @@
             </p>
         </div>
 
-        <div class="flex flex-wrap items-center gap-3">
+        <div class="flex items-center gap-3 w-full md:w-auto">
             <button type="button" data-modal-open="modalTambah"
-                class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-700">
+                class="inline-flex items-center justify-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-teal-700 w-full md:w-auto shadow-sm active:scale-95">
                 <i class="fas fa-plus-circle text-white"></i>
                 Tambah Tag
             </button>
@@ -48,17 +48,25 @@
             </div>
         </div>
 
+        <!-- Mobile Result Container (KODE KITA) -->
+        <div id="mobile-result-container" class="md:hidden divide-y divide-slate-100">
+            <div class="px-6 py-12 text-center text-slate-400 italic text-sm">
+                <i class="fas fa-spinner fa-spin mr-2 text-slate-300"></i>
+                Memuat data tag hasil pemeriksaan...
+            </div>
+        </div>
+
         <!-- TABLE -->
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto hidden md:block">
             <table id="table-result" class="w-full text-sm">
                 <!-- HEAD -->
                 <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
                     <tr>
-                        <th class="px-6 py-3.5 text-left font-semibold">No</th>
+                        <th class="px-6 py-3.5 text-left font-semibold w-12">No</th>
                         <th class="px-6 py-3.5 text-left font-semibold">Nama Tag</th>
                         <th class="px-6 py-3.5 text-left font-semibold">Deskripsi</th>
-                        <th class="px-6 py-3.5 text-center font-semibold">Jumlah Data</th>
-                        <th class="px-6 py-3.5 text-center font-semibold">Aksi</th>
+                        <th class="px-6 py-3.5 text-center font-semibold w-32">Jumlah Data</th>
+                        <th class="px-6 py-3.5 text-center font-semibold w-32">Aksi</th>
                     </tr>
                 </thead>
 

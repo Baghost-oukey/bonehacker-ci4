@@ -4,7 +4,6 @@
  */
 
 // === 1. GLOBAL HELPER FUNCTIONS ===
-// (Fungsi bawaan standar untuk konsistensi dengan modul lain)
 const MODAL_VISIBLE_CLASS = "flex";
 const MODAL_HIDDEN_CLASS = "hidden";
 
@@ -35,19 +34,14 @@ const closeModal = (modal) => {
 
 // === 2. MAIN PAGE SETUP FUNCTION ===
 const setupJabatanPage = () => {
-    // Ambil konfigurasi dari View
     const config = window.jabatanConfig;
-
-    // Sabuk pengaman: Pastikan jQuery dan Config tersedia
     if (!config || typeof window.$ === "undefined") return;
 
     const $ = window.$;
     const swalLib = window.Swal || window.swal;
 
-    // --- STATE VARIABLES ---
     let table = null;
 
-    // --- FUNGSI CEK FLASHDATA ---
     const checkFlashdata = () => {
         if (config.flashSuccess) {
             swalLib.fire({
@@ -58,7 +52,6 @@ const setupJabatanPage = () => {
                 showConfirmButton: false
             });
         }
-
         if (config.flashError) {
             swalLib.fire({
                 icon: 'error',
@@ -78,34 +71,95 @@ const setupJabatanPage = () => {
                 url: config.fetchUrl,
                 type: "POST",
                 data: function (d) {
-                    d[config.csrfName] = config.csrfHash; // Kirim CSRF Token
+                    d[config.csrfName] = config.csrfHash;
                 }
             },
             columns: [
-                { data: "no", width: "5%", sortable: false, searchable: false, className: "px-6 py-4 text-sm text-slate-500 border-0" },
-                { data: "nama_jabatan", width: "25%", className: "px-6 py-4 text-sm font-bold text-slate-700 border-0" },
-                { data: "deskripsi", width: "50%", className: "px-6 py-4 text-xs text-slate-500 border-0" },
+                { data: "no", width: "5%", sortable: false, searchable: false, className: "px-6 py-4 text-xs font-mono text-slate-400 border-0" },
+                { data: "nama_jabatan", width: "25%", className: "px-6 py-4 text-sm font-black text-slate-700 border-0" },
+                { data: "deskripsi", width: "50%", className: "px-6 py-4 text-xs text-slate-500 border-0 font-medium" },
                 { data: "action", class: "text-right px-6 py-4 border-0", width: "20%", sortable: false, searchable: false }
             ],
-            // DOM Layout untuk integrasi Tailwind
-            dom: '<"w-full"t><"flex flex-col md:flex-row items-center justify-between p-6 bg-white border-t border-slate-100 gap-4"<"flex items-center gap-4"li>p><"clear">',
+            dom: '<"w-full"t><"clear">',
             language: { search: "_INPUT_" },
             initComplete: function () {
                 const searchInput = $('.dataTables_filter input');
                 searchInput
                     .attr('placeholder', 'Cari jabatan...')
-                    .addClass('w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all outline-none block');
+                    .addClass('w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 focus:bg-white focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all outline-none block shadow-inner');
 
                 searchInput.appendTo($('#search-container'));
                 $('.dataTables_filter').hide();
             },
-            drawCallback: function () {
-                // Styling Pagination
-                $('.pagination').addClass('flex flex-row items-center mb-0');
-                $('.page-item').addClass('mx-0.5');
-                $('.page-link').addClass('px-3 py-1 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors');
-                $('.active .page-link').addClass('bg-teal-600 text-white border-teal-600 hover:bg-teal-700').removeClass('text-slate-600');
-                $('.dataTables_length select').addClass('border border-slate-200 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-600 bg-white focus:outline-none focus:border-teal-500 mx-2');
+            drawCallback: function (settings) {
+                const api = this.api();
+                const data = api.rows({ page: 'current' }).data();
+                const mobileContainer = $('#mobile-jabatan-container');
+                const footer = $('#table-footer');
+
+                // --- MOBILE CARD RENDERING ---
+                mobileContainer.empty();
+                if (data.length === 0) {
+                    mobileContainer.append(`
+                        <div class="py-16 text-center opacity-30">
+                            <i class="fas fa-id-badge text-4xl text-slate-300 mb-3"></i>
+                            <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Jabatan Kosong</p>
+                        </div>
+                    `);
+                } else {
+                    data.each(function (row) {
+                        mobileContainer.append(`
+                            <div class="p-5 space-y-4 hover:bg-slate-50/50 transition-colors">
+                                <div class="flex justify-between items-start">
+                                    <div class="space-y-1">
+                                        <p class="text-[9px] font-black text-slate-300 uppercase tracking-widest italic">#${row.no}</p>
+                                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">${row.nama_jabatan}</h3>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        ${row.action}
+                                    </div>
+                                </div>
+                                <div class="bg-slate-50/80 p-3.5 rounded-2xl border border-slate-100 shadow-inner">
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 opacity-60">Deskripsi Pekerjaan</p>
+                                    <p class="text-xs font-bold text-slate-600 leading-relaxed">${row.deskripsi || '<span class="italic opacity-30">Tidak ada deskripsi.</span>'}</p>
+                                </div>
+                            </div>
+                        `);
+                    });
+                }
+
+                // --- PAGINATION RENDERING ---
+                footer.empty();
+                const info = api.page.info();
+                const pagination = $(`
+                    <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                            Menampilkan ${info.start + 1} - ${info.end} dari ${info.recordsTotal} Jabatan
+                        </div>
+                        <div class="flex items-center gap-2" id="custom-pagination"></div>
+                    </div>
+                `);
+
+                footer.append(pagination);
+                
+                // Manual pagination for premium feel
+                const paginateContainer = $('#custom-pagination');
+                const prevDisabled = info.page === 0 ? 'opacity-30 pointer-events-none' : '';
+                const nextDisabled = info.page === info.pages - 1 ? 'opacity-30 pointer-events-none' : '';
+
+                paginateContainer.append(`
+                    <button class="px-3 py-2 rounded-xl border border-slate-200 text-slate-400 hover:bg-slate-50 transition-all ${prevDisabled}" onclick="window.jabatanTable.page('previous').draw('page')">
+                        <i class="fas fa-chevron-left text-[10px]"></i>
+                    </button>
+                    <div class="flex items-center bg-slate-50 rounded-xl px-1 border border-slate-100 shadow-inner">
+                        <span class="px-3 py-2 text-[11px] font-black text-slate-700">${info.page + 1} / ${info.pages}</span>
+                    </div>
+                    <button class="px-3 py-2 rounded-xl border border-slate-200 text-slate-400 hover:bg-slate-50 transition-all ${nextDisabled}" onclick="window.jabatanTable.page('next').draw('page')">
+                        <i class="fas fa-chevron-right text-[10px]"></i>
+                    </button>
+                `);
+
+                window.jabatanTable = api; // Global reference for pagination buttons
             }
         });
     };
@@ -116,31 +170,17 @@ const setupJabatanPage = () => {
         $(inputId).on('input', function () {
             clearTimeout(timer);
             const name = $(this).val();
-
-            if (name.trim() === "") {
-                $(submitBtnId).prop('disabled', true);
-                return;
-            }
-
-            if (name === originalName) {
-                $(inputId).removeClass('is-invalid');
-                $(submitBtnId).prop('disabled', false);
-                return;
-            }
+            if (name.trim() === "") { $(submitBtnId).prop('disabled', true); return; }
+            if (name === originalName) { $(inputId).removeClass('is-invalid'); $(submitBtnId).prop('disabled', false); return; }
 
             timer = setTimeout(() => {
                 $.ajax({
                     url: config.checkNameUrl,
                     type: "POST",
-                    data: {
-                        name: name,
-                        id: originalId,
-                        [config.csrfName]: config.csrfHash
-                    },
+                    data: { name: name, id: originalId, [config.csrfName]: config.csrfHash },
                     success: function (res) {
                         if (res.exists) {
                             $(inputId).addClass('is-invalid');
-                            $(errorId).text('Nama jabatan sudah digunakan.');
                             $(submitBtnId).prop('disabled', true);
                         } else {
                             $(inputId).removeClass('is-invalid');
@@ -154,74 +194,64 @@ const setupJabatanPage = () => {
 
     // --- SETUP EVENT LISTENERS ---
     const initEvents = () => {
-        // Event Klik Edit (Dari Tabel Server-Side)
         $(document).on('click', '.btn_edit', function (e) {
             e.preventDefault();
             const btn = $(this);
-
             $('#modal_edit_jabatan').modal('show');
             $('#edit_name').val(btn.data('name'));
             $('#edit_deskripsi').val(btn.data('description'));
             $('#editjabatanForm').attr("action", btn.data('href'));
-
             $('#edit_submitBtn').prop('disabled', false);
             $('#edit_name').removeClass('is-invalid');
         });
 
-        // Event Klik Delete (AJAX Post)
         $(document).on('click', '.btn_delete', function (e) {
             e.preventDefault();
             const href = $(this).data('href');
-
             swalLib.fire({
                 title: 'Hapus Jabatan ?',
                 text: "Jabatan Akan dihapus dari daftar",
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonText: 'Ya, Hapus'
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    confirmButton: 'bg-red-600 text-white px-6 py-2.5 rounded-xl font-bold ml-2',
+                    cancelButton: 'bg-slate-100 text-slate-500 px-6 py-2.5 rounded-xl font-bold'
+                },
+                buttonsStyling: false
             }).then((result) => {
                 if (result.isConfirmed) {
-                    $.post(href, {
-                        [config.csrfName]: config.csrfHash
-                    }, function (res) {
+                    $.post(href, { [config.csrfName]: config.csrfHash }, function (res) {
                         swalLib.fire({
                             icon: res.status,
-                            title: res.status === 'success' ? 'Mantap!' : 'Oops!',
+                            title: res.status === 'success' ? 'Berhasil!' : 'Gagal!',
                             text: res.message,
                             timer: 2000,
                             showConfirmButton: false
-                        }).then(() => {
-                            location.reload();
-                        });
+                        }).then(() => { location.reload(); });
                     }, 'json');
                 }
             });
         });
 
-        // Trigger Validasi saat Modal Tambah Terbuka
         $('#jabatanModal').on('shown.bs.modal', function () {
             setupValidation('#add_name', '#add_submitBtn', '#add_nameError', '', '');
         });
 
-        // Trigger Validasi saat Modal Edit Terbuka
         $('#modal_edit_jabatan').on('shown.bs.modal', function () {
             const originalName = $('#edit_name').val();
             const urlParts = $('#editjabatanForm').attr("action").split('/');
             const originalId = urlParts[urlParts.length - 1];
-
             setupValidation('#edit_name', '#edit_submitBtn', '#edit_nameError', originalName, originalId);
         });
     };
 
-    // ==========================================
-    // 4. EKSEKUSI FUNGSI (RUN)
-    // ==========================================
     checkFlashdata();
     initTable();
     initEvents();
 };
 
-// === 3. AUTO-RUN SAAT HALAMAN DIMUAT ===
 if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", setupJabatanPage);
 } else {

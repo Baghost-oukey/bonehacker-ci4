@@ -1,21 +1,20 @@
 <?= $this->extend('layout/layout') ?>
 <?= $this->section('content') ?>
 
-<div id="kasPage" class="container mx-auto px-4 py-6 space-y-8">
+<div id="kasPage" class="w-full py-4 md:py-6 space-y-6">
 
     <!-- HEADER & ACTION BAR -->
-    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
             <h2 class="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">Manajemen Arus Kas</h2>
             <p class="text-sm text-slate-500 mt-1">Pantau dan kelola riwayat pemasukan, pengeluaran biasa, dan harian.</p>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-3 w-full md:w-auto">
             <!-- FILTER WILAYAH -->
             <?php if (in_array($role, ['owner', 'superadmin'])): ?>
-                <div class="flex items-center gap-2">
-                    <i class="fas fa-map-marker-alt text-slate-400 text-sm"></i>
-                    <select id="filterRegionKas" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all">
+                <div class="flex-1 md:flex-none">
+                    <select id="filterRegionKas" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all">
                         <option value="all">Semua Wilayah</option>
                         <?php foreach ($list_regions as $reg): ?>
                             <option value="<?= esc($reg['id'], 'attr') ?>" <?= session()->get('active_region') == $reg['id'] ? 'selected' : '' ?>>
@@ -29,7 +28,7 @@
 
             <!-- TOMBOL REKAP -->
             <button type="button" data-modal-open="modalRekap"
-                class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 hover:border-slate-300 transition-all">
+                class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 hover:border-slate-300 transition-all flex-1 md:flex-none">
                 <i class="fas fa-print text-slate-400"></i>
                 Rekap
             </button>
@@ -99,25 +98,25 @@
 
     <!-- TABS NAVIGATION -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
-        <div class="border-b border-slate-100 px-6">
-            <nav class="-mb-px flex space-x-8" id="kas-tabs" aria-label="Tabs">
+        <div class="border-b border-slate-100 px-5 md:px-6 overflow-x-auto scrollbar-hide">
+            <nav class="-mb-px flex space-x-6 md:space-x-8" id="kas-tabs" aria-label="Tabs">
                 <button data-tab="pemasukan"
-                    class="tab-btn active text-teal-600 border-teal-600 border-b-2 py-5 px-1 text-sm font-bold whitespace-nowrap transition-all flex items-center gap-2">
-                    <i class="fas fa-arrow-down text-xs"></i> Data Pemasukan
+                    class="tab-btn active text-teal-600 border-teal-600 border-b-2 py-5 px-1 text-sm font-bold whitespace-nowrap transition-all flex items-center gap-2 shrink-0">
+                    <i class="fas fa-arrow-down text-xs"></i> Pemasukan
                 </button>
                 <button data-tab="pengeluaran"
-                    class="tab-btn text-slate-400 border-transparent border-b-2 py-5 px-1 text-sm font-bold whitespace-nowrap transition-all flex items-center gap-2">
-                    <i class="fas fa-arrow-up text-xs"></i> Data Pengeluaran
+                    class="tab-btn text-slate-400 border-transparent border-b-2 py-5 px-1 text-sm font-bold whitespace-nowrap transition-all flex items-center gap-2 shrink-0">
+                    <i class="fas fa-arrow-up text-xs"></i> Pengeluaran
                 </button>
                 <button data-tab="rutinan"
-                    class="tab-btn text-slate-400 border-transparent border-b-2 py-5 px-1 text-sm font-bold whitespace-nowrap transition-all flex items-center gap-2">
-                    <i class="fas fa-calendar-check text-xs"></i> Pengeluaran Harian
+                    class="tab-btn text-slate-400 border-transparent border-b-2 py-5 px-1 text-sm font-bold whitespace-nowrap transition-all flex items-center gap-2 shrink-0">
+                    <i class="fas fa-calendar-check text-xs"></i> Harian
                 </button>
             </nav>
         </div>
 
         <!-- Konten Tab -->
-        <div class="p-6">
+        <div class="p-5 md:p-6">
             <div id="tab-content-pemasukan" class="tab-pane block">
                 <?= $this->include('App\modules\kas\Views\components\pemasukkan_views') ?>
             </div>

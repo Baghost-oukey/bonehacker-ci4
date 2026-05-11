@@ -7,13 +7,13 @@ $listRegions = session()->get('list_regions_global') ?? [];
 
 <header id="appHeader" data-csrf-refresh-url="<?= site_url('auth/get_csrf') ?>"
     class="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur-md">
-    <div class="mx-auto flex h-14 max-w-screen-2xl items-center justify-between gap-2 px-4 md:px-6">
+    <div class="mx-auto flex h-14 max-w-screen-2xl items-center justify-between gap-1 px-3 md:px-6">
         
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1.5 min-w-0">
             <!-- TOGGLE BUTTON MOBILE -->
             <button id="sidebarToggle"
-                class="lg:hidden inline-flex items-center justify-center rounded-xl p-2 text-slate-600 hover:bg-slate-100 active:scale-95 transition-all">
-                <i class="fas fa-bars text-lg"></i>
+                class="lg:hidden inline-flex items-center justify-center rounded-xl p-1.5 text-slate-600 hover:bg-slate-100 active:scale-95 transition-all">
+                <i class="fas fa-bars text-base"></i>
             </button>
 
             <!-- BREADCRUMBS (Hidden on small mobile) -->
@@ -22,23 +22,23 @@ $listRegions = session()->get('list_regions_global') ?? [];
             </div>
 
             <!-- Page Title Mobile (Only shown on very small screens) -->
-            <div class="sm:hidden font-bold text-slate-900 truncate max-w-30">
+            <div class="sm:hidden font-bold text-slate-900 truncate max-w-[100px] text-xs">
                 <?= $title ?? 'BoneHacker' ?>
             </div>
         </div>
 
-        <div class="flex items-center gap-2 md:gap-4">
+        <div class="flex items-center gap-1.5 md:gap-4 shrink-0">
             <!-- Global Region Filter (Mobile Optimized) -->
             <div class="relative group">
                 <select id="globalRegionFilter" 
-                    class="block w-32 md:w-48 appearance-none bg-slate-50 border border-slate-200 text-slate-700 text-[11px] md:text-sm rounded-xl py-1.5 pl-3 pr-8 focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all cursor-pointer">
+                    class="block w-24 sm:w-32 md:w-48 appearance-none bg-slate-50 border border-slate-200 text-slate-700 text-[10px] md:text-sm rounded-xl py-1.5 pl-2 pr-7 focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all cursor-pointer">
                     <?php 
                         $allowed = session()->get('region_patient_allowed');
                         $hasMultipleRegions = is_array($allowed) && count($allowed) > 1;
                         $showAllOption = ($role === 'superadmin') || ($role === 'owner' && $hasMultipleRegions);
                     ?>
                     <?php if ($showAllOption): ?>
-                        <option value="all" <?= $activeRegion === 'all' ? 'selected' : '' ?>>Semua Wilayah</option>
+                        <option value="all" <?= $activeRegion === 'all' ? 'selected' : '' ?>>Semua</option>
                     <?php endif; ?>
                     
                     <?php foreach ($listRegions as $region): ?>
@@ -56,8 +56,8 @@ $listRegions = session()->get('list_regions_global') ?? [];
                         <?php endif; ?>
                     <?php endforeach; ?>
                 </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
-                    <i class="fas fa-chevron-down text-[10px]"></i>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1.5 text-slate-400">
+                    <i class="fas fa-chevron-down text-[9px]"></i>
                 </div>
             </div>
 

@@ -1,33 +1,33 @@
 <?= $this->extend('layout/layout') ?>
 <?= $this->section('content') ?>
 
-<div class="p-4 sm:p-6 md:p-8 max-w-350 mx-auto">
+<div id="statistikGenderPage" class="w-full px-4 py-4 md:py-6 space-y-6 overflow-x-hidden mx-auto">
     <!-- HEADER -->
-    <div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-            <h1 class="text-2xl font-black text-slate-800 tracking-tight"><?= esc($title) ?></h1>
+            <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-slate-900"><?= esc($title) ?></h1>
             <p class="text-sm text-slate-500 mt-1">Laporan distribusi dan statistik pasien berdasarkan jenis kelamin.</p>
         </div>
     </div>
 
     <div class="flex flex-col gap-6">
         <!-- MODAL FILTER -->
-        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 lg:p-6">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-5 items-end">
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 md:p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:items-end">
                 <div class="w-full">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Rentang Waktu Analisis</label>
-                    <div id="reportrange" class="flex items-center justify-between gap-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 cursor-pointer transition-all w-full">
-                        <div class="flex items-center gap-2 pointer-events-none text-indigo-500">
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Rentang Waktu Analisis</label>
+                    <div id="reportrange" class="flex items-center justify-between gap-3 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 cursor-pointer transition-colors w-full shadow-sm">
+                        <div class="flex items-center gap-2 pointer-events-none text-indigo-600">
                             <i class="fas fa-calendar-alt"></i>
                             <span class="text-slate-700"></span>
                         </div>
-                        <i class="fas fa-chevron-down text-[10px] text-slate-400 pointer-events-none"></i>
+                        <i class="fas fa-chevron-down text-xs text-slate-400 pointer-events-none"></i>
                     </div>
                 </div>
 
                 <div class="w-full">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Lokasi Cabang</label>
-                    <select id="region_id" class="bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-xl px-4 py-2.5 outline-none cursor-pointer w-full focus:ring-2 focus:ring-indigo-500/20 transition-all">
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Lokasi Cabang</label>
+                    <select id="region_id" class="bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-xl px-4 py-2.5 outline-none cursor-pointer w-full focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-sm transition-all">
                         <?php if (isset($regions_patient) && !empty($regions_patient)): ?>
                             <?php foreach ($wilayah as $value): ?>
                                 <?php if (in_array($value->id, (array)$regions_patient)): ?>

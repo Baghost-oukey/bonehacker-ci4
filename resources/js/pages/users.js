@@ -1,6 +1,6 @@
 /**
  * Users Management Page Script
- * Handles CRUD operations for user data with custom pagination
+ * Handles CRUD operations for user data with custom pagination and mobile cards
  */
 
 const MODAL_VISIBLE_CLASS = "flex";
@@ -22,12 +22,20 @@ const openModal = (modal) => {
     if (!modal) return;
     modal.classList.remove(MODAL_HIDDEN_CLASS);
     modal.classList.add(MODAL_VISIBLE_CLASS);
+    setTimeout(() => {
+        modal.querySelector('.transform')?.classList.remove('translate-y-full', 'scale-95');
+        modal.classList.remove('opacity-0');
+    }, 10);
 };
 
 const closeModal = (modal) => {
     if (!modal) return;
-    modal.classList.remove(MODAL_VISIBLE_CLASS);
-    modal.classList.add(MODAL_HIDDEN_CLASS);
+    modal.querySelector('.transform')?.classList.add('translate-y-full', 'md:scale-95');
+    modal.classList.add('opacity-0');
+    setTimeout(() => {
+        modal.classList.remove(MODAL_VISIBLE_CLASS);
+        modal.classList.add(MODAL_HIDDEN_CLASS);
+    }, 300);
 };
 
 const setupUsersPage = () => {
@@ -47,12 +55,14 @@ const setupUsersPage = () => {
     let deleteUrl = null;
     let originalUsername = "";
 
-    // Initialize Select2
     const initSelect2 = () => {
-        $('#regions_add, #edit_regions').select2({
-            width: '100%',
-            placeholder: "-- Pilih Wilayah --",
-            dropdownParent: $('#regions_add').closest('.modal-wrapper')
+        $('#regions_add, #edit_regions').each(function() {
+            const $this = $(this);
+            $this.select2({
+                width: '100%',
+                placeholder: "-- Pilih Wilayah --",
+                dropdownParent: $this.closest('.modal-wrapper')
+            });
         });
     };
 
@@ -63,54 +73,45 @@ const setupUsersPage = () => {
         $(`input[name='${config.csrfName}']`).val(newToken);
     };
 
-    const updatePaginationInfo = () => {
-        if (filteredRecords <= 0) {
-            $("#paginationInfo").text("Menampilkan 0 sampai 0 dari 0 data");
-            return;
-        }
-        const start = (currentPage - 1) * pageLength + 1;
-        const end = Math.min(currentPage * pageLength, filteredRecords);
-        $("#paginationInfo").text(`Menampilkan ${start} sampai ${end} dari ${filteredRecords} data`);
-    };
-
     const updatePaginationUI = () => {
         const totalPages = Math.max(1, Math.ceil(filteredRecords / pageLength));
         const container = $("#paginationNumbers");
         container.empty();
 
-        const startPage = Math.max(1, currentPage - 2);
-        const endPage = Math.min(totalPages, currentPage + 2);
-
-        if (startPage > 1) {
-            container.append(`<button class="pagination-btn inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:border-slate-400" data-page="1">1</button>`);
-            if (startPage > 2) {
-                container.append('<span class="px-1 text-slate-300">...</span>');
-            }
-        }
+        // Start/End for pagination window
+        const startPage = Math.max(1, currentPage - 1);
+        const endPage = Math.min(totalPages, currentPage + 1);
 
         for (let pageNum = startPage; pageNum <= endPage; pageNum += 1) {
             const activeClass = pageNum === currentPage
-                ? "bg-teal-600 border-teal-600 text-white font-semibold shadow-md shadow-teal-600/30"
-                : "border border-slate-300 bg-white text-slate-700 font-semibold transition hover:bg-slate-100 hover:border-slate-400";
-            container.append(`<button class="pagination-btn inline-flex h-8 w-8 items-center justify-center rounded-lg ${activeClass} text-xs" data-page="${pageNum}">${pageNum}</button>`);
-        }
-
-        if (endPage < totalPages) {
-            if (endPage < totalPages - 1) {
-                container.append('<span class="px-1 text-slate-300">...</span>');
-            }
-            container.append(`<button class="pagination-btn inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:border-slate-400" data-page="${totalPages}">${totalPages}</button>`);
+                ? "bg-teal-600 text-white font-black shadow-lg shadow-teal-600/20"
+                : "bg-white text-slate-500 font-bold hover:bg-slate-50 border border-slate-100";
+            container.append(`<button class="pagination-btn w-9 h-9 flex items-center justify-center rounded-xl text-[11px] transition-all ${activeClass}" data-page="${pageNum}">${pageNum}</button>`);
         }
 
         $("#paginationPrev").prop("disabled", currentPage <= 1);
         $("#paginationNext").prop("disabled", currentPage >= totalPages);
+        
+        const start = filteredRecords <= 0 ? 0 : (currentPage - 1) * pageLength + 1;
+        const end = Math.min(currentPage * pageLength, filteredRecords);
+        $("#paginationInfo").text(`Menampilkan ${start} - ${end} dari ${filteredRecords} User`);
     };
 
     const renderEmptyState = (message) => {
-        $("#table-user tbody").html(`<tr class="hover:bg-slate-50 transition"><td colspan="6" class="px-6 py-12 text-center text-slate-400 italic text-sm"><i class="fas fa-inbox mr-2 text-slate-300"></i>${message}</td></tr>`);
+        const emptyHtml = `
+            <div class="py-20 text-center opacity-30">
+                <i class="fas fa-users-slash text-5xl text-slate-300 mb-4"></i>
+                <p class="text-xs font-black text-slate-400 uppercase tracking-widest">${message}</p>
+            </div>
+        `;
+        $("#table-user tbody").html(`<tr><td colspan="6">${emptyHtml}</td></tr>`);
+        $("#mobile-users-container").html(emptyHtml);
     };
 
     const loadTableData = (pageNumber = 1) => {
+        $("#table-user tbody").css('opacity', '0.5');
+        $("#mobile-users-container").css('opacity', '0.5');
+
         $.ajax({
             url: config.fetchUrl,
             type: "POST",
@@ -123,466 +124,194 @@ const setupUsersPage = () => {
                 search: { value: searchValue },
             },
             success: (response) => {
-                if (response.csrfHash) {
-                    updateCsrf(response.csrfHash);
-                }
+                if (response.csrfHash) updateCsrf(response.csrfHash);
 
                 currentPage = pageNumber;
                 totalRecords = Number(response.recordsTotal || 0);
                 filteredRecords = Number(response.recordsFiltered || totalRecords);
 
                 const tbody = $("#table-user tbody");
-                tbody.empty();
+                const mobileContainer = $("#mobile-users-container");
+                tbody.empty().css('opacity', '1');
+                mobileContainer.empty().css('opacity', '1');
 
                 if (!response.data || response.data.length === 0) {
                     renderEmptyState("Data user belum tersedia");
-                    updatePaginationInfo();
                     updatePaginationUI();
                     return;
                 }
 
                 response.data.forEach((row) => {
-                    const tr = $(`<tr class="hover:bg-slate-50 transition border-b border-slate-100"></tr>`);
-                    tr.append(`<td class="px-6 py-3.5">${row.no || "-"}</td>`);
-                    tr.append(`<td class="px-6 py-3.5 font-medium text-slate-800">${row.realname || "-"}</td>`);
-                    tr.append(`<td class="px-6 py-3.5 text-slate-600">${row.username || "-"}</td>`);
-                    tr.append(`<td class="px-6 py-3.5">${row.role || "-"}</td>`);
-                    tr.append(`<td class="px-6 py-3.5 text-slate-500">${row.region_name || "-"}</td>`);
-                    tr.append(`<td class="px-6 py-3.5 text-center">${row.action || "-"}</td>`);
+                    // Desktop row
+                    const tr = $(`<tr class="hover:bg-slate-50/50 transition-colors border-b border-slate-50 group"></tr>`);
+                    tr.append(`<td class="px-6 py-4 text-xs font-mono text-slate-400 italic">#${row.no || "-"}</td>`);
+                    tr.append(`<td class="px-6 py-4 font-black text-slate-800 text-sm">${row.realname || "-"}</td>`);
+                    tr.append(`<td class="px-6 py-4 text-xs font-bold text-slate-500">${row.username || "-"}</td>`);
+                    tr.append(`<td class="px-6 py-4"><span class="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest bg-slate-100 text-slate-500 border border-slate-200">${row.role || "-"}</span></td>`);
+                    tr.append(`<td class="px-6 py-4 text-xs font-bold text-slate-400">${row.region_name || "-"}</td>`);
+                    tr.append(`<td class="px-6 py-4 text-center">${row.action || "-"}</td>`);
                     tbody.append(tr);
+
+                    // Mobile card
+                    mobileContainer.append(`
+                        <div class="p-5 space-y-4 hover:bg-slate-50/50 transition-all">
+                            <div class="flex justify-between items-start">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center font-black text-sm shadow-sm border border-teal-100/50">
+                                        ${(row.realname || "U")[0].toUpperCase()}
+                                    </div>
+                                    <div class="flex flex-col gap-0.5">
+                                        <h3 class="text-sm font-black text-slate-800 leading-tight uppercase tracking-tight">${row.realname}</h3>
+                                        <p class="text-[10px] font-bold text-slate-400">@${row.username}</p>
+                                    </div>
+                                </div>
+                                <div class="flex gap-1.5">
+                                    ${row.action}
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest bg-slate-100 text-slate-500 border border-slate-200">
+                                    <i class="fas fa-shield-alt mr-1 opacity-50"></i> ${row.role}
+                                </span>
+                                <span class="px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest bg-teal-50 text-teal-600 border border-teal-100/50 max-w-[150px] truncate">
+                                    <i class="fas fa-map-marker-alt mr-1 opacity-50"></i> ${row.region_name || 'Semua Wilayah'}
+                                </span>
+                            </div>
+                        </div>
+                    `);
                 });
 
-                updatePaginationInfo();
                 updatePaginationUI();
-            },
-            error: () => {
-                renderEmptyState("Gagal memuat data user");
-                filteredRecords = 0;
-                updatePaginationInfo();
-                updatePaginationUI();
-            },
+            }
         });
     };
 
-    // Toggle region field based on role
     const toggleRegionField = (roleSelect, targetField) => {
         const role = $(roleSelect).val();
-
         const selectElement = $(targetField).find('select');
         
         if (role === 'owner' || role === 'admin' || role === 'user') {
             $(targetField).fadeIn().removeClass('hidden');
             selectElement.attr('required', true);
-            
-            // Determine if multiple regions are allowed
             const isMultiple = (role === 'owner');
-            
-            // Re-initialize select2 with new multiple setting
-            if (selectElement.hasClass("select2-hidden-accessible")) {
-                selectElement.select2('destroy');
-            }
-            
+            if (selectElement.hasClass("select2-hidden-accessible")) selectElement.select2('destroy');
             selectElement.prop('multiple', isMultiple);
-            
-            selectElement.select2({
-                width: '100%',
-                placeholder: "-- Pilih Wilayah --",
-                dropdownParent: selectElement.closest('.modal-wrapper')
-            });
-            
-            // Clear multiple selections if switching to single select role
-            if (!isMultiple && Array.isArray(selectElement.val()) && selectElement.val().length > 1) {
-                selectElement.val(null).trigger('change');
-            }
+            initSelect2();
         } else {
             $(targetField).fadeOut().addClass('hidden');
             selectElement.attr('required', false).val(null).trigger('change');
         }
     };
 
-    // Check username availability
     const checkUsername = (username, feedbackElement, submitBtn, currentUsername = null) => {
         const inputField = $(feedbackElement).siblings('input');
-
         if (username.length < 3) {
             $(feedbackElement).addClass('hidden');
-            $(submitBtn).prop('disabled', false);
             inputField.removeClass('border-red-500 border-teal-500');
             return;
         }
-
-        // Skip check if editing and username hasn't changed
         if (currentUsername && username.toLowerCase() === currentUsername.toLowerCase()) {
-            $(feedbackElement).removeClass('hidden').text('Username saat ini').css('color', '#64748b');
+            $(feedbackElement).removeClass('hidden').text('USERNAME SAAT INI').css('color', '#94a3b8');
             inputField.removeClass('border-red-500').addClass('border-teal-500');
-            $(submitBtn).prop('disabled', false);
             return;
         }
 
-        $(feedbackElement).removeClass('hidden').text('Memeriksa...').css('color', '#64748b');
-        inputField.removeClass('border-red-500 border-teal-500');
-
-        $.ajax({
-            url: config.checkUsernameUrl,
-            type: "POST",
-            data: {
-                username: username,
-                [config.csrfName]: config.csrfHash
-            },
-            dataType: "json",
-            success: function(res) {
-                if (res.exists === true || res.exists === "true") {
-                    $(feedbackElement).removeClass('hidden').text('Username sudah digunakan').css('color', '#ef4444');
-                    inputField.addClass('border-red-500').removeClass('border-teal-500');
-                    $(submitBtn).prop('disabled', true);
-                } else {
-                    $(feedbackElement).removeClass('hidden').text('Username tersedia').css('color', '#10b981');
-                    inputField.removeClass('border-red-500').addClass('border-teal-500');
-                    $(submitBtn).prop('disabled', false);
-                }
-            },
-            error: function() {
-                $(feedbackElement).removeClass('hidden').text('Gagal memeriksa username').css('color', '#ef4444');
+        $(feedbackElement).removeClass('hidden').text('MEMERIKSA...').css('color', '#94a3b8');
+        $.post(config.checkUsernameUrl, { username, ...getCsrfPayload(config) }, (res) => {
+            if (res.exists) {
+                $(feedbackElement).text('SUDAH DIGUNAKAN').css('color', '#ef4444');
                 inputField.addClass('border-red-500').removeClass('border-teal-500');
                 $(submitBtn).prop('disabled', true);
+            } else {
+                $(feedbackElement).text('TERSEDIA').css('color', '#10b981');
+                inputField.removeClass('border-red-500').addClass('border-teal-500');
+                $(submitBtn).prop('disabled', false);
             }
-        });
+        }, 'json');
     };
 
-    // Search handler with debounce
-    const searchHandler = debounce((value) => {
-        searchValue = value;
-        currentPage = 1;
-        loadTableData(1);
-    }, 400);
+    const searchHandler = debounce((v) => { searchValue = v; currentPage = 1; loadTableData(1); });
 
-    // Event Listeners
-    $("#searchInput").on("keyup", function () {
-        searchHandler($(this).val());
-    });
+    // Events
+    $("#searchInput").on("keyup", function () { searchHandler($(this).val()); });
+    $("#paginationLength").on("change", function () { pageLength = parseInt($(this).val(), 10); currentPage = 1; loadTableData(1); });
+    $(document).on("click", ".pagination-btn", function () { loadTableData(parseInt($(this).data("page"), 10)); });
+    $("#paginationPrev").on("click", () => { if (currentPage > 1) loadTableData(currentPage - 1); });
+    $("#paginationNext").on("click", () => { if (currentPage < Math.ceil(filteredRecords / pageLength)) loadTableData(currentPage + 1); });
 
-    $("#paginationLength").on("change", function () {
-        pageLength = parseInt($(this).val(), 10);
-        currentPage = 1;
-        loadTableData(1);
-    });
+    $('#role_add, #edit_role').on('change', function() { toggleRegionField(this, $(this).data('target')); });
 
-    $(document).on("click", ".pagination-btn", function () {
-        const pageNum = parseInt($(this).data("page"), 10);
-        if (!Number.isNaN(pageNum)) loadTableData(pageNum);
-    });
+    $('#username_add').on('keyup', debounce(function() { checkUsername($(this).val(), '#formAddUser .username-feedback', '#submitBtnAdd'); }, 500));
+    $('#edit_username').on('keyup', debounce(function() { checkUsername($(this).val(), '#formEditUser .edit-username-feedback', '#submitBtnEdit', originalUsername); }, 500));
 
-    $("#paginationPrev").on("click", () => {
-        if (currentPage > 1) loadTableData(currentPage - 1);
-    });
-
-    $("#paginationNext").on("click", () => {
-        const totalPages = Math.max(1, Math.ceil(filteredRecords / pageLength));
-        if (currentPage < totalPages) loadTableData(currentPage + 1);
-    });
-
-    // Role change handlers
-    $('#role_add').on('change', function() {
-        toggleRegionField(this, '#regionFieldAdd');
-    });
-
-    $('#edit_role').on('change', function() {
-        toggleRegionField(this, '#regionFieldEdit');
-    });
-
-    // Username validation (Add)
-    const debouncedCheckAdd = debounce((username) => {
-        checkUsername(username, '#formAddUser .username-feedback', '#submitBtnAdd');
-    }, 500);
-
-    $('#username_add').on('keyup', function() {
-        const username = $(this).val();
-        debouncedCheckAdd(username);
-    });
-
-    // Username validation (Edit)
-    const debouncedCheckEdit = debounce((username) => {
-        checkUsername(username, '#formEditUser .edit-username-feedback', '#submitBtnEdit', originalUsername);
-    }, 500);
-
-    $('#edit_username').on('keyup', function() {
-        const username = $(this).val();
-        debouncedCheckEdit(username);
-    });
-
-    // Submit form add
-    $('#formAddUser').on('submit', function(e) {
+    // CRUD Ajax
+    $('.modal-wrapper form').on('submit', function(e) {
         e.preventDefault();
-
         const form = this;
         const $form = $(form);
-        const btn = $('#submitBtnAdd');
+        const btn = $form.find('button[type="submit"]');
+        const modal = $form.closest('.modal-wrapper')[0];
 
-        if (!form.checkValidity()) {
-            $form.addClass('was-validated');
-            $form.find('.invalid-feedback').removeClass('hidden');
-            return;
-        }
+        if (!form.checkValidity()) { $form.addClass('was-validated'); return; }
 
-        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Menyimpan...');
-
+        btn.prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin"></i>');
         const formData = new FormData(form);
         formData.append(config.csrfName, config.csrfHash);
 
         $.ajax({
             url: $form.attr('action'),
             type: "POST",
-            data: formData,
-            contentType: false,
-            processData: false,
-            dataType: "json",
-            success: function(res) {
+            data: formData, contentType: false, processData: false, dataType: "json",
+            success: (res) => {
                 if (res.status === 'success') {
-                    closeModal(document.getElementById("modalAdd"));
-                    form.reset();
-                    $form.removeClass('was-validated');
-                    $('#regionFieldAdd').addClass('hidden');
+                    closeModal(modal);
+                    if (form.id === 'formAddUser') form.reset();
                     loadTableData(currentPage);
-
-                    if (swalLib?.fire) {
-                        swalLib.fire({
-                            icon: 'success',
-                            title: 'Berhasil!',
-                            text: res.message,
-                            timer: 1500,
-                            showConfirmButton: false
-                        });
-                    } else {
-                        alert(res.message);
-                    }
+                    swalLib.fire({ icon: 'success', title: 'Berhasil!', text: res.message, timer: 1500, showConfirmButton: false });
                 } else {
-                    if (swalLib?.fire) {
-                        swalLib.fire('Gagal!', res.message, 'error');
-                    } else {
-                        alert(res.message);
-                    }
+                    swalLib.fire('Gagal!', res.message, 'error');
                 }
             },
-            error: function(xhr) {
-                console.error(xhr.responseText);
-                if (swalLib?.fire) {
-                    swalLib.fire('Error!', 'Terjadi kesalahan sistem.', 'error');
-                } else {
-                    alert('Terjadi kesalahan sistem.');
-                }
-            },
-            complete: function() {
-                btn.prop('disabled', false).text('Simpan');
-            }
+            error: () => swalLib.fire('Error!', 'Terjadi kesalahan sistem.', 'error'),
+            complete: () => btn.prop('disabled', false).text('Simpan')
         });
     });
 
-    // Edit button handler
     $(document).on('click', '.btn_edit', function() {
         const d = $(this).data();
-        const modal = $('#modalEdit');
-
         originalUsername = d.username;
-
-        modal.find('form').attr('action', d.href);
+        $('#formEditUser').attr('action', d.href);
         $('#edit_realname').val(d.realname);
         $('#edit_username').val(d.username);
         $('#edit_role').val(d.role).trigger('change');
-
-        if (d.regions_patient) {
-            const regions = String(d.regions_patient).split(',').map(Number);
-            $('#edit_regions').val(regions).trigger('change');
-        }
-
-        // Reset feedback
-        $('#formEditUser .edit-username-feedback').addClass('hidden');
-        $('#submitBtnEdit').prop('disabled', false);
-
+        if (d.regions_patient) $('#edit_regions').val(String(d.regions_patient).split(',').map(Number)).trigger('change');
         openModal(document.getElementById("modalEdit"));
     });
 
-    // Submit form edit
-    $('#formEditUser').on('submit', function(e) {
-        e.preventDefault();
-
-        const form = this;
-        const $form = $(form);
-        const btn = $('#submitBtnEdit');
-
-        if (!form.checkValidity()) {
-            $form.addClass('was-validated');
-            $form.find('.invalid-feedback').removeClass('hidden');
-            return;
-        }
-
-        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Menyimpan...');
-
-        const formData = new FormData(form);
-        formData.append(config.csrfName, config.csrfHash);
-
-        $.ajax({
-            url: $form.attr('action'),
-            type: "POST",
-            data: formData,
-            contentType: false,
-            processData: false,
-            dataType: "json",
-            success: function(res) {
-                if (res.status === 'success') {
-                    closeModal(document.getElementById("modalEdit"));
-                    loadTableData(currentPage);
-
-                    if (swalLib?.fire) {
-                        swalLib.fire({
-                            icon: 'success',
-                            title: 'Berhasil!',
-                            text: res.message,
-                            timer: 1500,
-                            showConfirmButton: false
-                        });
-                    } else {
-                        alert(res.message);
-                    }
-                } else {
-                    if (swalLib?.fire) {
-                        swalLib.fire('Gagal!', res.message, 'error');
-                    } else {
-                        alert(res.message);
-                    }
-                    btn.prop('disabled', false).text('Simpan Perubahan');
-                }
-            },
-            error: function(xhr) {
-                console.error(xhr.responseText);
-                if (swalLib?.fire) {
-                    swalLib.fire('Error!', 'Terjadi kesalahan sistem.', 'error');
-                } else {
-                    alert('Terjadi kesalahan sistem.');
-                }
-                btn.prop('disabled', false).text('Simpan Perubahan');
-            }
-        });
-    });
-
-    // Delete button handler
     $(document).on('click', '.btn_delete', function(e) {
         e.preventDefault();
-        deleteUrl = $(this).data('href');
-        if (!deleteUrl) {
-            console.error("URL tidak ditemukan pada atribut data-href!");
-            return;
-        }
-        openModal(document.getElementById("modalDelete"));
-    });
-
-    // Confirm delete
-    $('#confirmDelete').on('click', function() {
-        if (!deleteUrl) return;
-
-        const btn = $(this);
-        btn.prop('disabled', true).text('Menghapus...');
-
-        const formData = new FormData();
-        formData.append(config.csrfName, config.csrfHash);
-
-        $.ajax({
-            url: deleteUrl,
-            type: "POST",
-            data: formData,
-            contentType: false,
-            processData: false,
-            dataType: "json",
-            success: function(res) {
-                if (res.status === 'success') {
-                    closeModal(document.getElementById("modalDelete"));
-                    deleteUrl = null;
+        const href = $(this).data('href');
+        swalLib.fire({
+            title: 'Hapus User?', text: "Data ini akan dihapus permanen.", icon: 'warning',
+            showCancelButton: true, confirmButtonText: 'Ya, Hapus!', cancelButtonText: 'Batal',
+            customClass: { confirmButton: 'bg-red-600 text-white px-6 py-2 rounded-xl font-bold ml-2', cancelButton: 'bg-slate-100 text-slate-500 px-6 py-2 rounded-xl font-bold' },
+            buttonsStyling: false
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.post(href, getCsrfPayload(config), (res) => {
+                    swalLib.fire({ icon: res.status, title: res.status === 'success' ? 'Berhasil!' : 'Gagal!', text: res.message, timer: 1500, showConfirmButton: false });
                     loadTableData(currentPage);
-
-                    if (swalLib?.fire) {
-                        swalLib.fire({
-                            icon: 'success',
-                            title: 'Berhasil!',
-                            text: res.message,
-                            timer: 1500,
-                            showConfirmButton: false
-                        });
-                    } else {
-                        alert(res.message);
-                    }
-                } else {
-                    if (swalLib?.fire) {
-                        swalLib.fire('Gagal!', res.message, 'error');
-                    } else {
-                        alert(res.message);
-                    }
-                }
-            },
-            error: function() {
-                if (swalLib?.fire) {
-                    swalLib.fire('Error!', 'Terjadi kesalahan sistem.', 'error');
-                } else {
-                    alert('Terjadi kesalahan sistem.');
-                }
-            },
-            complete: function() {
-                btn.prop('disabled', false).text('Ya, Hapus');
+                }, 'json');
             }
         });
     });
 
-    // Modal handlers
-    document.addEventListener("click", (event) => {
-        const openTrigger = event.target.closest("[data-modal-open]");
-        if (openTrigger) {
-            const targetId = openTrigger.getAttribute("data-modal-open");
-            const modal = document.getElementById(targetId);
-            openModal(modal);
+    // Global Modal Handler
+    $(document).on("click", "[data-modal-open]", function() { openModal(document.getElementById($(this).data("modal-open"))); initSelect2(); });
+    $(document).on("click", "[data-modal-close], .modal-wrapper", function(e) { if (e.target === this || $(this).is('[data-modal-close]')) closeModal($(this).closest(".modal-wrapper")[0]); });
 
-            // Re-initialize Select2 when modal opens
-            setTimeout(() => {
-                if (targetId === 'modalAdd' || targetId === 'modalEdit') {
-                    initSelect2();
-                }
-            }, 100);
-            return;
-        }
-
-        const closeTrigger = event.target.closest("[data-modal-close]");
-        if (closeTrigger) {
-            closeModal(closeTrigger.closest(".modal-wrapper"));
-            return;
-        }
-
-        if (event.target.classList && event.target.classList.contains("modal-wrapper")) {
-            closeModal(event.target);
-        }
-    });
-
-    // Reset form when modal add is closed
-    $("#modalAdd").on("click", "[data-modal-close]", function() {
-        $('#formAddUser')[0].reset();
-        $('#formAddUser').removeClass('was-validated');
-        $('#formAddUser .invalid-feedback').addClass('hidden');
-        $('#formAddUser .username-feedback').addClass('hidden');
-        $('#regionFieldAdd').addClass('hidden');
-        $('#submitBtnAdd').prop('disabled', false);
-    });
-
-    // Reset form when modal edit is closed
-    $("#modalEdit").on("click", "[data-modal-close]", function() {
-        $('#formEditUser').removeClass('was-validated');
-        $('#formEditUser .invalid-feedback').addClass('hidden');
-        $('#formEditUser .edit-username-feedback').addClass('hidden');
-    });
-
-    // Initialize
     initSelect2();
     loadTableData(1);
 };
 
-// Initialize page
-if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", setupUsersPage);
-} else {
-    setupUsersPage();
-}
+if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", setupUsersPage); } else { setupUsersPage(); }

@@ -1,10 +1,10 @@
 <?= $this->extend('layout/layout') ?>
 <?= $this->section('content') ?>
 
-<div class="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto">
-    <div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+<div class="py-4 md:py-6 space-y-6">
+    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-            <h1 class="text-3xl font-black text-slate-800 tracking-tight">Kategori Keuangan</h1>
+            <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">Kategori Keuangan</h1>
             <p class="text-sm text-slate-500 mt-1">Kelola kategori pemasukan dan pengeluaran (Global & Cabang)</p>
         </div>
     </div>
@@ -70,7 +70,7 @@
         <!-- LIST KATEGORI -->
         <div class="lg:col-span-2">
             <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-                <div class="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <div class="p-5 md:p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                     <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">Daftar Kategori Aktif</h3>
                     
                     <?php if (session()->get('role') === 'superadmin'): ?>
@@ -84,7 +84,47 @@
                     </form>
                     <?php endif; ?>
                 </div>
-                <div class="overflow-x-auto">
+
+                <!-- Mobile Category Cards -->
+                <div class="md:hidden divide-y divide-slate-100">
+                    <?php foreach ($categories as $cat): ?>
+                    <div class="p-4 flex items-center justify-between gap-4">
+                        <div class="flex flex-col gap-2 min-w-0">
+                            <span class="text-[14px] font-black text-slate-900 truncate uppercase tracking-tight"><?= esc($cat['name']) ?></span>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <?php if ($cat['type'] === 'income'): ?>
+                                    <span class="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-md text-[9px] font-black uppercase tracking-widest border border-emerald-100">Pemasukan</span>
+                                <?php else: ?>
+                                    <span class="px-2 py-0.5 bg-rose-50 text-rose-600 rounded-md text-[9px] font-black uppercase tracking-widest border border-rose-100">Pengeluaran</span>
+                                <?php endif; ?>
+
+                                <?php if ($cat['is_default']): ?>
+                                    <span class="text-[9px] font-bold text-indigo-500 uppercase tracking-widest"><i class="fas fa-shield-alt mr-1"></i> System</span>
+                                <?php elseif (is_null($cat['region_id'])): ?>
+                                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest"><i class="fas fa-globe mr-1"></i> Global</span>
+                                <?php else: ?>
+                                    <span class="text-[9px] font-bold text-amber-500 uppercase tracking-widest"><i class="fas fa-map-marker-alt mr-1"></i> Cabang</span>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <div class="shrink-0">
+                            <?php if (!$cat['is_default']): ?>
+                                <a href="<?= base_url('kas/categories/delete/' . $cat['id']) ?>" 
+                                   onclick="return confirm('Hapus kategori ini?')"
+                                   class="w-10 h-10 inline-flex items-center justify-center rounded-xl bg-rose-50 text-rose-500 active:scale-95 transition-all border border-rose-100 shadow-sm">
+                                    <i class="fas fa-trash-alt text-sm"></i>
+                                </a>
+                            <?php else: ?>
+                                <div class="w-10 h-10 inline-flex items-center justify-center text-slate-300 italic text-[10px]">
+                                    <i class="fas fa-lock"></i>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+
+                <div class="overflow-x-auto hidden md:block">
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">

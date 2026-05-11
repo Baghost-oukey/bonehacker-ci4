@@ -107,6 +107,7 @@ const setupMedisPage = () => {
     // --- LOAD DATA / TABLE DATA ---
     const renderEmptyState = (message) => {
         $("#table-medhis tbody").html(`<tr class="hover:bg-slate-50 transition"><td colspan="5" class="px-6 py-12 text-center text-slate-400 italic text-sm"><i class="fas fa-inbox mr-2 text-slate-300"></i>${message}</td></tr>`);
+        $("#mobile-medhis-container").html(`<div class="px-6 py-12 text-center text-slate-400 italic text-sm"><i class="fas fa-inbox mr-2 text-slate-300"></i>${message}</div>`);
     };
     const loadTableData = (pageNumber = 1) => {
         $.ajax({
@@ -128,21 +129,56 @@ const setupMedisPage = () => {
                 totalRecords = Number(response.recordsTotal || 0);
                 filteredRecords = Number(response.recordsFiltered || totalRecords);
                 const tbody = $("#table-medhis tbody");
+                const mContainer = $("#mobile-medhis-container");
                 tbody.empty();
+                mContainer.empty();
+
                 if (!response.data || response.data.length === 0) {
                     renderEmptyState("Data tag riwayat medis belum tersedia");
                     updatePaginationInfo();
                     updatePaginationUI();
                     return;
                 }
+
                 response.data.forEach((row) => {
+                    const trimNameTags = row.nama ? row.nama.toLowerCase().replace(/\b\w/g, s => s.toUpperCase()) : "-";
+                    const deskripsiRaw = row.deskripsi || "Tidak ada deskripsi";
+                    const deskripsi = row.deskripsi
+                        ? `<span class="text-slate-600">${row.deskripsi}</span>`
+                        : `<span class="text-slate-400 italic text-xs">Tidak ada deskripsi</span>`;
+
+                    // --- RENDER DESKTOP ROW ---
                     const tr = $(`<tr class="hover:bg-slate-50 transition border-b border-slate-100"></tr>`);
                     tr.append(`<td class="px-6 py-3.5">${row.no || "-"}</td>`);
-                    tr.append(`<td class="px-6 py-3.5 font-medium text-slate-800">${row.nama || "-"}</td>`);
-                    tr.append(`<td class="px-6 py-3.5 text-slate-500">${row.deskripsi || "-"}</td>`);
+                    tr.append(`<td class="px-6 py-3.5 font-medium text-slate-800">${trimNameTags}</td>`);
+                    tr.append(`<td class="px-6 py-3.5 text-slate-500">${deskripsi}</td>`);
                     tr.append(`<td class="px-6 py-3.5 text-center">${row.jumlah || "0"}</td>`);
                     tr.append(`<td class="px-6 py-3.5 text-center">${row.action || "-"}</td>`);
                     tbody.append(tr);
+
+                    // --- RENDER MOBILE CARD ---
+                    const mCard = $(`
+                        <div class="p-4 bg-white hover:bg-slate-50/50 transition-colors">
+                            <div class="flex items-start justify-between gap-4 mb-3">
+                                <div class="flex flex-col min-w-0">
+                                    <h4 class="text-[15px] font-black text-slate-900 tracking-tight leading-tight mb-1 truncate">${trimNameTags}</h4>
+                                    <p class="text-[11px] text-slate-500 font-medium line-clamp-2">${deskripsiRaw}</p>
+                                </div>
+                                <div class="shrink-0">
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-100 text-[11px] font-black tracking-wide">
+                                        ${row.jumlah || 0} Data
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between pt-3 border-t border-slate-50">
+                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">No. ${row.no}</span>
+                                <div class="flex items-center gap-2">
+                                    ${row.action || ""}
+                                </div>
+                            </div>
+                        </div>
+                    `);
+                    mContainer.append(mCard);
                 });
 
                 updatePaginationInfo();

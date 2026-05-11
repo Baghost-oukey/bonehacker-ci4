@@ -45,6 +45,7 @@ if ($isDevEnvironment) {
             max-width: 100vw;
             overflow-x: hidden;
             position: relative;
+            -webkit-overflow-scrolling: touch;
         }
 
         .export-hidden {
@@ -92,7 +93,7 @@ if ($isDevEnvironment) {
             <?php endif; ?>
 
             <!-- CONTENT -->
-            <main class="flex-1 overflow-y-auto p-4 md:p-6">
+            <main class="flex-1 p-4 md:p-6">
                 <?= $this->renderSection('content') ?>
             </main>
 
