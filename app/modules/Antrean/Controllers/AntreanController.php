@@ -58,7 +58,7 @@ class AntreanController extends BaseController
         $searchValue = (is_array($search) && isset($search['value'])) ? $search['value'] : $request->getVar('search');
 
         $builder = $this->db->table('patient_queues pq')
-            ->select('pq.id as queue_id, pq.queue_number, pq.queue_date, p.id as patient_id, p.name as patient_name, p.age as patient_age, p.phone, p.address, pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama, h.id as history_id, h.process_at, h.finish_at')
+            ->select('pq.id as queue_id, pq.queue_number, pq.queue_date, pq.region_id, p.id as patient_id, p.name as patient_name, p.age as patient_age, p.phone, p.address, pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama, h.id as history_id, h.process_at, h.finish_at')
             ->select('(SELECT COUNT(*) FROM histories h_vc WHERE h_vc.patient_id = p.id AND h_vc.is_delete = 0) AS visit_count')
             ->select('CASE 
                 WHEN h.process_at IS NOT NULL AND h.finish_at IS NULL THEN 1 
@@ -134,7 +134,7 @@ class AntreanController extends BaseController
                 }
 
                 // Tombol Medis - langsung buka modal rekam medis
-                $btn .= '<button type="button" onclick="openMedicalRecordModal(' . $row->patient_id . ', ' . ($historyId ?: 'null') . ', ' . $row->queue_id . ')" class="inline-flex h-8 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-100 hover:text-slate-900"><i class="fas fa-file-medical mr-1.5 text-slate-400"></i> Medis</button>';
+                $btn .= '<button type="button" onclick="openMedicalRecordModal(' . $row->patient_id . ', ' . ($historyId ?: 'null') . ', ' . $row->queue_id . ', ' . ($row->region_id ?: 'null') . ')" class="inline-flex h-8 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-100 hover:text-slate-900"><i class="fas fa-file-medical mr-1.5 text-slate-400"></i> Medis</button>';
                 $btn .= '</div>';
                 return $btn;
             })
@@ -397,18 +397,23 @@ class AntreanController extends BaseController
 
         $startDate = $this->request->getGet('start_date') ?: date('Y-m-d');
         $endDate = $this->request->getGet('end_date') ?: date('Y-m-d');
-        $regionId = $this->request->getGet('region');
+        $region = $this->request->getGet('region');
+        $role = session()->get('role');
+        $active_region = session()->get('active_region');
         $region_session = session()->get('region_patient');
 
-        if (empty($regionId) || $regionId === 'all') {
-            $regionId = $region_session;
-        }
-        
-        // Handle comma separated string from URL
-        if (is_string($regionId) && strpos($regionId, ',') !== false) {
-            $regionId = explode(',', $regionId);
+        if ($role === 'superadmin') {
+            $filter = ($region && $region !== 'all') ? $region : ($active_region !== 'all' ? $active_region : 'all');
+        } else if ($role === 'owner') {
+            $filter = ($region && $region !== 'all') ? $region : ($active_region !== 'all' ? $active_region : $region_session);
+        } else {
+            $filter = $region_session;
         }
 
+        // Handle comma separated string from URL
+        if (is_string($filter) && strpos($filter, ',') !== false) {
+            $filter = explode(',', $filter);
+        }
 
         $builder = $this->db->table('patient_queues pq')
             ->select('pq.queue_date, 
@@ -429,14 +434,14 @@ class AntreanController extends BaseController
             ->join('patients p', 'p.id = pq.patient_id', 'left')
             ->join('patient_address pa', 'pa.patient_id = p.id', 'left')
             ->join('histories h', 'h.patient_queue_id = pq.id', 'left')
-            ->join('terapis t', 't.terapis_id = h.terapis_id', 'left')
+            ->join('terapis t', 't.id = h.terapis_id', 'left')
             ->where('DATE(pq.queue_date) >=', $startDate)
             ->where('DATE(pq.queue_date) <=', $endDate);
-        if (!empty($regionId)) {
-            if (is_array($regionId)) {
-                $builder->whereIn('pq.region_id', $regionId);
+        if ($filter !== 'all' && !empty($filter)) {
+            if (is_array($filter)) {
+                $builder->whereIn('pq.region_id', $filter);
             } else {
-                $builder->where('pq.region_id', $regionId);
+                $builder->where('pq.region_id', $filter);
             }
         }
 
@@ -520,15 +525,21 @@ class AntreanController extends BaseController
         $startDate = $this->request->getGet('start_date') ?: date('Y-m-d');
         $endDate = $this->request->getGet('end_date') ?: date('Y-m-d');
         $region = $this->request->getGet('region');
+        $role = session()->get('role');
+        $active_region = session()->get('active_region');
         $region_session = session()->get('region_patient');
 
-        if (empty($region) || $region === 'all') {
-            $region = $region_session;
+        if ($role === 'superadmin') {
+            $filter = ($region && $region !== 'all') ? $region : ($active_region !== 'all' ? $active_region : 'all');
+        } else if ($role === 'owner') {
+            $filter = ($region && $region !== 'all') ? $region : ($active_region !== 'all' ? $active_region : $region_session);
+        } else {
+            $filter = $region_session;
         }
 
         // Handle comma separated string from URL
-        if (is_string($region) && strpos($region, ',') !== false) {
-            $region = explode(',', $region);
+        if (is_string($filter) && strpos($filter, ',') !== false) {
+            $filter = explode(',', $filter);
         }
 
         $builder = $this->db->table('patient_queues pq')
@@ -543,15 +554,15 @@ class AntreanController extends BaseController
             ->join('patients p', 'p.id = pq.patient_id', 'left')
             ->join('patient_address pa', 'pa.patient_id = p.id', 'left')
             ->join('histories h', 'h.patient_queue_id = pq.id', 'left')
-            ->join('terapis t', 't.terapis_id = h.terapis_id', 'left')
+            ->join('terapis t', 't.id = h.terapis_id', 'left')
             ->where('DATE(pq.queue_date) >=', $startDate)
             ->where('DATE(pq.queue_date) <=', $endDate);
 
-        if (!empty($region)) {
-            if (is_array($region)) {
-                $builder->whereIn('pq.region_id', $region);
+        if ($filter !== 'all' && !empty($filter)) {
+            if (is_array($filter)) {
+                $builder->whereIn('pq.region_id', $filter);
             } else {
-                $builder->where('pq.region_id', $region);
+                $builder->where('pq.region_id', $filter);
             }
         }
         $query = $builder->get();

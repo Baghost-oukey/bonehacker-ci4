@@ -14,10 +14,11 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitor Antrean | Bone Hacker</title>
     
-    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
     
-    <!-- Load CSS from Vite/Build -->
     <?php if ($shouldUseViteDevServer): ?>
         <link rel="stylesheet" href="<?= $viteBrowserUrl ?>/resources/css/app.css">
     <?php else: ?>
@@ -25,186 +26,180 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
     <?php endif; ?>
 
     <style>
-        /* Hide scrollbar for Chrome, Safari and Opera */
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        /* Hide scrollbar for IE, Edge and Firefox */
-        .no-scrollbar {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
-        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* Ensure body takes full screen with gradient */
         body {
             margin: 0;
             padding: 0;
             min-height: 100vh;
-            background: linear-gradient(135deg, #f5dec5 0%, #e2e8f0 50%, #b2d4eb 100%);
+            background: radial-gradient(circle at top, #1e293b 0%, #0f172a 50%, #020617 100%);
+            background-attachment: fixed;
+            font-family: 'Outfit', sans-serif;
+            color: #f1f5f9;
         }
+
+        .glow-orange { box-shadow: 0 0 15px rgba(249, 115, 22, 0.4), inset 0 0 10px rgba(249, 115, 22, 0.2); border: 1px solid rgba(249, 115, 22, 0.6); }
+        .glow-blue { box-shadow: 0 0 15px rgba(6, 182, 212, 0.4), inset 0 0 10px rgba(6, 182, 212, 0.2); border: 1px solid rgba(6, 182, 212, 0.6); }
+        .glow-green { box-shadow: 0 0 15px rgba(16, 185, 129, 0.4), inset 0 0 10px rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.6); }
+
+        .glow-text-orange { text-shadow: 0 0 10px rgba(249, 115, 22, 0.8); }
+        .glow-text-blue { text-shadow: 0 0 10px rgba(6, 182, 212, 0.8); }
+        .glow-text-green { text-shadow: 0 0 10px rgba(16, 185, 129, 0.8); }
+
+        .dark-card { background: linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%); backdrop-filter: blur(10px); }
+        .dark-column { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px); border: 1px solid rgba(51, 65, 85, 0.5); }
+        
+        .list-card-orange { background: linear-gradient(90deg, rgba(249, 115, 22, 0.1) 0%, rgba(15, 23, 42, 0.8) 100%); border: 1px solid rgba(249, 115, 22, 0.4); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .list-card-blue { background: linear-gradient(90deg, rgba(6, 182, 212, 0.1) 0%, rgba(15, 23, 42, 0.8) 100%); border: 1px solid rgba(6, 182, 212, 0.4); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .list-card-green { background: linear-gradient(90deg, rgba(16, 185, 129, 0.1) 0%, rgba(15, 23, 42, 0.8) 100%); border: 1px solid rgba(16, 185, 129, 0.4); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
     </style>
 </head>
-<body class="flex flex-col p-4 md:p-8 gap-6 md:gap-8 text-slate-800">
+<body class="flex flex-col p-4 md:p-6 gap-6 text-slate-100">
 
     <?php if (isset($isPublic) && $isPublic): ?>
-        <script>
-            setTimeout(function() { location.reload(); }, 30000); // 30s auto refresh
-
-            document.addEventListener('DOMContentLoaded', function() {
-                const scrollContainers = document.querySelectorAll('.auto-scroll-list');
-                scrollContainers.forEach(container => {
-                    let scrollSpeed = 1; 
-                    let isPaused = false;
-                    function autoScroll() {
-                        if (isPaused) return;
-                        const maxScroll = container.scrollHeight - container.clientHeight;
-                        if (maxScroll <= 0) return;
-                        container.scrollTop += scrollSpeed;
-                        if (container.scrollTop >= maxScroll) {
-                            isPaused = true;
-                            setTimeout(() => { container.scrollTop = 0; isPaused = false; }, 2000);
-                        }
-                    }
-                    setInterval(autoScroll, 50); 
-                });
-            });
-        </script>
+        <!-- JS logic is handled by antrean_monitor.js -->
     <?php endif; ?>
 
     <!-- HEADER -->
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center px-2">
-        <div>
-            <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 uppercase drop-shadow-sm">
-                MONITOR ANTRIAN
-            </h1>
-            <p class="text-lg md:text-xl font-bold text-slate-600 mt-2">
-                Bone Hacker - <?= esc($regionName ?? 'Semua Wilayah') ?>
-            </p>
+        <div class="flex items-center gap-4">
+            <div class="text-slate-300 text-6xl drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
+                <i class="fas fa-bone"></i>
+            </div>
+            <div>
+                <h1 class="text-4xl md:text-5xl font-black tracking-widest text-slate-100 drop-shadow-lg">
+                    MONITOR ANTRIAN
+                </h1>
+                <p class="text-base md:text-lg font-semibold text-slate-300 mt-1 tracking-wider">
+                    Bone Hacker - <?= esc($regionName ?? 'Semua Wilayah') ?>
+                </p>
+            </div>
         </div>
         
         <div class="text-right flex flex-col items-end mt-4 md:mt-0">
-            <div class="flex items-center gap-3">
-                <div id="liveTime" class="text-5xl md:text-7xl font-black text-blue-600 tracking-wider font-mono drop-shadow-md"></div>
-                <div class="h-12 w-12 flex items-center justify-center rounded-full bg-white/60 backdrop-blur-sm text-slate-600 shadow-sm border border-white/60">
-                    <i class="fas fa-sun text-2xl"></i>
+            <div class="glow-orange rounded-xl px-6 py-2 flex flex-col items-end justify-center dark-card">
+                <div class="flex items-center gap-4">
+                    <div id="liveTime" class="text-4xl md:text-5xl font-black text-orange-400 tracking-widest glow-text-orange font-mono"></div>
+                    <i class="fas fa-cog text-slate-400 text-xl animate-[spin_4s_linear_infinite]"></i>
                 </div>
+                <p id="liveDate" class="text-xs md:text-sm font-bold text-slate-300 uppercase tracking-[0.2em] mt-1"></p>
             </div>
-            <p id="liveDate" class="text-base md:text-lg font-bold text-slate-500 uppercase tracking-widest mt-2"></p>
-            
-            <script>
-                function updateTime() {
-                    const now = new Date();
-                    const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\./g, ':');
-                    document.getElementById('liveTime').textContent = timeString;
-                    
-                    const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
-                    const dateString = now.toLocaleDateString('id-ID', options);
-                    document.getElementById('liveDate').textContent = dateString;
-                }
-                setInterval(updateTime, 1000);
-                updateTime();
-            </script>
         </div>
     </div>
 
-    <!-- STATS ROW (Single White Box) -->
-    <div class="bg-white/90 backdrop-blur-md rounded-3xl shadow-lg border border-white p-6 flex justify-around items-center divide-x-2 divide-slate-200">
+    <!-- STATS ROW (3 Separate Glowing Boxes) -->
+    <div id="stats-container" class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
         <!-- Menunggu -->
-        <div class="flex flex-col items-center justify-center w-1/3 text-center">
-            <span class="text-6xl md:text-8xl font-black text-orange-500 drop-shadow-sm leading-none"><?= count($waitingList) ?></span>
-            <span class="text-base md:text-lg font-extrabold text-slate-500 uppercase tracking-widest mt-3">Menunggu</span>
+        <div class="dark-card glow-orange rounded-xl p-6 flex flex-col items-center justify-center relative overflow-hidden">
+            <span class="text-6xl md:text-7xl font-black text-white drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)] z-10"><?= count($waitingList) ?></span>
+            <span class="text-xs md:text-sm font-bold text-slate-300 uppercase tracking-[0.2em] mt-2 z-10">Menunggu Pasien</span>
+            <div class="text-orange-500/20 text-7xl absolute right-6 top-1/2 -translate-y-1/2">
+                <i class="fas fa-hourglass-half"></i>
+            </div>
         </div>
-        <!-- Sedang Terapi -->
-        <div class="flex flex-col items-center justify-center w-1/3 text-center">
-            <span class="text-6xl md:text-8xl font-black text-blue-500 drop-shadow-sm leading-none"><?= count($processingList) ?></span>
-            <span class="text-base md:text-lg font-extrabold text-slate-500 uppercase tracking-widest mt-3">Terapi</span>
+        
+        <!-- Terapi -->
+        <div class="dark-card glow-blue rounded-xl p-6 flex flex-col items-center justify-center relative overflow-hidden">
+            <span class="text-6xl md:text-7xl font-black text-white drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)] z-10"><?= count($processingList) ?></span>
+            <span class="text-xs md:text-sm font-bold text-slate-300 uppercase tracking-[0.2em] mt-2 z-10">Pasien Terapi</span>
+            <div class="text-cyan-500/20 text-7xl absolute right-6 top-1/2 -translate-y-1/2">
+                <i class="fas fa-stethoscope"></i>
+            </div>
         </div>
+        
         <!-- Selesai -->
-        <div class="flex flex-col items-center justify-center w-1/3 text-center">
-            <span class="text-6xl md:text-8xl font-black text-green-600 drop-shadow-sm leading-none"><?= count($finishedList) ?></span>
-            <span class="text-base md:text-lg font-extrabold text-slate-500 uppercase tracking-widest mt-3">Selesai</span>
+        <div class="dark-card glow-green rounded-xl p-6 flex flex-col items-center justify-center relative overflow-hidden">
+            <span class="text-6xl md:text-7xl font-black text-white drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)] z-10"><?= count($finishedList) ?></span>
+            <span class="text-xs md:text-sm font-bold text-slate-300 uppercase tracking-[0.2em] mt-2 z-10">Pasien Selesai</span>
+            <div class="text-emerald-500/20 text-7xl absolute right-6 top-1/2 -translate-y-1/2">
+                <i class="fas fa-check-circle"></i>
+            </div>
         </div>
     </div>
 
     <!-- 3 COLUMNS -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 flex-1 min-h-[45vh]">
+    <div id="queue-columns" class="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-[40vh]">
         
         <!-- KOLOM MENUNGGU -->
-        <div class="bg-orange-50/60 backdrop-blur-sm rounded-3xl shadow-lg border border-white overflow-hidden flex flex-col">
-            <div class="bg-white/95 border-t-8 border-t-orange-500 py-4 text-center shadow-sm z-10 border-b border-b-orange-100">
-                <h2 class="text-xl font-black text-orange-600 uppercase tracking-[0.2em]">Menunggu</h2>
+        <div class="dark-column rounded-xl overflow-hidden flex flex-col">
+            <div class="py-4 text-center border-b border-orange-500/30">
+                <h2 class="text-lg font-black text-orange-400 uppercase tracking-[0.2em] glow-text-orange">Menunggu</h2>
             </div>
-            <div class="flex-1 overflow-y-auto p-4 md:p-5 space-y-4 auto-scroll-list no-scrollbar bg-white/40">
+            <div class="flex-1 overflow-y-auto p-4 space-y-3 auto-scroll-list no-scrollbar">
                 <?php if (!empty($waitingList)): ?>
                     <?php foreach ($waitingList as $i => $q): ?>
-                        <div class="flex items-center gap-4 bg-white/95 rounded-2xl p-4 shadow-sm border border-slate-100 transform transition-transform hover:scale-[1.02]">
-                            <div class="h-14 w-14 shrink-0 flex items-center justify-center rounded-xl bg-white shadow-inner border border-slate-100">
-                                <span class="text-3xl font-black text-slate-900"><?= esc($q->queue_number ?? '-') ?></span>
+                        <div class="list-card-orange rounded-xl p-3 flex items-center gap-4">
+                            <div class="h-12 w-12 shrink-0 flex items-center justify-center rounded-full border-2 border-orange-400/80 bg-orange-900/20">
+                                <span class="text-2xl font-black text-orange-400"><?= esc($q->queue_number ?? '-') ?></span>
                             </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-xl font-bold text-slate-900 uppercase truncate"><?= esc($q->patient_name ?? '-') ?></p>
+                            <div class="flex-1 min-w-0 flex items-center gap-2">
+                                <p class="text-lg font-bold text-slate-100 uppercase tracking-wider truncate"><?= esc($q->patient_name ?? '-') ?></p>
+                                <i class="fas fa-user text-orange-400/50 text-xs"></i>
                             </div>
-                            <div class="text-right pr-2">
-                                <span class="text-xl font-black text-orange-500">#<?= $i + 1 ?></span>
+                            <div class="text-right pl-2">
+                                <span class="text-sm font-bold text-slate-300">#<?= $i + 1 ?></span>
                             </div>
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <div class="h-full flex items-center justify-center">
-                        <p class="text-slate-400 font-bold text-xl">KOSONG</p>
+                    <div class="h-full flex flex-col items-center justify-center">
+                        <p class="text-orange-400/50 font-black text-3xl tracking-[0.3em] uppercase glow-text-orange" style="font-family: serif;">KOSONG</p>
                     </div>
                 <?php endif; ?>
             </div>
         </div>
 
         <!-- KOLOM SEDANG TERAPI -->
-        <div class="bg-blue-50/60 backdrop-blur-sm rounded-3xl shadow-lg border border-white overflow-hidden flex flex-col">
-            <div class="bg-white/95 border-t-8 border-t-blue-500 py-4 text-center shadow-sm z-10 border-b border-b-blue-100">
-                <h2 class="text-xl font-black text-blue-600 uppercase tracking-[0.2em]">Sedang Terapi</h2>
+        <div class="dark-column rounded-xl overflow-hidden flex flex-col">
+            <div class="py-4 text-center border-b border-cyan-500/30">
+                <h2 class="text-lg font-black text-cyan-400 uppercase tracking-[0.2em] glow-text-blue">Sedang Terapi</h2>
             </div>
-            <div class="flex-1 overflow-y-auto p-4 md:p-5 space-y-4 auto-scroll-list no-scrollbar bg-white/40">
+            <div class="flex-1 overflow-y-auto p-4 space-y-3 auto-scroll-list no-scrollbar">
                 <?php if (!empty($processingList)): ?>
                     <?php foreach ($processingList as $i => $q): ?>
-                        <div class="flex items-center gap-4 bg-white/95 rounded-2xl p-4 shadow-sm border border-slate-100 transform transition-transform hover:scale-[1.02]">
-                            <div class="h-14 w-14 shrink-0 flex items-center justify-center rounded-xl bg-white shadow-inner border border-slate-100">
-                                <span class="text-3xl font-black text-slate-900"><?= esc($q->queue_number ?? '-') ?></span>
+                        <div class="list-card-blue rounded-xl p-3 flex items-center gap-4 relative overflow-hidden">
+                            <!-- Animated Loading Bar -->
+                            <div class="absolute bottom-2 left-4 right-4 h-1 bg-slate-800 rounded-full overflow-hidden">
+                                <div class="h-full bg-cyan-400 w-1/3 animate-[translateX_2s_infinite] glow-blue"></div>
                             </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-xl font-bold text-slate-900 uppercase truncate"><?= esc($q->patient_name ?? '-') ?></p>
+                            <div class="h-12 w-12 shrink-0 flex items-center justify-center rounded-full border-2 border-cyan-400/80 bg-cyan-900/20 mb-2">
+                                <span class="text-2xl font-black text-cyan-400"><?= esc($q->queue_number ?? '-') ?></span>
                             </div>
-                            <div class="text-right pr-2">
-                                <i class="fas fa-spinner animate-spin text-blue-500 text-2xl"></i>
+                            <div class="flex-1 min-w-0 flex items-center gap-2 mb-2">
+                                <p class="text-lg font-bold text-slate-100 uppercase tracking-wider truncate"><?= esc($q->patient_name ?? '-') ?></p>
+                                <i class="fas fa-user-md text-cyan-400/50 text-xs"></i>
                             </div>
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <div class="h-full flex items-center justify-center">
-                        <p class="text-slate-400 font-bold text-xl">KOSONG</p>
+                    <div class="h-full flex flex-col items-center justify-center">
+                        <p class="text-cyan-400/50 font-black text-3xl tracking-[0.3em] uppercase glow-text-blue" style="font-family: serif;">KOSONG</p>
                     </div>
                 <?php endif; ?>
             </div>
         </div>
 
         <!-- KOLOM SELESAI -->
-        <div class="bg-green-50/60 backdrop-blur-sm rounded-3xl shadow-lg border border-white overflow-hidden flex flex-col">
-            <div class="bg-white/95 border-t-8 border-t-green-500 py-4 text-center shadow-sm z-10 border-b border-b-green-100">
-                <h2 class="text-xl font-black text-green-600 uppercase tracking-[0.2em]">Selesai</h2>
+        <div class="dark-column rounded-xl overflow-hidden flex flex-col">
+            <div class="py-4 text-center border-b border-emerald-500/30">
+                <h2 class="text-lg font-black text-emerald-400 uppercase tracking-[0.2em] glow-text-green">Selesai</h2>
             </div>
-            <div class="flex-1 overflow-y-auto p-4 md:p-5 space-y-4 auto-scroll-list no-scrollbar bg-white/40">
+            <div class="flex-1 overflow-y-auto p-4 space-y-3 auto-scroll-list no-scrollbar">
                 <?php if (!empty($finishedList)): ?>
                     <?php foreach ($finishedList as $i => $q): ?>
-                        <div class="flex items-center gap-4 bg-white/95 rounded-2xl p-4 shadow-sm border border-slate-100 opacity-80">
-                            <div class="h-14 w-14 shrink-0 flex items-center justify-center rounded-xl bg-white shadow-inner border border-slate-100">
-                                <span class="text-3xl font-black text-slate-900"><?= esc($q->queue_number ?? '-') ?></span>
+                        <div class="list-card-green rounded-xl p-3 flex items-center gap-4 opacity-60">
+                            <div class="h-12 w-12 shrink-0 flex items-center justify-center rounded-full border-2 border-emerald-400/80 bg-emerald-900/20">
+                                <span class="text-2xl font-black text-emerald-400"><?= esc($q->queue_number ?? '-') ?></span>
                             </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-xl font-bold text-slate-900 uppercase truncate"><?= esc($q->patient_name ?? '-') ?></p>
+                            <div class="flex-1 min-w-0 flex items-center gap-2">
+                                <p class="text-lg font-bold text-slate-300 uppercase tracking-wider truncate line-through decoration-emerald-500/50"><?= esc($q->patient_name ?? '-') ?></p>
                             </div>
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <div class="h-full flex items-center justify-center">
-                        <p class="text-slate-400 font-bold text-xl">KOSONG</p>
+                    <div class="h-full flex flex-col items-center justify-center">
+                        <p class="text-emerald-400/50 font-black text-3xl tracking-[0.3em] uppercase glow-text-green" style="font-family: serif;">KOSONG</p>
                     </div>
                 <?php endif; ?>
             </div>
@@ -214,11 +209,11 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
 
     <!-- MARQUEE BOTTOM BAR -->
     <?php if (isset($isPublic) && $isPublic): ?>
-    <div class="bg-white/90 backdrop-blur-md py-4 px-6 rounded-2xl border border-white shadow-md mt-auto flex items-center overflow-hidden">
-        <marquee behavior="scroll" direction="left" scrollamount="6" class="text-base md:text-lg font-semibold text-slate-700 w-full whitespace-nowrap">
-            <span class="text-blue-600 font-black italic">PURBALINGGA:</span> RT 3/RW 2, Dusun Parung Bongas, Desa Kradenan &nbsp;&nbsp;&nbsp;&nbsp; | &nbsp;&nbsp;&nbsp;&nbsp;
-            <span class="text-blue-600 font-black italic">PEMALANG:</span> Jl. Banjarsari, Bojongnangka &nbsp;&nbsp;&nbsp;&nbsp; | &nbsp;&nbsp;&nbsp;&nbsp;
-            <span class="text-blue-600 font-black italic">PURWOKERTO:</span> Jl. Dr. Gumbreg, Kel. Mersi, Kec. Purwokerto Timur
+    <div class="dark-card border border-slate-700/50 py-3 px-6 rounded-xl mt-auto flex items-center overflow-hidden">
+        <marquee behavior="scroll" direction="left" scrollamount="6" class="text-sm md:text-base font-semibold text-slate-300 w-full whitespace-nowrap">
+            <span class="text-cyan-400 font-black tracking-widest">PURBALINGGA:</span> RT 3/RW 2, Dusun Parung Bongas, Desa Kradenan &nbsp;&nbsp;&nbsp;&nbsp; <span class="text-slate-600">|</span> &nbsp;&nbsp;&nbsp;&nbsp;
+            <span class="text-cyan-400 font-black tracking-widest">PEMALANG:</span> Jl. Banjarsari, Bojongnangka &nbsp;&nbsp;&nbsp;&nbsp; <span class="text-slate-600">|</span> &nbsp;&nbsp;&nbsp;&nbsp;
+            <span class="text-cyan-400 font-black tracking-widest">PURWOKERTO:</span> Jl. Dr. Gumbreg, Kel. Mersi, Kec. Purwokerto Timur
         </marquee>
     </div>
     <?php endif; ?>

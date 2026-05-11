@@ -125,14 +125,7 @@ class History extends BaseController
         $queueId   = $this->request->getPost('queue_id');
         $type      = $this->request->getPost('type') ?? 'posted';
 
-        if (!empty($queueId) && $type === 'posted') {
-            $queue = $this->db->table('patient_queues')->where('id', $queueId)->get()->getRow();
-            if ($queue && $queue->is_stored_history == 1) {
-                // Allow update if it's already posted? No, store is for new records.
-                // But if they clicked save twice, we don't want duplicate jasa_pelayanan.
-            }
-            $this->db->table('patient_queues')->where('id', $queueId)->update(['is_stored_history' => 1]);
-        }
+        // The patient_queues table does not have is_stored_history. Queue status is determined by histories.process_at and histories.finish_at.
 
         // Validation for processAt and finishAt
         $processAt = $this->request->getPost('processAt');
@@ -141,6 +134,15 @@ class History extends BaseController
             return $this->response->setJSON([
                 'status'  => false,
                 'message' => 'Waktu selesai tidak boleh lebih awal dari waktu mulai.'
+            ]);
+        }
+
+        // Validation for Terapis (must not be empty if posted)
+        $terapis = $this->request->getPost('terapis');
+        if ($type === 'posted' && (empty($terapis) || !is_array($terapis) || empty($terapis[0]))) {
+            return $this->response->setJSON([
+                'status'  => false,
+                'message' => 'Terapis harus dipilih sebelum menyimpan data riwayat secara permanen. Jika belum ada terapis, simpan sebagai draft atau perbarui data terapis.'
             ]);
         }
 
@@ -184,9 +186,6 @@ class History extends BaseController
                 'message' => $type === 'draft' ? 'Data riwayat berhasil disimpan sebagai draft' : 'Data riwayat berhasil disimpan'
             ]);
         } else {
-            if (!empty($queueId) && $type === 'posted') {
-                $this->db->table('patient_queues')->where('id', $queueId)->update(['is_stored_history' => 0]);
-            }
 
             return $this->response->setJSON([
                 'status'  => false,
@@ -212,6 +211,15 @@ class History extends BaseController
             ]);
         }
 
+        // Validation for Terapis (must not be empty if posted)
+        $terapis = $this->request->getPost('terapis');
+        if ($type === 'posted' && (empty($terapis) || !is_array($terapis) || empty($terapis[0]))) {
+            return $this->response->setJSON([
+                'status'  => false,
+                'message' => 'Terapis harus dipilih sebelum menyimpan data riwayat secara permanen. Jika belum ada terapis, simpan sebagai draft atau perbarui data terapis.'
+            ]);
+        }
+
         $complaintValues = $this->processTags($this->request->getPost('complaint'), 'complaint_tags');
         $medhisValues    = $this->processTags($this->request->getPost('medhis'), 'medhis_tags');
         $resultValues    = $this->processTags($this->request->getPost('results'), 'result_tags');
@@ -229,10 +237,6 @@ class History extends BaseController
             $this->model_history->updateKejantanan($id, $kejantananData, $statusKejantanan);
 
             if ($type === 'posted') {
-                // Mark queue as finalized
-                if (!empty($queueId)) {
-                    $this->db->table('patient_queues')->where('id', $queueId)->update(['is_stored_history' => 1]);
-                }
 
                 // Auto-update/insert ke tabel jasa_pelayanan
                 $this->upsertJasaPelayanan($id, $patientId, $statusKejantanan);
@@ -343,7 +347,7 @@ class History extends BaseController
             }
         }
 
-        return [
+        $mapped = [
             'patient_id'            => $patientId,
             'terapis_id'            => is_array($this->request->getPost('terapis')) ? implode(',', $this->request->getPost('terapis')) : "",
 
@@ -385,6 +389,13 @@ class History extends BaseController
             'type'                  => $this->request->getPost('type') ?? 'posted',
             'created_by'            => session()->get('userId'),
         ];
+        
+        $queueId = $this->request->getPost('queue_id');
+        if (!empty($queueId)) {
+            $mapped['patient_queue_id'] = $queueId;
+        }
+
+        return $mapped;
     }
 
 
@@ -569,7 +580,6 @@ class History extends BaseController
             'tanggal_layanan'  => $tanggalLayanan,
             'is_delete'        => 0,
             'created_at'       => date('Y-m-d H:i:s'),
-            'updated_at'       => date('Y-m-d H:i:s'),
         ]);
     }
 
@@ -594,7 +604,6 @@ class History extends BaseController
             'patient_id'       => $patientId,
             'terapis_id'       => $terapisId,
             'kategori_layanan' => ($statusKejantanan === 'ya') ? 'Kejantanan' : 'Reguler',
-            'updated_at'       => date('Y-m-d H:i:s'),
         ];
 
         if ($existing) {

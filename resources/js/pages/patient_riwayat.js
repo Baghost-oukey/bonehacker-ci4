@@ -42,18 +42,47 @@ const PatientHistoryPage = {
     if (!page || typeof window.$ === "undefined") return;
     
     // DEBUG: Log config untuk memastikan patientRegionId ada
-    console.log('=== PATIENT CONFIG ===');
-    console.log('Patient ID:', this.config.patientId);
-    console.log('Patient Region ID:', this.config.patientRegionId);
-    console.log('Config:', this.config);
-    
+
+
+
+
     this.initTagify();
     this.initEventListeners();
-    this.loadTableData(1);
+    
+    if (this.config.patientId) {
+      this.loadTableData(1);
+    }
+    
     this.checkUrlParams();
     
     // Init biodata read-only mode
     this.initBiodataMode();
+  },
+
+  /**
+   * Loads patient history dynamically into the container
+   * @param {string|number} patientId
+   * @param {string|number} queueId
+   * @param {string|number} regionId
+   */
+  loadPatient(patientId, queueId, regionId) {
+    if (!patientId) return;
+
+    this.config.patientId = patientId;
+    this.config.queueId = queueId;
+    if (regionId) this.config.patientRegionId = regionId;
+
+    // Construct exactly: historyFetchBase + '/' + patientId
+    const baseUrl = this.config.urls.historyFetchBase || this.config.urls.historyFetch.replace(/\/\d+$/, '');
+    this.config.urls.historyFetch = `${baseUrl.replace(/\/$/, '')}/${patientId}`;
+
+    const container = document.getElementById("patientHistoryContainer");
+    if (container) {
+      container.classList.remove("hidden");
+      container.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    this.loadTableData(1);
   },
 
   // Initialize biodata read-only mode
@@ -346,7 +375,7 @@ const PatientHistoryPage = {
         })
         .catch((err) => {
           if (err.name !== 'AbortError') {
-            console.error(`[X] FETCH GAGAL PADA [${inputName.toUpperCase()}]:`, err);
+
           }
           tagify.loading(false);
         });
@@ -502,13 +531,13 @@ const PatientHistoryPage = {
       const timeDiff = Math.abs(new Date() - new Date(data.date_modified));
       const dayDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
       if (dayDiff > 1 && data.type !== 'draft') {
-        $('#exampleModal form :input').prop('readonly', true);
-        $('#exampleModal form :checkbox, #exampleModal form :radio, #region_history, .terapis').prop('disabled', true);
+        $('#modalRiwayatPasien form :input').prop('readonly', true);
+        $('#modalRiwayatPasien form :checkbox, #modalRiwayatPasien form :radio, #region_history, .terapis').prop('disabled', true);
         [complaintTagify, medhisTagify, resultTagify].forEach(t => { if (t) t.setReadonly(true); });
         $('#save-button').hide();
       } else {
-        $('#exampleModal form :input').prop('readonly', false);
-        $('#exampleModal form :checkbox, #exampleModal form :radio, #region_history, .terapis').prop('disabled', false);
+        $('#modalRiwayatPasien form :input').prop('readonly', false);
+        $('#modalRiwayatPasien form :checkbox, #modalRiwayatPasien form :radio, #region_history, .terapis').prop('disabled', false);
         [complaintTagify, medhisTagify, resultTagify].forEach(t => { if (t) t.setReadonly(false); });
         $('#save-button').prop('disabled', false).show();
       }
@@ -530,11 +559,11 @@ const PatientHistoryPage = {
 
   // --- ADD RIWAYAT ---
   add() {
-    console.log('=== ADD RIWAYAT CALLED ===');
-    const modal = document.getElementById("exampleModal");
+
+    const modal = document.getElementById("modalRiwayatPasien");
     const form = document.getElementById("save_data");
     if (!modal || !form) {
-      console.error('Modal or form not found!');
+
       return;
     }
 
@@ -551,10 +580,8 @@ const PatientHistoryPage = {
     const now = new Date();
     const processAtValue = this.formatDateTimeForInput(now);
     const finishAtValue = this.formatDateTimeForInput(now);
-    
-    console.log('Setting processAt to:', processAtValue);
-    console.log('Setting finishAt to:', finishAtValue);
-    
+
+
     form.querySelector('input[name="processAt"]').value = processAtValue;
     form.querySelector('input[name="finishAt"]').value = finishAtValue;
     
@@ -563,37 +590,34 @@ const PatientHistoryPage = {
     $(form).find('input[type="checkbox"], input[type="radio"]').prop('checked', false);
     
     // Set wilayah periksa dari biodata pasien
-    console.log('=== SETTING REGION ===');
-    console.log('Patient Region ID from config:', this.config.patientRegionId);
-    console.log('Region dropdown exists:', $('#region_history').length > 0);
-    console.log('Region dropdown options:', $('#region_history option').length);
-    
+
+
+
+
     if (this.config.patientRegionId && this.config.patientRegionId !== '' && this.config.patientRegionId !== 'null') {
-      console.log('Attempting to set region dropdown to:', this.config.patientRegionId);
-      
+
       // Set value langsung
       const regionSelect = document.getElementById('region_history');
       if (regionSelect) {
         regionSelect.value = this.config.patientRegionId;
-        console.log('Region dropdown value after direct set:', regionSelect.value);
+
       }
       
       // Set via jQuery
       $('#region_history').val(this.config.patientRegionId);
-      console.log('Region dropdown value after jQuery set:', $('#region_history').val());
-      
+
       // Trigger change untuk select2 dan load terapis
       setTimeout(() => {
         $('#region_history').trigger('change');
-        console.log('Region dropdown value after trigger change:', $('#region_history').val());
-        console.log('Selected option text:', $('#region_history option:selected').text());
+
+
       }, 100);
     } else {
-      console.warn('Patient region ID is empty, undefined, or null:', this.config.patientRegionId);
+
     }
     
     // Hitung durasi otomatis LANGSUNG setelah set waktu
-    console.log('=== CALCULATING INITIAL DURATION ===');
+
     setTimeout(() => {
       this.calculateDuration();
     }, 150);
@@ -626,7 +650,7 @@ const PatientHistoryPage = {
       type: "GET",
       dataType: "json",
       success: function (data) {
-        const modal = document.getElementById("exampleModal");
+        const modal = document.getElementById("modalRiwayatPasien");
         openModal(modal);
 
         modal.querySelector(".modal-title").textContent = isDuplicate ? "Duplikat Riwayat Pasien" : "Detail Riwayat Pasien";
@@ -655,10 +679,9 @@ const PatientHistoryPage = {
 
   // Load terapis berdasarkan region yang dipilih
   loadTerapisByRegion(regionId) {
-    console.log('=== LOADING TERAPIS BY REGION ===');
-    console.log('Region ID:', regionId);
-    console.log('URL:', this.config.urls.terapisByRegion);
-    
+
+
+
     const self = this;
     
     // Show loading state
@@ -670,8 +693,7 @@ const PatientHistoryPage = {
       data: { region_id: regionId },
       dataType: 'json',
       success: function(response) {
-        console.log('Terapis response:', response);
-        
+
         $('.terapis').empty();
         
         if (response.status && response.data && response.data.length > 0) {
@@ -685,18 +707,17 @@ const PatientHistoryPage = {
               })
             );
           });
-          
-          console.log('Loaded', response.data.length, 'terapis');
+
         } else {
           $('.terapis').append('<option value="">Tidak ada terapis di wilayah ini</option>');
-          console.warn('No terapis found for region:', regionId);
+
         }
         
         $('.terapis').trigger('change');
       },
       error: function(xhr, status, error) {
-        console.error('Error loading terapis:', error);
-        console.error('Response:', xhr.responseText);
+
+
         $('.terapis').empty().append('<option value="">Error memuat terapis</option>').trigger('change');
       }
     });
@@ -716,19 +737,34 @@ const PatientHistoryPage = {
       }
       self.destroy(id);
     });
-    $("#region_history, .terapis").select2({ dropdownParent: $("#exampleModal"), width: "100%" });
+    $("#region_history, .terapis").select2({ dropdownParent: $("#modalRiwayatPasien"), width: "100%" });
 
     // Event listener untuk perubahan wilayah periksa - update dropdown terapis
     $(document).on('change', '#region_history', function() {
       const regionId = $(this).val();
-      console.log('=== REGION CHANGED ===');
-      console.log('Selected region ID:', regionId);
-      
+
+
       if (regionId) {
         self.loadTerapisByRegion(regionId);
       } else {
         // Jika wilayah kosong, kosongkan juga terapis
         $('.terapis').empty().append('<option value="">Pilih Terapis</option>').trigger('change');
+      }
+    });
+
+    // Auto check/uncheck Sakit/Tidak berdasarkan Grade
+    $(document).on('change', '#pemeriksaan input[type="radio"][name$="_grade"]', function() {
+      if ($(this).is(':checked')) {
+        const checkboxName = $(this).attr('name').replace('_grade', '');
+        $(`#pemeriksaan input[type="checkbox"][name="${checkboxName}"]`).prop('checked', true);
+      }
+    });
+
+    // Auto clear Grade jika Sakit/Tidak di-uncheck
+    $(document).on('change', '#pemeriksaan input[type="checkbox"][value="sakit"]', function() {
+      if (!$(this).is(':checked')) {
+        const radioName = $(this).attr('name') + '_grade';
+        $(`#pemeriksaan input[type="radio"][name="${radioName}"]`).prop('checked', false);
       }
     });
 
@@ -775,8 +811,8 @@ const PatientHistoryPage = {
     // --- THERAPY DURATION (Auto-calculate, field is readonly) ---
     // Gunakan event delegation untuk memastikan event tetap bekerja
     $(document).on('change', '#processAt, #finishAt', function() {
-      console.log('=== TIME INPUT CHANGED ===');
-      console.log('Changed element:', this.name, 'New value:', this.value);
+
+
       self.calculateDuration();
       // Pastikan field timeConsume tetap readonly setelah perhitungan
       $('#timeConsume').prop('readonly', true);
@@ -784,7 +820,7 @@ const PatientHistoryPage = {
     
     // Tambahan: trigger saat user mengetik (untuk real-time update)
     $(document).on('input', '#processAt, #finishAt', function() {
-      console.log('=== TIME INPUT (typing) ===');
+
       self.calculateDuration();
       $('#timeConsume').prop('readonly', true);
     });
@@ -818,10 +854,10 @@ const PatientHistoryPage = {
   },
 
   calculateDuration() {
-    console.log('=== CALCULATE DURATION CALLED ===');
-    const modal = $('#exampleModal');
+
+    const modal = $('#modalRiwayatPasien');
     if (!modal.length) {
-      console.log('Modal not found');
+
       return;
     }
 
@@ -829,8 +865,6 @@ const PatientHistoryPage = {
     const endVal = modal.find('#finishAt').val();
     const timeConsumeField = modal.find('#timeConsume');
 
-    console.log('Process At value:', startVal);
-    console.log('Finish At value:', endVal);
 
     if (startVal && endVal) {
       try {
@@ -838,34 +872,29 @@ const PatientHistoryPage = {
         const startTime = new Date(startVal);
         const endTime = new Date(endVal);
 
-        console.log('Start Time parsed:', startTime);
-        console.log('End Time parsed:', endTime);
 
         if (!isNaN(startTime.getTime()) && !isNaN(endTime.getTime())) {
           // Calculate difference in minutes
           const diffMs = endTime.getTime() - startTime.getTime();
           const diffMins = Math.floor(diffMs / (1000 * 60));
-          
-          console.log('Difference in milliseconds:', diffMs);
-          console.log('Calculated duration in minutes:', diffMins);
-          
+
+
           // Update the timeConsume field (readonly, auto-calculated)
           const finalValue = diffMins > 0 ? diffMins : 0;
           timeConsumeField.val(finalValue);
-          console.log('Set timeConsume field to:', finalValue);
-          
+
           // Pastikan field tetap readonly
           timeConsumeField.prop('readonly', true);
         } else {
-          console.error('Invalid date/time values');
+
         }
       } catch (e) {
-        console.error('Error calculating duration:', e);
+
         timeConsumeField.val('');
       }
     } else {
       // Jika salah satu waktu kosong, kosongkan juga total waktu
-      console.log('One or both times are empty, clearing timeConsume');
+
       timeConsumeField.val('');
     }
   },
@@ -903,7 +932,7 @@ const PatientHistoryPage = {
         const freshToken = res.new_token || res.csrf_hash;
         if (freshToken) self.updateCsrf(freshToken);
         if (res.status) {
-          closeModal(document.getElementById("exampleModal"));
+          closeModal(document.getElementById("modalRiwayatPasien"));
           self.loadTableData(self.currentPage);
           if (window.Swal?.fire) window.Swal.fire({ icon: "success", title: "Berhasil!", text: res.message, timer: 2000, showConfirmButton: false });
         } else {
@@ -953,6 +982,9 @@ window.toggleLainnyaTextbox = function (textboxId, show, retainValue = false) {
     if (!show && !retainValue) textbox.value = '';
   }
 };
+
+// Expose to window for external calls (like from index.php)
+window.PatientHistoryPage = PatientHistoryPage;
 
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", () => PatientHistoryPage.init());

@@ -1,11 +1,11 @@
-<div id="patientHistoryContainer" class="rounded-2xl bg-white shadow-sm border border-slate-200/50 overflow-hidden">
+<div id="patientHistoryContainer" class="hidden rounded-2xl bg-white shadow-sm border border-slate-200/50 overflow-hidden mt-6">
     <!-- HEADER TABLE -->
     <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
             <h3 class="text-lg font-semibold text-slate-800">Riwayat Kunjungan Pasien</h3>
             <p class="text-sm text-slate-500">Daftar rekam medis dan histori terapi</p>
         </div>
-        <button id="btn-add-history" type="button" data-modal-open="exampleModal"
+        <button id="btn-add-history" type="button" data-modal-open="modalRiwayatPasien"
             class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 transition">
             <i class="fas fa-plus"></i> Tambah Riwayat
         </button>
@@ -70,7 +70,7 @@
 
 
 <!-- MODAL TAMBAH/EDIT RIWAYAT -->
-<div id="exampleModal" class="modal-wrapper hidden fixed inset-0 z-60 items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 transition-opacity">
+<div id="modalRiwayatPasien" class="modal-wrapper hidden fixed inset-0 z-60 items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 transition-opacity">
     <!-- Diperlebar menjadi max-w-6xl karena isi form sangat banyak -->
     <div class="w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
         

@@ -59,10 +59,10 @@ const setupAntreanPage = () => {
 
   // --- INIT TABLE 1 (TABLE ANTREAN) ---
   const table1 = $('#table-1').DataTable({
-    processing: true,
+    processing: false,
     serverSide: true,
     order: [],
-    dom: '<"flex flex-col md:flex-row items-center justify-between px-6 py-4 gap-4 border-b border-slate-100"<"flex items-center gap-4"l>>t<"flex flex-col items-center justify-between p-5 bg-slate-50/50 border-t border-slate-200 gap-6"<"hidden md:block text-[10px] font-black uppercase tracking-widest text-slate-400"i><"w-full flex justify-center"p>>',
+    dom: '<"flex flex-col sm:flex-row items-center justify-between px-6 py-4 gap-4 border-b border-slate-100"<"flex items-center gap-4"l>>t<"flex flex-col md:flex-row items-center justify-between p-5 bg-slate-50/50 border-t border-slate-200 gap-4"<"text-xs font-medium text-slate-500"i><"flex items-center justify-end"p>>',
     language: { 
       search: "", 
       searchPlaceholder: "Cari pasien...", 
@@ -104,75 +104,73 @@ const setupAntreanPage = () => {
       $('.dataTables_filter input').addClass('w-full');
     },
     drawCallback: function (settings) {
-      // Sembunyikan spinner setelah data dimuat
-      $("#iconSearch1").show();
-      $("#iconSpinner1").hide();
+      if (window.innerWidth < 768) {
+        // --- LOGIKA MOBILE KITA ---
+        $("#iconSearch1").show();
+        $("#iconSpinner1").hide();
 
-      const api = this.api();
-      const data = api.rows({ page: 'current' }).data();
-      const $cardContainer = $('#mobile-card-container');
-      
-      console.log('DataTable Draw Callback - Mobile Rendering');
-      console.log('Records Found:', data.length);
-      
-      $cardContainer.empty();
+        const api = this.api();
+        const data = api.rows({ page: 'current' }).data();
+        const $cardContainer = $('#mobile-card-container');
+        $cardContainer.empty();
 
-      if (data.length === 0) {
-        $cardContainer.append('<div class="p-12 text-center text-slate-400 italic text-sm">Tidak ada data antrean.</div>');
+        if (data.length === 0) {
+          $cardContainer.append('<div class="p-12 text-center text-slate-400 italic text-sm">Tidak ada data antrean.</div>');
+        } else {
+          data.each(function (row) {
+            const statusClass = row.description.includes('Menunggu') ? 'bg-amber-50 text-amber-600 border-amber-100' : 
+                               row.description.includes('Proses') ? 'bg-teal-50 text-teal-600 border-teal-100' : 
+                               'bg-slate-50 text-slate-600 border-slate-100';
+            
+            const cardHtml = `
+              <div class="p-4 space-y-4 bg-white">
+                  <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-3">
+                          <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-teal-50 text-teal-600 font-black text-xl border border-teal-100 shadow-sm">
+                              ${row.queue_number}
+                          </div>
+                          <div class="flex flex-col min-w-0">
+                              <span class="text-base font-black text-slate-900 truncate uppercase tracking-tight">${row.name}</span>
+                              <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">${row.date}</span>
+                          </div>
+                      </div>
+                      <div class="shrink-0 px-3 py-1 rounded-full border text-[9px] font-black uppercase tracking-tighter ${statusClass}">
+                          ${row.description}
+                      </div>
+                  </div>
+                  
+                  <div class="grid grid-cols-2 gap-4 bg-slate-50/50 rounded-xl p-3 border border-slate-100">
+                      <div class="flex flex-col gap-1">
+                          <span class="text-[9px] text-slate-400 font-black uppercase tracking-widest">Usia</span>
+                          <span class="text-xs text-slate-700 font-black">${row.age || '-'}</span>
+                      </div>
+                      <div class="flex flex-col gap-1 border-l border-slate-200 pl-4">
+                          <span class="text-[9px] text-slate-400 font-black uppercase tracking-widest">Alamat</span>
+                          <span class="text-xs text-slate-700 font-black truncate">${row.address || '-'}</span>
+                      </div>
+                  </div>
+
+                  <div class="pt-2">
+                      <div class="w-full flex items-center gap-2 [&>a]:flex-1 [&>button]:flex-1 [&>a]:flex [&>a]:items-center [&>a]:justify-center [&>a]:h-10 [&>a]:rounded-xl [&>a]:text-xs [&>a]:font-bold [&>button]:h-10 [&>button]:rounded-xl [&>button]:text-xs [&>button]:font-bold">
+                          ${row.action}
+                      </div>
+                  </div>
+              </div>
+            `;
+            $cardContainer.append(cardHtml);
+          });
+        }
+        $('.dataTables_paginate').addClass('!flex !flex-row !items-center !justify-center gap-1 w-full mt-4');
       } else {
-        data.each(function (row) {
-          const statusClass = row.description.includes('Menunggu') ? 'bg-amber-50 text-amber-600 border-amber-100' : 
-                             row.description.includes('Proses') ? 'bg-teal-50 text-teal-600 border-teal-100' : 
-                             'bg-slate-50 text-slate-600 border-slate-100';
-          
-          const cardHtml = `
-            <div class="p-4 space-y-4 bg-white">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-teal-50 text-teal-600 font-black text-xl border border-teal-100 shadow-sm">
-                            ${row.queue_number}
-                        </div>
-                        <div class="flex flex-col min-w-0">
-                            <span class="text-base font-black text-slate-900 truncate uppercase tracking-tight">${row.name}</span>
-                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">${row.date}</span>
-                        </div>
-                    </div>
-                    <div class="shrink-0 px-3 py-1 rounded-full border text-[9px] font-black uppercase tracking-tighter ${statusClass}">
-                        ${row.description}
-                    </div>
-                </div>
-                
-                <div class="grid grid-cols-2 gap-4 bg-slate-50/50 rounded-xl p-3 border border-slate-100">
-                    <div class="flex flex-col gap-1">
-                        <span class="text-[9px] text-slate-400 font-black uppercase tracking-widest">Usia</span>
-                        <span class="text-xs text-slate-700 font-black">${row.age || '-'}</span>
-                    </div>
-                    <div class="flex flex-col gap-1 border-l border-slate-200 pl-4">
-                        <span class="text-[9px] text-slate-400 font-black uppercase tracking-widest">Alamat</span>
-                        <span class="text-xs text-slate-700 font-black truncate">${row.address || '-'}</span>
-                    </div>
-                </div>
-
-                <div class="pt-2">
-                    <div class="w-full flex items-center gap-2 [&>a]:flex-1 [&>button]:flex-1 [&>a]:flex [&>a]:items-center [&>a]:justify-center [&>a]:h-10 [&>a]:rounded-xl [&>a]:text-xs [&>a]:font-bold [&>button]:h-10 [&>button]:rounded-xl [&>button]:text-xs [&>button]:font-bold">
-                        ${row.action}
-                    </div>
-                </div>
-            </div>
-          `;
-          $cardContainer.append(cardHtml);
-        });
+        // --- LOGIKA DESKTOP REMOTE ---
+        $('.dataTables_paginate').addClass('!flex !flex-row !items-center !justify-end gap-1');
       }
-
-      // Pagination styling (Mobile Optimized)
-      $('.dataTables_paginate').addClass('!flex !flex-row !items-center !justify-center gap-1 w-full mt-4');
+      
+      // --- STYLING PAGINATION HASIL PULL (TABLE 1) ---
       $('.dataTables_paginate > span').addClass('!flex !flex-row !items-center gap-1');
-      $('.paginate_button').addClass('!inline-flex items-center justify-center min-w-[36px] h-9 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 cursor-pointer hover:bg-slate-50 transition-all !m-0 !p-0 shadow-sm');
-      
-      // Paksa warna untuk halaman AKTIF
-      $('.paginate_button.current').attr('style', 'background-color: #0d9488 !important; color: white !important; border-color: #0d9488 !important; box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.2) !important;');
-      
-      $('.paginate_button.disabled').addClass('!opacity-30 cursor-not-allowed shadow-none');
+      $('.paginate_button').addClass('!inline-flex items-center justify-center min-w-[32px] h-8 rounded-lg border border-slate-300 text-xs font-semibold text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors !m-0 !p-0');
+      $('.paginate_button.current').addClass('!bg-teal-600 !text-white !border-teal-600 hover:!bg-teal-700').removeClass('bg-white text-slate-700');
+      $('.paginate_button.disabled').addClass('!opacity-50 cursor-not-allowed shadow-none hover:bg-white hover:text-slate-700');
     }
   });
 
@@ -187,10 +185,10 @@ const setupAntreanPage = () => {
     if (!table2Init) {
       table2Init = true;
       $('#table-2').DataTable({
-        processing: true,
+        processing: false,
         serverSide: true,
         // Ganti baris dom di table-2 menjadi ini:
-dom: 't<"modal-pagination-bar flex items-center justify-center p-4 bg-slate-50/50 border-t border-slate-200 mt-auto"<"hidden md:block text-xs text-slate-500"i><"flex justify-center"p>>',
+        dom: 't<"flex items-center justify-between p-4 bg-slate-50/50 border-t border-slate-200"<"text-xs text-slate-500"i><"flex items-end"p>>',
         language: { search: "", searchPlaceholder: "Ketik Nama atau Nomor WhatsApp...", paginate: { previous: '<i class="fas fa-chevron-left text-[10px]"></i>', next: '<i class="fas fa-chevron-right text-[10px]"></i>' } },
         ajax: {
           url: config.fetchPatientUrl,
@@ -220,60 +218,56 @@ dom: 't<"modal-pagination-bar flex items-center justify-center p-4 bg-slate-50/5
           $('.dataTables_filter input').addClass('w-full min-w-[300px]');
         },
         drawCallback: function (settings) {
-          // Sembunyikan spinner setelah data dimuat
-          $("#iconSearch2").removeClass("hidden");
-          $("#iconSpinner2").addClass("hidden");
+          if (window.innerWidth < 768) {
+            // --- LOGIKA MOBILE KITA ---
+            $("#iconSearch2").removeClass("hidden");
+            $("#iconSpinner2").addClass("hidden");
 
-          // Render Mobile Cards
-          const api = this.api();
-          const data = api.rows({ page: 'current' }).data();
-          const $cardContainer = $('#mobile-patient-list');
-          
-          $cardContainer.empty();
-          
-          if (data.length === 0) {
-            $cardContainer.append('<div class="p-8 text-center text-slate-400 italic text-sm"><i class="fas fa-search mr-2"></i> Tidak ada data pasien.</div>');
+            const api = this.api();
+            const data = api.rows({ page: 'current' }).data();
+            const $cardContainer = $('#mobile-patient-list');
+            $cardContainer.empty();
+            
+            if (data.length === 0) {
+              $cardContainer.append('<div class="p-8 text-center text-slate-400 italic text-sm"><i class="fas fa-search mr-2"></i> Tidak ada data pasien.</div>');
+            } else {
+              data.each(function (row) {
+                const statusClass = row.description.includes('Lama') ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-teal-50 text-teal-600 border-teal-100';
+                const card = $(`
+                  <div class="p-4 space-y-3 bg-white">
+                    <div class="flex items-center justify-between">
+                      <span class="text-[10px] font-mono font-bold text-slate-400">#${row.patient_id}</span>
+                      <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${statusClass}">
+                        ${row.description}
+                      </span>
+                    </div>
+                    
+                    <div class="space-y-1">
+                      <h4 class="text-sm font-black text-slate-900 uppercase tracking-tight">${row.name}</h4>
+                      <p class="text-[11px] text-slate-500 font-medium leading-relaxed">
+                        <i class="fas fa-map-marker-alt mr-1"></i> ${row.address || "-"}
+                      </p>
+                    </div>
+
+                    <div class="pt-1">
+                      ${row.action.replace('btn-sm', 'w-full h-10 rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2')}
+                    </div>
+                  </div>
+                `);
+                $cardContainer.append(card);
+              });
+            }
+            $('.dataTables_paginate').addClass('!flex !flex-row !items-center !justify-center gap-1 w-full mt-4');
           } else {
-            data.each(function (row) {
-              const statusClass = row.description.includes('Lama') ? 'bg-amber-50 text-amber-600 border-amber-100' : 'bg-teal-50 text-teal-600 border-teal-100';
-              const card = $(`
-                <div class="p-4 space-y-3 bg-white">
-                  <div class="flex items-center justify-between">
-                    <span class="text-[10px] font-mono font-bold text-slate-400">#${row.patient_id}</span>
-                    <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${statusClass}">
-                      ${row.description}
-                    </span>
-                  </div>
-                  
-                  <div class="space-y-1">
-                    <h4 class="text-sm font-black text-slate-900 uppercase tracking-tight">${row.name}</h4>
-                    <p class="text-[11px] text-slate-500 font-medium leading-relaxed">
-                      <i class="fas fa-map-marker-alt mr-1"></i> ${row.address || "-"}
-                    </p>
-                  </div>
-
-                  <div class="pt-1">
-                    ${row.action.replace('btn-sm', 'w-full h-10 rounded-xl text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2')}
-                  </div>
-                </div>
-              `);
-              $cardContainer.append(card);
-            });
+            // --- LOGIKA DESKTOP REMOTE ---
+            $('.dataTables_paginate').addClass('!flex !flex-row !items-center !justify-end gap-1');
           }
 
-          // Pagination styling (Mobile Optimized)
-          $('.dataTables_paginate').addClass('!flex !flex-row !items-center !justify-center gap-1 w-full mt-4');
+          // --- STYLING PAGINATION HASIL PULL (TABLE 2 / MODAL) ---
           $('.dataTables_paginate > span').addClass('!flex !flex-row !items-center gap-1');
-          $('.paginate_button').addClass('!inline-flex items-center justify-center min-w-[32px] h-8 rounded-lg border border-slate-200 text-[10px] font-bold text-slate-600 cursor-pointer hover:bg-slate-50 transition-all !m-0 !p-0');
-          
-          // Paksa warna untuk halaman AKTIF (Modal)
-          setTimeout(() => {
-            $('.dataTables_wrapper .paginate_button.current').each(function() {
-              $(this).attr('style', 'background-color: #0d9488 !important; color: white !important; border-color: #0d9488 !important; font-weight: bold !important; shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.2) !important;');
-            });
-          }, 50);
-
-          $('.paginate_button.disabled').addClass('!opacity-30 cursor-not-allowed shadow-none');
+          $('.paginate_button').addClass('!inline-flex items-center justify-center min-w-[28px] h-7 rounded text-[11px] font-semibold text-slate-600 cursor-pointer hover:bg-slate-100 transition-colors !m-0 !p-0 border border-slate-300');
+          $('.paginate_button.current').addClass('!bg-slate-900 !text-white hover:!bg-slate-800 border-0').removeClass('bg-white text-slate-600');
+          $('.paginate_button.disabled').addClass('!opacity-50 cursor-not-allowed shadow-none');
         }
       });
     }
@@ -504,10 +498,6 @@ dom: 't<"modal-pagination-bar flex items-center justify-center p-4 bg-slate-50/5
 
   $("#searchInput").on("keyup", function () {
     const val = $(this).val();
-    if (val.length > 0) {
-      $("#iconSearch1").addClass("hidden");
-      $("#iconSpinner1").removeClass("hidden");
-    }
     searchInputDebounce(val);
   });
 
@@ -520,10 +510,6 @@ dom: 't<"modal-pagination-bar flex items-center justify-center p-4 bg-slate-50/5
 
   $("#searchPatientList").off("keyup").on("keyup", function () {
     const val = $(this).val();
-    if (val.length > 0) {
-      $("#iconSearch2").addClass("hidden");
-      $("#iconSpinner2").removeClass("hidden");
-    }
     searchDebounce(val);
   });
 

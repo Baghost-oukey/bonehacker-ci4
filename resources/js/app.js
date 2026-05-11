@@ -7,6 +7,7 @@ import "./components/profile.js";
 import "./components/clock.js";
 import "./pages/header.js";
 import "./pages/antrean.js";
+import "./pages/antrean_monitor.js";
 import "./pages/views.js";
 import "./pages/rekam_medis.js";
 import "./pages/journal.js";

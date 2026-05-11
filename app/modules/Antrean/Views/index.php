@@ -35,76 +35,90 @@
     </div>
 
     <!-- TABLE & CARD VIEW ANTREAN -->
+    <!-- TABLE 1 HALAMAN ANTREAN -->
     <div class="rounded-2xl bg-white shadow-sm border border-slate-200/50 overflow-hidden">
-        <div class="border-b border-slate-100 bg-slate-50/50 px-4 py-4 md:px-6">
+        <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4">
             <div class="mb-4">
                 <h3 class="text-lg font-semibold text-slate-800">Data Antrean</h3>
-                <p class="text-sm text-slate-500">Monitoring antrean secara real-time</p>
+                <p class="text-sm text-slate-500">Monitoring dan pengelolaan antrean pasien secara real-time</p>
             </div>
 
-            <div class="flex flex-col gap-3">
-            <div class="flex flex-col gap-4">
-                <!-- Search -->
-                <div class="relative w-full">
-                    <i id="iconSearch1" class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                    <input type="text" id="searchInput" placeholder="Cari nama pasien..."
-                        class="w-full rounded-2xl border border-slate-200 pl-11 pr-4 py-3 text-sm focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 outline-none transition-all shadow-sm">
-                </div>
-                
-                <div class="flex flex-col md:flex-row md:items-center gap-3">
-                    <!-- Date Range -->
-                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1">
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
                         <div class="relative flex-1">
-                            <i class="fas fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"></i>
-                            <input type="date" id="startDate" class="w-full rounded-xl border border-slate-200 pl-9 pr-3 py-2.5 text-xs font-bold text-slate-600 focus:border-teal-500 outline-none" value="<?= date('Y-m-d') ?>">
+                            <i id="iconSearch1" class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm transition-all"></i>
+                            <input type="text" id="searchInput" placeholder="Cari pasien..."
+                                class="w-full rounded-lg border border-slate-200 pl-9 pr-3 py-2 text-sm transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15">
                         </div>
-                        <div class="hidden sm:block text-slate-300">-</div>
-                        <div class="relative flex-1">
-                            <i class="fas fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"></i>
-                            <input type="date" id="endDate" class="w-full rounded-xl border border-slate-200 pl-9 pr-3 py-2.5 text-xs font-bold text-slate-600 focus:border-teal-500 outline-none" value="<?= date('Y-m-d') ?>">
-                        </div>
-                    </div>
 
-                    <?php if (session()->get('role') === 'superadmin'): ?>
-                    <!-- Export Buttons -->
-                    <div class="grid grid-cols-2 md:flex gap-2">
-                        <button id="btnPdf" class="flex-1 md:flex-none flex h-10 items-center justify-center gap-2 rounded-xl bg-red-50 text-red-600 border border-red-100 px-5 text-xs font-black uppercase tracking-widest hover:bg-red-100 transition-all">
-                            <i class="fas fa-file-pdf"></i> PDF
-                        </button>
-                        <button id="btnExcel" class="flex-1 md:flex-none flex h-10 items-center justify-center gap-2 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 px-5 text-xs font-black uppercase tracking-widest hover:bg-emerald-100 transition-all">
-                            <i class="fas fa-file-excel"></i> Excel
-                        </button>
+                    <div class="flex items-center gap-2 text-sm">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-calendar-alt text-slate-400 text-base"></i>
+                            <input type="date" id="startDate"
+                                class="rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-600 transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15"
+                                value="<?= date('Y-m-d') ?>">
+                        </div>
+                        <span class="text-slate-300">-</span>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-calendar-check text-slate-400 text-base"></i>
+                            <input type="date" id="endDate"
+                                class="rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-600 transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15"
+                                value="<?= date('Y-m-d') ?>">
+                        </div>
                     </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <?php if (session()->get('role') === 'superadmin'): ?>
+                        <button id="btnPdf"
+                            class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-medium text-red-600 transition hover:bg-red-50 hover:border-red-300">
+                            <i class="fas fa-file-pdf text-sm"></i>
+                            <span class="hidden sm:inline">PDF</span>
+                        </button>
+
+                        <button id="btnExcel"
+                            class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-xs font-medium text-emerald-600 transition hover:bg-emerald-50 hover:border-emerald-300">
+                            <i class="fas fa-file-excel text-sm"></i>
+                            <span class="hidden sm:inline">Excel</span>
+                        </button>
                     <?php endif; ?>
                 </div>
             </div>
-            </div>
         </div>
 
-        <!-- Desktop Table & Mobile Cards Wrapper -->
         <div id="antrean-table-container">
             <!-- Mobile Cards (Shown on Mobile) -->
             <div id="mobile-card-container" class="md:hidden divide-y divide-slate-100 bg-white mb-6">
                 <div class="p-12 text-center text-slate-400 italic text-sm">
-                    <i class="fas fa-spinner fa-spin mr-2"></i> Memuat antrean...
+                    <i class="fas fa-spinner fa-spin mr-2 text-slate-300"></i>
+                    Memuat data antrean...
                 </div>
             </div>
 
             <!-- Table (Hidden on Mobile) -->
             <div class="overflow-x-auto">
                 <table id="table-1" class="w-full text-sm hidden md:table">
-                    <thead class="bg-slate-50 text-slate-500 text-[10px] uppercase tracking-wider">
+                    <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
                         <tr>
-                            <th class="px-6 py-4 text-center font-bold">No</th>
-                            <th class="px-6 py-4 text-left font-bold">Tanggal</th>
-                            <th class="px-6 py-4 text-left font-bold">Nama</th>
-                            <th class="px-6 py-4 text-left font-bold">Usia</th>
-                            <th class="px-6 py-4 text-left font-bold">Alamat</th>
-                            <th class="px-6 py-4 text-center font-bold">Status</th>
-                            <th class="px-6 py-4 text-center font-bold">Aksi</th>
+                            <th class="px-6 py-3.5 text-center font-semibold">Antrean</th>
+                            <th class="px-6 py-3.5 text-left font-semibold">Tanggal</th>
+                            <th class="px-6 py-3.5 text-left font-semibold">Nama</th>
+                            <th class="px-6 py-3.5 text-left font-semibold">Usia</th>
+                            <th class="px-6 py-3.5 text-left font-semibold">Alamat</th>
+                            <th class="px-6 py-3.5 text-center font-semibold">Status</th>
+                            <th class="px-6 py-3.5 text-center font-semibold">
+                                <?= session()->get('role') === 'superadmin' ? 'Aksi' : 'Keterangan' ?>
+                            </th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100 text-slate-700"></tbody>
+                    <tbody class="divide-y divide-slate-100 text-slate-700">
+                        <tr class="hover:bg-slate-50 transition">
+                            <td colspan="8" class="px-6 py-12 text-center text-slate-400 italic text-sm">
+                                <i class="fas fa-spinner fa-spin mr-2 text-slate-300"></i>
+                                Memuat data antrean...
+                            </td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -140,46 +154,48 @@
         </div>
 
         <div class="p-5">
-            <div class="flex flex-col md:flex-row md:items-center gap-4 mb-4">
-                <div class="relative flex-1">
-                    <i id="iconSearch2" class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm transition-all"></i>
-                    <i id="iconSpinner2" class="fas fa-circle-notch fa-spin absolute left-3 top-1/2 -translate-y-1/2 text-teal-600 text-sm hidden transition-all"></i>
-                    <input type="text" id="searchPatientList" placeholder="Ketik Nama atau Nomor WhatsApp..."
-                        class="w-full rounded-lg border border-slate-300 pl-9 pr-4 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
-                    <p class="mt-1.5 text-[11px] text-slate-400">
-                        <i class="fas fa-info-circle mr-1"></i> Pencarian otomatis mencakup seluruh wilayah/cabang.
-                    </p>
+            <div class="flex flex-col gap-1.5 mb-4">
+                <div class="flex flex-col md:flex-row gap-4">
+                    <div class="relative flex-1">
+                        <i id="iconSearch2" class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm transition-all"></i>
+                        <input type="text" id="searchPatientList" placeholder="Ketik Nama atau Nomor WhatsApp..."
+                            class="w-full rounded-lg border border-slate-300 pl-9 pr-4 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                    </div>
+                    <button type="button" data-modal-open="modalnewpatient"
+                        class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 whitespace-nowrap">
+                        <i class="fas fa-user-plus"></i>
+                        Pasien Baru
+                    </button>
                 </div>
-
-                <button type="button" data-modal-open="modalnewpatient"
-                    class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 whitespace-nowrap">
-                    <i class="fas fa-user-plus"></i>
-                    Pasien Baru
-                </button>
+                <p class="text-[11px] text-slate-400">
+                    <i class="fas fa-info-circle mr-1"></i> Pencarian otomatis mencakup seluruh wilayah/cabang.
+                </p>
             </div>
 
-            <!-- Table & Card Wrapper -->
             <div id="patient-selection-container">
                 <!-- Mobile Card List (Shown on Mobile) -->
                 <div id="mobile-patient-list" class="md:hidden flex flex-col divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-y-auto max-h-[50vh] bg-white no-scrollbar mb-4">
                     <div class="p-8 text-center text-slate-400 italic text-sm">
-                        <i class="fas fa-search fa-bounce mr-2"></i> Ketik nama pasien di atas...
+                        <i class="fas fa-spinner fa-spin mr-2 text-slate-300"></i>
+                        Memuat data pasien...
                     </div>
                 </div>
 
                 <!-- Desktop Table (Hidden on Mobile) -->
-                <div class="overflow-x-auto border border-slate-200 rounded-xl">
-                    <table id="table-2" class="w-full text-sm hidden md:table">
-                        <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide sticky top-0 z-10">
+                <div class="overflow-x-auto border border-slate-200 rounded-xl hidden md:block">
+                    <table id="table-2" class="w-full text-sm">
+                        <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
                             <tr>
-                                <th class="px-4 py-3 text-left font-semibold">No</th>
+                                <th class="px-4 py-3 text-left font-semibold">ID</th>
                                 <th class="px-4 py-3 text-left font-semibold">Nama</th>
                                 <th class="px-4 py-3 text-left font-semibold">Alamat</th>
                                 <th class="px-4 py-3 text-center font-semibold">Status</th>
                                 <th class="px-4 py-3 text-center font-semibold">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody id="patientListBody" class="divide-y divide-slate-100 bg-white"></tbody>
+                        <tbody class="divide-y divide-slate-100 text-slate-700">
+                            <!-- DataTables akan mengisi ini -->
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -392,6 +408,7 @@
         csrfTokenName: '<?= csrf_token() ?>',
         csrfHash: '<?= csrf_hash() ?>',
         urls: {
+            historyFetchBase: '<?= site_url("history/fetch") ?>',
             historyFetch: '<?= site_url("history/fetch") ?>/',
             historyStore: '<?= site_url("history/store") ?>',
             historyDestroy: '<?= site_url("history/destroy") ?>',
@@ -402,30 +419,18 @@
         }
     };
 
-    // Fungsi untuk membuka modal rekam medis dari tombol Medis
-    function openMedicalRecordModal(patientId, historyId, queueId) {
-        // Update config dengan data pasien
-        window.patientConfig.patientId = patientId;
-        window.patientConfig.queueId = queueId;
-        
-        // Buka modal
-        const modal = document.getElementById('modalRiwayat');
-        if (modal) {
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            
-            // Jika ada historyId, load data rekam medis
-            if (historyId) {
-                // Trigger load data rekam medis
-                if (typeof window.loadHistoryData === 'function') {
-                    window.loadHistoryData(historyId);
-                }
-            } else {
-                // Reset form untuk rekam medis baru
-                if (typeof window.resetHistoryForm === 'function') {
-                    window.resetHistoryForm();
-                }
-            }
+    /**
+     * Membuka dan menampilkan rekam medis pasien di bawah tabel antrean
+     * @param {number|string} patientId ID Pasien
+     * @param {number|string|null} historyId ID History (jika ada)
+     * @param {number|string} queueId ID Antrean
+     * @param {number|string|null} regionId ID Wilayah
+     */
+    function openMedicalRecordModal(patientId, historyId, queueId, regionId) {
+        if (window.PatientHistoryPage && typeof window.PatientHistoryPage.loadPatient === 'function') {
+            window.PatientHistoryPage.loadPatient(patientId, queueId, regionId);
+        } else {
+            console.error('[PatientHistoryPage] Module is not loaded or missing loadPatient method.');
         }
     }
 </script>
