@@ -27,7 +27,7 @@ class Absensikaryawan extends BaseController
         $region_patient = session()->get('region_patient');
         $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
 
-        $terapisQuery = $this->model_terapis->where('is_active', 1);
+        $terapisQuery = $this->model_terapis->where('is_active', 1)->where('is_presensi', 1);
         if (!empty($allowed_regions)) {
             if (is_array($allowed_regions)) {
                 $terapisQuery->whereIn('region_id', $allowed_regions);
@@ -39,7 +39,7 @@ class Absensikaryawan extends BaseController
         $data = [
             'title'        => 'Presensi Harian',
             'terapis'      => $terapisQuery->findAll(),
-            'rekap_harian' => $this->model_absensi->getRekapHarian($bulan, $tahun),
+            'rekap_harian' => $this->model_absensi->getRekapHarian($bulan, $tahun, $allowed_regions),
             'filter_bulan' => $bulan,
             'filter_tahun' => $tahun,
             'tanggal'      => date('Y-m-d')
@@ -53,7 +53,10 @@ class Absensikaryawan extends BaseController
         $bulan = $this->request->getGet('bulan') ?? date('m');
         $tahun = $this->request->getGet('tahun') ?? date('Y');
 
-        $rekap = $this->model_absensi->getRekapHarian($bulan, $tahun);
+        $region_patient = session()->get('region_patient');
+        $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
+
+        $rekap = $this->model_absensi->getRekapHarian($bulan, $tahun, $allowed_regions);
 
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
@@ -83,22 +86,23 @@ class Absensikaryawan extends BaseController
         exit;
     }
 
-    public function store($tanggal = null)
+    public function presensi($tanggal = null)
     {
         if ($tanggal === null || !strtotime($tanggal)) {
             $tanggal = date('Y-m-d');
         }
 
-        $absensiByTanggal = $this->model_absensi->getByTanggal($tanggal);
+        $region_patient = session()->get('region_patient');
+        $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
+
+        $absensiByTanggal = $this->model_absensi->getByTanggal($tanggal, $allowed_regions);
         $rekapByTanggal = [];
 
         foreach ($absensiByTanggal as $row) {
             $rekapByTanggal[$row['terapis_id']] = $row;
         }
 
-        $region_patient = session()->get('region_patient');
-        $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
-        $terapisQuery = $this->model_terapis->where('is_active', 1);
+        $terapisQuery = $this->model_terapis->where('is_active', 1)->where('is_presensi', 1);
         if (!empty($allowed_regions)) {
             if (is_array($allowed_regions)) { $terapisQuery->whereIn('region_id', $allowed_regions); }
             else { $terapisQuery->where('region_id', $allowed_regions); }
@@ -111,12 +115,103 @@ class Absensikaryawan extends BaseController
             'rekap_by_tanggal' => $rekapByTanggal
         ];
 
-        return view('App\modules\absensi_karyawan\Views\absensi', $data);
+        return view('App\modules\absensi_karyawan\Views\presensi', $data);
     }
 
     public function detail($tanggal = null)
     {
-        return $this->store($tanggal);
+        return $this->presensi($tanggal);
+    }
+
+    public function tambah()
+    {
+        if (!session()->get('isLogin')) {
+            return redirect()->to(base_url('auth'));
+        }
+
+        $region_patient = session()->get('region_patient');
+        $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
+
+        $terapisQuery = $this->model_terapis
+            ->select('terapis.*, regions.name as region_name')
+            ->join('regions', 'regions.id = terapis.region_id', 'left')
+            ->where('terapis.is_active', 1)
+            ->where('terapis.is_presensi', 1);
+        
+        if (!empty($allowed_regions)) {
+            if (is_array($allowed_regions)) { 
+                $terapisQuery->whereIn('terapis.region_id', $allowed_regions); 
+            } else { 
+                $terapisQuery->where('terapis.region_id', $allowed_regions); 
+            }
+        }
+
+        $data = [
+            'title'   => 'Tambah Presensi',
+            'terapis' => $terapisQuery->orderBy('terapis.nama', 'ASC')->findAll(),
+        ];
+
+        return view('App\modules\absensi_karyawan\Views\tambah_presensi', $data);
+    }
+
+    public function simpan_presensi_baru()
+    {
+        $tanggal = $this->request->getPost('tanggal');
+        $terapisIds = $this->request->getPost('terapis_ids');
+
+        if (empty($tanggal) || empty($terapisIds)) {
+            return $this->response->setJSON([
+                'status' => 'error', 
+                'message' => 'Tanggal dan terapis wajib dipilih'
+            ]);
+        }
+
+        // Validasi tanggal tidak boleh lebih dari hari ini
+        $today = date('Y-m-d');
+        if ($tanggal > $today) {
+            return $this->response->setJSON([
+                'status' => 'error', 
+                'message' => 'Tidak dapat input presensi untuk tanggal masa depan'
+            ]);
+        }
+
+        $dataInsert = [];
+        foreach ($terapisIds as $terapisId) {
+            $dataInsert[] = [
+                'terapis_id' => $terapisId,
+                'tanggal'    => $tanggal,
+                'status'     => 'Hadir', // Default Hadir
+                'keterangan' => null
+            ];
+        }
+
+        // DATABASE TRANSACTION
+        $db = \Config\Database::connect();
+        $db->transStart();
+        
+        // Hapus presensi existing untuk terapis yang dipilih di tanggal ini
+        $this->model_absensi->whereIn('terapis_id', $terapisIds)
+                            ->where('tanggal', $tanggal)
+                            ->delete();
+        
+        // Insert presensi baru
+        $this->model_absensi->insertBatch($dataInsert);
+
+        $db->transComplete();
+        
+        if ($db->transStatus() === true) {
+            $jumlahTerapis = count($terapisIds);
+            return $this->response->setJSON([
+                'status'   => 'success',
+                'message'  => "Presensi untuk {$jumlahTerapis} terapis pada tanggal " . date('d M Y', strtotime($tanggal)) . ' berhasil disimpan!',
+                'csrfHash' => csrf_hash()
+            ]);
+        }
+        
+        return $this->response->setJSON([
+            'status' => 'error', 
+            'message' => 'Gagal menyimpan ke database. Sistem telah membatalkan perubahan.'
+        ]);
     }
 
     public function simpan_massal()
@@ -149,6 +244,7 @@ class Absensikaryawan extends BaseController
             return $this->response->setJSON([
                 'status'   => 'success',
                 'message'  => 'Presensi tanggal ' . date('d M Y', strtotime($tanggal)) . ' berhasil disimpan!',
+                'redirect' => base_url('kehadiran'),
                 'csrfHash' => csrf_hash()
             ]);
         }

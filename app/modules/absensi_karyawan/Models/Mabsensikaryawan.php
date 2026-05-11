@@ -50,6 +50,7 @@ class Mabsensikaryawan extends Model
         $bulanBagus = str_pad((string)$bulan, 2, '0', STR_PAD_LEFT);
         $tanggalAwal = "$tahun-$bulanBagus-01";
         $tanggalAkhir = date('Y-m-t', strtotime($tanggalAwal));
+        
         return $this->where('terapis_id', $terapisId)
             ->where('status', 'Hadir')
             ->where('tanggal >=', $tanggalAwal)
@@ -57,24 +58,51 @@ class Mabsensikaryawan extends Model
             ->countAllResults();
     }
 
-    public function getRekapHarian($bulan = null, $tahun = null)
+    public function getRekapHarian($bulan = null, $tahun = null, $allowedRegions = null)
     {
-        $builder = $this->select('tanggal')
-            ->select('SUM(CASE WHEN status = "Hadir" THEN 1 ELSE 0 END) as total_hadir', false)
-            ->select('SUM(CASE WHEN status = "Tidak Hadir" THEN 1 ELSE 0 END) as total_tidak_hadir', false);
+        $builder = $this->select('absensi_karyawan.tanggal')
+            ->select('SUM(CASE WHEN absensi_karyawan.status = "Hadir" THEN 1 ELSE 0 END) as total_hadir', false)
+            ->select('SUM(CASE WHEN absensi_karyawan.status = "Tidak Hadir" THEN 1 ELSE 0 END) as total_tidak_hadir', false)
+            ->join('terapis', 'terapis.id = absensi_karyawan.terapis_id', 'inner')
+            ->where('terapis.is_active', 1) // Filter hanya terapis aktif
+            ->where('terapis.is_presensi', 1); // Filter hanya terapis yang ikut presensi
 
         if ($bulan && $tahun) {
-            $builder->where('MONTH(tanggal)', $bulan)
-                    ->where('YEAR(tanggal)', $tahun);
+            $builder->where('MONTH(absensi_karyawan.tanggal)', $bulan)
+                    ->where('YEAR(absensi_karyawan.tanggal)', $tahun);
         }
 
-        return $builder->groupBy('tanggal')
-            ->orderBy('tanggal', 'DESC')
+        // Filter by region
+        if (!empty($allowedRegions)) {
+            if (is_array($allowedRegions)) {
+                $builder->whereIn('terapis.region_id', $allowedRegions);
+            } else {
+                $builder->where('terapis.region_id', $allowedRegions);
+            }
+        }
+
+        return $builder->groupBy('absensi_karyawan.tanggal')
+            ->orderBy('absensi_karyawan.tanggal', 'DESC')
             ->findAll();
     }
 
-    public function getByTanggal(string $tanggal)
+    public function getByTanggal(string $tanggal, $allowedRegions = null)
     {
-        return $this->where('tanggal', $tanggal)->findAll();
+        $builder = $this->select('absensi_karyawan.*')
+            ->join('terapis', 'terapis.id = absensi_karyawan.terapis_id', 'inner')
+            ->where('absensi_karyawan.tanggal', $tanggal)
+            ->where('terapis.is_active', 1) // Filter hanya terapis aktif
+            ->where('terapis.is_presensi', 1); // Filter hanya terapis yang ikut presensi
+
+        // Filter by region
+        if (!empty($allowedRegions)) {
+            if (is_array($allowedRegions)) {
+                $builder->whereIn('terapis.region_id', $allowedRegions);
+            } else {
+                $builder->where('terapis.region_id', $allowedRegions);
+            }
+        }
+
+        return $builder->findAll();
     }
 }

@@ -20,10 +20,12 @@ class MTerapis extends Model
         'tanggal_lahir', 
         'rank',
         'is_active',
+        'is_presensi',
         'region_id',
         'jabatan_id',
         'foto',
-        'is_active'
+        'tgl_mulai_kerja',
+        'keterangan'
     ];
 
     protected bool $allowEmptyInserts = false;

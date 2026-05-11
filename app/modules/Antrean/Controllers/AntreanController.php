@@ -96,7 +96,17 @@ class AntreanController extends BaseController
         return DataTable::of($builder)
             ->setSearchableColumns(['p.name', 'p.phone', 'pa.kabupaten_nama', 'p.id'])
             ->add('date', function ($row) {
-                return !empty($row->queue_date) ? date('d-m-Y', strtotime($row->queue_date)) : '-';
+                if (empty($row->queue_date)) return '-';
+                
+                $bulan_indo = [
+                    1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+                    5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+                    9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+                ];
+                $tgl = date('d', strtotime($row->queue_date));
+                $bln = $bulan_indo[(int)date('m', strtotime($row->queue_date))];
+                $thn = date('Y', strtotime($row->queue_date));
+                return "$tgl $bln $thn";
             })
             ->add('name', function ($row) {
                 $statusPasien = $row->visit_count > 0
@@ -651,5 +661,49 @@ class AntreanController extends BaseController
         $this->response->setHeader('Content-Type', 'application/pdf');
         $pdf->Output('Laporan_Antrean_' . date('Ymd') . '.pdf', 'I');
         exit();
+    }
+
+    /**
+     * Get patient data for auto-fill medical record modal
+     */
+    public function getPatientData($patientId)
+    {
+        $patient = $this->db->table('patients')
+            ->where('id', $patientId)
+            ->get()
+            ->getRow();
+
+        if (!$patient) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Patient not found'
+            ]);
+        }
+
+        // Get address data
+        $address = $this->db->table('patient_address')
+            ->where('patient_id', $patientId)
+            ->get()
+            ->getRow();
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => [
+                'name' => $patient->name ?? '',
+                'age' => $patient->age ?? '',
+                'phone' => $patient->phone ?? '',
+                'region_id' => $patient->region_id ?? '',
+                'address' => $address ? [
+                    'provinsi_id' => $address->provinsi_id ?? '',
+                    'provinsi_nama' => $address->provinsi_nama ?? '',
+                    'kabupaten_id' => $address->kabupaten_id ?? '',
+                    'kabupaten_nama' => $address->kabupaten_nama ?? '',
+                    'kecamatan_id' => $address->kecamatan_id ?? '',
+                    'kecamatan_nama' => $address->kecamatan_nama ?? '',
+                    'desa_id' => $address->desa_id ?? '',
+                    'desa_nama' => $address->desa_nama ?? '',
+                ] : null
+            ]
+        ]);
     }
 }

@@ -12,6 +12,37 @@
 
 </div>
 
-<?= $this->section('scripts') ?>
-
-<?= $this->endSection() ?>
+<script>
+    // Update clock every second
+    function updateClock() {
+        const now = new Date();
+        
+        // Format day and date
+        const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        
+        const dayName = days[now.getDay()];
+        const date = now.getDate();
+        const month = months[now.getMonth()];
+        const year = now.getFullYear();
+        
+        const dayElement = document.getElementById('clock-day');
+        if (dayElement) {
+            dayElement.textContent = `${dayName}, ${date} ${month} ${year}`;
+        }
+        
+        // Format time
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        
+        const timeElement = document.getElementById('clock-time');
+        if (timeElement) {
+            timeElement.textContent = `${hours}:${minutes}:${seconds}`;
+        }
+    }
+    
+    // Update immediately and then every second
+    updateClock();
+    setInterval(updateClock, 1000);
+</script>

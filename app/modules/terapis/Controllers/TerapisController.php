@@ -236,6 +236,7 @@ class TerapisController extends BaseController
     $id = $this->request->getPost('id');
     $terapis_id = $this->request->getPost('terapis_id');
     $status = $this->request->getPost('status') === 'on' ? 1 : 0;
+    $is_presensi = $this->request->getPost('is_presensi') === 'on' ? 1 : 0;
     $file = $this->request->getFile('foto');
 
     $data = [
@@ -250,6 +251,7 @@ class TerapisController extends BaseController
       'tgl_mulai_kerja' => $this->request->getPost('tgl_kerja'),
       'keterangan' => $this->request->getPost('keterangan'),
       'is_active' => $status,
+      'is_presensi' => $is_presensi,
     ];
 
     if ($foto = $this->uploadPhoto($file)) {

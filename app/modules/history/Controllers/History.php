@@ -57,9 +57,25 @@ class History extends BaseController
         $totalFiltered = $this->model_history->getTotalData($id, $options);
         $totalData     = $this->model_history->countAllResults(); // Total tanpa filter
         $no = $options['offset'] + 1;
+        
+        $bulan_indo = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+        
         foreach ($dataOutput as $value) {
             $value->no = $no++;
-            $value->date = $value->date ? date('d-m-Y', strtotime($value->date)) : '-';
+            
+            if ($value->date) {
+                $tgl = date('d', strtotime($value->date));
+                $bln = $bulan_indo[(int)date('m', strtotime($value->date))];
+                $thn = date('Y', strtotime($value->date));
+                $value->date = "$tgl $bln $thn";
+            } else {
+                $value->date = '-';
+            }
+            
             $value->complaint = !empty($value->complaint_names) ? $value->complaint_names : '-';
             $value->medhis    = !empty($value->medhis_names) ? $value->medhis_names : '-';
             $value->duration = isset($value->time_consume) ? $value->time_consume . ' mnt' : '-';

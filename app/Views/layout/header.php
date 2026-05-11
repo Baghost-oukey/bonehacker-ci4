@@ -61,8 +61,8 @@ $listRegions = session()->get('list_regions_global') ?? [];
                 </div>
             </div>
 
-            <!-- Clock (Hidden on mobile to save space) -->
-            <div class="hidden md:block">
+            <!-- Clock -->
+            <div>
                 <?= $this->include('App\Views\components\clock') ?>
             </div>
 

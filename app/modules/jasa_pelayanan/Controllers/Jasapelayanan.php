@@ -10,17 +10,19 @@ class Jasapelayanan extends BaseController
 {
     protected $model_jasapelayanan;
     protected $db;
+    protected $modelJaspelSettings;
 
     public function __construct()
     {
         $this->model_jasapelayanan = new Mjasapelayanan();
+        $this->modelJaspelSettings = new \App\modules\jasa_pelayanan\Models\MJaspelSettings();
         $this->db = \Config\Database::connect();
         helper(['url', 'form']);
     }
 
     /**
      * Halaman Jasa Pelayanan - Reguler
-     * Tampil daftar pasien (mirip Rekam Medis)
+     * Tampil data per hari dengan total pasien dan komisi
      */
     public function reguler()
     {
@@ -44,6 +46,7 @@ class Jasapelayanan extends BaseController
             'sess_region_name' => session()->get('active_region_name'),
             'sess_region_id'  => session()->get('active_region'),
             'sess_role'       => $role,
+            'current_month'   => date('Y-m'),
         ];
 
         return view('App\modules\jasa_pelayanan\Views\index_regular', $data);
@@ -165,12 +168,26 @@ class Jasapelayanan extends BaseController
             ]);
             $fullAddress = implode(', ', $addressParts);
 
+            // Format tanggal ke bahasa Indonesia
+            $bulan_indo = [
+                1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+                5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+                9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+            ];
+            $dateFormatted = '-';
+            if (!empty($row->last_visit_date)) {
+                $tgl = date('d', strtotime($row->last_visit_date));
+                $bln = $bulan_indo[(int)date('m', strtotime($row->last_visit_date))];
+                $thn = date('Y', strtotime($row->last_visit_date));
+                $dateFormatted = "$tgl $bln $thn";
+            }
+
             $output[] = [
                 "id"           => $row->id,
                 "name"         => $row->name . ' (' . ($row->phone ?? '-') . ')',
                 "name_region"  => $row->name_region ?? '-',
                 "address"      => $fullAddress ?: '-',
-                "date"         => !empty($row->last_visit_date) ? date('d-m-Y', strtotime($row->last_visit_date)) : '-',
+                "date"         => $dateFormatted,
                 "visit_count"  => $row->visit_count ?? 0,
                 "phone"        => $row->phone ?? '-',
             ];
@@ -222,11 +239,21 @@ class Jasapelayanan extends BaseController
 
         $no = $start + 1;
         $output = [];
+        
+        $bulan_indo = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
 
         foreach ($dataOutput as $row) {
+            $tgl = date('d', strtotime($row->tanggal_layanan));
+            $bln = $bulan_indo[(int)date('m', strtotime($row->tanggal_layanan))];
+            $thn = date('Y', strtotime($row->tanggal_layanan));
+            
             $output[] = [
                 "no"              => $no++,
-                "tanggal_layanan" => date('d-m-Y', strtotime($row->tanggal_layanan)),
+                "tanggal_layanan" => "$tgl $bln $thn",
                 "nama_pasien"     => $row->nama_pasien . ' (' . ($row->telepon_pasien ?? '-') . ')',
                 "nama_terapis"    => $row->nama_terapis ?? '-',
                 "action"          => '
@@ -372,6 +399,233 @@ class Jasapelayanan extends BaseController
             'status'    => true,
             'message'   => 'Data berhasil dihapus',
             'new_token' => csrf_hash()
+        ]);
+    }
+
+    /**
+     * Halaman Pengaturan Jaspel
+     */
+    public function settings()
+    {
+        if (!session()->get('isLogin')) {
+            return redirect()->to(base_url('auth'));
+        }
+
+        $role = session()->get('role');
+        $region_patient = session()->get('region_patient');
+        
+        // Hanya superadmin dan owner yang bisa akses
+        if (!in_array($role, ['superadmin', 'owner'])) {
+            return redirect()->back()->with('message', ['error', 'Akses Ditolak', 'Anda tidak memiliki akses ke halaman ini.']);
+        }
+
+        $mRegion = model('App\modules\region\Models\MRegion');
+        $mTerapis = new \App\modules\terapis\Models\MTerapis();
+        
+        $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
+        $regions = $mRegion->getData(null, $allowed_regions);
+
+        // Get all settings
+        $settings = $this->modelJaspelSettings->getAllWithRegion();
+        
+        // Get all terapis grouped by region
+        $allTerapis = $mTerapis->select('terapis.*, regions.name as region_name')
+                               ->join('regions', 'regions.id = terapis.region_id', 'left')
+                               ->where('terapis.is_active', 1)
+                               ->findAll();
+
+        $data = [
+            'title'           => 'Pengaturan Jasa Pelayanan',
+            'realname'        => session()->get('realname'),
+            'role'            => $role,
+            'regions'         => $regions,
+            'settings'        => $settings,
+            'all_terapis'     => $allTerapis,
+            'msg'             => session()->getFlashdata('message'),
+        ];
+
+        return view('App\modules\jasa_pelayanan\Views\settings', $data);
+    }
+
+    /**
+     * Save Jaspel Settings
+     */
+    public function saveSettings()
+    {
+        if (!session()->get('isLogin')) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Unauthorized']);
+        }
+
+        $regionId = $this->request->getPost('region_id');
+        $nominal = $this->request->getPost('nominal_per_pasien');
+        $terapisIds = $this->request->getPost('terapis_ids'); // array
+
+        if (empty($regionId) || empty($nominal)) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Region dan nominal wajib diisi'
+            ]);
+        }
+
+        $data = [
+            'nominal_per_pasien' => $nominal,
+            'terapis_ids' => json_encode($terapisIds ?? []),
+            'updated_by' => session()->get('userId'),
+        ];
+
+        // Check if new insert
+        $existing = $this->modelJaspelSettings->where('region_id', $regionId)->first();
+        if (!$existing) {
+            $data['created_by'] = session()->get('userId');
+        }
+
+        $result = $this->modelJaspelSettings->saveSettings($regionId, $data);
+
+        if ($result) {
+            return $this->response->setJSON([
+                'status' => 'success',
+                'message' => 'Pengaturan berhasil disimpan',
+                'csrfHash' => csrf_hash()
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'status' => 'error',
+            'message' => 'Gagal menyimpan pengaturan'
+        ]);
+    }
+
+    /**
+     * Get Jaspel Data Per Hari (untuk DataTables)
+     */
+    public function getJaspelPerHari()
+    {
+        $request = \Config\Services::request();
+        
+        $bulan = $this->request->getPost('bulan') ?? date('Y-m');
+        $regionId = $this->request->getPost('region_id');
+        
+        $role = session()->get('role');
+        $region_patient = session()->get('region_patient');
+        
+        // Filter region berdasarkan role
+        if ($role !== 'superadmin') {
+            if ($region_patient !== 'all') {
+                $regionId = is_array($region_patient) ? $region_patient[0] : $region_patient;
+            }
+        }
+
+        if (empty($regionId)) {
+            return $this->response->setJSON([
+                'draw' => intval($this->request->getPost('draw')),
+                'recordsTotal' => 0,
+                'recordsFiltered' => 0,
+                'data' => [],
+                'csrfHash' => csrf_hash()
+            ]);
+        }
+
+        // Get jaspel settings untuk region ini
+        $settings = $this->modelJaspelSettings->getByRegion($regionId);
+        
+        if (!$settings) {
+            return $this->response->setJSON([
+                'draw' => intval($this->request->getPost('draw')),
+                'recordsTotal' => 0,
+                'recordsFiltered' => 0,
+                'data' => [],
+                'message' => 'Pengaturan jaspel belum dibuat untuk cabang ini',
+                'csrfHash' => csrf_hash()
+            ]);
+        }
+
+        $nominalPerPasien = $settings->nominal_per_pasien;
+        $terapisIdsAllowed = json_decode($settings->terapis_ids, true) ?? [];
+
+        // Parse bulan
+        list($tahun, $bulanNum) = explode('-', $bulan);
+        $startDate = "$tahun-$bulanNum-01";
+        $endDate = date('Y-m-t', strtotime($startDate));
+
+        // Query: Hitung jumlah pasien per hari dari histories
+        $pasienPerHari = $this->db->table('histories h')
+            ->select('DATE(h.date) as tanggal, COUNT(DISTINCT h.patient_id) as total_pasien')
+            ->where('h.history_region', $regionId)
+            ->where('h.is_delete', 0)
+            ->where('h.type', 'posted') // Hanya yang sudah posted
+            ->where('DATE(h.date) >=', $startDate)
+            ->where('DATE(h.date) <=', $endDate)
+            ->groupBy('DATE(h.date)')
+            ->orderBy('tanggal', 'DESC')
+            ->get()
+            ->getResult();
+
+        $output = [];
+        $no = 1;
+
+        foreach ($pasienPerHari as $row) {
+            $tanggal = $row->tanggal;
+            $totalPasien = $row->total_pasien;
+
+            // Cek terapis yang hadir di tanggal ini (dari terapis yang berhak dan masih aktif)
+            $terapisHadir = [];
+            if (!empty($terapisIdsAllowed)) {
+                $terapisHadir = $this->db->table('absensi_karyawan ak')
+                    ->select('ak.terapis_id')
+                    ->join('terapis t', 't.id = ak.terapis_id', 'inner')
+                    ->whereIn('ak.terapis_id', $terapisIdsAllowed)
+                    ->where('ak.tanggal', $tanggal)
+                    ->where('ak.status', 'Hadir')
+                    ->where('t.is_active', 1) // Hanya terapis yang aktif
+                    ->get()
+                    ->getResultArray();
+            }
+
+            $jumlahTerapisHadir = count($terapisHadir);
+            $totalJaspelHariIni = $totalPasien * $nominalPerPasien;
+            $jaspelPerTerapis = $jumlahTerapisHadir > 0 ? $totalJaspelHariIni / $jumlahTerapisHadir : 0;
+
+            // Get nama terapis yang hadir
+            $namaTerapisHadir = '-';
+            if ($jumlahTerapisHadir > 0) {
+                $terapisHadirIds = array_column($terapisHadir, 'terapis_id');
+                $namaTerapis = $this->db->table('terapis')
+                    ->select('nama')
+                    ->whereIn('id', $terapisHadirIds)
+                    ->where('is_active', 1) // Hanya terapis yang aktif
+                    ->get()
+                    ->getResultArray();
+                $namaTerapisHadir = implode(', ', array_column($namaTerapis, 'nama'));
+            }
+
+            // Format tanggal ke bahasa Indonesia
+            $bulan_indo = [
+                1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+                5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+                9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+            ];
+            $tgl = date('d', strtotime($tanggal));
+            $bln = $bulan_indo[(int)date('m', strtotime($tanggal))];
+            $thn = date('Y', strtotime($tanggal));
+            $tanggalIndo = "$tgl $bln $thn";
+
+            $output[] = [
+                'no' => $no++,
+                'tanggal' => $tanggalIndo,
+                'total_pasien' => $totalPasien,
+                'terapis_hadir' => $jumlahTerapisHadir . ' orang',
+                'nama_terapis' => $namaTerapisHadir,
+                'total_jaspel' => 'Rp ' . number_format($totalJaspelHariIni, 0, ',', '.'),
+                'jaspel_per_terapis' => 'Rp ' . number_format($jaspelPerTerapis, 0, ',', '.'),
+            ];
+        }
+
+        return $this->response->setJSON([
+            'draw' => intval($this->request->getPost('draw')),
+            'recordsTotal' => count($output),
+            'recordsFiltered' => count($output),
+            'data' => $output,
+            'csrfHash' => csrf_hash()
         ]);
     }
 }

@@ -181,10 +181,23 @@ class Patients extends BaseController
         $totalData = $this->patientModel->countAllResults();
 
         $no = $start + 1;
+        $bulan_indo = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+        
         foreach ($dataOutput as &$value) {
             $value->no = $no;
 
-            $value->date = !empty($value->date) ? date('d-m-Y', strtotime($value->date)) : '-';
+            if (!empty($value->date)) {
+                $tgl = date('d', strtotime($value->date));
+                $bln = $bulan_indo[(int)date('m', strtotime($value->date))];
+                $thn = date('Y', strtotime($value->date));
+                $value->date = "$tgl $bln $thn";
+            } else {
+                $value->date = '-';
+            }
 
             $value->action = '
                 <div class="flex items-center justify-center gap-2">
@@ -301,12 +314,21 @@ class Patients extends BaseController
             ]);
             $fullAddress = implode(', ', $addressParts);
 
+            // Format tanggal ke bahasa Indonesia
+            $dateFormatted = '-';
+            if (!empty($row->last_visit_date)) {
+                $tgl = date('d', strtotime($row->last_visit_date));
+                $bln = $bulan_indo[(int)date('m', strtotime($row->last_visit_date))];
+                $thn = date('Y', strtotime($row->last_visit_date));
+                $dateFormatted = "$tgl $bln $thn";
+            }
+
             $output[] = [
                 "id" => $row->id,
                 "name" => $row->name . ' (' . $row->phone . ')',
                 "name_region" => $row->name_region ?? '-',
                 "address" => $fullAddress,
-                "date" => !empty($row->last_visit_date) ? date('d-m-Y', strtotime($row->last_visit_date)) : '-',
+                "date" => $dateFormatted,
                 "visit_count" => $row->visit_count ?? 0,
                 "action" => '
                 <a href="' . site_url('patient/show/' . $row->id) . '" class="btn btn-primary btn-sm mr-1"><i class="fas fa-eye"></i></a>

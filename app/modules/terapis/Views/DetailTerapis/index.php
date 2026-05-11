@@ -207,8 +207,19 @@
                             <label class="mt-2 inline-flex items-center gap-3 cursor-pointer">
                                 <input type="checkbox" name="status" id="status_checkbox" class="form-input sr-only peer" <?= $terapis->is_active == 1 ? 'checked' : '' ?> disabled>
                                 <div class="relative w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:inset-s-0.5 after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
-                                <span class="text-sm font-medium text-slate-700">Aktif</span>
+                                <span class="text-sm font-medium text-slate-700" id="status_label"><?= $terapis->is_active == 1 ? 'Ya' : 'Tidak' ?></span>
                             </label>
+                        </div>
+
+                        <!-- Presensi -->
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium text-slate-700">Presensi</label>
+                            <label class="mt-2 inline-flex items-center gap-3 cursor-pointer">
+                                <input type="checkbox" name="is_presensi" id="presensi_checkbox" class="form-input sr-only peer" <?= ($terapis->is_presensi ?? 1) == 1 ? 'checked' : '' ?> disabled>
+                                <div class="relative w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:inset-s-0.5 after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
+                                <span class="text-sm font-medium text-slate-700" id="presensi_label"><?= ($terapis->is_presensi ?? 1) == 1 ? 'Ya' : 'Tidak' ?></span>
+                            </label>
+                            <p class="text-xs text-slate-500 mt-1">Jika dinonaktifkan, terapis tidak akan muncul di form presensi harian</p>
                         </div>
                     </div>
                 </div>
@@ -638,6 +649,15 @@
             }
         }
     }
+
+    // Update label text when toggle changes
+    document.getElementById('status_checkbox').addEventListener('change', function() {
+        document.getElementById('status_label').textContent = this.checked ? 'Ya' : 'Tidak';
+    });
+
+    document.getElementById('presensi_checkbox').addEventListener('change', function() {
+        document.getElementById('presensi_label').textContent = this.checked ? 'Ya' : 'Tidak';
+    });
 </script>
 
 <?= $this->endSection() ?>

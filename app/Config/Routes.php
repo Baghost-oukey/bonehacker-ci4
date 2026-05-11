@@ -26,16 +26,17 @@ $routes->get('antrean/daftar-antrean', '\App\Modules\Antrean\Controllers\Antrean
 
 // Antrean
 $routes->group('antrean', ['namespace' => 'App\Modules\Antrean\Controllers', 'filter' => 'auth'], function ($routes) {
-  $routes->get('', 'AntreanController::index');
-  $routes->get('fetchJson', 'AntreanController::fetchJson');
-  $routes->post('fetchDataTable', 'AntreanController::fetchDataTable');
-  $routes->post('fetchPatientDataTables', 'AntreanController::fetchPatientDataTables');
-  $routes->get('addToQueue/(:num)', 'AntreanController::addToQueue/$1');
-  $routes->post('destroy/(:num)', 'AntreanController::destroy/$1');
-  $routes->get('procesToQueue/(:num)', 'AntreanController::procesToQueue/$1');
-  $routes->get('finishQueue/(:num)', 'AntreanController::finishQueue/$1');
-  $routes->get('export_excell_antrean', 'AntreanController::export_excell_antrean');
-  $routes->get('print_pdf_antrean', 'AntreanController::print_pdf_antrean');
+    $routes->get('', 'AntreanController::index');
+    $routes->get('fetchJson', 'AntreanController::fetchJson');
+    $routes->post('fetchDataTable', 'AntreanController::fetchDataTable');
+    $routes->post('fetchPatientDataTables', 'AntreanController::fetchPatientDataTables');
+    $routes->get('getPatientData/(:num)', 'AntreanController::getPatientData/$1');
+    $routes->get('addToQueue/(:num)', 'AntreanController::addToQueue/$1');
+    $routes->post('destroy/(:num)', 'AntreanController::destroy/$1');
+    $routes->get('procesToQueue/(:num)', 'AntreanController::procesToQueue/$1');
+    $routes->get('finishQueue/(:num)', 'AntreanController::finishQueue/$1');
+    $routes->get('export_excell_antrean', 'AntreanController::export_excell_antrean');
+    $routes->get('print_pdf_antrean', 'AntreanController::print_pdf_antrean');
 });
 
 // Rekam Medis
@@ -364,24 +365,28 @@ $routes->group('detail-gaji', ['namespace' => 'App\modules\detail_gaji\Controlle
   $routes->post('proses_simpan', 'Detailgaji::proses_simpan');
 });
 
-// Routes - Kehadruan 
+// Routes - Kehadiran 
 $routes->group('kehadiran', ['namespace' => 'App\modules\absensi_karyawan\Controllers', 'filter' => 'auth'], function ($routes) {
   $routes->get('/', 'Absensikaryawan::index');
-  $routes->get('store/(:any)', 'Absensikaryawan::store/$1');
-  $routes->get('store', 'Absensikaryawan::store'); // Route untuk halaman form Card
+  $routes->get('tambah', 'Absensikaryawan::tambah');
+  $routes->post('simpan_presensi_baru', 'Absensikaryawan::simpan_presensi_baru');
+  $routes->get('presensi/(:any)', 'Absensikaryawan::presensi/$1');
   $routes->get('detail/(:any)', 'Absensikaryawan::detail/$1');
-  $routes->post('simpan_massal', 'Absensikaryawan::simpan_massal'); // Route untuk proses AJAX
   $routes->get('export', 'Absensikaryawan::export');
+  $routes->post('simpan_massal', 'Absensikaryawan::simpan_massal');
 });
 
 
-$routes->group('jasa-pelayanan', ['namespace' => 'App\modules\jasa_pelayanan\Controllers', 'filter' => 'auth'], function ($routes) {
-  $routes->get('reguler', 'Jasapelayanan::reguler');
-  $routes->get('kejantanan', 'Jasapelayanan::kejantanan');
-  $routes->post('fetch', 'Jasapelayanan::fetch');
-  $routes->post('fetchPatients', 'Jasapelayanan::fetchPatients');
-  $routes->get('show/(:num)', 'Jasapelayanan::show/$1');
-  $routes->get('detail-reguler/(:num)', 'Jasapelayanan::showReguler/$1');
-  $routes->get('detail-kejantanan/(:num)', 'Jasapelayanan::showKejantanan/$1');
-  $routes->post('destroy/(:num)', 'Jasapelayanan::destroy/$1');
+$routes->group('jasa-pelayanan', ['namespace' => 'App\modules\jasa_pelayanan\Controllers', 'filter' => 'auth'], function($routes) {
+    $routes->get('reguler', 'Jasapelayanan::reguler');
+    $routes->get('kejantanan', 'Jasapelayanan::kejantanan');
+    $routes->get('settings', 'Jasapelayanan::settings');
+    $routes->post('saveSettings', 'Jasapelayanan::saveSettings');
+    $routes->post('getJaspelPerHari', 'Jasapelayanan::getJaspelPerHari');
+    $routes->post('fetch', 'Jasapelayanan::fetch');
+    $routes->post('fetchPatients', 'Jasapelayanan::fetchPatients');
+    $routes->get('show/(:num)', 'Jasapelayanan::show/$1');
+    $routes->get('detail-reguler/(:num)', 'Jasapelayanan::showReguler/$1');
+    $routes->get('detail-kejantanan/(:num)', 'Jasapelayanan::showKejantanan/$1');
+    $routes->post('destroy/(:num)', 'Jasapelayanan::destroy/$1'); 
 });

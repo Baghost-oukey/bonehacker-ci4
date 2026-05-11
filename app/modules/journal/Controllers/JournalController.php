@@ -87,9 +87,17 @@ class JournalController extends BaseController
         });
 
         $datatables->addColumn('tanggal', function ($row) {
-            return !empty($row->tanggal)
-                ? date('d-m-Y', strtotime($row->tanggal))
-                : '-';
+            if (empty($row->tanggal)) return '-';
+            
+            $bulan_indo = [
+                1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+                5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+                9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+            ];
+            $tgl = date('d', strtotime($row->tanggal));
+            $bln = $bulan_indo[(int)date('m', strtotime($row->tanggal))];
+            $thn = date('Y', strtotime($row->tanggal));
+            return "$tgl $bln $thn";
         });
 
         $datatables->addColumn('status', function ($row) {

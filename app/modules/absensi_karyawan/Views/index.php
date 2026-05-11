@@ -32,8 +32,8 @@
                 <i class="fas fa-file-excel text-emerald-600"></i> Export
             </a>
 
-            <a href="<?= base_url('kehadiran/store') ?>" class="bg-indigo-600 hover:bg-indigo-700 text-white font-black text-sm uppercase tracking-widest py-2.5 px-6 rounded-xl transition-all shadow-lg shadow-indigo-200 flex items-center gap-2">
-                <i class="fas fa-plus"></i> Input Hari Ini
+            <a href="<?= base_url('kehadiran/tambah') ?>" class="bg-indigo-600 hover:bg-indigo-700 text-white font-black text-sm uppercase tracking-widest py-2.5 px-6 rounded-xl transition-all shadow-lg shadow-indigo-200 flex items-center gap-2">
+                <i class="fas fa-plus"></i> Tambah Presensi
             </a>
         </div>
     </div>
@@ -63,7 +63,19 @@
                                             <i class="fas fa-calendar-day"></i>
                                         </div>
                                         <div>
-                                            <p class="font-bold text-slate-800"><?= date('d F Y', strtotime($rekap['tanggal'])) ?></p>
+                                            <p class="font-bold text-slate-800">
+                                                <?php
+                                                    $bulan_indo = [
+                                                        1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+                                                        5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+                                                        9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+                                                    ];
+                                                    $tanggal = date('d', strtotime($rekap['tanggal']));
+                                                    $bulan = $bulan_indo[(int)date('m', strtotime($rekap['tanggal']))];
+                                                    $tahun = date('Y', strtotime($rekap['tanggal']));
+                                                    echo "$tanggal $bulan $tahun";
+                                                ?>
+                                            </p>
                                             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Telah diinput</p>
                                         </div>
                                     </div>
@@ -82,7 +94,7 @@
                                     <a href="<?= base_url('kehadiran/detail/' . $rekap['tanggal']) ?>" class="text-slate-400 hover:text-indigo-600 transition-colors p-2" title="Lihat Rincian">
                                         <i class="fas fa-eye text-lg"></i>
                                     </a>
-                                    <a href="<?= base_url('kehadiran/store/' . $rekap['tanggal']) ?>" class="text-slate-400 hover:text-amber-500 transition-colors p-2" title="Edit Data">
+                                    <a href="<?= base_url('kehadiran/presensi/' . $rekap['tanggal']) ?>" class="text-slate-400 hover:text-amber-500 transition-colors p-2" title="Edit Data">
                                         <i class="fas fa-edit text-lg"></i>
                                     </a>
                                 </td>
