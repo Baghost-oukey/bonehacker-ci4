@@ -96,7 +96,11 @@ const setupRegionPage = () => {
 
   const renderEmptyState = (message) => {
     const colCount = config.role === 'superadmin' ? 5 : 4;
+    // Desktop table state
     $("#table-region tbody").html(`<tr class="hover:bg-slate-50 transition"><td colspan="${colCount}" class="px-6 py-12 text-center text-slate-400 italic text-sm"><i class="fas fa-inbox mr-2 text-slate-300"></i>${message}</td></tr>`);
+    
+    // Mobile container state
+    $("#mobile-region-container").html(`<div class="p-12 text-center text-slate-400 italic text-sm"><i class="fas fa-inbox mr-2 text-slate-300"></i>${message}</div>`);
   };
 
   const loadTableData = (pageNumber = 1) => {
@@ -120,7 +124,9 @@ const setupRegionPage = () => {
         filteredRecords = Number(response.recordsFiltered || totalRecords);
 
         const tbody = $("#table-region tbody");
+        const mContainer = $("#mobile-region-container");
         tbody.empty();
+        mContainer.empty();
 
         if (!response.data || response.data.length === 0) {
           renderEmptyState("Data cabang belum tersedia");
@@ -130,6 +136,7 @@ const setupRegionPage = () => {
         }
 
         response.data.forEach((row) => {
+          // --- RENDER DESKTOP TABLE ---
           const tr = $(`<tr class="hover:bg-slate-50 transition border-b border-slate-100"></tr>`);
           tr.append(`<td class="px-6 py-3.5">${row.id || "-"}</td>`);
           tr.append(`<td class="px-6 py-3.5 text-slate-800">${row.name_view || "-"}</td>`);
@@ -139,8 +146,38 @@ const setupRegionPage = () => {
           if (config.role === 'superadmin') {
             tr.append(`<td class="px-6 py-3.5 text-right">${row.action || "-"}</td>`);
           }
-          
           tbody.append(tr);
+
+          // --- RENDER MOBILE CARDS ---
+          const cardHtml = `
+            <div class="p-4 space-y-4 bg-white">
+              <div class="flex items-start justify-between gap-3">
+                <div class="flex items-start gap-3 flex-1 min-w-0">
+                  <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-400 font-mono text-sm border border-slate-200 shadow-sm mt-0.5">
+                    #${row.id}
+                  </div>
+                  <div class="flex flex-col min-w-0">
+                    <span class="text-[15px] font-black text-slate-900 leading-tight uppercase tracking-tight">${row.name_view}</span>
+                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Dibuat: ${row.created_at}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-slate-50/50 rounded-xl p-3 border border-slate-100">
+                <div class="flex flex-col gap-1">
+                  <span class="text-[9px] text-slate-400 font-black uppercase tracking-widest">Terakhir Diperbarui</span>
+                  <span class="text-[11px] text-slate-700 font-black">${row.updated_at || '-'}</span>
+                </div>
+              </div>
+
+              <div class="pt-1">
+                 <div class="w-full flex items-center justify-center gap-2 [&>a]:flex-1 [&>button]:flex-1 [&>a]:flex [&>a]:items-center [&>a]:justify-center [&>a]:h-10 [&>a]:rounded-xl [&>a]:text-xs [&>a]:font-bold [&>button]:h-10 [&>button]:rounded-xl [&>button]:text-xs [&>button]:font-bold shadow-sm">
+                   ${row.action || ""}
+                 </div>
+              </div>
+            </div>
+          `;
+          mContainer.append(cardHtml);
         });
 
         updatePaginationInfo();

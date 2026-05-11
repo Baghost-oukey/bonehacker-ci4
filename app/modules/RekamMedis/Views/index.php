@@ -1,7 +1,7 @@
 <?= $this->extend('layout/layout') ?>
 <?= $this->section('content') ?>
 
-<section id="rekamMedisPage" class="w-full space-y-6 p-4 md:p-6">
+<section id="rekamMedisPage" class="w-full space-y-6 py-4 md:py-6">
     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
             <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">
@@ -12,25 +12,25 @@
             </p>
         </div>
 
-        <div class="flex flex-wrap items-center gap-3">
+        <div class="grid grid-cols-2 gap-3 w-full md:w-auto md:flex md:items-center">
             <?php if (session()->get('role') === 'superadmin'): ?>
                 <button type="button" data-modal-open="modalExport"
-                    class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
+                    class="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
                     <i class="fas fa-file-export text-slate-500"></i>
-                    Export Data
+                    <span>Export</span>
                 </button>
             <?php endif; ?>
 
             <button type="button" data-modal-open="exampleModal"
-                class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-700">
+                class="inline-flex items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-700">
                 <i class="fas fa-plus-circle text-white"></i>
-                Tambah Pasien
+                <span>Pasien</span>
             </button>
         </div>
     </div>
 
     <div class="rounded-2xl bg-white shadow-sm border border-slate-200/50 overflow-hidden">
-        <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4">
+        <div class="border-b border-slate-100 bg-slate-50/50 px-5 py-4 md:px-6">
             <div class="mb-4">
                 <h3 class="text-lg font-semibold text-slate-800">Data Pasien</h3>
                 <p class="text-sm text-slate-500">Kelola data pasien dan rekam medis secara efisien</p>
@@ -48,8 +48,16 @@
             </div>
         </div>
 
+        <!-- Mobile Card Container (KODE KITA) -->
+        <div id="mobile-patient-container" class="md:hidden divide-y divide-slate-100 bg-white">
+            <div class="p-12 text-center text-slate-400 italic text-sm">
+                <i class="fas fa-spinner fa-spin mr-2 text-slate-300"></i>
+                Memuat data pasien...
+            </div>
+        </div>
+
         <div class="overflow-x-auto">
-            <table id="table-RekamMedis" class="w-full text-sm">
+            <table id="table-RekamMedis" class="w-full text-sm hidden md:table">
                 <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
                     <tr>
                         <th class="px-6 py-3.5 text-left font-semibold">ID Pasien</th>

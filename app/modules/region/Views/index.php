@@ -1,7 +1,7 @@
 <?= $this->extend('layout/layout') ?>
 <?= $this->section('content') ?>
 
-<section id="regionPage" class="w-full space-y-6 p-4 md:p-6">
+<section id="regionPage" class="w-full space-y-6 py-4 md:py-6">
     <?php
     $sess_role = session()->get('role');
     $sess_active_id = session()->get('active_region');
@@ -26,10 +26,10 @@
         </div>
 
         <?php if ($sess_role === 'superadmin'): ?>
-        <div class="flex items-center">
+        <div class="w-full md:w-auto">
             <button type="button" data-modal-open="modalTambahRegion"
-                class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-700">
-                <i class="fas fa-plus text-white"></i>
+                class="inline-flex w-full md:w-auto items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-700">
+                <i class="fas fa-plus-circle text-white"></i>
                 Tambah Cabang
             </button>
         </div>
@@ -37,8 +37,7 @@
     </div>
 
     <div class="rounded-2xl bg-white shadow-sm border border-slate-200/50 overflow-hidden">
-        <!-- Header -->
-        <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4">
+        <div class="border-b border-slate-100 bg-slate-50/50 px-5 py-4 md:px-6">
             <div class="mb-4">
                 <h3 class="text-lg font-semibold text-slate-800">Daftar Cabang</h3>
                 <p class="text-sm text-slate-500">Wilayah aktif: <?= esc($region_label) ?></p>
@@ -53,22 +52,30 @@
         </div>
 
         <!-- Table -->
+        <!-- Mobile Card Container (KODE KITA) -->
+        <div id="mobile-region-container" class="md:hidden divide-y divide-slate-100 bg-white">
+            <div class="p-12 text-center text-slate-400 italic text-sm">
+                <i class="fas fa-spinner fa-spin mr-2 text-slate-300"></i>
+                Memuat data cabang...
+            </div>
+        </div>
+
         <div class="overflow-x-auto">
-            <table id="table-region" class="w-full text-sm">
+            <table id="table-region" class="w-full text-sm hidden md:table">
                 <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
                     <tr>
                         <th class="px-6 py-3.5 text-left font-semibold">ID</th>
                         <th class="px-6 py-3.5 text-left font-semibold">Cabang</th>
                         <th class="px-6 py-3.5 text-left font-semibold">Waktu Buat</th>
                         <th class="px-6 py-3.5 text-left font-semibold">Terakhir Diperbarui</th>
-                        <?php if ($sess_role === 'superadmin'): ?>
-                        <th class="px-6 py-3.5 text-right font-semibold">Aksi</th>
+                        <?php if (session()->get('role') === 'superadmin'): ?>
+                            <th class="px-6 py-3.5 text-right font-semibold">Aksi</th>
                         <?php endif; ?>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-slate-700">
                     <tr class="hover:bg-slate-50 transition">
-                        <td colspan="5" class="px-6 py-12 text-center text-slate-400 italic text-sm">
+                        <td colspan="<?= session()->get('role') === 'superadmin' ? 5 : 4 ?>" class="px-6 py-12 text-center text-slate-400 italic text-sm">
                             <i class="fas fa-spinner fa-spin mr-2 text-slate-300"></i>
                             Memuat data cabang...
                         </td>

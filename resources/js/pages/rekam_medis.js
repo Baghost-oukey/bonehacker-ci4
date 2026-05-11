@@ -117,8 +117,15 @@ const setupRekamMedisPage = () => {
     const icon = isLoading
       ? '<i class="fas fa-spinner fa-spin mr-2 text-slate-300"></i>'
       : '<i class="fas fa-inbox mr-2 text-slate-300"></i>';
+    
+    // Desktop table state
     $("#table-RekamMedis tbody").html(
       `<tr class="hover:bg-slate-50 transition"><td colspan="7" class="px-6 py-12 text-center text-slate-400 italic text-sm">${icon}${message}</td></tr>`,
+    );
+
+    // Mobile container state
+    $("#mobile-patient-container").html(
+      `<div class="p-12 text-center text-slate-400 italic text-sm">${icon}${message}</div>`
     );
   };
 
@@ -145,7 +152,9 @@ const setupRekamMedisPage = () => {
         filteredRecords = Number(response.recordsFiltered || totalRecords);
 
         const tbody = $("#table-RekamMedis tbody");
+        const mContainer = $("#mobile-patient-container");
         tbody.empty();
+        mContainer.empty();
 
         if (!response.data || response.data.length === 0) {
           renderTableState("Data pasien belum tersedia");
@@ -155,15 +164,9 @@ const setupRekamMedisPage = () => {
         }
 
         response.data.forEach((row) => {
-          // --- INJECT STYLING UNTUK DELETE ---
           const isDeleted = row.is_delete == 1 || row.is_delete === "1";
-          const textStyle = isDeleted
-            ? "text-red-500 line-through decoration-red-500"
-            : "";
-          const nameStyle = isDeleted
-            ? "text-red-500 line-through decoration-red-500"
-            : "text-slate-800 font-medium";
-
+          const textStyle = isDeleted ? "text-red-500 line-through decoration-red-500" : "";
+          const nameStyle = isDeleted ? "text-red-500 line-through decoration-red-500" : "text-slate-800 font-medium";
 
           // --- BUTTON AKSI ---
           const actionBtns = `
@@ -187,29 +190,69 @@ const setupRekamMedisPage = () => {
             </div>
           `;
 
-          const tr = $(
-            `<tr class="hover:bg-slate-50 transition border-b border-slate-100 ${isDeleted ? 'bg-red-50/30' : ''}"></tr>`,
-          );
-          tr.append(
-            `<td class="px-6 py-3.5 text-xs ${isDeleted ? 'text-red-500 line-through' : 'text-slate-500'}">${row.id || "-"}</td>`,
-          );
-          tr.append(
-            `<td class="px-6 py-3.5 ${nameStyle}">${row.name || "-"}</td>`,
-          );
-          tr.append(
-            `<td class="px-6 py-3.5 ${isDeleted ? 'text-red-500 line-through' : 'text-slate-700'}">${row.name_region || "-"}</td>`
-          );
-          tr.append(
-            `<td class="px-6 py-3.5 text-xs max-w-xs truncate ${isDeleted ? 'text-red-500 line-through' : 'text-slate-500'}">${row.address || "-"}</td>`,
-          );
-          tr.append(
-            `<td class="px-6 py-3.5 text-center text-xs ${isDeleted ? 'text-red-500 line-through' : ''}">${row.date || "-"}</td>`,
-          );
-          tr.append(
-            `<td class="px-6 py-3.5 text-center ${isDeleted ? 'text-red-500 line-through' : ''}">${row.visit_count || 0}</td>`,
-          );
+          // --- RENDER DESKTOP TABLE ---
+          const tr = $(`<tr class="hover:bg-slate-50 transition border-b border-slate-100 ${isDeleted ? 'bg-red-50/30' : ''}"></tr>`);
+          tr.append(`<td class="px-6 py-3.5 text-xs ${isDeleted ? 'text-red-500 line-through' : 'text-slate-500'}">${row.id || "-"}</td>`);
+          tr.append(`<td class="px-6 py-3.5 ${nameStyle}">${row.name || "-"}</td>`);
+          tr.append(`<td class="px-6 py-3.5 ${isDeleted ? 'text-red-500 line-through' : 'text-slate-700'}">${row.name_region || "-"}</td>`);
+          tr.append(`<td class="px-6 py-3.5 text-xs max-w-xs truncate ${isDeleted ? 'text-red-500 line-through' : 'text-slate-500'}">${row.address || "-"}</td>`);
+          tr.append(`<td class="px-6 py-3.5 text-center text-xs ${isDeleted ? 'text-red-500 line-through' : ''}">${row.date || "-"}</td>`);
+          tr.append(`<td class="px-6 py-3.5 text-center ${isDeleted ? 'text-red-500 line-through' : ''}">${row.visit_count || 0}</td>`);
           tr.append(`<td class="px-6 py-3.5">${actionBtns}</td>`);
           tbody.append(tr);
+
+          // --- RENDER MOBILE CARDS ---
+          const cardHtml = `
+            <div class="p-4 space-y-4 bg-white ${isDeleted ? 'bg-red-50/20' : ''}">
+              <div class="flex items-start justify-between gap-3">
+                <div class="flex items-start gap-3 flex-1 min-w-0">
+                  <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-400 font-mono text-sm border border-slate-200 shadow-sm mt-0.5">
+                    #${row.id}
+                  </div>
+                  <div class="flex flex-col min-w-0">
+                    <span class="text-[15px] font-black text-slate-900 leading-tight ${isDeleted ? 'text-red-500 line-through' : ''}">${row.name}</span>
+                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">${row.name_region}</span>
+                  </div>
+                </div>
+                <div class="flex flex-col items-end shrink-0">
+                  <div class="flex items-center gap-1.5 bg-teal-50 px-2 py-1 rounded-lg border border-teal-100">
+                     <span class="text-[11px] font-black text-teal-600">${row.visit_count}</span>
+                     <span class="text-[9px] font-bold text-teal-400 uppercase tracking-tighter">Visit</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3 bg-slate-50/50 rounded-xl p-3 border border-slate-100">
+                <div class="flex flex-col gap-1">
+                  <span class="text-[9px] text-slate-400 font-black uppercase tracking-widest">Kunjungan Terakhir</span>
+                  <span class="text-[11px] text-slate-700 font-black">${row.date || '-'}</span>
+                </div>
+                <div class="flex flex-col gap-1 border-l border-slate-200 pl-3">
+                  <span class="text-[9px] text-slate-400 font-black uppercase tracking-widest text-right">Alamat</span>
+                  <span class="text-[11px] text-slate-700 font-black truncate text-right">${row.address || '-'}</span>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2 pt-1">
+                <a href="/patient/show/${row.id}"
+                  class="flex items-center justify-center gap-2 h-10 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-600 shadow-sm transition active:scale-95 active:bg-slate-50">
+                  <i class="fas fa-eye text-sm"></i>
+                  <span>DETAIL</span>
+                </a>
+                ${config.isSuperadmin && !isDeleted
+                ? `
+                <button type="button" data-id="${row.id}"
+                  class="flex items-center justify-center gap-2 h-10 rounded-xl border border-red-100 bg-red-50/50 text-xs font-bold text-red-600 shadow-sm transition active:scale-95 btn-delete">
+                  <i class="fas fa-trash text-sm"></i>
+                  <span>HAPUS</span>
+                </button>
+                `
+                : `<div class="h-10"></div>`
+              }
+              </div>
+            </div>
+          `;
+          mContainer.append(cardHtml);
         });
 
         updatePaginationInfo();
