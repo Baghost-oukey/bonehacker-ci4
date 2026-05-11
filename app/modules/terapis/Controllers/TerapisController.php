@@ -501,10 +501,12 @@ class TerapisController extends BaseController
       'terapis' => $terapis,
       'wilayah' => $this->model_region->getData(),
       'jabatan' => $this->model_terapis->get_jabatan(),
+      'connected_user' => $this->model_users->where('terapis_id', $terapis_id)->first(),
+      'all_users' => [], // Provide an empty array or fetch users if necessary, to avoid undefined variable in the view
     ];
 
     // Generate QR Code as in detail_terapis
-    $qrContent = base_url('terapis/public_info/' . $username);
+    $qrContent = base_url('terapis/public_info/' . $terapis_id);
     $writer = new PngWriter();
     $qrCode = QrCode::create($qrContent)
       ->setEncoding(new Encoding('UTF-8'))

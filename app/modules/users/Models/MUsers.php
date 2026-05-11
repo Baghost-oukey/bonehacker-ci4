@@ -52,8 +52,7 @@ class MUsers extends Model
   public function getListData($options = [])
   {
     $builder = $this->db->table($this->table . ' u');
-    $builder->select('u.id, u.realname, u.username, u.role, u.regions_patient, r.name AS region_name');
-    $builder->join('regions r', 'u.regions_patient = r.id', 'left');
+    $builder->select('u.id, u.realname, u.username, u.role, u.regions_patient');
 
     if (!empty($options['search'])) {
       $builder->groupStart()

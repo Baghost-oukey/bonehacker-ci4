@@ -249,4 +249,24 @@ class Gajikaryawan extends BaseController
         $writer->save('php://output');
         exit();
     }
+    public function monitor()
+    {
+        $terapis_id = session()->get('terapis_id');
+        
+        if (!$terapis_id) {
+            return redirect()->to(base_url('beranda'))->with('error', 'Akun Anda tidak terhubung dengan data Terapis.');
+        }
+
+        $detail = $this->Mriwayatgaji->getDetailPerhitungan($terapis_id);
+        $history = $this->Mriwayatgaji->getHistoryByTerapis($terapis_id);
+
+        $data = [
+            'title'     => 'Gaji Saya',
+            'estimasi'  => $detail['terapis'],
+            'history'   => $history,
+            'realname'  => session()->get('realname'),
+        ];
+
+        return view('App\modules\gaji\Views\monitor', $data);
+    }
 }

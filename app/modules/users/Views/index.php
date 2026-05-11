@@ -227,6 +227,7 @@
         fetchUrl: "<?= base_url('users/fetch') ?>",
         storeUrl: "<?= base_url('users/store') ?>",
         checkUsernameUrl: "<?= base_url('users/check_username_exists') ?>",
+        viewPatientUrl: "<?= base_url('users/view_patient') ?>",
         baseUrl: "<?= base_url('users') ?>"
     };
 </script>
