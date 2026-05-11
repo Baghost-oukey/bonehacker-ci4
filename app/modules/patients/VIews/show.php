@@ -42,6 +42,7 @@
         csrfTokenName: '<?= csrf_token() ?>',
         csrfHash: '<?= csrf_hash() ?>',
         urls: {
+            historyFetchBase: '<?= site_url("history/fetch") ?>',
             historyFetch: '<?= site_url("history/fetch/" . ($patient_id ?? 0)) ?>',
             historyStore: '<?= site_url("history/store") ?>',
             historyDestroy: '<?= site_url("history/destroy") ?>',

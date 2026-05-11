@@ -59,7 +59,7 @@ const setupAntreanPage = () => {
 
   // --- INIT TABLE 1 (TABLE ANTREAN) ---
   const table1 = $('#table-1').DataTable({
-    processing: true,
+    processing: false,
     serverSide: true,
     order: [],
     dom: '<"flex flex-col sm:flex-row items-center justify-between px-6 py-4 gap-4 border-b border-slate-100"<"flex items-center gap-4"l>>t<"flex flex-col md:flex-row items-center justify-between p-5 bg-slate-50/50 border-t border-slate-200 gap-4"<"text-xs font-medium text-slate-500"i><"flex items-center justify-end"p>>',
@@ -89,10 +89,6 @@ const setupAntreanPage = () => {
       $('.dataTables_filter input').addClass('w-full');
     },
     drawCallback: function () {
-      // Sembunyikan spinner setelah data dimuat
-      $("#iconSearch1").show();
-      $("#iconSpinner1").hide();
-
       $('.dataTables_paginate').addClass('!flex !flex-row !items-center !justify-end gap-1');
       $('.dataTables_paginate > span').addClass('!flex !flex-row !items-center gap-1');
       $('.paginate_button').addClass('!inline-flex items-center justify-center min-w-[32px] h-8 rounded-lg border border-slate-300 text-xs font-semibold text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors !m-0 !p-0');
@@ -112,7 +108,7 @@ const setupAntreanPage = () => {
     if (!table2Init) {
       table2Init = true;
       $('#table-2').DataTable({
-        processing: true,
+        processing: false,
         serverSide: true,
         // Ganti baris dom di table-2 menjadi ini:
 dom: 't<"flex items-center justify-between p-4 bg-slate-50/50 border-t border-slate-200"<"text-xs text-slate-500"i><"flex items-end"p>>',
@@ -138,10 +134,6 @@ dom: 't<"flex items-center justify-between p-4 bg-slate-50/50 border-t border-sl
           $('.dataTables_filter input').addClass('w-full min-w-[300px]');
         },
         drawCallback: function () {
-          // Sembunyikan spinner setelah data dimuat
-          $("#iconSearch2").removeClass("hidden");
-          $("#iconSpinner2").addClass("hidden");
-
           $('.dataTables_paginate').addClass('!flex !flex-row !items-center !justify-end gap-1');
           $('.dataTables_paginate > span').addClass('!flex !flex-row !items-center gap-1');
           $('.paginate_button').addClass('!inline-flex items-center justify-center min-w-[28px] h-7 rounded text-[11px] font-semibold text-slate-600 cursor-pointer hover:bg-slate-100 transition-colors !m-0 !p-0 border border-slate-300');
@@ -377,10 +369,6 @@ dom: 't<"flex items-center justify-between p-4 bg-slate-50/50 border-t border-sl
 
   $("#searchInput").on("keyup", function () {
     const val = $(this).val();
-    if (val.length > 0) {
-      $("#iconSearch1").addClass("hidden");
-      $("#iconSpinner1").removeClass("hidden");
-    }
     searchInputDebounce(val);
   });
 
@@ -393,10 +381,6 @@ dom: 't<"flex items-center justify-between p-4 bg-slate-50/50 border-t border-sl
 
   $("#searchPatientList").off("keyup").on("keyup", function () {
     const val = $(this).val();
-    if (val.length > 0) {
-      $("#iconSearch2").addClass("hidden");
-      $("#iconSpinner2").removeClass("hidden");
-    }
     searchDebounce(val);
   });
 

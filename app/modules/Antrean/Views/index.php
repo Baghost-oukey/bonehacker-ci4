@@ -46,7 +46,6 @@
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
                         <div class="relative flex-1">
                             <i id="iconSearch1" class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm transition-all"></i>
-                            <i id="iconSpinner1" class="fas fa-circle-notch fa-spin absolute left-3 top-1/2 -translate-y-1/2 text-teal-600 text-sm transition-all" style="display: none;"></i>
                             <input type="text" id="searchInput" placeholder="Cari pasien..."
                                 class="w-full rounded-lg border border-slate-200 pl-9 pr-3 py-2 text-sm transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15">
                         </div>
@@ -143,22 +142,22 @@
         </div>
 
         <div class="p-5">
-            <div class="flex flex-col md:flex-row md:items-center gap-4 mb-4">
-                <div class="relative flex-1">
-                    <i id="iconSearch2" class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm transition-all"></i>
-                    <i id="iconSpinner2" class="fas fa-circle-notch fa-spin absolute left-3 top-1/2 -translate-y-1/2 text-teal-600 text-sm hidden transition-all"></i>
-                    <input type="text" id="searchPatientList" placeholder="Ketik Nama atau Nomor WhatsApp..."
-                        class="w-full rounded-lg border border-slate-300 pl-9 pr-4 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
-                    <p class="mt-1.5 text-[11px] text-slate-400">
-                        <i class="fas fa-info-circle mr-1"></i> Pencarian otomatis mencakup seluruh wilayah/cabang.
-                    </p>
+            <div class="flex flex-col gap-1.5 mb-4">
+                <div class="flex flex-col md:flex-row gap-4">
+                    <div class="relative flex-1">
+                        <i id="iconSearch2" class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm transition-all"></i>
+                        <input type="text" id="searchPatientList" placeholder="Ketik Nama atau Nomor WhatsApp..."
+                            class="w-full rounded-lg border border-slate-300 pl-9 pr-4 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                    </div>
+                    <button type="button" data-modal-open="modalnewpatient"
+                        class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 whitespace-nowrap">
+                        <i class="fas fa-user-plus"></i>
+                        Pasien Baru
+                    </button>
                 </div>
-
-                <button type="button" data-modal-open="modalnewpatient"
-                    class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 whitespace-nowrap">
-                    <i class="fas fa-user-plus"></i>
-                    Pasien Baru
-                </button>
+                <p class="text-[11px] text-slate-400">
+                    <i class="fas fa-info-circle mr-1"></i> Pencarian otomatis mencakup seluruh wilayah/cabang.
+                </p>
             </div>
 
             <div class="max-h-[50vh] overflow-y-auto border border-slate-200 rounded-xl">
@@ -384,6 +383,7 @@
         csrfTokenName: '<?= csrf_token() ?>',
         csrfHash: '<?= csrf_hash() ?>',
         urls: {
+            historyFetchBase: '<?= site_url("history/fetch") ?>',
             historyFetch: '<?= site_url("history/fetch") ?>/',
             historyStore: '<?= site_url("history/store") ?>',
             historyDestroy: '<?= site_url("history/destroy") ?>',
@@ -394,30 +394,18 @@
         }
     };
 
-    // Fungsi untuk membuka modal rekam medis dari tombol Medis
-    function openMedicalRecordModal(patientId, historyId, queueId) {
-        // Update config dengan data pasien
-        window.patientConfig.patientId = patientId;
-        window.patientConfig.queueId = queueId;
-        
-        // Buka modal
-        const modal = document.getElementById('modalRiwayat');
-        if (modal) {
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            
-            // Jika ada historyId, load data rekam medis
-            if (historyId) {
-                // Trigger load data rekam medis
-                if (typeof window.loadHistoryData === 'function') {
-                    window.loadHistoryData(historyId);
-                }
-            } else {
-                // Reset form untuk rekam medis baru
-                if (typeof window.resetHistoryForm === 'function') {
-                    window.resetHistoryForm();
-                }
-            }
+    /**
+     * Membuka dan menampilkan rekam medis pasien di bawah tabel antrean
+     * @param {number|string} patientId ID Pasien
+     * @param {number|string|null} historyId ID History (jika ada)
+     * @param {number|string} queueId ID Antrean
+     * @param {number|string|null} regionId ID Wilayah
+     */
+    function openMedicalRecordModal(patientId, historyId, queueId, regionId) {
+        if (window.PatientHistoryPage && typeof window.PatientHistoryPage.loadPatient === 'function') {
+            window.PatientHistoryPage.loadPatient(patientId, queueId, regionId);
+        } else {
+            console.error('[PatientHistoryPage] Module is not loaded or missing loadPatient method.');
         }
     }
 </script>
