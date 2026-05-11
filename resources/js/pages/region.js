@@ -227,7 +227,6 @@ const setupRegionPage = () => {
     }
 
     const formData = new FormData(form);
-    formData.append(config.csrfName, config.csrfHash);
 
     $.ajax({
       url: $form.attr("action"),
@@ -249,19 +248,16 @@ const setupRegionPage = () => {
         }
       },
       success: (response) => {
-        if (swalLib) swalLib.close();
         if (response.new_token) {
-          if (typeof config !== 'undefined') config.csrfHash = response.new_token;
-
-          if (typeof updateCsrf === 'function') updateCsrf(response.new_token);
+          updateCsrf(response.new_token);
         }
 
+        if (swalLib) swalLib.close();
         if (response.status === "success") {
           setTimeout(() => {
             closeModal(document.getElementById("modalTambahRegion"));
             form.reset();
             $form.removeClass("was-validated");
-            $('#modalTambahRegion input[name="name"]').val('Cabang ');
             if (typeof loadTableData === 'function') loadTableData(currentPage);
 
             if (swalLib?.fire) {
@@ -287,7 +283,7 @@ const setupRegionPage = () => {
           }, 100);
         }
       },
-      error: () => {
+      error: (xhr) => {
         if (swalLib) swalLib.close();
 
         let msg = "Terjadi kegagalan sistem";
@@ -358,9 +354,6 @@ const setupRegionPage = () => {
       dataType: "json",
       beforeSend: () => {
         btn.prop("disabled", true).text("Menyimpan...");
-      },
-      success: (response) => {
-        updateCsrf(response.new_token);
         if (swalLib?.fire) {
           swalLib.fire({
             target: document.getElementById('modalEditRegion'),
@@ -372,11 +365,8 @@ const setupRegionPage = () => {
         }
       },
       success: (response) => {
+        if (response.new_token) updateCsrf(response.new_token);
         if (swalLib) swalLib.close();
-        if (response.new_token) {
-          if (typeof config !== 'undefined') config.csrfHash = response.new_token;
-          if (typeof updateCsrf === 'function') updateCsrf(response.new_token);
-        }
 
         if (response.status === "success") {
           setTimeout(() => {
@@ -459,12 +449,6 @@ const setupRegionPage = () => {
     const btn = $("#btnConfirmDelete");
 
     const formData = new FormData(form);
-
-    if (typeof config !== 'undefined' && config.csrfName) {
-      formData.append(config.csrfName, config.csrfHash);
-    }
-    // formData.append(config.csrfName, config.csrfHash);
-    // formData.append("_method", "DELETE");
 
     $.ajax({
       url: deleteUrl,

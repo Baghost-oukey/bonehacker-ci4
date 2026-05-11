@@ -73,8 +73,11 @@ const setupWhatsappPage = () => {
 
     // --- INISIALISASI DATATABLES ---
     const initTable = () => {
+        if ($.fn.DataTable.isDataTable('#table-wa')) {
+            $('#table-wa').DataTable().destroy();
+        }
         tableInstance = $('#table-wa').DataTable({
-            responsive: true,
+            responsive: false,
             autoWidth: false,
             order: [[0, 'asc']]
         });
