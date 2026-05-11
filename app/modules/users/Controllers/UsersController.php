@@ -37,9 +37,10 @@ class UsersController extends BaseController
   {
     $draw = $this->request->getPost('draw') ?? 1;
     $role = $this->request->getPost('role');
-    $search_value = $this->request->getPost('search_value') ?? '';
     $order = $this->request->getPost('order');
     $columns = $this->request->getPost('columns');
+    $search = $this->request->getPost('search');
+    $search_value = is_array($search) ? ($search['value'] ?? '') : ($this->request->getPost('search_value') ?? '');
 
     $options = [
       'order' => !empty($order) && !empty($columns) ? $columns[$order[0]['column']]['data'] : 'realname',
@@ -57,12 +58,15 @@ class UsersController extends BaseController
     // Optimasi N+1: Ambil semua region ID yang unik terlebih dahulu
     $all_region_ids = [];
     foreach ($dataOutput as $value) {
-      if (!($value->role === 'superadmin')) {
-        $ids = json_decode($value->regions_patient, true) ?: [];
-        $all_region_ids = array_merge($all_region_ids, $ids);
+      if ($value->role !== 'superadmin') {
+        $raw = $value->regions_patient;
+        $ids = is_string($raw) ? (json_decode($raw, true) ?: []) : (is_array($raw) ? $raw : []);
+        if (is_array($ids)) {
+            $all_region_ids = array_merge($all_region_ids, $ids);
+        }
       }
     }
-    $all_region_ids = array_unique(array_filter($all_region_ids));
+    $all_region_ids = array_unique(array_filter($all_region_ids, 'is_numeric'));
 
     $region_map = [];
     if (!empty($all_region_ids)) {
@@ -86,12 +90,15 @@ class UsersController extends BaseController
         $value->region_name = 'Semua Wilayah';
         $regions_patient_ids = [];
       } else {
-        $regions_patient_ids = json_decode($value->regions_patient, true) ?: [];
+        $raw = $value->regions_patient;
+        $regions_patient_ids = is_string($raw) ? (json_decode($raw, true) ?: []) : (is_array($raw) ? $raw : []);
         $names = [];
-        foreach ($regions_patient_ids as $rid) {
-          if (isset($region_map[$rid])) {
-            $names[] = $region_map[$rid];
-          }
+        if (is_array($regions_patient_ids)) {
+            foreach ($regions_patient_ids as $rid) {
+              if (isset($region_map[$rid])) {
+                $names[] = $region_map[$rid];
+              }
+            }
         }
         $value->region_name = !empty($names) ? implode(', ', $names) : '-';
       }

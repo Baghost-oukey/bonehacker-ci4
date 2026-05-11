@@ -144,37 +144,38 @@
     </div>
 </div>
 
-<!-- TABLE 2 MODAL -->
-<div id="exampleModal" class="modal-wrapper hidden fixed inset-0 z-50 items-center justify-center bg-black/40 p-4">
-    <div class="w-full max-w-5xl overflow-hidden rounded-2xl bg-white shadow-xl">
-        <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-            <h5 class="text-lg font-semibold text-slate-800">Tambah Pasien Ke Antrian</h5>
+<!-- TABLE 2 MODAL (PILIH PASIEN) -->
+<div id="exampleModal" class="modal-wrapper hidden fixed inset-0 z-[60] flex flex-col items-center justify-end md:justify-center bg-black/40 backdrop-blur-sm p-0 md:p-4">
+    <div class="w-full max-w-5xl overflow-hidden rounded-t-3xl md:rounded-3xl bg-white shadow-2xl flex flex-col max-h-[90vh]">
+        <div class="flex items-center justify-between border-b border-slate-100 px-6 py-5 bg-white shrink-0">
+            <h5 class="text-lg font-black text-slate-800 uppercase tracking-tight">Tambah Pasien Ke Antrian</h5>
             <button type="button" data-modal-close
-                class="rounded-md p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800">&times;</button>
+                class="text-slate-400 hover:text-red-500 transition-colors outline-none">
+                <i class="fas fa-times text-xl"></i>
+            </button>
         </div>
 
-        <div class="p-5">
-            <div class="flex flex-col gap-1.5 mb-4">
+        <div class="p-6 space-y-6 overflow-hidden flex flex-col">
+            <div class="flex flex-col gap-1.5 shrink-0">
                 <div class="flex flex-col md:flex-row gap-4">
-                    <div class="relative flex-1">
-                        <i id="iconSearch2" class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm transition-all"></i>
+                    <div class="relative flex-1 w-full">
+                        <i id="iconSearch2" class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
                         <input type="text" id="searchPatientList" placeholder="Ketik Nama atau Nomor WhatsApp..."
-                            class="w-full rounded-lg border border-slate-300 pl-9 pr-4 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                            class="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 outline-none bg-slate-50 focus:bg-white transition-all shadow-inner">
                     </div>
                     <button type="button" data-modal-open="modalnewpatient"
-                        class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 whitespace-nowrap">
-                        <i class="fas fa-user-plus"></i>
-                        Pasien Baru
+                        class="w-full md:w-auto px-6 py-3 rounded-xl bg-teal-600 text-white text-xs font-black tracking-widest uppercase hover:bg-teal-700 transition-all flex items-center justify-center gap-2 whitespace-nowrap">
+                        <i class="fas fa-user-plus"></i> Pasien Baru
                     </button>
                 </div>
-                <p class="text-[11px] text-slate-400">
-                    <i class="fas fa-info-circle mr-1"></i> Pencarian otomatis mencakup seluruh wilayah/cabang.
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2 mt-2">
+                    <i class="fas fa-info-circle text-teal-500"></i> Pencarian otomatis mencakup seluruh wilayah/cabang.
                 </p>
             </div>
 
-            <div id="patient-selection-container">
+            <div id="patient-selection-container" class="flex-1 overflow-hidden flex flex-col rounded-2xl border border-slate-100 shadow-inner bg-slate-50/30">
                 <!-- Mobile Card List (Shown on Mobile) -->
-                <div id="mobile-patient-list" class="md:hidden flex flex-col divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-y-auto max-h-[50vh] bg-white no-scrollbar mb-4">
+                <div id="mobile-patient-list" class="md:hidden flex flex-col divide-y divide-slate-100 overflow-y-auto max-h-[50vh] bg-white no-scrollbar">
                     <div class="p-8 text-center text-slate-400 italic text-sm">
                         <i class="fas fa-spinner fa-spin mr-2 text-slate-300"></i>
                         Memuat data pasien...
@@ -182,30 +183,34 @@
                 </div>
 
                 <!-- Desktop Table (Hidden on Mobile) -->
-                <div class="overflow-x-auto border border-slate-200 rounded-xl hidden md:block">
-                    <table id="table-2" class="w-full text-sm">
-                        <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
+                <div class="overflow-y-auto overflow-x-auto w-full hidden md:block">
+                    <table id="table-2" class="w-full text-left border-collapse bg-white relative">
+                        <thead class="bg-white shadow-sm sticky top-0 z-10">
                             <tr>
-                                <th class="px-4 py-3 text-left font-semibold">ID</th>
-                                <th class="px-4 py-3 text-left font-semibold">Nama</th>
-                                <th class="px-4 py-3 text-left font-semibold">Alamat</th>
-                                <th class="px-4 py-3 text-center font-semibold">Status</th>
-                                <th class="px-4 py-3 text-center font-semibold">Aksi</th>
+                                <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">ID</th>
+                                <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">NAMA</th>
+                                <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">ALAMAT</th>
+                                <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">STATUS</th>
+                                <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">AKSI</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100 text-slate-700">
+                        <tbody class="divide-y divide-slate-100 text-slate-700 text-sm">
                             <!-- DataTables akan mengisi ini -->
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
+
+        <div class="flex items-center justify-end px-6 py-4 bg-slate-50 border-t border-slate-100 shrink-0">
+            <button type="button" data-modal-close class="px-6 py-2.5 rounded-xl border border-slate-200 text-slate-500 text-xs font-black uppercase tracking-widest hover:bg-slate-100 transition-all">Tutup</button>
+        </div>
     </div>
 </div>
 
 
-<!-- ADD PASIEN MODAL -->
-<div id="modalnewpatient" class="modal-wrapper hidden fixed inset-0 z-50 items-center justify-center bg-black/40 p-4">
+<!-- ADD PASIEN MODAL (PASIEN BARU) -->
+<div id="modalnewpatient" class="modal-wrapper hidden fixed inset-0 z-[70] items-center justify-center bg-black/40 backdrop-blur-sm p-4 text-left">
     <div class="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-xl">
         <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
             <h5 class="text-lg font-semibold text-slate-800">Registrasi Pasien Baru</h5>
@@ -383,10 +388,10 @@
 
 <!-- MODAL REKAM MEDIS -->
 <style>
-/* Sembunyikan section riwayat kunjungan pasien di halaman antrean */
-#antreanPage #patientHistoryContainer {
-    display: none !important;
-}
+    /* Sembunyikan section riwayat kunjungan pasien di halaman antrean */
+    #antreanPage #patientHistoryContainer {
+        display: none !important;
+    }
 </style>
 <?= $this->include('App\modules\patients\Views\component\card_riwayat') ?>
 

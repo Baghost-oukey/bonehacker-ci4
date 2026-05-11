@@ -14,12 +14,14 @@ const openModal = (modal) => {
   if (!modal) return;
   modal.classList.remove(MODAL_HIDDEN_CLASS);
   modal.classList.add(MODAL_VISIBLE_CLASS);
+  modal.style.display = 'flex'; // Ensure it overrides any fadeOut inline style
 };
 
 const closeModal = (modal) => {
   if (!modal) return;
   modal.classList.remove(MODAL_VISIBLE_CLASS);
   modal.classList.add(MODAL_HIDDEN_CLASS);
+  modal.style.display = 'none'; // Sync with hidden class
 };
 
 const setupAntreanPage = () => {
@@ -63,14 +65,14 @@ const setupAntreanPage = () => {
     serverSide: true,
     order: [],
     dom: '<"flex flex-col sm:flex-row items-center justify-between px-6 py-4 gap-4 border-b border-slate-100"<"flex items-center gap-4"l>>t<"flex flex-col md:flex-row items-center justify-between p-5 bg-slate-50/50 border-t border-slate-200 gap-4"<"text-xs font-medium text-slate-500"i><"flex items-center justify-end"p>>',
-    language: { 
-      search: "", 
-      searchPlaceholder: "Cari pasien...", 
-      lengthMenu: "Tampilkan _MENU_", 
-      paginate: { 
-        previous: '<i class="fas fa-arrow-left"></i>', 
-        next: '<i class="fas fa-arrow-right"></i>' 
-      } 
+    language: {
+      search: "",
+      searchPlaceholder: "Cari pasien...",
+      lengthMenu: "Tampilkan _MENU_",
+      paginate: {
+        previous: '<i class="fas fa-arrow-left"></i>',
+        next: '<i class="fas fa-arrow-right"></i>'
+      }
     },
     ajax: {
       url: config.fetchUrl,
@@ -81,7 +83,7 @@ const setupAntreanPage = () => {
         d.end_date = $('#endDate').val();
         d.region = '';
       },
-      dataSrc: function(json) {
+      dataSrc: function (json) {
         if (json.new_token || json.csrf_hash) {
           config.csrfHash = json.new_token || json.csrf_hash;
           $(`input[name="${config.csrfName}"]`).val(config.csrfHash);
@@ -118,16 +120,16 @@ const setupAntreanPage = () => {
           $cardContainer.append('<div class="p-12 text-center text-slate-400 italic text-sm">Tidak ada data antrean.</div>');
         } else {
           data.each(function (row) {
-            const statusClass = row.description.includes('Menunggu') ? 'bg-amber-50 text-amber-600 border-amber-100' : 
-                               row.description.includes('Proses') ? 'bg-teal-50 text-teal-600 border-teal-100' : 
-                               'bg-slate-50 text-slate-600 border-slate-100';
-            
+            const statusClass = row.description.includes('Menunggu') ? 'bg-amber-50 text-amber-600 border-amber-100' :
+              row.description.includes('Proses') ? 'bg-teal-50 text-teal-600 border-teal-100' :
+                'bg-slate-50 text-slate-600 border-slate-100';
+
             const cardHtml = `
               <div class="p-4 space-y-4 bg-white">
                   <div class="flex items-center justify-between">
                       <div class="flex items-center gap-3">
                           <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-teal-50 text-teal-600 font-black text-xl border border-teal-100 shadow-sm">
-                              ${row.queue_number}
+                               ${row.queue_number}
                           </div>
                           <div class="flex flex-col min-w-0">
                               <span class="text-base font-black text-slate-900 truncate uppercase tracking-tight">${row.name}</span>
@@ -165,7 +167,7 @@ const setupAntreanPage = () => {
         // --- LOGIKA DESKTOP REMOTE ---
         $('.dataTables_paginate').addClass('!flex !flex-row !items-center !justify-end gap-1');
       }
-      
+
       // --- STYLING PAGINATION HASIL PULL (TABLE 1) ---
       $('.dataTables_paginate > span').addClass('!flex !flex-row !items-center gap-1');
       $('.paginate_button').addClass('!inline-flex items-center justify-center min-w-[32px] h-8 rounded-lg border border-slate-300 text-xs font-semibold text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors !m-0 !p-0');
@@ -197,7 +199,7 @@ const setupAntreanPage = () => {
             d[config.csrfName] = config.csrfHash;
             d.region = $("#region_id_new").val() || "";
           },
-          dataSrc: function(json) {
+          dataSrc: function (json) {
             if (json.new_token || json.csrf_hash) {
               config.csrfHash = json.new_token || json.csrf_hash;
               $(`input[name="${config.csrfName}"]`).val(config.csrfHash);
@@ -227,7 +229,7 @@ const setupAntreanPage = () => {
             const data = api.rows({ page: 'current' }).data();
             const $cardContainer = $('#mobile-patient-list');
             $cardContainer.empty();
-            
+
             if (data.length === 0) {
               $cardContainer.append('<div class="p-8 text-center text-slate-400 italic text-sm"><i class="fas fa-search mr-2"></i> Tidak ada data pasien.</div>');
             } else {
@@ -440,45 +442,37 @@ const setupAntreanPage = () => {
     });
   });
 
-  document.addEventListener("click", (event) => {
-    const openTrigger = event.target.closest("[data-modal-open]");
-    if (openTrigger) {
-      const targetId = openTrigger.getAttribute("data-modal-open");
-      const targetModal = document.getElementById(targetId);
-      if (targetId === "modalnewpatient") {
-        const old = document.getElementById("exampleModal");
-        if (old) closeModal(old);
-      }
-      openModal(targetModal);
-      if (targetId === "modalnewpatient") {
-        setTimeout(() => {
-          if (typeof initSelect2Desa === "function") initSelect2Desa();
-          const ni = targetModal.querySelector('input[name="name"]');
-          if (ni) ni.focus();
-        }, 300);
-      }
-      return;
+  $(document).on("click", "[data-modal-open]", function (event) {
+    const targetId = $(this).data("modal-open");
+    const targetModal = document.getElementById(targetId);
+    if (!targetModal) return;
+
+    // Special logic for new patient modal opened from selection modal
+    if (targetId === "modalnewpatient") {
+      // We don't necessarily close exampleModal here if we want them stacked,
+      // but we increased z-index of modalnewpatient in PHP to handle this.
     }
-    const closeTrigger = event.target.closest("[data-modal-close]");
-    if (closeTrigger) closeModal(closeTrigger.closest(".modal-wrapper"));
+
+    openModal(targetModal);
+
+    if (targetId === "modalnewpatient") {
+      setTimeout(() => {
+        if (typeof initSelect2Desa === "function") initSelect2Desa();
+        const ni = targetModal.querySelector('input[name="name"]');
+        if (ni) ni.focus();
+      }, 300);
+    }
+  });
+
+  $(document).on("click", "[data-modal-close]", function (e) {
+    e.preventDefault();
+    closeModal($(this).closest(".modal-wrapper")[0]);
   });
 
   $(document).on("click", ".modal-wrapper", function (e) {
     if (e.target === this) {
-      $(this).fadeOut(200, function () {
-        $(this).addClass("hidden").removeClass("flex").removeAttr("style");
-      });
+      closeModal(this);
     }
-  });
-
-  // Close button
-  $(document).on("click", "[data-modal-close]", function (e) {
-    e.preventDefault();
-    $(this)
-      .closest(".modal-wrapper")
-      .fadeOut(200, function () {
-        $(this).addClass("hidden").removeClass("flex").removeAttr("style");
-      });
   });
 
   // Toggle pasien rentan
@@ -617,31 +611,31 @@ if (document.readyState === "loading") {
 }
 
 // FUNGSI PREVIEW GAMBAR/FILE PASIEN
-window.previewFiles = function() {
-    const previewContainer = document.getElementById('file-previews');
-    const files = document.getElementById('userfiles').files;
-    previewContainer.innerHTML = '';
-    if (files) {
-        Array.from(files).forEach(file => {
-            const reader = new FileReader();
-            const div = document.createElement('div');
-            div.className = 'relative h-16 w-16 rounded-md border border-slate-200 overflow-hidden shadow-sm';
-            reader.onload = function(e) {
-                if (file.type.startsWith('image/')) {
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.className = 'h-full w-full object-cover';
-                    div.appendChild(img);
-                } else {
-                    const icon = document.createElement('div');
-                    icon.className = 'flex h-full w-full items-center justify-center bg-slate-50 text-slate-500 text-[10px] font-bold uppercase';
-                    icon.textContent = file.name.split('.').pop();
-                    div.appendChild(icon);
-                }
-            };
-            
-            reader.readAsDataURL(file);
-            previewContainer.appendChild(div);
-        });
-    }
+window.previewFiles = function () {
+  const previewContainer = document.getElementById('file-previews');
+  const files = document.getElementById('userfiles').files;
+  previewContainer.innerHTML = '';
+  if (files) {
+    Array.from(files).forEach(file => {
+      const reader = new FileReader();
+      const div = document.createElement('div');
+      div.className = 'relative h-16 w-16 rounded-md border border-slate-200 overflow-hidden shadow-sm';
+      reader.onload = function (e) {
+        if (file.type.startsWith('image/')) {
+          const img = document.createElement('img');
+          img.src = e.target.result;
+          img.className = 'h-full w-full object-cover';
+          div.appendChild(img);
+        } else {
+          const icon = document.createElement('div');
+          icon.className = 'flex h-full w-full items-center justify-center bg-slate-50 text-slate-500 text-[10px] font-bold uppercase';
+          icon.textContent = file.name.split('.').pop();
+          div.appendChild(icon);
+        }
+      };
+
+      reader.readAsDataURL(file);
+      previewContainer.appendChild(div);
+    });
+  }
 };

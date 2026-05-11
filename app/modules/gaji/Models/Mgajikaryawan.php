@@ -148,4 +148,15 @@ class Mgajikaryawan extends Model
             'terapis'   => $terapis
         ];
     }
+    public function getHistoryByTerapis($terapisId)
+    {
+        return $this->db->table($this->table . ' p')
+            ->select('p.*, t.nama, r.name as wilayah')
+            ->join('terapis t', 't.id = p.terapis_id')
+            ->join('regions r', 'r.id = t.region_id', 'left')
+            ->where('p.terapis_id', $terapisId)
+            ->orderBy('p.tanggal_bayar', 'DESC')
+            ->get()
+            ->getResultArray();
+    }
 }

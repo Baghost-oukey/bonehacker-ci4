@@ -288,6 +288,14 @@ const setupUsersPage = () => {
         openModal(document.getElementById("modalEdit"));
     });
 
+    $(document).on('click', '.btn_add_patient', function(e) {
+        e.preventDefault();
+        const userId = $(this).data('userid');
+        if (userId && config.viewPatientUrl) {
+            window.location.href = config.viewPatientUrl + '/' + userId;
+        }
+    });
+
     $(document).on('click', '.btn_delete', function(e) {
         e.preventDefault();
         const href = $(this).data('href');

@@ -200,7 +200,7 @@ class Users extends BaseController
             'patients_luar'   => $this->model_users->get_other_patients($user_id)
         ];
 
-        return view('App\Modules\users\Views\views_usersLuar', $data);
+        return view('App\Modules\users\Views\UsersLuar\index', $data);
     }
     public function fetch_patients()
     {

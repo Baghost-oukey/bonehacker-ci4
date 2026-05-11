@@ -330,6 +330,7 @@ $routes->group('gaji', ['namespace' => 'App\modules\gaji\Controllers', 'filter' 
   $routes->post('proses_bayar', 'Gajikaryawan::prosesBayar');
   $routes->get('fetch_estimasi', 'Gajikaryawan::fetchEstimasi');
   $routes->get('export', 'Gajikaryawan::export');
+  $routes->get('monitor', 'Gajikaryawan::monitor');
 });
 
 // Rutes - Kas bon
