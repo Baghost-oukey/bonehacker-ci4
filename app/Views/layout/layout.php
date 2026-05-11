@@ -41,6 +41,12 @@ if ($isDevEnvironment) {
     <?php endif; ?>
 
     <style>
+        html, body {
+            max-width: 100vw;
+            overflow-x: hidden;
+            position: relative;
+        }
+
         .export-hidden {
             display: none;
         }
@@ -82,23 +88,7 @@ if ($isDevEnvironment) {
 
             <!-- HEADER -->
             <?php if (!isset($isPublic) || !$isPublic): ?>
-            <header class="sticky top-0 z-20 bg-white border-b border-slate-200">
-
-                <div class="flex items-center justify-between px-4 h-14">
-
-                    <!-- TOGGLE BUTTON MOBILE -->
-                    <button id="sidebarToggle"
-                        class="lg:hidden inline-flex items-center justify-center rounded-md p-2 text-slate-600 hover:bg-slate-100">
-                        <i class="fas fa-bars text-lg"></i>
-                    </button>
-
-                    <!-- HEADER CONTENT -->
-                    <div class="flex-1">
-                        <?= $this->include('App\Views\layout\header') ?>
-                    </div>
-
-                </div>
-            </header>
+                <?= $this->include('App\Views\layout\header') ?>
             <?php endif; ?>
 
             <!-- CONTENT -->

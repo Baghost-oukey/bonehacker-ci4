@@ -11,22 +11,27 @@
         </button>
     </div>
 
-    <!-- TABLE RIWAYAT -->
-    <div class="overflow-x-auto">
+    <!-- DESKTOP TABLE RIWAYAT -->
+    <div class="hidden md:block overflow-x-auto no-scrollbar">
         <table id="table-2" class="w-full text-sm">
-            <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
+            <thead class="bg-slate-50 text-slate-500 text-[10px] uppercase tracking-wider">
                 <tr>
-                    <th class="px-6 py-3.5 text-center font-semibold w-12">No</th>
-                    <th class="px-6 py-3.5 text-left font-semibold">Keluhan</th>
-                    <th class="px-6 py-3.5 text-left font-semibold">Rekam Medis</th>
-                    <th class="px-6 py-3.5 text-left font-semibold">Tanggal</th>
-                    <th class="px-6 py-3.5 text-center font-semibold">Durasi</th>
-                    <th class="px-6 py-3.5 text-center font-semibold w-20">Type</th>
-                    <th class="px-6 py-3.5 text-center font-semibold">Aksi</th>
+                    <th class="px-6 py-3.5 text-center font-bold w-12">No</th>
+                    <th class="px-6 py-3.5 text-left font-bold">Keluhan</th>
+                    <th class="px-6 py-3.5 text-left font-bold">Rekam Medis</th>
+                    <th class="px-6 py-3.5 text-left font-bold">Tanggal</th>
+                    <th class="px-6 py-3.5 text-center font-bold">Durasi</th>
+                    <th class="px-6 py-3.5 text-center font-bold w-20">Type</th>
+                    <th class="px-6 py-3.5 text-center font-bold">Aksi</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 text-slate-700"></tbody>
         </table>
+    </div>
+
+    <!-- MOBILE CARD RIWAYAT -->
+    <div id="mobile-history-list" class="md:hidden flex flex-col divide-y divide-slate-100 bg-white">
+        <!-- Cards injected via JS -->
     </div>
 
     <!-- PAGINATION -->
@@ -585,7 +590,7 @@
                         <span class="text-sm font-medium text-slate-700">Kirim Notifikasi WhatsApp?</span>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" name="notifikasi" id="notifikasi-checkbox" class="sr-only peer" checked>
-                            <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-teal-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
+                            <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-teal-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
                         </label>
                     </div>
                 </div>
@@ -608,7 +613,7 @@
     </div>
 </div>
 
-<div id="deleteModal" class="modal-wrapper hidden fixed inset-0 z-[9999] flex items-center justify-center bg-gray-900/40 backdrop-blur-sm transition-opacity">
+<div id="deleteModal" class="modal-wrapper hidden fixed inset-0 z-9999 items-center justify-center bg-gray-900/40 backdrop-blur-sm transition-opacity">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 relative transform transition-all border border-gray-100">
         <button type="button" data-modal-close class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors focus:outline-none">
             <i class="fas fa-times text-lg"></i>

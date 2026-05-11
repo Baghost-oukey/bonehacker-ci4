@@ -131,7 +131,7 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
         
         <!-- KOLOM MENUNGGU -->
         <div class="bg-orange-50/60 backdrop-blur-sm rounded-3xl shadow-lg border border-white overflow-hidden flex flex-col">
-            <div class="bg-white/95 border-t-8 border-orange-500 py-4 text-center shadow-sm z-10 border-b border-orange-100">
+            <div class="bg-white/95 border-t-8 border-t-orange-500 py-4 text-center shadow-sm z-10 border-b border-b-orange-100">
                 <h2 class="text-xl font-black text-orange-600 uppercase tracking-[0.2em]">Menunggu</h2>
             </div>
             <div class="flex-1 overflow-y-auto p-4 md:p-5 space-y-4 auto-scroll-list no-scrollbar bg-white/40">
@@ -159,7 +159,7 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
 
         <!-- KOLOM SEDANG TERAPI -->
         <div class="bg-blue-50/60 backdrop-blur-sm rounded-3xl shadow-lg border border-white overflow-hidden flex flex-col">
-            <div class="bg-white/95 border-t-8 border-blue-500 py-4 text-center shadow-sm z-10 border-b border-blue-100">
+            <div class="bg-white/95 border-t-8 border-t-blue-500 py-4 text-center shadow-sm z-10 border-b border-b-blue-100">
                 <h2 class="text-xl font-black text-blue-600 uppercase tracking-[0.2em]">Sedang Terapi</h2>
             </div>
             <div class="flex-1 overflow-y-auto p-4 md:p-5 space-y-4 auto-scroll-list no-scrollbar bg-white/40">
@@ -187,7 +187,7 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
 
         <!-- KOLOM SELESAI -->
         <div class="bg-green-50/60 backdrop-blur-sm rounded-3xl shadow-lg border border-white overflow-hidden flex flex-col">
-            <div class="bg-white/95 border-t-8 border-green-500 py-4 text-center shadow-sm z-10 border-b border-green-100">
+            <div class="bg-white/95 border-t-8 border-t-green-500 py-4 text-center shadow-sm z-10 border-b border-b-green-100">
                 <h2 class="text-xl font-black text-green-600 uppercase tracking-[0.2em]">Selesai</h2>
             </div>
             <div class="flex-1 overflow-y-auto p-4 md:p-5 space-y-4 auto-scroll-list no-scrollbar bg-white/40">

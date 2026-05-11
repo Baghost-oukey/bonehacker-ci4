@@ -31,13 +31,13 @@
             <input type="hidden" name="tanggal" id="tanggal_absen_hidden" value="<?= esc($tanggal) ?>">
 
             <?php if (empty($terapis)): ?>
-                <div class="bg-white rounded-3xl border border-slate-200 p-8 text-center text-slate-400 font-bold shadow-sm">
+                <div class="bg-white rounded-4xl border border-slate-200 p-8 text-center text-slate-400 font-bold shadow-sm">
                     Belum ada data terapis aktif.
                 </div>
             <?php else: ?>
                 <?php foreach ($terapis as $index => $t): ?>
                     <?php $existing = $rekap_by_tanggal[$t->id] ?? null; ?>
-                    <div class="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-indigo-300 hover:shadow-md">
+                    <div class="rounded-4xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-indigo-300 hover:shadow-md">
                         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                             <div class="flex items-center gap-4">
                                 <div class="flex h-14 w-14 items-center justify-center rounded-full bg-indigo-100 text-indigo-700 font-black text-xl">
@@ -78,7 +78,7 @@
 
             <div class="sticky bottom-0 z-40 bg-slate-50/80 pt-4 backdrop-blur-sm">
                 <div class="mx-auto flex w-full max-w-6xl justify-center px-4 py-3">
-                    <button type="submit" id="btnSimpanAbsen" class="inline-flex items-center justify-center rounded-[1.5rem] bg-indigo-600 px-8 py-4 text-sm font-black uppercase tracking-[0.2em] text-white shadow-lg shadow-indigo-200 transition-all hover:bg-indigo-700">
+                    <button type="submit" id="btnSimpanAbsen" class="inline-flex items-center justify-center rounded-3xl bg-indigo-600 px-8 py-4 text-sm font-black uppercase tracking-[0.2em] text-white shadow-lg shadow-indigo-200 transition-all hover:bg-indigo-700">
                         <i class="fas fa-save mr-3"></i> Simpan Absensi Hari Ini
                     </button>
                 </div>

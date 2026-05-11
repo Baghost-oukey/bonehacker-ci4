@@ -217,11 +217,16 @@ const PatientHistoryPage = {
         self.totalRecords = Number(response.recordsTotal || 0);
         self.filteredRecords = Number(response.recordsFiltered || self.totalRecords);
         const tbody = $("#table-2 tbody");
+        const mobileList = $("#mobile-history-list");
         tbody.empty();
+        mobileList.empty();
+
         if (!response.data || response.data.length === 0) {
           self.renderTableState("Belum ada data riwayat");
+          mobileList.html('<div class="p-8 text-center text-slate-400 italic text-sm">Belum ada data riwayat</div>');
         } else {
           response.data.forEach(function (row) {
+            // Desktop Table
             const isDeleted = row.is_delete === "1" ? "text-red-500 line-through" : "text-slate-700";
             const tr = $(`<tr class="hover:bg-slate-50 transition border-b border-slate-100 ${isDeleted}"></tr>`);
             tr.append(`<td class="px-6 py-3.5 text-center text-xs">${row.no || "-"}</td>`);
@@ -240,6 +245,48 @@ const PatientHistoryPage = {
                             </div>
                         </td>`);
             tbody.append(tr);
+
+            // Mobile Card
+            const card = $(`
+              <div class="p-4 space-y-3 bg-white border-b border-slate-100 ${row.is_delete === '1' ? 'opacity-50 grayscale' : ''}">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <span class="text-[10px] font-black text-slate-400">#${row.no || "-"}</span>
+                    <span class="text-xs font-bold text-slate-900">${row.date || "-"}</span>
+                  </div>
+                  <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${row.type === 'draft' ? 'bg-amber-50 text-amber-700 border border-amber-100' : 'bg-teal-50 text-teal-700 border border-teal-100'}">
+                    ${row.type || "-"}
+                  </span>
+                </div>
+                
+                <div class="space-y-2">
+                  <div class="flex flex-col">
+                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Keluhan</span>
+                    <p class="text-xs text-slate-700 font-medium leading-relaxed">${row.complaint || "-"}</p>
+                  </div>
+                  <div class="flex flex-col">
+                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Rekam Medis</span>
+                    <p class="text-xs text-slate-700 font-medium leading-relaxed">${row.medhis || "-"}</p>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between pt-2">
+                  <span class="text-[10px] font-bold text-slate-500">Durasi: ${row.duration || "-"}</span>
+                  <div class="flex items-center gap-1">
+                    <button type="button" class="btn-edit-history w-9 h-9 flex items-center justify-center rounded-lg bg-teal-50 text-teal-600 border border-teal-100" data-id="${row.id}">
+                      <i class="fas fa-edit text-xs"></i>
+                    </button>
+                    <button type="button" class="btn-copy-history w-9 h-9 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 border border-blue-100" data-id="${row.id}">
+                      <i class="fas fa-copy text-xs"></i>
+                    </button>
+                    <button type="button" class="btn-delete-history w-9 h-9 flex items-center justify-center rounded-lg bg-red-50 text-red-600 border border-red-100" data-id="${row.id}">
+                      <i class="fas fa-trash text-xs"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `);
+            mobileList.append(card);
           });
         }
         self.updatePaginationInfo();

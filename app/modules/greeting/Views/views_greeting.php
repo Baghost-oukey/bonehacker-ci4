@@ -1,7 +1,7 @@
 <?= $this->extend('layout/layout') ?>
 <?= $this->section('content') ?>
 
-<div class="p-4 sm:p-6 md:p-8 max-w-[1400px] mx-auto">
+<div class="p-4 sm:p-6 md:p-8 max-w-350 mx-auto">
     <div class="mb-8">
         <h1 class="text-2xl font-black text-slate-800 tracking-tight"><?= $title ?></h1>
         <p class="text-sm text-slate-500 mt-1">Kelola template teks salam untuk dikirimkan ke pasien.</p>
@@ -80,7 +80,7 @@
                     <label for="greetings" class="text-[11px] font-black text-slate-500 uppercase tracking-wider mb-2 block">Teks Salam</label>
                     <p class="text-[11px] text-slate-400 mb-3 leading-relaxed">Tekan 'Enter' untuk membuat baris baru. Satu kotak ini merepresentasikan satu salam utuh.</p>
 
-                    <textarea id="greetings_input" name="greetings" class="form-control w-full px-4 py-4 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none bg-slate-50 focus:bg-white transition-all resize-y min-h-[120px]" placeholder="Ketik salam Anda di sini..." required></textarea>
+                    <textarea id="greetings_input" name="greetings" class="form-control w-full px-4 py-4 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none bg-slate-50 focus:bg-white transition-all resize-y min-h-30" placeholder="Ketik salam Anda di sini..." required></textarea>
                 </div>
 
                 <input type="hidden" id="greeting_index" name="greeting_index" value="">

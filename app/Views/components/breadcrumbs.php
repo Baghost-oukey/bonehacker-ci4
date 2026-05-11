@@ -64,26 +64,26 @@ if (empty($crumbs)) {
 }
 ?>
 
-<nav aria-label="Breadcrumb" class="text-sm">
-	<ol class="flex items-center text-slate-500">
+<nav aria-label="Breadcrumb" class="text-[11px] md:text-sm">
+	<ol class="flex items-center text-slate-500 overflow-hidden">
 
 		<?php foreach ($crumbs as $index => $crumb): ?>
 			<?php $isLast = ($index === array_key_last($crumbs)); ?>
 
-			<li class="flex items-center">
+			<li class="flex items-center <?= !$isLast ? 'hidden md:flex' : '' ?>">
 
 				<?php if ($crumb['url'] && !$isLast): ?>
-					<a href="<?= esc($crumb['url']) ?>" class="hover:text-slate-900 transition-colors">
+					<a href="<?= esc($crumb['url']) ?>" class="hover:text-slate-900 transition-colors whitespace-nowrap">
 						<?= esc($crumb['label']) ?>
 					</a>
 				<?php else: ?>
-					<span class="text-slate-900 font-medium">
+					<span class="text-slate-900 font-bold md:font-medium truncate max-w-37.5 md:max-w-none">
 						<?= esc($crumb['label']) ?>
 					</span>
 				<?php endif; ?>
 
 				<?php if (!$isLast): ?>
-					<span class="mx-2 text-slate-400">/</span>
+					<span class="mx-1.5 md:mx-2 text-slate-400">/</span>
 				<?php endif; ?>
 
 			</li>

@@ -34,86 +34,83 @@
         </div>
     </div>
 
-    <!-- TABLE 1 HALAMAN ANTREAN -->
+    <!-- TABLE & CARD VIEW ANTREAN -->
     <div class="rounded-2xl bg-white shadow-sm border border-slate-200/50 overflow-hidden">
-        <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4">
+        <div class="border-b border-slate-100 bg-slate-50/50 px-4 py-4 md:px-6">
             <div class="mb-4">
                 <h3 class="text-lg font-semibold text-slate-800">Data Antrean</h3>
-                <p class="text-sm text-slate-500">Monitoring dan pengelolaan antrean pasien secara real-time</p>
+                <p class="text-sm text-slate-500">Monitoring antrean secara real-time</p>
             </div>
 
-            <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+            <div class="flex flex-col gap-3">
+            <div class="flex flex-col gap-4">
+                <!-- Search -->
+                <div class="relative w-full">
+                    <i id="iconSearch1" class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                    <input type="text" id="searchInput" placeholder="Cari nama pasien..."
+                        class="w-full rounded-2xl border border-slate-200 pl-11 pr-4 py-3 text-sm focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 outline-none transition-all shadow-sm">
+                </div>
+                
+                <div class="flex flex-col md:flex-row md:items-center gap-3">
+                    <!-- Date Range -->
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1">
                         <div class="relative flex-1">
-                            <i id="iconSearch1" class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm transition-all"></i>
-                            <i id="iconSpinner1" class="fas fa-circle-notch fa-spin absolute left-3 top-1/2 -translate-y-1/2 text-teal-600 text-sm transition-all" style="display: none;"></i>
-                            <input type="text" id="searchInput" placeholder="Cari pasien..."
-                                class="w-full rounded-lg border border-slate-200 pl-9 pr-3 py-2 text-sm transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15">
+                            <i class="fas fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"></i>
+                            <input type="date" id="startDate" class="w-full rounded-xl border border-slate-200 pl-9 pr-3 py-2.5 text-xs font-bold text-slate-600 focus:border-teal-500 outline-none" value="<?= date('Y-m-d') ?>">
                         </div>
-
-                    <div class="flex items-center gap-2 text-sm">
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-calendar-alt text-slate-400 text-base"></i>
-                            <input type="date" id="startDate"
-                                class="rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-600 transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15"
-                                value="<?= date('Y-m-d') ?>">
-                        </div>
-                        <span class="text-slate-300">-</span>
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-calendar-check text-slate-400 text-base"></i>
-                            <input type="date" id="endDate"
-                                class="rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-600 transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15"
-                                value="<?= date('Y-m-d') ?>">
+                        <div class="hidden sm:block text-slate-300">-</div>
+                        <div class="relative flex-1">
+                            <i class="fas fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"></i>
+                            <input type="date" id="endDate" class="w-full rounded-xl border border-slate-200 pl-9 pr-3 py-2.5 text-xs font-bold text-slate-600 focus:border-teal-500 outline-none" value="<?= date('Y-m-d') ?>">
                         </div>
                     </div>
-                </div>
 
-                <div class="flex items-center gap-2">
                     <?php if (session()->get('role') === 'superadmin'): ?>
-                        <button id="btnPdf"
-                            class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-medium text-red-600 transition hover:bg-red-50 hover:border-red-300">
-                            <i class="fas fa-file-pdf text-sm"></i>
-                            <span class="hidden sm:inline">PDF</span>
+                    <!-- Export Buttons -->
+                    <div class="grid grid-cols-2 md:flex gap-2">
+                        <button id="btnPdf" class="flex-1 md:flex-none flex h-10 items-center justify-center gap-2 rounded-xl bg-red-50 text-red-600 border border-red-100 px-5 text-xs font-black uppercase tracking-widest hover:bg-red-100 transition-all">
+                            <i class="fas fa-file-pdf"></i> PDF
                         </button>
-
-                        <button id="btnExcel"
-                            class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-xs font-medium text-emerald-600 transition hover:bg-emerald-50 hover:border-emerald-300">
-                            <i class="fas fa-file-excel text-sm"></i>
-                            <span class="hidden sm:inline">Excel</span>
+                        <button id="btnExcel" class="flex-1 md:flex-none flex h-10 items-center justify-center gap-2 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 px-5 text-xs font-black uppercase tracking-widest hover:bg-emerald-100 transition-all">
+                            <i class="fas fa-file-excel"></i> Excel
                         </button>
+                    </div>
                     <?php endif; ?>
                 </div>
             </div>
+            </div>
         </div>
 
-        <div class="overflow-x-auto">
-            <table id="table-1" class="w-full text-sm">
-                <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
-                    <tr>
-                        <th class="px-6 py-3.5 text-center font-semibold">Antrean</th>
-                        <th class="px-6 py-3.5 text-left font-semibold">Tanggal</th>
-                        <th class="px-6 py-3.5 text-left font-semibold">Nama</th>
-                        <th class="px-6 py-3.5 text-left font-semibold">Usia</th>
-                        <th class="px-6 py-3.5 text-left font-semibold">Alamat</th>
-                        <th class="px-6 py-3.5 text-center font-semibold">Status</th>
-                        <th class="px-6 py-3.5 text-center font-semibold">
-                            <?= session()->get('role') === 'superadmin' ? 'Aksi' : 'Keterangan' ?>
-                        </th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 text-slate-700">
-                    <tr class="hover:bg-slate-50 transition">
-                        <td colspan="8" class="px-6 py-12 text-center text-slate-400 italic text-sm">
-                            <i class="fas fa-spinner fa-spin mr-2 text-slate-300"></i>
-                            Memuat data antrean...
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+        <!-- Desktop Table & Mobile Cards Wrapper -->
+        <div id="antrean-table-container">
+            <!-- Mobile Cards (Shown on Mobile) -->
+            <div id="mobile-card-container" class="md:hidden divide-y divide-slate-100 bg-white mb-6">
+                <div class="p-12 text-center text-slate-400 italic text-sm">
+                    <i class="fas fa-spinner fa-spin mr-2"></i> Memuat antrean...
+                </div>
+            </div>
+
+            <!-- Table (Hidden on Mobile) -->
+            <div class="overflow-x-auto">
+                <table id="table-1" class="w-full text-sm hidden md:table">
+                    <thead class="bg-slate-50 text-slate-500 text-[10px] uppercase tracking-wider">
+                        <tr>
+                            <th class="px-6 py-4 text-center font-bold">No</th>
+                            <th class="px-6 py-4 text-left font-bold">Tanggal</th>
+                            <th class="px-6 py-4 text-left font-bold">Nama</th>
+                            <th class="px-6 py-4 text-left font-bold">Usia</th>
+                            <th class="px-6 py-4 text-left font-bold">Alamat</th>
+                            <th class="px-6 py-4 text-center font-bold">Status</th>
+                            <th class="px-6 py-4 text-center font-bold">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-slate-700"></tbody>
+                </table>
+            </div>
         </div>
 
-        <div class="border-t border-slate-100 bg-slate-50/30 px-6 py-3 text-xs text-slate-400">
-            Data ditampilkan berdasarkan filter tanggal dan wilayah pengguna
+        <div class="border-t border-slate-100 bg-slate-50/30 px-6 py-3 text-[10px] text-slate-400 text-center md:text-left">
+            Data disinkronkan secara real-time • Berdasarkan wilayah & filter
         </div>
     </div>
 </section>
@@ -161,19 +158,30 @@
                 </button>
             </div>
 
-            <div class="max-h-[50vh] overflow-y-auto border border-slate-200 rounded-xl">
-                <table id="table-2" class="w-full text-sm">
-                    <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide sticky top-0 z-10">
-                        <tr>
-                            <th class="px-4 py-3 text-left font-semibold">No</th>
-                            <th class="px-4 py-3 text-left font-semibold">Nama</th>
-                            <th class="px-4 py-3 text-left font-semibold">Alamat</th>
-                            <th class="px-4 py-3 text-center font-semibold">Status</th>
-                            <th class="px-4 py-3 text-center font-semibold">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="patientListBody" class="divide-y divide-slate-100 bg-white"></tbody>
-                </table>
+            <!-- Table & Card Wrapper -->
+            <div id="patient-selection-container">
+                <!-- Mobile Card List (Shown on Mobile) -->
+                <div id="mobile-patient-list" class="md:hidden flex flex-col divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-y-auto max-h-[50vh] bg-white no-scrollbar mb-4">
+                    <div class="p-8 text-center text-slate-400 italic text-sm">
+                        <i class="fas fa-search fa-bounce mr-2"></i> Ketik nama pasien di atas...
+                    </div>
+                </div>
+
+                <!-- Desktop Table (Hidden on Mobile) -->
+                <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                    <table id="table-2" class="w-full text-sm hidden md:table">
+                        <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide sticky top-0 z-10">
+                            <tr>
+                                <th class="px-4 py-3 text-left font-semibold">No</th>
+                                <th class="px-4 py-3 text-left font-semibold">Nama</th>
+                                <th class="px-4 py-3 text-left font-semibold">Alamat</th>
+                                <th class="px-4 py-3 text-center font-semibold">Status</th>
+                                <th class="px-4 py-3 text-center font-semibold">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="patientListBody" class="divide-y divide-slate-100 bg-white"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
