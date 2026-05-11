@@ -10,9 +10,9 @@ class MRegion extends Model
     protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
     protected $returnType       = 'object';
-    protected $useSoftDeletes   = false;
+    protected $useSoftDeletes   = true;
     protected $protectFields    = true;
-    protected $allowedFields    = ['name', 'created_at', 'updated_at'];
+    protected $allowedFields    = ['name', 'address', 'phone', 'is_active', 'created_at', 'updated_at'];
 
     protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;
@@ -56,12 +56,27 @@ class MRegion extends Model
             LEFT JOIN patients as p ON p.region_id = r.id ";
     }
 
-    public function getData(array $column = null)
+    public function getData(array $column = null, $allowed_regions = null)
     {
         $builder = $this->builder();
         if (isset($column)) {
             $builder->select($column);
         }
+        if (!empty($allowed_regions)) {
+            if (is_array($allowed_regions)) {
+                if (!empty($allowed_regions)) {
+                    $builder->whereIn('id', $allowed_regions);
+                } else {
+                    // Jika array kosong, kita paksa tidak ada hasil (0) daripada error
+                    $builder->where('id', 0);
+                }
+            } else {
+                if ($allowed_regions !== '[]' && $allowed_regions !== '') {
+                    $builder->where('id', $allowed_regions);
+                }
+            }
+        }
+        $builder->where('is_active', 1);
         return $builder->get()->getResult();
     }
 
@@ -74,7 +89,7 @@ class MRegion extends Model
         $mode       = $options['mode'] ?? 'ASC';
 
         $builder    = $this->db->table('regions as r');
-        $builder->select('r.id, r.name, r.created_at, r.updated_at, COUNT(p.id) as jumlah');
+        $builder->select('r.id, r.name, r.address, r.phone, r.is_active, r.created_at, r.updated_at, COUNT(p.id) as jumlah');
         $builder->join('patients as p', 'p.region_id = r.id', 'left');
 
         // $sql = $this->querySql();
@@ -84,6 +99,10 @@ class MRegion extends Model
             foreach ($options['where_like'] as $like) {
                $builder->where($like);
             }
+        }
+
+        if (!empty($options['where_in'])) {
+            $builder->whereIn('r.id', $options['where_in']);
         }
 
         // $sql .= $where;
@@ -112,6 +131,10 @@ class MRegion extends Model
                 $builder->where($like);
             }
         }
+
+        if (!empty($options['where_in'])) {
+            $builder->whereIn('r.id', $options['where_in']);
+        }
         // $sql = "SELECT COUNT(DISTINCT id) AS total FROM ( ";
         // $sql .= $this->querySql();
         // $sql .= ") AS temp_table WHERE 1 = 1 " . $where_like;
@@ -120,8 +143,12 @@ class MRegion extends Model
         return $builder->countAllResults();
     }
 
-    public function getTotal()
+    public function getTotal($options = [])
     {
-        return $this->countAllResults();
+        $builder = $this->builder();
+        if (!empty($options['where_in'])) {
+            $builder->whereIn('id', $options['where_in']);
+        }
+        return $builder->countAllResults();
     }
 }

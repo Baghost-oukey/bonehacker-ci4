@@ -16,26 +16,30 @@ $routes->group('auth', ['namespace' => 'App\Modules\auth\Controllers'], function
   $routes->get('get_csrf', 'Auth::get_csrf');
 });
 
+// API Routes Consolidated at the end of file
+
 // Beranda
-$routes->get('beranda', 'BerandaController::index', ['namespace' => 'App\Modules\Beranda\Controllers']);
+$routes->get('beranda', 'BerandaController::index', ['namespace' => 'App\Modules\Beranda\Controllers', 'filter' => 'auth']);
+
+// Antrean Public
+$routes->get('antrean/daftar-antrean', '\App\Modules\Antrean\Controllers\AntreanController::daftarAntrean');
 
 // Antrean
-$routes->group('antrean', ['namespace' => 'App\Modules\Antrean\Controllers'], function ($routes) {
-  $routes->get('', 'AntreanController::index');
-  $routes->get('fetchJson', 'AntreanController::fetchJson');
-  $routes->post('fetchDataTable', 'AntreanController::fetchDataTable');
-  $routes->post('fetchPatientDataTables', 'AntreanController::fetchPatientDataTables');
-  $routes->get('addToQueue/(:num)', 'AntreanController::addToQueue/$1');
-  $routes->post('destroy/(:num)', 'AntreanController::destroy/$1');
-  $routes->get('daftar-antrean', 'AntreanController::daftarAntrean');
-  $routes->get('procesToQueue/(:num)', 'AntreanController::procesToQueue/$1');
-  $routes->get('finishQueue/(:num)', 'AntreanController::finishQueue/$1');
-  $routes->get('export_excell_antrean', 'AntreanController::export_excell_antrean');
-  $routes->get('print_pdf_antrean', 'AntreanController::print_pdf_antrean');
+$routes->group('antrean', ['namespace' => 'App\Modules\Antrean\Controllers', 'filter' => 'auth'], function ($routes) {
+    $routes->get('', 'AntreanController::index');
+    $routes->get('fetchJson', 'AntreanController::fetchJson');
+    $routes->post('fetchDataTable', 'AntreanController::fetchDataTable');
+    $routes->post('fetchPatientDataTables', 'AntreanController::fetchPatientDataTables');
+    $routes->get('addToQueue/(:num)', 'AntreanController::addToQueue/$1');
+    $routes->post('destroy/(:num)', 'AntreanController::destroy/$1');
+    $routes->get('procesToQueue/(:num)', 'AntreanController::procesToQueue/$1');
+    $routes->get('finishQueue/(:num)', 'AntreanController::finishQueue/$1');
+    $routes->get('export_excell_antrean', 'AntreanController::export_excell_antrean');
+    $routes->get('print_pdf_antrean', 'AntreanController::print_pdf_antrean');
 });
 
 // Rekam Medis
-$routes->get('rekam-medis', '\App\Modules\RekamMedis\Controllers\RekamMedisController::index');
+$routes->get('rekam-medis', '\App\Modules\RekamMedis\Controllers\RekamMedisController::index', ['filter' => 'auth']);
 $routes->post('patients/fetch2', '\App\Modules\patients\Controllers\Patients::fetch2');
 
 // Save Data - Rekam Medis
@@ -44,17 +48,18 @@ $routes->post('patient/check_phone', '\App\Modules\patients\Controllers\Patients
 $routes->get('patient/export_data', '\App\Modules\patients\Controllers\Patients::export_data');
 
 // Wilayah
-$routes->group('region', ['namespace' => 'App\Modules\Region\Controllers'], function ($routes) {
+$routes->group('region', ['namespace' => 'App\Modules\Region\Controllers', 'filter' => 'auth'], function ($routes) {
   $routes->get('', 'RegionController::index');
   $routes->post('fetch', 'RegionController::fetch');
   $routes->post('store', 'RegionController::store');
   $routes->post('update/(:num)', 'RegionController::update/$1');
   $routes->post('destroy/(:num)', 'RegionController::destroy/$1');
+  $routes->post('reactivate/(:num)', 'RegionController::reactivate/$1');
 });
 // app/Config/Routes.php
 
 // Journal
-$routes->group('journal', ['namespace' => 'App\Modules\Journal\Controllers'], function ($routes) {
+$routes->group('journal', ['namespace' => 'App\Modules\Journal\Controllers', 'filter' => 'auth'], function ($routes) {
   $routes->get('', 'JournalController::index');
   $routes->post('fetch', 'JournalController::fetch');
   $routes->get('export_excell', 'JournalController::export_excell');
@@ -68,23 +73,26 @@ $routes->group('transaksi', ['namespace' => 'App\Modules\Transaksi\Controllers',
   $routes->post('fetch', 'TransaksiController::fetch');
   $routes->post('store', 'TransaksiController::store');
   $routes->post('delete', 'TransaksiController::delete');
+  $routes->get('export_excell', 'TransaksiController::export_excell');
+  $routes->get('export_pdf', 'TransaksiController::export_pdf');
+  $routes->get('chart_data', 'TransaksiController::chart_data');
 });
 
-// Statistik => Ada Typo
-$routes->group('statistik', ['namespace' => 'App\Modules\statisktik\Controllers'], function ($routes) {
+// Statistik
+$routes->group('statistik', ['namespace' => 'App\Modules\statistik\Controllers', 'filter' => 'auth'], function ($routes) {
   $routes->get('', 'Statistik::index');
   $routes->get('fetch_statistics', 'Statistik::fetch_statistics');
   $routes->get('fetch_analysis', 'Statistik::fetch_analysis');
 });
 
 // Statistik - Tag
-$routes->group('statistiktag', ['namespace' => 'App\Modules\statistiktag\Controllers'], function ($routes) {
+$routes->group('statistiktag', ['namespace' => 'App\Modules\statistiktag\Controllers', 'filter' => 'auth'], function ($routes) {
   $routes->get('', 'StatistikTag::index');
   $routes->get('fetch_statistics', 'StatistikTag::fetch_statistics');
 });
 
 // Statistik - Hasil Pemeriksaan
-$routes->group('statistikresult', ['namespace' => 'App\Modules\statistikresult\Controllers'], function ($routes) {
+$routes->group('statistikresult', ['namespace' => 'App\Modules\statistikresult\Controllers', 'filter' => 'auth'], function ($routes) {
   $routes->get('', 'StatistikResult::index');
   $routes->get('fetch_statistics', 'StatistikResult::fetch_statistics');
 });
@@ -104,14 +112,14 @@ $routes->group('statistikdaerah', ['namespace' => 'App\Modules\statistikdaerah\C
   $routes->get('fetch_desa', 'Statistikdaerah::fetch_desa');
 });
 
-// Statistik Sosial Media
-$routes->group('statistikresource', ['namespace' => 'App\Modules\statistikrecource\Controllers'], function ($routes) {
-  $routes->get('', 'statistikrecource::index');
-  $routes->get('get_marketing_data', 'statistikrecource::get_marketing_data');
+// Statistik-Sumber Daya
+$routes->group('statistikresource', ['namespace' => 'App\Modules\statistikresource\Controllers', 'filter' => 'auth'], function ($routes) {
+  $routes->get('', 'StatistikResource::index');
+  $routes->get('get_marketing_data', 'StatistikResource::get_marketing_data');
 });
 
 // Jabatan
-$routes->group('jabatan', ['namespace' => 'App\Modules\jabatan\Controllers'], function ($routes) {
+$routes->group('jabatan', ['namespace' => 'App\Modules\jabatan\Controllers', 'filter' => 'auth'], function ($routes) {
   $routes->get('', 'Jabatan::index');
   $routes->post('fetch', 'Jabatan::fetch');
   $routes->post('store', 'Jabatan::store');
@@ -120,8 +128,9 @@ $routes->group('jabatan', ['namespace' => 'App\Modules\jabatan\Controllers'], fu
   $routes->post('check_name_exists', 'Jabatan::check_name_exists');
 });
 
+
 // Tag - Complaint(Keluhan)
-$routes->group('tag-keluhan', ['namespace' => 'App\Modules\TagComplaint\Controllers'], function ($routes) {
+$routes->group('tag-keluhan', ['namespace' => 'App\Modules\TagComplaint\Controllers', 'filter' => 'auth'], function ($routes) {
   $routes->get('', 'TagComplaintController::index');
   $routes->post('fetch', 'TagComplaintController::fetch');
   $routes->post('store', 'TagComplaintController::store');
@@ -129,10 +138,11 @@ $routes->group('tag-keluhan', ['namespace' => 'App\Modules\TagComplaint\Controll
   $routes->post('destroy/(:num)', 'TagComplaintController::destroy/$1');
   $routes->post('check_name_exists', 'TagComplaintController::check_name_exists');
   $routes->get('get_tags', 'TagComplaintController::get_tags');
+
 });
 
 // Tag - Medis(Rekam Medis)
-$routes->group('tag-rekam-medis', ['namespace' => 'App\Modules\TagRekamMedis\Controllers'], function ($routes) {
+$routes->group('tag-rekam-medis', ['namespace' => 'App\Modules\TagRekamMedis\Controllers', 'filter' => 'auth'], function ($routes) {
   $routes->get('/', 'MedisController::index');
   $routes->match(['get', 'post'], 'fetch', 'MedisController::fetch');
   $routes->get('tags', 'MedisController::get_tags');
@@ -143,7 +153,7 @@ $routes->group('tag-rekam-medis', ['namespace' => 'App\Modules\TagRekamMedis\Con
 });
 
 // Tag - Result
-$routes->group('tag-pemeriksaan', ['namespace' => 'App\Modules\TagPemeriksaan\Controllers'], function ($routes) {
+$routes->group('tag-pemeriksaan', ['namespace' => 'App\Modules\TagPemeriksaan\Controllers', 'filter' => 'auth'], function ($routes) {
   $routes->get('', 'TagPemeriksaanController::index');
   $routes->post('fetch', 'TagPemeriksaanController::fetch');
   $routes->post('store', 'TagPemeriksaanController::store');
@@ -154,12 +164,12 @@ $routes->group('tag-pemeriksaan', ['namespace' => 'App\Modules\TagPemeriksaan\Co
 });
 
 // Logs
-$routes->group('logs', ['namespace' => 'App\Modules\logs\Controllers'], function ($routes) {
+$routes->group('logs', ['namespace' => 'App\Modules\logs\Controllers', 'filter' => 'auth'], function ($routes) {
   $routes->get('', 'Log::index');
 });
 
 // Whatsapp
-$routes->group('whatsapp', ['namespace' => 'App\Modules\whatsapp\Controllers'], function ($routes) {
+$routes->group('whatsapp', ['namespace' => 'App\Modules\whatsapp\Controllers', 'filter' => 'auth'], function ($routes) {
   $routes->get('', 'Whatsapp::index');
   $routes->post('store', 'Whatsapp::store');
   $routes->post('edit/(:num)', 'Whatsapp::edit/$1');
@@ -168,30 +178,31 @@ $routes->group('whatsapp', ['namespace' => 'App\Modules\whatsapp\Controllers'], 
 });
 
 // History
-$routes->group('history', ['namespace' => 'App\Modules\history\Controllers'], function ($routes) {
+$routes->group('history', ['namespace' => 'App\Modules\history\Controllers', 'filter' => 'auth'], function ($routes) {
   $routes->post('fetch/(:num)', 'History::fetch/$1');
   $routes->post('store', 'History::store');
   $routes->post('update', 'History::update');
   $routes->post('copy', 'History::copy');
   $routes->post('destroy/(:num)', 'History::destroy/$1');
   $routes->get('show/(:num)', 'History::show/$1');
+  $routes->get('terapis-by-region', 'History::getTerapisByRegion');
 });
 
 // Log - WhatsApp
-$routes->group('log_whatsapp', ['namespace' => 'App\Modules\log_whatsapp\Controllers'], function ($routes) {
+$routes->group('log_whatsapp', ['namespace' => 'App\Modules\log_whatsapp\Controllers', 'filter' => 'auth'], function ($routes) {
   $routes->get('', 'Logwhatsapp::index');
   $routes->post('resend', 'Logwhatsapp::resend');
 });
 
 // Greeting
-$routes->group('greeting', ['namespace' => 'App\Modules\greeting\Controllers'], function ($routes) {
+$routes->group('greeting', ['namespace' => 'App\Modules\greeting\Controllers', 'filter' => 'auth'], function ($routes) {
   $routes->get('', 'Greeting::index');
   $routes->post('save', 'Greeting::save');
   $routes->get('delete/(:num)', 'Greeting::delete/$1');
 });
 
 // Terapis
-$routes->group('terapis', ['namespace' => 'App\Modules\terapis\Controllers'], function ($routes) {
+$routes->group('terapis', ['namespace' => 'App\Modules\terapis\Controllers', 'filter' => 'auth'], function ($routes) {
   $routes->get('', 'TerapisController::index');
   $routes->get('detail-terapis/(:any)', 'TerapisController::detail_terapis/$1');
   $routes->post('fetch', 'TerapisController::fetch'); // Untuk narik data tabel
@@ -200,34 +211,40 @@ $routes->group('terapis', ['namespace' => 'App\Modules\terapis\Controllers'], fu
   $routes->post('checkId', 'TerapisController::checkId');
   $routes->post('store', 'TerapisController::store');
   $routes->post('update', 'TerapisController::update');
+  $routes->post('deletefoto', 'TerapisController::deletefoto');
   $routes->get('destroy/(:num)', 'TerapisController::destroy/$1');
   $routes->get('public_info/(:any)', 'TerapisController::public_info/$1');
+  $routes->post('generate_user', 'TerapisController::generate_user');
+  $routes->post('link_user', 'TerapisController::link_user');
+  $routes->get('profil_saya', 'TerapisController::profil_saya');
 });
 
 // Untuk Akses info publik
 // $routes->get('p/(:any)', '\App\Controllers\Terapis::public_info/$1');
 
 // Users
-$routes->group('users', ['namespace' => 'App\Modules\Users\Controllers'], function ($routes) {
+$routes->group('users', ['namespace' => 'App\Modules\Users\Controllers', 'filter' => 'auth'], function ($routes) {
   $routes->get('', 'UsersController::index');
   $routes->post('fetch', 'UsersController::fetch');
   $routes->post('store', 'UsersController::store');
   $routes->post('update/(:num)', 'UsersController::update/$1');
-  $routes->get('destroy/(:num)', 'UsersController::destroy/$1');
+  $routes->post('destroy/(:num)', 'UsersController::destroy/$1');
 
   // Pasien Luar
-  $routes->get('view_patient/(:num)', 'UsersController::view_patient/$1');
-  $routes->post('fetch_patients', 'UsersController::fetch_patients');
-  $routes->post('add_outside_patient', 'UsersController::add_outside_patient');
-  $routes->post('fetch_patients_luar', 'UsersController::fetch_patients_luar');
-  $routes->post('get_outside_patients_select', 'UsersController::get_outside_patients_select');
-  $routes->post('delete_outside_patient', 'UsersController::delete_outside_patient');
-  $routes->post('send_notif_patients/(:num)', 'UsersController::send_notif_patients/$1');
-  $routes->post('check_username_exists', 'UsersController::check_username_exists');
+
+  $routes->get('view_patient/(:num)', 'Users::view_patient/$1');
+  $routes->post('fetch_patients', 'Users::fetch_patients');
+  $routes->post('add_outside_patient', 'Users::add_outside_patient');
+  $routes->post('fetch_patients_luar', 'Users::fetch_patients_luar');
+  $routes->post('get_outside_patients_select', 'Users::get_outside_patients_select');
+  $routes->post('delete_outside_patient', 'Users::delete_outside_patient');
+  $routes->post('send_notif_patients/(:num)', 'Users::send_notif_patients/$1');
+  $routes->post('check_username_exists', 'Users::check_username_exists');
+
 });
 
 // Patients - Routes
-$routes->group('patient', ['namespace' => 'App\Modules\patients\Controllers'], function ($routes) {
+$routes->group('patient', ['namespace' => 'App\Modules\patients\Controllers', 'filter' => 'auth'], function ($routes) {
   $routes->get('', 'Patients::index');
   $routes->post('fetch', 'Patients::fetch');
   $routes->post('fetch2', 'Patients::fetch2');
@@ -244,7 +261,7 @@ $routes->group('patient', ['namespace' => 'App\Modules\patients\Controllers'], f
 });
 
 // Routes - Kas
-$routes->group('kas', ['namespace' => 'App\modules\kas\Controllers'], function ($routes) {
+$routes->group('kas', ['namespace' => 'App\modules\kas\Controllers', 'filter' => 'auth'], function ($routes) {
   $routes->get('/', 'Kas::index');
   $routes->post('get_data_pemasukan', 'Kas::get_data_pemasukan');
   $routes->post('get_data_pengeluaran', 'Kas::get_data_pengeluaran');
@@ -254,6 +271,11 @@ $routes->group('kas', ['namespace' => 'App\modules\kas\Controllers'], function (
   $routes->post('bayar_pengeluaran_harian', 'Kas::bayar_pengeluaran_harian');
   $routes->post('set_filter_region', 'Kas::set_filter_region');
 
+  // Kategori Keuangan
+  $routes->get('categories', 'FinanceCategoryController::index', ['namespace' => 'App\Modules\transaksi\Controllers']);
+  $routes->post('categories/store', 'FinanceCategoryController::store', ['namespace' => 'App\Modules\transaksi\Controllers']);
+  $routes->get('categories/delete/(:num)', 'FinanceCategoryController::delete/$1', ['namespace' => 'App\Modules\transaksi\Controllers']);
+
   // Grouping untuk CRUD Master Pengeluaran Harian
   $routes->group('master', function ($routes) {
     $routes->post('simpan', 'Kas::simpan_master_harian');
@@ -261,23 +283,57 @@ $routes->group('kas', ['namespace' => 'App\modules\kas\Controllers'], function (
   });
 });
 
+// --- API ROUTES FOR MOBILE (Consolidated) ---
+$routes->group('api', ['namespace' => 'App\Modules\api\Controllers'], function ($routes) {
+  $routes->post('login', 'Auth::login');
+  $routes->get('statistics/summary', 'Statistics::summary');
+  
+  // Antrean API
+  $routes->get('antrean', 'Antrean::index');
+  $routes->post('antrean/proses', 'Antrean::proses');
+  $routes->post('antrean/selesai', 'Antrean::selesai');
+
+  // Patients API
+  $routes->get('patients', 'Patients::index');
+  $routes->get('patients/show/(:num)', 'Patients::show/$1');
+  $routes->post('patients/add-to-queue', 'Patients::addToQueue');
+  $routes->post('patients/register', 'Patients::register');
+  $routes->post('patients/upload-file', 'Patients::uploadFile');
+  $routes->post('patients/delete-file', 'Patients::deleteFile');
+
+  // Region (Cabang) API
+  $routes->get('regions', 'Region::index');
+  $routes->post('regions/store', 'Region::store');
+  $routes->post('regions/update/(:num)', 'Region::update/$1');
+  $routes->post('regions/delete/(:num)', 'Region::delete/$1');
+
+  // History & Medical Records API
+  $routes->get('medical-records/patient/(:num)', 'History::index/$1');
+  $routes->get('medical-records/tags', 'History::tags');
+  $routes->post('medical-records/store', 'History::save');
+});
+
 // Routes - Statsitik Keuangan
-$routes->group('statistikkeuangan', ['namespace' => 'App\Modules\StatistikKeuangan\Controllers'], function ($routes) {
-  $routes->get('/', 'StatistikKeuangan::index'); // Gunakan '/' agar terbaca sebagai root grup
+$routes->group('statistikkeuangan', ['namespace' => 'App\Modules\StatistikKeuangan\Controllers', 'filter' => 'auth'], function ($routes) {
+  $routes->get('/', 'StatistikKeuangan::index'); 
   $routes->get('get_chart_data', 'StatistikKeuangan::get_chart_data');
+  $routes->get('export_excel', 'StatistikKeuangan::export_excel');
+  $routes->get('export_pdf', 'StatistikKeuangan::export_pdf');
 });
 
 
 // Routes - Gaji
-$routes->group('gaji', ['namespace' => 'App\modules\gaji\Controllers'], function ($routes) {
+$routes->group('gaji', ['namespace' => 'App\modules\gaji\Controllers', 'filter' => 'auth'], function ($routes) {
   $routes->get('/', 'Gajikaryawan::index');
   $routes->post('setting/save', 'Gajikaryawan::saveSetting');
   $routes->get('detail/(:num)', 'Gajikaryawan::detailEstimasi/$1');
   $routes->post('proses_bayar', 'Gajikaryawan::prosesBayar');
+  $routes->get('fetch_estimasi', 'Gajikaryawan::fetchEstimasi');
+  $routes->get('export', 'Gajikaryawan::export');
 });
 
 // Rutes - Kas bon
-$routes->group('kasbon', ['namespace' => 'App\modules\kasbon_karyawan\Controllers'], function ($routes) {
+$routes->group('kasbon', ['namespace' => 'App\modules\kasbon_karyawan\Controllers', 'filter' => 'auth'], function ($routes) {
   $routes->get('/', 'Kasbonkaryawan::index');
   $routes->post('fetch', 'Kasbonkaryawan::fetchKaryawan');
   $routes->get('detail/(:num)', 'Kasbonkaryawan::detail/$1');
@@ -287,7 +343,7 @@ $routes->group('kasbon', ['namespace' => 'App\modules\kasbon_karyawan\Controller
 
 
 // Rotes - tunjangan karyawan
-$routes->group('tunjangan-karyawan', ['namespace' => 'App\modules\tunjangan_karyawan\Controllers'], function ($routes) {
+$routes->group('tunjangan-karyawan', ['namespace' => 'App\modules\tunjangan_karyawan\Controllers', 'filter' => 'auth'], function ($routes) {
   $routes->get('/', 'Tunjangankaryawan::index');
   $routes->post('fetch', 'Tunjangankaryawan::fetch');
   $routes->post('store', 'Tunjangankaryawan::store');
@@ -295,7 +351,7 @@ $routes->group('tunjangan-karyawan', ['namespace' => 'App\modules\tunjangan_kary
 });
 
 // Rutes - transaksi tunjangan
-$routes->group('transaksi-tunjangan', ['namespace' => 'App\modules\transaksi_tunjangan\Controllers'], function ($routes) {
+$routes->group('transaksi-tunjangan', ['namespace' => 'App\modules\transaksi_tunjangan\Controllers', 'filter' => 'auth'], function ($routes) {
   $routes->get('/', 'Transaksitunjangan::index');
   $routes->post('fetch', 'Transaksitunjangan::fetch');
   $routes->get('detail/(:num)', 'Transaksitunjangan::detail/$1');
@@ -303,24 +359,24 @@ $routes->group('transaksi-tunjangan', ['namespace' => 'App\modules\transaksi_tun
 });
 
 // ROUTES MODUL PENGGAJIAN (PAYROLL)
-// $routes->group('detail-gaji', ['namespace' => 'App\modules\detail_gaji\Controllers'], function($routes) {
-//     $routes->get('/', 'Detailgaji::index');
-//     $routes->get('review/(:num)', 'Detailgaji::review/$1');
-//     $routes->post('proses_simpan', 'Detailgaji::proses_simpan');
-
-// });
+$routes->group('detail-gaji', ['namespace' => 'App\modules\detail_gaji\Controllers', 'filter' => 'auth'], function($routes) {
+    $routes->get('/', 'Detailgaji::index');
+    $routes->get('review/(:num)', 'Detailgaji::review/$1');
+    $routes->post('proses_simpan', 'Detailgaji::proses_simpan');
+});
 
 // Routes - Kehadruan 
-$routes->group('kehadiran', ['namespace' => 'App\modules\absensi_karyawan\Controllers'], function ($routes) {
+$routes->group('kehadiran', ['namespace' => 'App\modules\absensi_karyawan\Controllers', 'filter' => 'auth'], function ($routes) {
   $routes->get('/', 'Absensikaryawan::index');
   $routes->get('store/(:any)', 'Absensikaryawan::store/$1');
   $routes->get('store', 'Absensikaryawan::store'); // Route untuk halaman form Card
   $routes->get('detail/(:any)', 'Absensikaryawan::detail/$1');
   $routes->post('simpan_massal', 'Absensikaryawan::simpan_massal'); // Route untuk proses AJAX
+  $routes->get('export', 'Absensikaryawan::export');
 });
 
 
-$routes->group('jasa-pelayanan', ['namespace' => 'App\modules\jasa_pelayanan\Controllers'], function($routes) {
+$routes->group('jasa-pelayanan', ['namespace' => 'App\modules\jasa_pelayanan\Controllers', 'filter' => 'auth'], function($routes) {
     $routes->get('reguler', 'Jasapelayanan::reguler');
     $routes->get('kejantanan', 'Jasapelayanan::kejantanan');
     $routes->post('fetch', 'Jasapelayanan::fetch');

@@ -3,20 +3,18 @@
 
 <?php
 $isDevEnvironment = ENVIRONMENT === 'development';
-$viteDevServer = rtrim((string) (env('vite.devServerUrl') ?? 'http://localhost:5173'), '/');
+// Selalu gunakan 127.0.0.1 untuk cek koneksi (lebih cepat di Windows, hindari DNS overhead)
+$viteCheckHost = '127.0.0.1';
+$vitePort = 5173;
+// URL yang diinject ke browser — gunakan 'localhost' agar dapat diakses dari domain .test
+// (sudah diizinkan oleh cors config di vite.config.js)
+$viteBrowserUrl = 'http://localhost:5173';
 $shouldUseViteDevServer = false;
 
 if ($isDevEnvironment) {
-    $viteHost = (string) parse_url($viteDevServer, PHP_URL_HOST);
-    $vitePort = (int) (parse_url($viteDevServer, PHP_URL_PORT) ?: 5173);
-
-    if ($viteHost !== '') {
-        $viteSocket = @fsockopen($viteHost, $vitePort, $errno, $errstr, 0.15);
-        if (is_resource($viteSocket)) {
-            $shouldUseViteDevServer = true;
-            fclose($viteSocket);
-        }
-    }
+    // Dipaksa false agar selalu menggunakan aset hasil build (npm run build)
+    // untuk menghindari masalah CORS pada environment Windows/Laragon .test
+    $shouldUseViteDevServer = false;
 }
 ?>
 
@@ -36,7 +34,7 @@ if ($isDevEnvironment) {
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
     <link href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css" rel="stylesheet" type="text/css" />
     <?php if ($shouldUseViteDevServer): ?>
-        <link rel="stylesheet" href="<?= $viteDevServer ?>/resources/css/app.css">
+        <link rel="stylesheet" href="<?= $viteBrowserUrl ?>/resources/css/app.css">
     <?php else: ?>
         <link rel="stylesheet"
             href="<?= base_url('build/assets/app.css') . '?v=' . (is_file(FCPATH . 'build/assets/app.css') ? filemtime(FCPATH . 'build/assets/app.css') : time()) ?>">
@@ -46,6 +44,19 @@ if ($isDevEnvironment) {
         .export-hidden {
             display: none;
         }
+
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            /* IE and Edge */
+            scrollbar-width: none;
+            /* Firefox */
+        }
     </style>
 </head>
 
@@ -53,16 +64,15 @@ if ($isDevEnvironment) {
     <div id="app" class="min-h-screen flex bg-slate-50 text-slate-900">
 
         <!-- ================= SIDEBAR ================= -->
+        <?php if (!isset($isPublic) || !$isPublic): ?>
         <aside id="sidebar" class="
-        fixed inset-y-0 left-0 z-30 w-64 bg-white border-r border-slate-200
-        transform -translate-x-full transition-transform duration-300 ease-in-out
-
-        lg:static lg:translate-x-0 lg:shrink-0
-    ">
-            <div class="h-full overflow-y-auto">
-                <?= $this->include('App\Views\layout\sidebar') ?>
-            </div>
+            w-64 bg-white border-r border-slate-200 transition-transform duration-300 ease-in-out flex flex-col
+            fixed inset-y-0 left-0 z-40 -translate-x-full
+            lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:z-10 lg:shrink-0
+        ">
+            <?= $this->include('App\Views\layout\sidebar') ?>
         </aside>
+        <?php endif; ?>
 
         <!-- ================= BACKDROP ================= -->
         <div id="sidebarBackdrop" class="fixed inset-0 z-20 hidden bg-black/40 lg:hidden"></div>
@@ -71,6 +81,7 @@ if ($isDevEnvironment) {
         <div class="flex flex-col flex-1 min-h-screen">
 
             <!-- HEADER -->
+            <?php if (!isset($isPublic) || !$isPublic): ?>
             <header class="sticky top-0 z-20 bg-white border-b border-slate-200">
 
                 <div class="flex items-center justify-between px-4 h-14">
@@ -88,6 +99,7 @@ if ($isDevEnvironment) {
 
                 </div>
             </header>
+            <?php endif; ?>
 
             <!-- CONTENT -->
             <main class="flex-1 overflow-y-auto p-4 md:p-6">
@@ -115,8 +127,8 @@ if ($isDevEnvironment) {
     <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify"></script>
     <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.polyfills.min.js"></script>
     <?php if ($shouldUseViteDevServer): ?>
-        <script type="module" src="<?= $viteDevServer ?>/@vite/client"></script>
-        <script type="module" src="<?= $viteDevServer ?>/resources/js/app.js"></script>
+        <script type="module" src="<?= $viteBrowserUrl ?>/@vite/client"></script>
+        <script type="module" src="<?= $viteBrowserUrl ?>/resources/js/app.js"></script>
     <?php else: ?>
         <script type="module"
             src="<?= base_url('build/assets/app.js') . '?v=' . (is_file(FCPATH . 'build/assets/app.js') ? filemtime(FCPATH . 'build/assets/app.js') : time()) ?>"></script>
@@ -124,6 +136,27 @@ if ($isDevEnvironment) {
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
+            // Cleanup backdrop yang mungkin tersisa
+            const cleanupBackdrops = () => {
+                // Hapus semua SweetAlert backdrop
+                document.querySelectorAll('.swal2-container').forEach(el => el.remove());
+                document.querySelectorAll('.swal2-backdrop-show').forEach(el => el.remove());
+                
+                // Hapus Select2 backdrop
+                document.querySelectorAll('.select2-dropdown').forEach(el => el.remove());
+                document.querySelectorAll('.select2-container--open').forEach(el => {
+                    el.classList.remove('select2-container--open');
+                });
+                
+                // Reset body
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+                document.body.classList.remove('swal2-shown', 'swal2-height-auto');
+            };
+            
+            // Jalankan cleanup
+            cleanupBackdrops();
+            
             const sidebar = document.getElementById("sidebar");
             const backdrop = document.getElementById("sidebarBackdrop");
             const toggle = document.getElementById("sidebarToggle");
@@ -151,24 +184,17 @@ if ($isDevEnvironment) {
 
     <script>
         (function() {
-            // var metaName = document.querySelector('meta[name="csrf-token-name"]');
-            // var metaHash = document.querySelector('meta[name="csrf-token-hash"]');
-            // var csrfName = metaName ? metaName.getAttribute('content') : null;
             var csrfName = $('meta[name="csrf-token-name"]').attr('content');
-            // var csrfHash = metaHash ? metaHash.getAttribute('content') : null;
 
             function refreshCsrfToken() {
                 $.get('<?= site_url('auth/get_csrf') ?>', function(data) {
                     $('meta[name="csrf-token-hash"]').attr('content', data.token);
-                    // 2. Update semua input hidden yang dibuat pake csrf_field()
                     $('input[name="' + csrfName + '"]').val(data.token);
-                    // 3. Update settingan global JQuery AJAX
                     $.ajaxSetup({
                         data: {
                             [csrfName]: data.token
                         }
                     });
-                    // console.log('CSRF token Berhasil Diperbarui');
                 });
             }
 
@@ -183,6 +209,18 @@ if ($isDevEnvironment) {
                     });
                 }
 
+
+                // Sembunyikan alert error bawaan DataTables yang mengganggu (Ajax error)
+                if ($.fn.dataTable) {
+                    $.fn.dataTable.ext.errMode = 'none';
+                }
+
+                // Handle jika sesi habis (Unauthorized 401) pada semua request AJAX
+                $(document).ajaxError(function(event, xhr, settings) {
+                    if (xhr.status === 401) {
+                        window.location.href = '<?= base_url('auth') ?>';
+                    }
+                });
 
                 // Jurus Anti-Macet: Setiap request POST selesai, kita minta token baru
                 $(document).ajaxComplete(function(event, xhr, settings) {

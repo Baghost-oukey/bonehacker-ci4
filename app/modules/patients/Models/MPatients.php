@@ -133,8 +133,12 @@ class MPatients extends Model
         $builder->join('histories h', 'h.patient_id = patients.id AND h.is_delete = 0', 'left');
 
         // Filter berdasarkan region jika ada
-        if (!empty($region)) {
-            $builder->where('patients.region_id', $region);
+        if (!empty($region) && $region !== 'all') {
+            if (is_array($region)) {
+                $builder->whereIn('patients.region_id', $region);
+            } else {
+                $builder->where('patients.region_id', $region);
+            }
         }
    if ($start_date && $end_date) {
         $builder->groupStart()

@@ -235,9 +235,10 @@ const setupJournalPage = () => {
 
         // --- RESET FILTER ---
         $('#btn-reset').on('click', function () {
+            const today = new Date().toISOString().split('T')[0];
             $('#customSearch').val('');
-            $('#start_date').val('');
-            $('#end_date').val('');
+            $('#start_date').val(today);
+            $('#end_date').val(today);
             $('#region').val('').trigger('change');
             currentPage = 1;
             pageLength = 25;

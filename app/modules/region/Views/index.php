@@ -25,6 +25,7 @@
             </p>
         </div>
 
+        <?php if ($sess_role === 'superadmin'): ?>
         <div class="flex items-center">
             <button type="button" data-modal-open="modalTambahRegion"
                 class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-700">
@@ -32,6 +33,7 @@
                 Tambah Cabang
             </button>
         </div>
+        <?php endif; ?>
     </div>
 
     <div class="rounded-2xl bg-white shadow-sm border border-slate-200/50 overflow-hidden">
@@ -59,7 +61,9 @@
                         <th class="px-6 py-3.5 text-left font-semibold">Cabang</th>
                         <th class="px-6 py-3.5 text-left font-semibold">Waktu Buat</th>
                         <th class="px-6 py-3.5 text-left font-semibold">Terakhir Diperbarui</th>
+                        <?php if ($sess_role === 'superadmin'): ?>
                         <th class="px-6 py-3.5 text-right font-semibold">Aksi</th>
+                        <?php endif; ?>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-slate-700">
@@ -135,6 +139,18 @@
                     name="name" required autofocus>
                 <div class="invalid-feedback text-xs text-red-500 mt-1 hidden">Nama Cabang tidak boleh kosong</div>
             </div>
+            <div class="space-y-1">
+                <label class="text-sm font-medium text-slate-700">Alamat</label>
+                <textarea
+                    class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                    name="address" rows="2"></textarea>
+            </div>
+            <div class="space-y-1">
+                <label class="text-sm font-medium text-slate-700">Nomor HP</label>
+                <input type="text"
+                    class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                    name="phone">
+            </div>
 
             <div class="flex items-center justify-end gap-2 border-t border-slate-200 pt-4">
                 <button type="button" data-modal-close
@@ -163,6 +179,18 @@
                     class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
                     id="editName" name="name" required>
                 <div class="invalid-feedback text-xs text-red-500 mt-1 hidden">Nama Cabang tidak boleh kosong</div>
+            </div>
+            <div class="space-y-1">
+                <label class="text-sm font-medium text-slate-700">Alamat</label>
+                <textarea
+                    class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                    id="editAddress" name="address" rows="2"></textarea>
+            </div>
+            <div class="space-y-1">
+                <label class="text-sm font-medium text-slate-700">Nomor HP</label>
+                <input type="text"
+                    class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                    id="editPhone" name="phone">
             </div>
 
             <div class="flex items-center justify-end gap-2 border-t border-slate-200 pt-4">
@@ -232,7 +260,8 @@
         csrfHash: "<?= csrf_hash() ?>",
         fetchUrl: "<?= base_url('region/fetch') ?>",
         storeUrl: "<?= site_url('region/store') ?>",
-        baseUrl: "<?= site_url('region') ?>"
+        baseUrl: "<?= site_url('region') ?>",
+        role: "<?= esc($sess_role) ?>"
     };
 </script>
 

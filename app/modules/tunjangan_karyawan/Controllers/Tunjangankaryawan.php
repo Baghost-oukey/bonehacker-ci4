@@ -76,7 +76,7 @@ class Tunjangankaryawan extends BaseController
             if (!$this->Mtunjangan->update($id, $dataSimpan)) {
                 return $this->response->setStatusCode(400)->setJSON([
                     'status' => 'error',
-                    'errors' => $this->Mtunjangan->errors()
+                    'errors' => 'Gagal memperbarui data. Pastikan semua field terisi dengan benar.'
                 ]);
             }
             $pesan = 'Data master tunjangan berhasil diperbarui.';
@@ -84,7 +84,7 @@ class Tunjangankaryawan extends BaseController
             if (!$this->Mtunjangan->insert($dataSimpan)) {
                 return $this->response->setStatusCode(400)->setJSON([
                     'status' => 'error',
-                    'errors' => $this->Mtunjangan->errors()
+                    'errors' => 'Gagal menambahkan data. Pastikan semua field terisi dengan benar.'
                 ]);
             }
             $pesan = 'Jenis tunjangan baru berhasil ditambahkan.';

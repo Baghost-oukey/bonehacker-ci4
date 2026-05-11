@@ -8,7 +8,7 @@
             <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">
                 <?= esc($title) ?>
             </h1>
-            <p class="text-sm text-slate-500">Detail data pasien — Jasa Pelayanan Kejantanan</p>
+            <p class="text-sm text-slate-500">Biodata, Riwayat, dan File Pasien — Jasa Pelayanan Kejantanan</p>
         </div>
         <div class="flex flex-wrap items-center gap-3">
             <a href="<?= site_url('jasa-pelayanan/kejantanan') ?>"
@@ -18,38 +18,20 @@
         </div>
     </div>
 
-    <!-- TAB NAV -->
-    <div class="border-b border-slate-200">
-        <nav class="flex gap-6" id="patient-tabs">
-            <button data-tab="biodata"
-                class="tab-btn border-b-2 border-teal-600 text-teal-600 pb-3 text-sm font-medium transition">
-                Biodata
-            </button>
-            <button data-tab="riwayat"
-                class="tab-btn border-b-2 border-transparent text-slate-500 hover:text-slate-700 pb-3 text-sm font-medium transition">
-                Riwayat Kejantanan
-            </button>
-            <button data-tab="file"
-                class="tab-btn border-b-2 border-transparent text-slate-500 hover:text-slate-700 pb-3 text-sm font-medium transition">
-                File
-            </button>
-        </nav>
-    </div>
-
-    <!-- TAB CONTENT -->
-    <div class="mt-6">
+    <!-- CONTENT SECTIONS -->
+    <div class="space-y-6">
         <!-- BIODATA -->
-        <div id="tab-biodata" class="tab-content">
+        <div id="tab-biodata">
             <?= $this->include('App\modules\patients\Views\component\card_biodata') ?>
         </div>
 
         <!-- RIWAYAT (Kejantanan - form kejantanan selalu tampil) -->
-        <div id="tab-riwayat" class="tab-content hidden">
+        <div id="tab-riwayat">
             <?= $this->include('App\modules\jasa_pelayanan\Views\detailKejantanan\components\card_riwayat_kejantanan') ?>
         </div>
 
         <!-- FILE -->
-        <div id="tab-file" class="tab-content hidden">
+        <div id="tab-file">
             <?= $this->include('App\modules\patients\Views\component\card_file') ?>
         </div>
     </div>
@@ -62,6 +44,7 @@
     window.patientConfig = {
         patientId: '<?= esc($patient_id ?? "") ?>',
         queueId: '<?= esc($queue_id ?? "") ?>',
+        patientRegionId: '<?= esc($patient->region_id ?? "") ?>',
         csrfTokenName: '<?= csrf_token() ?>',
         csrfHash: '<?= csrf_hash() ?>',
         urls: {
@@ -72,7 +55,8 @@
             medisTags: '<?= site_url("tag-rekam-medis/tags") ?>',
             resultTags: '<?= site_url("tag-pemeriksaan/get_tags") ?>',
             fileBase: '<?= base_url("patient_file") ?>',
-            fileUpload: '<?= site_url("patient/update_files") ?>'
+            fileUpload: '<?= site_url("patient/update_files") ?>',
+            terapisByRegion: '<?= site_url("history/terapis-by-region") ?>'
         },
         fileUrlsData: <?= !empty($file_urls) ? (is_array($file_urls) ? json_encode($file_urls) : $file_urls) : '[]' ?>,
         kategoriLayanan: 'Kejantanan'

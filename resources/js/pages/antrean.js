@@ -10,14 +10,6 @@ const getCsrfPayload = (config) => ({
   [config.csrfName]: config.csrfHash,
 });
 
-const debounce = (fn, delay = 400) => {
-  let timerId;
-  return (...args) => {
-    clearTimeout(timerId);
-    timerId = setTimeout(() => fn(...args), delay);
-  };
-};
-
 const openModal = (modal) => {
   if (!modal) return;
   modal.classList.remove(MODAL_HIDDEN_CLASS);
@@ -36,6 +28,14 @@ const setupAntreanPage = () => {
   if (!config || !page || typeof window.$ === "undefined") return;
   const $ = window.$;
   const swalLib = window.Swal || window.swal;
+
+  const debounce = (fn, delay = 400) => {
+    let timerId;
+    return (...args) => {
+      clearTimeout(timerId);
+      timerId = setTimeout(() => fn(...args), delay);
+    };
+  };
   const injectStyle = () => {
     const style = document.createElement('style');
     style.innerHTML = `
@@ -61,7 +61,7 @@ const setupAntreanPage = () => {
   const table1 = $('#table-1').DataTable({
     processing: true,
     serverSide: true,
-    // Ganti baris dom di table-1 menjadi ini:
+    order: [],
     dom: '<"flex flex-col sm:flex-row items-center justify-between px-6 py-4 gap-4 border-b border-slate-100"<"flex items-center gap-4"l>>t<"flex flex-col md:flex-row items-center justify-between p-5 bg-slate-50/50 border-t border-slate-200 gap-4"<"text-xs font-medium text-slate-500"i><"flex items-center justify-end"p>>',
     language: { search: "", searchPlaceholder: "Cari pasien...", lengthMenu: "Tampilkan _MENU_", paginate: { previous: '<i class="fas fa-chevron-left text-[10px]"></i>', next: '<i class="fas fa-chevron-right text-[10px]"></i>' } },
     ajax: {
@@ -75,12 +75,11 @@ const setupAntreanPage = () => {
       }
     },
     columns: [
-      { data: 'patient_id', class: 'px-6 py-3.5 text-center font-mono text-xs font-semibold text-slate-500', sortable: true, searchable: true },
+      { data: 'queue_number', class: 'px-6 py-3.5 text-center font-bold text-lg text-teal-600', sortable: true, searchable: true },
       { data: 'date', class: 'px-6 py-3.5 text-left text-xs text-slate-600', sortable: false, searchable: false },
       { data: 'name', class: 'px-6 py-3.5 text-left font-bold text-slate-800', sortable: true, searchable: true },
       { data: 'age', class: 'px-6 py-3.5 text-left text-slate-600', sortable: true, searchable: false },
       { data: 'address', class: 'px-6 py-3.5 text-left text-xs text-slate-500 max-w-[200px] truncate', sortable: false, searchable: false },
-      { data: 'phone', class: 'px-6 py-3.5 text-left text-slate-600', sortable: true, searchable: true },
       { data: 'description', class: 'px-6 py-3.5 text-center', sortable: false, searchable: false },
       { data: 'action', class: 'px-6 py-3.5 text-center', sortable: false, searchable: false }
     ],
@@ -90,6 +89,10 @@ const setupAntreanPage = () => {
       $('.dataTables_filter input').addClass('w-full');
     },
     drawCallback: function () {
+      // Sembunyikan spinner setelah data dimuat
+      $("#iconSearch1").show();
+      $("#iconSpinner1").hide();
+
       $('.dataTables_paginate').addClass('!flex !flex-row !items-center !justify-end gap-1');
       $('.dataTables_paginate > span').addClass('!flex !flex-row !items-center gap-1');
       $('.paginate_button').addClass('!inline-flex items-center justify-center min-w-[32px] h-8 rounded-lg border border-slate-300 text-xs font-semibold text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors !m-0 !p-0');
@@ -113,7 +116,7 @@ const setupAntreanPage = () => {
         serverSide: true,
         // Ganti baris dom di table-2 menjadi ini:
 dom: 't<"flex items-center justify-between p-4 bg-slate-50/50 border-t border-slate-200"<"text-xs text-slate-500"i><"flex items-end"p>>',
-        language: { search: "", searchPlaceholder: "Ketik Nama, NIK, atau ID...", paginate: { previous: '<i class="fas fa-chevron-left text-[10px]"></i>', next: '<i class="fas fa-chevron-right text-[10px]"></i>' } },
+        language: { search: "", searchPlaceholder: "Ketik Nama atau Nomor WhatsApp...", paginate: { previous: '<i class="fas fa-chevron-left text-[10px]"></i>', next: '<i class="fas fa-chevron-right text-[10px]"></i>' } },
         ajax: {
           url: config.fetchPatientUrl,
           type: "POST",
@@ -135,6 +138,10 @@ dom: 't<"flex items-center justify-between p-4 bg-slate-50/50 border-t border-sl
           $('.dataTables_filter input').addClass('w-full min-w-[300px]');
         },
         drawCallback: function () {
+          // Sembunyikan spinner setelah data dimuat
+          $("#iconSearch2").removeClass("hidden");
+          $("#iconSpinner2").addClass("hidden");
+
           $('.dataTables_paginate').addClass('!flex !flex-row !items-center !justify-end gap-1');
           $('.dataTables_paginate > span').addClass('!flex !flex-row !items-center gap-1');
           $('.paginate_button').addClass('!inline-flex items-center justify-center min-w-[28px] h-7 rounded text-[11px] font-semibold text-slate-600 cursor-pointer hover:bg-slate-100 transition-colors !m-0 !p-0 border border-slate-300');
@@ -364,15 +371,33 @@ dom: 't<"flex items-center justify-between p-4 bg-slate-50/50 border-t border-sl
   $(document).on("click", ".modal-wrapper > div", (e) => e.stopPropagation());
 
   // --- SEARCH TABLE 1 ---
+  const searchInputDebounce = debounce((val) => {
+    table1.search(val).draw();
+  }, 400);
+
   $("#searchInput").on("keyup", function () {
-    $('#table-1').DataTable().search($(this).val()).draw();
+    const val = $(this).val();
+    if (val.length > 0) {
+      $("#iconSearch1").addClass("hidden");
+      $("#iconSpinner1").removeClass("hidden");
+    }
+    searchInputDebounce(val);
   });
 
   // --- SEARCH TABLE 2 ---
-  $("#searchPatientList").off("keyup").on("keyup", function () {
+  const searchDebounce = debounce((val) => {
     if ($.fn.DataTable.isDataTable('#table-2')) {
-      $('#table-2').DataTable().search($(this).val()).draw();
+      $('#table-2').DataTable().search(val).draw();
     }
+  }, 400);
+
+  $("#searchPatientList").off("keyup").on("keyup", function () {
+    const val = $(this).val();
+    if (val.length > 0) {
+      $("#iconSearch2").addClass("hidden");
+      $("#iconSpinner2").removeClass("hidden");
+    }
+    searchDebounce(val);
   });
 
   // --- Export buttons ---

@@ -46,21 +46,35 @@ class UsersController extends BaseController
       'mode' => !empty($order) ? $order[0]['dir'] : 'asc',
       'offset' => $this->request->getPost('start') ?? 0,
       'limit' => $this->request->getPost('length') ?? 10,
-      'where_like' => [],
+      'search' => $search_value,
     ];
-
-    if (!empty($search_value)) {
-      $options['where_like'] = [
-        "u.realname LIKE '%$search_value%'",
-        "u.username LIKE '%$search_value%'",
-        // Kalau mau role gak ikut terfilter 'pe', u.role jangan dimasukin di sini
-      ];
-    }
 
     $dataOutput = $this->model_users->getListData($options);
     $totalFiltered = $this->model_users->getTotalData($options);
     $totalData = $this->model_users->countAll();
     $no = $options['offset'] + 1;
+
+    // Optimasi N+1: Ambil semua region ID yang unik terlebih dahulu
+    $all_region_ids = [];
+    foreach ($dataOutput as $value) {
+      if (!($value->role === 'superadmin')) {
+        $ids = json_decode($value->regions_patient, true) ?: [];
+        $all_region_ids = array_merge($all_region_ids, $ids);
+      }
+    }
+    $all_region_ids = array_unique(array_filter($all_region_ids));
+
+    $region_map = [];
+    if (!empty($all_region_ids)) {
+      $region_names_query = $this->model_users->db->table('regions')
+        ->select('id, name')
+        ->whereIn('id', $all_region_ids)
+        ->get()
+        ->getResult();
+      foreach ($region_names_query as $r) {
+        $region_map[$r->id] = $r->name;
+      }
+    }
 
     foreach ($dataOutput as $value) {
       $value->no = $no++;
@@ -73,8 +87,13 @@ class UsersController extends BaseController
         $regions_patient_ids = [];
       } else {
         $regions_patient_ids = json_decode($value->regions_patient, true) ?: [];
-        $regions_patient_names = $this->model_users->get_region_names($regions_patient_ids);
-        $value->region_name = !empty($regions_patient_names) ? implode(', ', $regions_patient_names) : '-';
+        $names = [];
+        foreach ($regions_patient_ids as $rid) {
+          if (isset($region_map[$rid])) {
+            $names[] = $region_map[$rid];
+          }
+        }
+        $value->region_name = !empty($names) ? implode(', ', $names) : '-';
       }
 
       $value->action =
@@ -116,6 +135,9 @@ class UsersController extends BaseController
 
     // Cek duplikasi username
     if ($this->model_users->where('username', $post['username'])->first()) {
+      if ($this->request->isAJAX()) {
+        return $this->response->setJSON(['status' => 'error', 'message' => 'Username sudah digunakan', 'csrfHash' => csrf_hash()]);
+      }
       $this->session->setFlashdata('error_message', 'Username sudah digunakan');
       return redirect()->to('users');
     }
@@ -136,11 +158,16 @@ class UsersController extends BaseController
     }
 
     if ($this->model_users->insert($data)) {
+      if ($this->request->isAJAX()) {
+        return $this->response->setJSON(['status' => 'success', 'message' => 'Data berhasil disimpan', 'csrfHash' => csrf_hash()]);
+      }
       $this->session->setFlashdata('message', ['success', 'Data berhasil disimpan']);
     } else {
+      if ($this->request->isAJAX()) {
+        return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal menyimpan data', 'csrfHash' => csrf_hash()]);
+      }
       $this->session->setFlashdata('message', ['danger', 'Gagal menyimpan data']);
     }
-
     return redirect()->to('users');
   }
 
@@ -148,6 +175,9 @@ class UsersController extends BaseController
   {
     $post = $this->request->getPost();
     if ($this->model_users->username_exists_edit($post['username'], $id)) {
+      if ($this->request->isAJAX()) {
+        return $this->response->setJSON(['status' => 'error', 'message' => 'Username sudah digunakan', 'csrfHash' => csrf_hash()]);
+      }
       $this->session->setFlashdata('error_message', 'Username already taken');
       return redirect()->to('users');
     }
@@ -179,16 +209,32 @@ class UsersController extends BaseController
     }
 
     if ($this->model_users->update($id, $data)) {
+      if ($this->request->isAJAX()) {
+        return $this->response->setJSON(['status' => 'success', 'message' => 'Data diperbarui', 'csrfHash' => csrf_hash()]);
+      }
       $this->session->setFlashdata('message', ['success', 'Data diperbarui']);
+    } else {
+      if ($this->request->isAJAX()) {
+        return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal memperbarui data', 'csrfHash' => csrf_hash()]);
+      }
+      $this->session->setFlashdata('message', ['danger', 'Gagal memperbarui data']);
     }
-
+ 
     return redirect()->to('users');
   }
 
   public function destroy($id)
   {
     if ($this->model_users->delete($id)) {
+      if ($this->request->isAJAX()) {
+        return $this->response->setJSON(['status' => 'success', 'message' => 'Data dihapus', 'csrfHash' => csrf_hash()]);
+      }
       $this->session->setFlashdata('message', ['success', 'Data dihapus']);
+    } else {
+      if ($this->request->isAJAX()) {
+        return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal menghapus data', 'csrfHash' => csrf_hash()]);
+      }
+      $this->session->setFlashdata('message', ['danger', 'Gagal menghapus data']);
     }
     return redirect()->to('users');
   }

@@ -97,8 +97,34 @@
 
         <!-- TAB 2: RIWAYAT TRANSAKSI -->
         <div id="tab-riwayat" class="tab-content p-6 hidden">
-            <!-- Filter Riwayat diletakkan di sini (Bulan, Tahun, dll) -->
-            <p class="text-sm text-slate-500 mb-4">Menampilkan riwayat gaji yang sudah lunas.</p>
+            <!-- Filter Riwayat -->
+            <form action="<?= base_url('gaji') ?>" method="GET" class="mb-6 flex flex-wrap items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <input type="hidden" name="tab" value="riwayat">
+                <div class="flex items-center gap-2">
+                    <label class="text-xs font-bold text-slate-500 uppercase">Bulan:</label>
+                    <select name="bulan" onchange="this.form.submit()" class="text-sm font-bold border-slate-200 rounded-lg focus:ring-blue-500">
+                        <?php for ($m = 1; $m <= 12; $m++): ?>
+                            <option value="<?= $m ?>" <?= $filter_bulan == $m ? 'selected' : '' ?>><?= date('F', mktime(0, 0, 0, $m, 1)) ?></option>
+                        <?php endfor; ?>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-xs font-bold text-slate-500 uppercase">Tahun:</label>
+                    <select name="tahun" onchange="this.form.submit()" class="text-sm font-bold border-slate-200 rounded-lg focus:ring-blue-500">
+                        <?php for ($y = date('Y'); $y >= date('Y') - 5; $y--): ?>
+                            <option value="<?= $y ?>" <?= $filter_tahun == $y ? 'selected' : '' ?>><?= $y ?></option>
+                        <?php endfor; ?>
+                    </select>
+                </div>
+                <div class="ml-auto flex items-center gap-2">
+                    <p class="text-sm text-slate-500 mr-2">Menampilkan riwayat gaji yang sudah lunas.</p>
+                    <a href="<?= base_url('gaji/export?bulan=' . $filter_bulan . '&tahun=' . $filter_tahun . '&region_id=' . $filter_region) ?>" 
+                       class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition text-sm font-medium shadow-sm">
+                        <i class="fas fa-file-excel"></i>
+                        Export Excel
+                    </a>
+                </div>
+            </form>
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
@@ -245,5 +271,25 @@
         saveSettingUrl: "<?= base_url('gaji/setting/save') ?>",
         prosesBayarUrl: "<?= base_url('gaji/proses_bayar') ?>"
     };
+
+    // Auto-open active tab based on URL param ?tab=
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const activeTab = urlParams.get('tab');
+        if (activeTab) {
+            const targetContent = document.getElementById('tab-' + activeTab);
+            const targetBtn = document.querySelector('[data-target="tab-' + activeTab + '"]');
+            if (targetContent && targetBtn) {
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+                document.querySelectorAll('.tab-btn').forEach(b => {
+                    b.classList.remove('border-blue-600', 'text-blue-600');
+                    b.classList.add('border-transparent', 'text-slate-500');
+                });
+                targetContent.classList.remove('hidden');
+                targetBtn.classList.add('border-blue-600', 'text-blue-600');
+                targetBtn.classList.remove('border-transparent', 'text-slate-500');
+            }
+        }
+    });
 </script>
 <?= $this->endSection() ?>

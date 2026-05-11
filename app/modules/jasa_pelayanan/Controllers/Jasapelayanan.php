@@ -31,8 +31,8 @@ class Jasapelayanan extends BaseController
         $mRegion = model('App\modules\region\Models\MRegion');
 
         $role = session()->get('role');
-        $sessRegionName = session()->get('region_name');
-        $sessRegionId = session()->get('region_id');
+        $region_patient = session()->get('region_patient');
+        $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
 
         $data = [
             'realname'        => session()->get('realname'),
@@ -40,9 +40,9 @@ class Jasapelayanan extends BaseController
             'title'           => 'Jasa Pelayanan - Reguler',
             'kategori'        => 'Reguler',
             'msg'             => session()->getFlashdata('message'),
-            'wilayah'         => $mRegion->getData() ?? [],
-            'sess_region_name' => $sessRegionName,
-            'sess_region_id'  => $sessRegionId,
+            'wilayah'         => $mRegion->getData(null, $allowed_regions) ?? [],
+            'sess_region_name' => session()->get('active_region_name'),
+            'sess_region_id'  => session()->get('active_region'),
             'sess_role'       => $role,
         ];
 
@@ -62,8 +62,8 @@ class Jasapelayanan extends BaseController
         $mRegion = model('App\modules\region\Models\MRegion');
 
         $role = session()->get('role');
-        $sessRegionName = session()->get('region_name');
-        $sessRegionId = session()->get('region_id');
+        $region_patient = session()->get('region_patient');
+        $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
 
         $data = [
             'realname'        => session()->get('realname'),
@@ -71,9 +71,9 @@ class Jasapelayanan extends BaseController
             'title'           => 'Jasa Pelayanan - Kejantanan',
             'kategori'        => 'Kejantanan',
             'msg'             => session()->getFlashdata('message'),
-            'wilayah'         => $mRegion->getData() ?? [],
-            'sess_region_name' => $sessRegionName,
-            'sess_region_id'  => $sessRegionId,
+            'wilayah'         => $mRegion->getData(null, $allowed_regions) ?? [],
+            'sess_region_name' => session()->get('active_region_name'),
+            'sess_region_id'  => session()->get('active_region'),
             'sess_role'       => $role,
         ];
 
@@ -93,16 +93,8 @@ class Jasapelayanan extends BaseController
         $search   = $request->getPost('search') ?? '';
         $kategori = $request->getPost('kategori') ?? 'Reguler';
 
-        $role          = session()->get('role');
-        $activeRegion  = session()->get('active_region');
-        $regionProfile = session()->get('region_patient');
-
-        // Tentukan filter wilayah
-        if ($role === 'owner' || $role === 'superadmin') {
-            $regionFilter = ($activeRegion && $activeRegion !== 'all') ? $activeRegion : null;
-        } else {
-            $regionFilter = $regionProfile;
-        }
+        $region_patient  = session()->get('region_patient');
+        $regionFilter = ($region_patient !== 'all') ? $region_patient : null;
 
         // Tentukan status kejantanan untuk filter
         $kejantananStatus = ($kategori === 'Kejantanan') ? 'ya' : 'tidak';
@@ -309,14 +301,15 @@ class Jasapelayanan extends BaseController
         $mCountries = new \App\modules\countries\Models\MCountries();
         $mTerapis = new \App\modules\terapis\Models\MTerapis();
 
-        $regions_patient = json_decode(session()->get('regions_patient') ?? '[]', true);
+        $region_patient = session()->get('region_patient');
+        $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
 
         $data = [
             'title'           => 'Detail Pasien — ' . $kategori,
             'kategori'        => $kategori,
             'patient'         => $patientData,
             'address'         => (object) $addressData,
-            'wilayah'         => $mRegion->asObject()->findAll(),
+            'wilayah'         => $mRegion->getData(null, $allowed_regions) ?? [],
             'negara'          => $mCountries->asObject()->findAll(),
             'terapis'         => $mTerapis->asObject()->findAll(),
             'resources'       => $patientModel->get_resources(),
@@ -330,7 +323,7 @@ class Jasapelayanan extends BaseController
             'updated_by_name' => $this->getUserName($patientData->updated_by ?? null),
             'realname'        => session()->get('realname'),
             'role'            => session()->get('role'),
-            'regions_patient' => [$regions_patient],
+            'regions_patient' => $region_patient,
             'msg'             => session()->getFlashdata('message') ?? ['', '', ''],
         ];
 
@@ -367,7 +360,7 @@ class Jasapelayanan extends BaseController
             'layanan' => $detailLayanan
         ];
 
-        return view('App\modules\jasa_pelayanan\Views\index_regular', $data);
+        return view('App\modules\jasa_pelayanan\Views\detailRegular\show', $data);
     }
 
     // 4. FUNGSI HAPUS DATA (Soft Delete)

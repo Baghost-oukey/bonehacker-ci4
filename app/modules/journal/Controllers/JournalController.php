@@ -28,11 +28,13 @@ class JournalController extends BaseController
     public function index()
     {
         $session = session();
+        $region_patient = $session->get('region_patient');
+        $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
 
         return view('App\Modules\Journal\Views\index', [
             'title' => 'Journal Patients',
             'role' => $session->get('role'),
-            'wilayah' => $this->model_regions->findAll(),
+            'wilayah' => $this->model_regions->getData(null, $allowed_regions),
             'current_segment' => 'journal',
             'realname' => $session->get('realname'),
         ]);
@@ -57,8 +59,11 @@ class JournalController extends BaseController
         //     $cabang = $session->get('active_cabang') ?? null;
         // }
 
+        // Use region_patient session as the single source of truth.
+        // If a specific region is posted, use it; otherwise fall back to session.
+        $region_session = $session->get('region_patient');
         if (empty($cabang) || $cabang === 'all') {
-            $cabang = $session->get('active_region') ?? null;
+            $cabang = $region_session;
         }
 
         //  QUERY
@@ -143,7 +148,12 @@ class JournalController extends BaseController
         set_time_limit(300);
         ini_set('memory_limit', '512M');
 
-       $cabang = $this->request->getGet('region') ?? $this->request->getGet('cabang_id');
+        $cabang = $this->request->getGet('region') ?? $this->request->getGet('cabang_id');
+        $region_session = session()->get('region_patient');
+        if (empty($cabang) || $cabang === 'all') {
+            $cabang = $region_session;
+        }
+
         $start_date = $this->request->getGet('start_date');
         $end_date = $this->request->getGet('end_date');
 
@@ -174,7 +184,12 @@ class JournalController extends BaseController
     // ================= EXPORT EXCEL =================
     public function export_excell()
     {
-    $cabang = $this->request->getGet('region') ?? $this->request->getGet('cabang_id');
+        $cabang = $this->request->getGet('region') ?? $this->request->getGet('cabang_id');
+        $region_session = session()->get('region_patient');
+        if (empty($cabang) || $cabang === 'all') {
+            $cabang = $region_session;
+        }
+
         $start_date = $this->request->getGet('start_date');
         $end_date = $this->request->getGet('end_date');
 
@@ -220,6 +235,10 @@ class JournalController extends BaseController
     // ================= ROUTER EXPORT =================
     public function export_file_journal()
     {
+        if (session()->get('role') !== 'superadmin') {
+            return redirect()->to('journal')->with('error', 'Unauthorized access');
+        }
+
         $format = $this->request->getGet('format_type');
 
         return ($format === 'pdf')

@@ -13,7 +13,7 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
-            <?php if (isset($role) && $role === 'superadmin'): ?>
+            <?php if (session()->get('role') === 'superadmin'): ?>
                 <button type="button" data-modal-open="modalExport"
                     class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
                     <i class="fas fa-file-export text-slate-500"></i>
@@ -37,9 +37,13 @@
             </div>
 
             <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div class="flex-1 sm:flex-none sm:w-72">
-                    <input type="text" id="searchInput" placeholder="Cari pasien..."
-                        class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15">
+                <div class="flex flex-col sm:flex-row gap-3 items-center">
+                    <div class="w-full sm:w-72">
+                        <input type="text" id="searchInput" placeholder="Cari pasien..."
+                            class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15">
+                    </div>
+
+
                 </div>
             </div>
         </div>
@@ -105,7 +109,7 @@
         </div>
 
         <div class="border-t border-slate-100 bg-slate-50/30 px-6 py-3 text-xs text-slate-400">
-            Data ditampilkan berdasarkan filter wilayah pengguna
+            <i class="fas fa-info-circle mr-1"></i> Menampilkan data wilayah aktif. Gunakan kolom pencarian untuk menemukan pasien di <strong>seluruh cabang</strong>.
         </div>
     </div>
 </section>
@@ -382,7 +386,8 @@
         checkPhoneUrl: "<?= site_url('patient/check_phone') ?>",
         destroyBaseUrl: "<?= site_url('patient/destroy') ?>",
         dashboardUrl: "<?= site_url('dashboard') ?>",
-        isSuperadmin: <?= isset($role) && $role === 'superadmin' ? 'true' : 'false' ?>
+        isSuperadmin: <?= isset($role) && $role === 'superadmin' ? 'true' : 'false' ?>,
+        filterRegion: <?= json_encode($filter_region) ?>
     };
 </script>
 

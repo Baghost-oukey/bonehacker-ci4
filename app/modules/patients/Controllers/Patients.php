@@ -36,10 +36,13 @@ class Patients extends BaseController
         if ($files) {
             foreach ($files as $file) {
                 if ($file->isValid() && !$file->hasMoved()) {
-                    $newName = $file->getRandomName();
+                    $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+                    if (in_array($file->getMimeType(), $allowedTypes) && $file->getSizeByUnit('kb') <= 10240) {
+                        $newName = $file->getRandomName();
 
-                    if ($file->move(FCPATH . 'patient_file', $newName)) {
-                        $file_urls[] = $newName;
+                        if ($file->move(FCPATH . 'patient_file', $newName)) {
+                            $file_urls[] = $newName;
+                        }
                     }
                 }
             }
@@ -107,10 +110,9 @@ class Patients extends BaseController
                 // session()->setFlashdata('message', ['success', 'Data Berhasil Disimpan']);
                 // return redirect()->to(site_url('dashboard'));
             } else {
-                $errors = implode(', ', $this->patientModel->errors());
                 return $this->response->setJSON([
                     'status' => 'error',
-                    'message' => 'Gagal validasi: ' . $errors,
+                    'message' => 'Gagal menyimpan data pasien. Pastikan data yang dimasukkan valid.',
                     'new_token' => csrf_hash()
                 ]);
                 // return redirect()->back()->with('message', ['error', 'Gagal: ' . $errors]);
@@ -118,7 +120,7 @@ class Patients extends BaseController
         } catch (\Exception $e) {
             return $this->response->setJSON([
                 'status' => 'error',
-                'message' => 'Database Error: ' . $e->getMessage(),
+                'message' => 'Terjadi kesalahan pada sistem. Silakan coba lagi nanti.',
                 'new_token' => csrf_hash()
             ]);
         }
@@ -147,6 +149,16 @@ class Patients extends BaseController
 
         // Inisialisasi Query Builder melalui Model
         $builder = $this->patientModel->builder();
+
+        // Logic Filter Wilayah (Region)
+        $region_session = session()->get('region_patient');
+        if ($region_session !== 'all' && !empty($region_session)) {
+            if (is_array($region_session)) {
+                $builder->whereIn('region_id', $region_session);
+            } else {
+                $builder->where('region_id', $region_session);
+            }
+        }
 
         // Logic Pencarian (Search)
         if (!empty($search)) {
@@ -227,9 +239,16 @@ class Patients extends BaseController
         // ->where('p.is_delete', 0);
         // ->limit($limit, $start);
 
-        // if (!empty($region)) {
-        //     $builder->where('p.region_id', $region);
-        // }
+        $active_region = session()->get('active_region');
+        $region_session = session()->get('region_patient');
+        
+        // Smart Logic: Jika pencarian kosong, gunakan filter wilayah. Jika sedang mencari, buka akses lintas wilayah.
+        if (empty($search)) {
+            $region = ($region && $region !== 'all') ? $region : ($active_region !== 'all' ? $active_region : $region_session);
+        } else {
+            $region = 'all'; // Cari di seluruh database jika ada keyword
+        }
+
         if (!empty($region) && $region !== 'all') {
             if (is_array($region)) {
                 $builder->whereIn('p.region_id', $region);
@@ -360,14 +379,15 @@ class Patients extends BaseController
         $mRegion = new \App\modules\region\Models\MRegion();
         $mTerapis = new \App\modules\terapis\Models\MTerapis();
 
-        $regions_patient = json_decode($this->session->get('regions_patient') ?? '[]', true);
+        $region_patient = session()->get('region_patient');
+        $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
 
         $data = [
             'title' => 'Detil Pasien',
             'patient' => $patientData,
             'address' => (object) $addressData,
             'alamat_patient' => $mAddress->asObject()->findAll(),
-            'wilayah' => $mRegion->asObject()->findAll(),
+            'wilayah' => $mRegion->getData(null, $allowed_regions) ?? [],
             'negara' => $mCountries->asObject()->findAll(),
             'terapis' => $mTerapis->asObject()->findAll(),
             'resources' => $this->patientModel->get_resources(),
@@ -384,7 +404,7 @@ class Patients extends BaseController
             'updated_by_name' => $this->getUserName($patientData->updated_by ?? null),
             'realname' => $this->session->get('realname'),
             'role' => $this->session->get('role'),
-            'regions_patient' => [$regions_patient],
+            'regions_patient' => $region_patient,
             'msg' => $this->session->getFlashdata('message') ?? ['', '', ''],
         ];
 
@@ -434,8 +454,8 @@ class Patients extends BaseController
         if ($files) {
             foreach ($files as $file) {
                 if ($file->isValid() && !$file->hasMoved()) {
-                    $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'application/pdf'];
-                    if (in_array($file->getMimeType(), $allowedTypes) && $file->getSizeByUnit('kb') <= 2048) {
+                    $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+                    if (in_array($file->getMimeType(), $allowedTypes) && $file->getSizeByUnit('kb') <= 10240) {
 
                         $newName = $file->getRandomName();
 
@@ -549,9 +569,12 @@ class Patients extends BaseController
             if (isset($imageFiles['userfiles'])) {
                 foreach ($imageFiles['userfiles'] as $img) {
                     if ($img->isValid() && !$img->hasMoved()) {
-                        $newName = $img->getRandomName();
-                        $img->move(FCPATH . 'patient_file', $newName);
-                        $newFileUrls[] = base_url('patient_file/' . $newName);
+                        $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+                        if (in_array($img->getMimeType(), $allowedTypes) && $img->getSizeByUnit('kb') <= 10240) {
+                            $newName = $img->getRandomName();
+                            $img->move(FCPATH . 'patient_file', $newName);
+                            $newFileUrls[] = base_url('patient_file/' . $newName);
+                        }
                     }
                 }
             }
@@ -770,8 +793,16 @@ class Patients extends BaseController
 
     public function export_data()
     {
+        if (session()->get('role') !== 'superadmin') {
+            return redirect()->to(base_url('beranda'))->with('message', ['error', 'Anda tidak memiliki hak akses untuk ekspor data.']);
+        }
         $type = $this->request->getGet('type');
         $region_id = $this->request->getGet('region_id');
+        $region_session = session()->get('region_patient');
+
+        if (empty($region_id) || $region_id === 'all') {
+            $region_id = $region_session;
+        }
         $periode = $this->request->getGet('periode');
         $start_date = null;
         $end_date = null;

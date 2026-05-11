@@ -6,15 +6,25 @@
         <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
                 <h3 class="text-lg font-semibold text-slate-800">Biodata Pasien</h3>
-                <p class="text-sm text-slate-500">Ubah dan perbarui informasi dasar pasien</p>
+                <p class="text-sm text-slate-500" id="biodata-subtitle">Informasi dasar pasien</p>
             </div>
-            <button type="submit"
-                class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 transition">
-                <i class="fas fa-save"></i> Simpan Perubahan
-            </button>
+            <div class="flex gap-2">
+                <button type="button" id="btn-edit-biodata"
+                    class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition">
+                    <i class="fas fa-edit"></i> Edit Data
+                </button>
+                <button type="button" id="btn-cancel-edit" style="display: none;"
+                    class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition">
+                    <i class="fas fa-times"></i> Batal
+                </button>
+                <button type="submit" id="btn-save-biodata" style="display: none;"
+                    class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 transition">
+                    <i class="fas fa-save"></i> Simpan Perubahan
+                </button>
+            </div>
         </div>
 
-        <div class="p-6">
+        <div class="p-6" id="biodata-content">
             <?php if (isset($patient->is_suspective) && $patient->is_suspective): ?>
                 <div class="mb-6 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4">
                     <i class="fas fa-exclamation-triangle text-red-500 mt-0.5"></i>

@@ -89,8 +89,8 @@
             <input type="hidden" name="id" value="<?= esc($patient_id) ?>">
             <div class="space-y-1">
                 <label class="text-sm font-medium text-slate-700">Pilih Berkas</label>
-                <p class="text-xs text-slate-500">Mendukung format PDF, JPG, PNG (Maks. 2MB)</p>
-                <input type="file" name="userfiles[]" multiple id="modalFileInput"
+                <p class="text-xs text-slate-500">Mendukung format PDF, JPG, JPEG, PNG, WEBP (Maks. 10MB)</p>
+                <input type="file" name="userfiles[]" multiple id="modalFileInput" accept=".pdf,.jpg,.jpeg,.png,.webp"
                     class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-teal-50 file:text-teal-600 hover:file:bg-teal-100 cursor-pointer">
             </div>
             <div class="flex items-center justify-end gap-2 border-t border-slate-200 pt-4">

@@ -10,13 +10,7 @@ const getCsrfPayload = (config) => ({
   [config.csrfName]: config.csrfHash,
 });
 
-const debounce = (fn, delay = 400) => {
-  let timerId;
-  return (...args) => {
-    clearTimeout(timerId);
-    timerId = setTimeout(() => fn(...args), delay);
-  };
-};
+
 
 const openModal = (modal) => {
   if (!modal) return;
@@ -39,6 +33,14 @@ const setupRekamMedisPage = () => {
 
   const $ = window.$;
   const swalLib = window.Swal || window.swal;
+
+  const debounce = (fn, delay = 400) => {
+    let timerId;
+    return (...args) => {
+      clearTimeout(timerId);
+      timerId = setTimeout(() => fn(...args), delay);
+    };
+  };
 
   let currentPage = 1;
   let pageLength = 25;
@@ -121,7 +123,7 @@ const setupRekamMedisPage = () => {
   };
 
   const loadTableData = (pageNumber = 1) => {
-    const region = $("#region").val() || "";
+    const region = config.filterRegion;
     renderTableState("Memuat data pasien...", true);
 
     $.ajax({
@@ -231,6 +233,7 @@ const setupRekamMedisPage = () => {
   $("#searchInput").on("keyup", function () {
     searchHandler($(this).val());
   });
+
 
   $("#paginationLength").on("change", function () {
     pageLength = parseInt($(this).val(), 10);

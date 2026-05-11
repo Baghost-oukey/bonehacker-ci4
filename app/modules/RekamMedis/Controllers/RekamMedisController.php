@@ -9,43 +9,29 @@ class RekamMedisController extends BaseController
 {
     public function index()
     {
-        if (!session()->get('isLogin')) {
-            return redirect()->to(base_url('auth'));
-        }
-
         $mRegion = model('App\modules\region\Models\MRegion');
         $mCountries = model('App\modules\countries\Models\MCountries');
         $mPatient = model('App\modules\patients\Models\MPatients');
 
         $role = session()->get('role');
-        $activeRegion = session()->get('active_region');
-        $regionProfile = session()->get('region_patient');
-        $sessRegionName = session()->get('region_name');
-        $sessRegionId = session()->get('region_id');
-
-        // Tentukan filter wilayah
-        if ($role === 'owner' || $role === 'superadmin') {
-            $filter = ($activeRegion && $activeRegion !== 'all') ? $activeRegion : 'all';
-        } else {
-            $filter = $regionProfile;
-        }
-
-        $patient_query = $mPatient->getAllData($filter);
-        $patients = $patient_query->getResult();
+        $active_region = session()->get('active_region');
+        $region_patient = session()->get('region_patient');
+        $filter = ($active_region !== 'all') ? $active_region : $region_patient;
+        $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
 
         $data = [
             'realname' => session()->get('realname'),
             'role' => $role,
             'title' => 'Rekam Medis',
             'msg' => session()->getFlashdata('message'),
-            'wilayah' => $mRegion->getData() ?? [],
+            'wilayah' => $mRegion->getData(null, $allowed_regions) ?? [],
             'resources' => $mPatient->get_resources() ?? [],
             'negara' => $mCountries->getData() ?? [],
-            'patients' => $patients,
             'patient_information' => null,
-            'sess_region_name' => $sessRegionName,
-            'sess_region_id' => $sessRegionId,
+            'sess_region_name' => session()->get('active_region_name'),
+            'sess_region_id' => $active_region,
             'sess_role' => $role,
+            'filter_region' => $filter,
         ];
 
         return view('App\Modules\RekamMedis\Views\index', $data);

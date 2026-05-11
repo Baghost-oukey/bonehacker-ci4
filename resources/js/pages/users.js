@@ -167,12 +167,36 @@ const setupUsersPage = () => {
     // Toggle region field based on role
     const toggleRegionField = (roleSelect, targetField) => {
         const role = $(roleSelect).val();
-        if (role === 'user' || role === 'owner') {
+
+        const selectElement = $(targetField).find('select');
+        
+        if (role === 'owner' || role === 'admin' || role === 'user') {
             $(targetField).fadeIn().removeClass('hidden');
-            $(targetField).find('select').attr('required', true);
+            selectElement.attr('required', true);
+            
+            // Determine if multiple regions are allowed
+            const isMultiple = (role === 'owner');
+            
+            // Re-initialize select2 with new multiple setting
+            if (selectElement.hasClass("select2-hidden-accessible")) {
+                selectElement.select2('destroy');
+            }
+            
+            selectElement.prop('multiple', isMultiple);
+            
+            selectElement.select2({
+                width: '100%',
+                placeholder: "-- Pilih Wilayah --",
+                dropdownParent: selectElement.closest('.modal-wrapper')
+            });
+            
+            // Clear multiple selections if switching to single select role
+            if (!isMultiple && Array.isArray(selectElement.val()) && selectElement.val().length > 1) {
+                selectElement.val(null).trigger('change');
+            }
         } else {
             $(targetField).fadeOut().addClass('hidden');
-            $(targetField).find('select').attr('required', false).val(null).trigger('change');
+            selectElement.attr('required', false).val(null).trigger('change');
         }
     };
 
@@ -395,7 +419,6 @@ const setupUsersPage = () => {
 
         const formData = new FormData(form);
         formData.append(config.csrfName, config.csrfHash);
-        formData.append('_method', 'PUT');
 
         $.ajax({
             url: $form.attr('action'),
@@ -461,7 +484,6 @@ const setupUsersPage = () => {
 
         const formData = new FormData();
         formData.append(config.csrfName, config.csrfHash);
-        formData.append('_method', 'DELETE');
 
         $.ajax({
             url: deleteUrl,

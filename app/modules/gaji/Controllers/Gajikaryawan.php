@@ -21,15 +21,19 @@ class Gajikaryawan extends BaseController
 
     public function index()
     {
-        $regionId = $this->request->getGet('region_id') ?? 'all';
-        // Filter untuk Tab 2 (Riwayat), default bulan dan tahun saat ini
+        $region_patient = session()->get('region_patient');
+        $sessionRegionId = ($region_patient !== 'all' && !empty($region_patient))
+            ? (is_array($region_patient) ? $region_patient[0] : $region_patient)
+            : 'all';
+
+        $regionId = $this->request->getGet('region_id') ?? $sessionRegionId;
         $bulan = $this->request->getGet('bulan') ?? date('n');
         $tahun = $this->request->getGet('tahun') ?? date('Y');
 
         $data = [
             'title'            => 'Kelola Gaji Karyawan',
-            'estimasi_gaji'    => $this->Mriwayatgaji->getPayrollEstimates($regionId), // Data Tab 1
-            'riwayat_gaji'     => $this->Mriwayatgaji->getPayrollHistory($bulan, $tahun, $regionId), // Data Tab 2
+            'estimasi_gaji'    => $this->Mriwayatgaji->getPayrollEstimates($regionId),
+            'riwayat_gaji'     => $this->Mriwayatgaji->getPayrollHistory($bulan, $tahun, $regionId),
             'filter_region'    => $regionId,
             'filter_bulan'     => $bulan,
             'filter_tahun'     => $tahun
@@ -180,5 +184,69 @@ class Gajikaryawan extends BaseController
         }
 
         return redirect()->to('/gaji')->with('success', 'Gaji karyawan berhasil diproses dan dibayarkan.');
+    }
+    public function fetchEstimasi()
+    {
+        $region_patient = session()->get('region_patient');
+        $sessionRegionId = ($region_patient !== 'all' && !empty($region_patient))
+            ? (is_array($region_patient) ? $region_patient[0] : $region_patient)
+            : 'all';
+        $regionId = $this->request->getGet('region_id') ?? $sessionRegionId;
+
+        $data = $this->Mriwayatgaji->getPayrollEstimates($regionId);
+        return $this->response->setJSON([
+            'status'   => 'success',
+            'data'     => $data,
+            'csrfHash' => csrf_hash()
+        ]);
+    }
+    public function export()
+    {
+        $role = session()->get('role');
+        if (!in_array($role, ['superadmin', 'owner', 'admin'])) {
+            return redirect()->to('/gaji')->with('error', 'Unauthorized access');
+        }
+
+        $bulan = $this->request->getGet('bulan') ?? date('n');
+        $tahun = $this->request->getGet('tahun') ?? date('Y');
+        $region_patient = session()->get('region_patient');
+        $sessionRegionId = ($region_patient !== 'all' && !empty($region_patient))
+            ? (is_array($region_patient) ? $region_patient[0] : $region_patient)
+            : 'all';
+        $regionId = $this->request->getGet('region_id') ?? $sessionRegionId;
+
+        $data = $this->Mriwayatgaji->getPayrollHistory($bulan, $tahun, $regionId);
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Riwayat Penggajian');
+
+        $headers = ['No', 'Tanggal Bayar', 'Nama Karyawan', 'Wilayah', 'Periode', 'Gaji Pokok', 'Tunjangan', 'Potongan', 'Gaji Bersih'];
+        $sheet->fromArray($headers, NULL, 'A1');
+
+        $rowNum = 2;
+        foreach ($data as $i => $row) {
+            $sheet->fromArray([
+                $i + 1,
+                date('d/m/Y', strtotime($row['tanggal_bayar'])),
+                $row['nama'],
+                $row['wilayah'],
+                date('F', mktime(0, 0, 0, $row['periode_bulan'], 1)) . ' ' . $row['periode_tahun'],
+                $row['gaji_pokok_total'],
+                $row['total_tunjangan'],
+                $row['total_potongan'],
+                $row['gaji_bersih']
+            ], NULL, 'A' . $rowNum);
+            $rowNum++;
+        }
+
+        $filename = 'Laporan_Gaji_' . date('F', mktime(0, 0, 0, $bulan, 1)) . '_' . $tahun . '.xlsx';
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit();
     }
 }

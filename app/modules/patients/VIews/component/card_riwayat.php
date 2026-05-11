@@ -20,6 +20,7 @@
                     <th class="px-6 py-3.5 text-left font-semibold">Keluhan</th>
                     <th class="px-6 py-3.5 text-left font-semibold">Rekam Medis</th>
                     <th class="px-6 py-3.5 text-left font-semibold">Tanggal</th>
+                    <th class="px-6 py-3.5 text-center font-semibold">Durasi</th>
                     <th class="px-6 py-3.5 text-center font-semibold w-20">Type</th>
                     <th class="px-6 py-3.5 text-center font-semibold">Aksi</th>
                 </tr>
@@ -56,6 +57,8 @@
                     <span class="hidden sm:inline">Berikutnya</span><i class="fas fa-chevron-right text-xs ml-1"></i>
                 </button>
             </div>
+
+
         </div>
     </div>
 </div>
@@ -77,10 +80,12 @@
         <!-- MODAL BODY -->
         <div class="flex-1 overflow-y-auto custom-scrollbar p-6 bg-slate-50/30">
             <form id="save_data" action="<?= site_url('history/store') ?>" method="post" class="space-y-8" novalidate>
+
                 <?= csrf_field() ?>
                 <input type="hidden" name="id" id="history_id">
                 <input type="hidden" name="patient_id" id="patient_id" value="<?= $patient_id ?>">
                 <input type="hidden" name="queue_id" id="queue_id" value="<?= $queue_id ?>">
+                <input type="hidden" name="type" id="history-type" value="posted">
 
                 <!-- SECTION 1: HEADER INFO PASIEN (Mirip Screenshot) -->
                 <div class="flex flex-col md:flex-row gap-6">
@@ -130,13 +135,12 @@
                                 <span class="w-4 text-center">:</span>
                                 <div class="flex-1">
                                     <select id="region_history" name="history_region" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-white">
-                                        <option value="">Semua Wilayah</option>
+                                        <option value="">Pilih Wilayah</option>
                                         <?php foreach ($wilayah as $value): ?>
                                             <?php
+                                            // Prioritas: region_id dari patient (biodata)
                                             $selected = '';
-                                            if (isset($regions_patient[0]) && $value->id == $regions_patient[0]) {
-                                                $selected = 'selected';
-                                            } elseif (isset($patient->region_id) && $value->id == $patient->region_id) {
+                                            if (isset($patient->region_id) && $value->id == $patient->region_id) {
                                                 $selected = 'selected';
                                             }
                                             ?>
@@ -153,15 +157,15 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 border-y border-slate-200 py-6">
                     <div class="space-y-1">
                         <label class="text-sm font-medium text-slate-600">Waktu mulai terapi :</label>
-                        <input type="text" name="processAt" id="processAt" disabled class="w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-500">
+                        <input type="datetime-local" name="processAt" id="processAt" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
                     </div>
                     <div class="space-y-1">
                         <label class="text-sm font-medium text-slate-600">Waktu selesai terapi :</label>
-                        <input type="text" name="finishAt" id="finishAt" disabled class="w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-500">
+                        <input type="datetime-local" name="finishAt" id="finishAt" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
                     </div>
                     <div class="space-y-1">
-                        <label class="text-sm font-medium text-slate-600">Total Waktu :</label>
-                        <input type="text" name="timeConsume" id="timeConsume" disabled class="w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-500">
+                        <label class="text-sm font-medium text-slate-600">Total Waktu (Menit) :</label>
+                        <input type="text" name="timeConsume" id="timeConsume" readonly class="w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-600 cursor-not-allowed" title="Otomatis dihitung dari waktu mulai dan selesai">
                     </div>
                 </div>
 
@@ -594,6 +598,9 @@
             <button type="button" data-modal-close class="rounded-lg border border-slate-300 bg-white px-5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition">
                 Batal
             </button>
+            <button type="button" id="save-draft-button" class="rounded-lg border border-amber-600 bg-amber-50 px-5 py-2 text-sm font-medium text-amber-700 hover:bg-amber-100 transition">
+                Simpan sebagai Draft
+            </button>
             <button type="submit" form="save_data" id="save-button" class="rounded-lg bg-teal-600 px-5 py-2 text-sm font-medium text-white hover:bg-teal-700 transition">
                 Simpan Data
             </button>
@@ -624,3 +631,4 @@
         
     </div>
 </div>
+

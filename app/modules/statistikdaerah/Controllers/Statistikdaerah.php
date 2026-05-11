@@ -20,9 +20,8 @@ class Statistikdaerah extends BaseController
     }
     public function index()
     {
-        //
-        $region_patient = $this->session->get('regions_patient');
-        $region_patient = is_string($region_patient) ? json_decode($region_patient, true) : $region_patient;
+        $region_patient = $this->session->get('region_patient');
+        $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
 
         $msg = $this->session->getFlashdata('message') ?? $this->session->getFlashdata('msg');
 
@@ -30,11 +29,10 @@ class Statistikdaerah extends BaseController
         $data = [
             'realname'        => $this->session->get('realname'),
             'role'            => $this->session->get('role'),
-            'regions_patient' => $region_patient,
             'base_url'        => base_url(),
             'current_segment' => $this->request->getUri()->getSegment(1),
             'title'           => 'Statistik Daerah',
-            'wilayah'         => $model_region->getData(),
+            'wilayah'         => $model_region->getData(null, $allowed_regions),
             'msg'             => $msg ?? ['', '', '']
         ];
 

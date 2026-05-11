@@ -41,6 +41,18 @@ const FinanceAnalytics = {
             $(e.currentTarget).find('i').addClass('animate-spin');
             this.loadData(() => $(e.currentTarget).find('i').removeClass('animate-spin'));
         });
+
+        // Export PDF
+        $('#btnExportPdf').on('click', () => {
+            const params = $.param(this.state.filters);
+            window.open(`${window.financeStatsConfig.exportPdfUrl}?${params}`, '_blank');
+        });
+
+        // Export Excel
+        $('#btnExportExcel').on('click', () => {
+            const params = $.param(this.state.filters);
+            window.open(`${window.financeStatsConfig.exportExcelUrl}?${params}`, '_blank');
+        });
     },
 
     async loadData(callback = null) {

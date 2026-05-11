@@ -1,6 +1,8 @@
 <?php
-$realname = session()->get('realname') ?? ($realname ?? 'User');
-$avatarUrl = session()->get('avatar_url') ?? '';
+/** @var string $role */
+$role = $role ?? session()->get('role') ?? '';
+$realname = $realname ?? session()->get('realname') ?? 'User';
+$avatarUrl = $avatarUrl ?? session()->get('avatar') ?? session()->get('avatar_url') ?? '';
 $initial = strtoupper(substr(trim($realname), 0, 1));
 if ($initial === '' || $initial === false) {
     $initial = 'U';
@@ -28,33 +30,40 @@ $avatarPalette = $avatarPalettes[$paletteIndex];
     <button
         type="button"
         data-menu-toggle="userMenu"
-        class="group relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm ring-1 ring-slate-100 transition hover:border-slate-300 hover:bg-slate-50 hover:shadow focus:outline-none focus:ring-2 focus:ring-slate-300"
-        aria-label="Buka menu profil"
-        title="<?= esc($realname) ?>">
-        <?php if (!empty($avatarUrl)): ?>
-            <img
-                id="profileAvatarImage"
-                src="<?= esc($avatarUrl) ?>"
-                alt="Avatar"
-                class="h-9 w-9 rounded-full object-cover ring-1 ring-slate-200"
-                onerror="this.classList.add('hidden');document.getElementById('profileAvatarFallback')?.classList.remove('hidden');" />
-        <?php else: ?>
-            <span
-                id="profileAvatarFallback"
-                class="flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold ring-1 <?= $avatarPalette['bg'] ?> <?= $avatarPalette['text'] ?> <?= $avatarPalette['ring'] ?>">
-                <?= esc($initial) ?>
-            </span>
-        <?php endif; ?>
+        class="group relative inline-flex h-10 items-center gap-2.5 rounded-full border border-slate-200 bg-white pl-1.5 pr-3 shadow-sm ring-1 ring-slate-100 transition hover:border-slate-300 hover:bg-slate-50 hover:shadow focus:outline-none focus:ring-2 focus:ring-slate-300"
+        aria-label="Buka menu profil">
+        
+        <div class="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full ring-1 ring-slate-200">
+            <?php if (!empty($avatarUrl)): ?>
+                <img
+                    id="profileAvatarImage"
+                    src="<?= esc($avatarUrl) ?>"
+                    alt="Avatar"
+                    class="h-full w-full object-cover"
+                    onerror="this.classList.add('hidden');document.getElementById('profileAvatarFallback')?.classList.remove('hidden');" />
+            <?php else: ?>
+                <span
+                    id="profileAvatarFallback"
+                    class="flex h-full w-full items-center justify-center text-[10px] font-bold <?= $avatarPalette['bg'] ?> <?= $avatarPalette['text'] ?>">
+                    <?= esc($initial) ?>
+                </span>
+            <?php endif; ?>
 
-        <?php if (!empty($avatarUrl)): ?>
-            <span
-                id="profileAvatarFallback"
-                class="hidden h-9 w-9 items-center justify-center rounded-full text-sm font-semibold ring-1 <?= $avatarPalette['bg'] ?> <?= $avatarPalette['text'] ?> <?= $avatarPalette['ring'] ?>">
-                <?= esc($initial) ?>
-            </span>
-        <?php endif; ?>
+            <?php if (!empty($avatarUrl)): ?>
+                <span
+                    id="profileAvatarFallback"
+                    class="hidden h-full w-full items-center justify-center text-[10px] font-bold <?= $avatarPalette['bg'] ?> <?= $avatarPalette['text'] ?>">
+                    <?= esc($initial) ?>
+                </span>
+            <?php endif; ?>
+        </div>
 
-        <span id="currentUserName" class="sr-only"><?= esc($realname) ?></span>
+        <div class="hidden md:flex flex-col items-start leading-none">
+            <span class="text-[11px] font-bold text-slate-700"><?= esc($realname) ?></span>
+            <span class="text-[9px] font-medium text-slate-400 uppercase tracking-tight"><?= esc($role) ?></span>
+        </div>
+
+        <i class="fas fa-chevron-down text-[10px] text-slate-300 transition-transform duration-200 group-hover:text-slate-400"></i>
     </button>
 
     <div id="userMenu"

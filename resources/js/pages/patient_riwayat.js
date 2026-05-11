@@ -40,10 +40,91 @@ const PatientHistoryPage = {
     this.currentCsrfHash = this.config.csrfHash || "";
     const page = document.getElementById("patientHistoryContainer");
     if (!page || typeof window.$ === "undefined") return;
+    
+    // DEBUG: Log config untuk memastikan patientRegionId ada
+    console.log('=== PATIENT CONFIG ===');
+    console.log('Patient ID:', this.config.patientId);
+    console.log('Patient Region ID:', this.config.patientRegionId);
+    console.log('Config:', this.config);
+    
     this.initTagify();
     this.initEventListeners();
     this.loadTableData(1);
     this.checkUrlParams();
+    
+    // Init biodata read-only mode
+    this.initBiodataMode();
+  },
+
+  // Initialize biodata read-only mode
+  initBiodataMode() {
+    const biodataContent = document.getElementById('biodata-content');
+    if (!biodataContent) return;
+    
+    // Set semua input ke readonly saat pertama kali load
+    this.setBiodataReadOnly(true);
+    
+    // Event listener untuk tombol Edit
+    $('#btn-edit-biodata').on('click', () => {
+      this.setBiodataReadOnly(false);
+      $('#btn-edit-biodata').hide();
+      $('#btn-cancel-edit, #btn-save-biodata').show();
+      $('#biodata-subtitle').text('Ubah dan perbarui informasi dasar pasien');
+    });
+    
+    // Event listener untuk tombol Batal
+    $('#btn-cancel-edit').on('click', () => {
+      // Reset form ke nilai awal
+      document.getElementById('patientForm').reset();
+      // Reload halaman untuk kembalikan data asli
+      location.reload();
+    });
+  },
+
+  // Set biodata form ke mode read-only atau editable
+  setBiodataReadOnly(isReadOnly) {
+    const form = document.getElementById('patientForm');
+    if (!form) return;
+    
+    if (isReadOnly) {
+      // Set semua input, select, textarea ke readonly/disabled
+      $(form).find('input:not([type="hidden"]), select, textarea').each(function() {
+        const $el = $(this);
+        const tagName = this.tagName.toLowerCase();
+        
+        if (tagName === 'select' || this.type === 'checkbox' || this.type === 'radio') {
+          $el.prop('disabled', true);
+          $el.addClass('cursor-not-allowed opacity-60');
+        } else {
+          $el.prop('readonly', true);
+          $el.addClass('bg-slate-50 cursor-not-allowed');
+        }
+      });
+      
+      // Hide tombol save & cancel, show tombol edit
+      $('#btn-save-biodata, #btn-cancel-edit').hide();
+      $('#btn-edit-biodata').show();
+      $('#biodata-subtitle').text('Informasi dasar pasien (Mode Lihat)');
+    } else {
+      // Remove readonly/disabled dari semua input
+      $(form).find('input:not([type="hidden"]), select, textarea').each(function() {
+        const $el = $(this);
+        const tagName = this.tagName.toLowerCase();
+        
+        if (tagName === 'select' || this.type === 'checkbox' || this.type === 'radio') {
+          $el.prop('disabled', false);
+          $el.removeClass('cursor-not-allowed opacity-60');
+        } else {
+          $el.prop('readonly', false);
+          $el.removeClass('bg-slate-50 cursor-not-allowed');
+        }
+      });
+      
+      // Hide tombol edit, show tombol save & cancel
+      $('#btn-edit-biodata').hide();
+      $('#btn-save-biodata, #btn-cancel-edit').show();
+      $('#biodata-subtitle').text('Ubah dan perbarui informasi dasar pasien');
+    }
   },
 
 
@@ -58,6 +139,14 @@ const PatientHistoryPage = {
     if (!dateTime) return "";
     const d = new Date(dateTime);
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  },
+
+  formatDateTimeForInput(dateTime) {
+    if (!dateTime) return "";
+    const d = new Date(dateTime);
+    if (isNaN(d.getTime())) return "";
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   },
 
 
@@ -139,6 +228,7 @@ const PatientHistoryPage = {
             tr.append(`<td class="px-6 py-3.5 text-xs">${row.complaint || "-"}</td>`);
             tr.append(`<td class="px-6 py-3.5 text-xs">${row.medhis || "-"}</td>`);
             tr.append(`<td class="px-6 py-3.5 text-xs text-slate-600">${row.date || "-"}</td>`);
+            tr.append(`<td class="px-6 py-3.5 text-center text-xs font-medium text-slate-600">${row.duration || "-"}</td>`);
             tr.append(`<td class="px-6 py-3.5 text-center text-xs">
                             <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${row.type === 'draft' ? 'bg-amber-50 text-amber-700' : 'bg-teal-50 text-teal-700'}">${row.type || "-"}</span>
                         </td>`);
@@ -220,7 +310,7 @@ const PatientHistoryPage = {
 
   // --- CRUD & FORM ---
   setCheckboxes(name, dataString) {
-    const arr = dataString ? dataString.split(',') : [];
+    const arr = dataString ? dataString.split(',').map(s => s.trim()).filter(Boolean) : [];
     arr.forEach(val => $(`input[name="${name}[]"][value="${val}"]`).prop('checked', true));
   },
 
@@ -244,6 +334,17 @@ const PatientHistoryPage = {
     $('input[type="checkbox"], input[type="radio"]').prop('checked', false);
     $('#terapi-form, #pemeriksaan, #nonton-porn-frequency, #onani-frequency, #onani-lainnya-textbox, #nonton-lainnya-textbox, #hubungan-lainnya-textbox').hide();
 
+    const type = data.type || "posted";
+    $("#history-type").val(type);
+
+    if (type === "draft") {
+      $("#save-draft-button").text("Perbarui Draft").show();
+      $("#save-button").text("Finalisasi & Simpan");
+    } else {
+      $("#save-draft-button").hide();
+      $("#save-button").text("Simpan Data");
+    }
+
     if (!isDuplicate) form.querySelector('input[name="id"]').value = data.id || "";
     form.querySelector('input[name="patient_id"]').value = data.patient_id || this.config.patientId;
     form.querySelector('input[name="queue_id"]').value = data.queue_id || this.config.queueId;
@@ -252,8 +353,19 @@ const PatientHistoryPage = {
     if (complaintTagify) { complaintTagify.removeAllTags(); if (data.complaint && data.complaint !== "-") complaintTagify.addTags(data.complaint.split(", ")); }
     if (medhisTagify) { medhisTagify.removeAllTags(); if (data.medhis && data.medhis !== "-") medhisTagify.addTags(data.medhis.split(", ")); }
     if (resultTagify) { resultTagify.removeAllTags(); if (data.results && data.results !== "-") resultTagify.addTags(data.results.split(", ")); }
-    const textFields = ['processAt', 'finishAt', 'timeConsume', 'cervical', 'thoraxal', 'lumbar', 'sacrum', 'pelvis', 'power', 'pr'];
-    textFields.forEach(f => { if (data[f]) $(`input[name="${f}"]`).val(data[f]); });
+    const textFields = ['timeConsume', 'cervical', 'thoraxal', 'lumbar', 'sacrum', 'pelvis', 'power', 'pr'];
+    textFields.forEach(f => {
+      let dbField = f;
+      if (f === 'timeConsume') dbField = 'time_consume';
+      if (data[dbField]) $(`input[name="${f}"]`).val(data[dbField]);
+    });
+
+    if (data.processAt) $('input[name="processAt"]').val(this.formatDateTimeForInput(data.processAt));
+    if (data.finishAt) $('input[name="finishAt"]').val(this.formatDateTimeForInput(data.finishAt));
+    
+    // Hitung durasi otomatis dan pastikan field readonly
+    this.calculateDuration();
+    $('#timeConsume').prop('readonly', true);
     const textareas = ['other', 'measure', 'ket_vertebrata', 'ket_thorax', 'ket_kompresi', 'ket_plintiran', 'ket_viska', 'penyebab', 'results'];
     textareas.forEach(f => {
       let dbField = f;
@@ -371,28 +483,88 @@ const PatientHistoryPage = {
 
   // --- ADD RIWAYAT ---
   add() {
+    console.log('=== ADD RIWAYAT CALLED ===');
     const modal = document.getElementById("exampleModal");
     const form = document.getElementById("save_data");
-    if (!modal || !form) return;
+    if (!modal || !form) {
+      console.error('Modal or form not found!');
+      return;
+    }
 
     openModal(modal);
     modal.querySelector(".modal-title").textContent = "Tambah Riwayat Pasien";
     form.setAttribute("action", this.config.urls.historyStore);
-    form.reset();
-
+    
+    // Reset form KECUALI select region
+    form.querySelector('input[name="id"]').value = '';
     form.querySelector('input[name="patient_id"]').value = this.config.patientId;
     form.querySelector('input[name="queue_id"]').value = this.config.queueId;
     form.querySelector('input[name="date"]').value = this.formatDateForInput(new Date());
 
+    const now = new Date();
+    const processAtValue = this.formatDateTimeForInput(now);
+    const finishAtValue = this.formatDateTimeForInput(now);
+    
+    console.log('Setting processAt to:', processAtValue);
+    console.log('Setting finishAt to:', finishAtValue);
+    
+    form.querySelector('input[name="processAt"]').value = processAtValue;
+    form.querySelector('input[name="finishAt"]').value = finishAtValue;
+    
+    // Clear all inputs except region
+    $(form).find('input[type="text"]:not(#timeConsume), textarea').val('');
+    $(form).find('input[type="checkbox"], input[type="radio"]').prop('checked', false);
+    
+    // Set wilayah periksa dari biodata pasien
+    console.log('=== SETTING REGION ===');
+    console.log('Patient Region ID from config:', this.config.patientRegionId);
+    console.log('Region dropdown exists:', $('#region_history').length > 0);
+    console.log('Region dropdown options:', $('#region_history option').length);
+    
+    if (this.config.patientRegionId && this.config.patientRegionId !== '' && this.config.patientRegionId !== 'null') {
+      console.log('Attempting to set region dropdown to:', this.config.patientRegionId);
+      
+      // Set value langsung
+      const regionSelect = document.getElementById('region_history');
+      if (regionSelect) {
+        regionSelect.value = this.config.patientRegionId;
+        console.log('Region dropdown value after direct set:', regionSelect.value);
+      }
+      
+      // Set via jQuery
+      $('#region_history').val(this.config.patientRegionId);
+      console.log('Region dropdown value after jQuery set:', $('#region_history').val());
+      
+      // Trigger change untuk select2 dan load terapis
+      setTimeout(() => {
+        $('#region_history').trigger('change');
+        console.log('Region dropdown value after trigger change:', $('#region_history').val());
+        console.log('Selected option text:', $('#region_history option:selected').text());
+      }, 100);
+    } else {
+      console.warn('Patient region ID is empty, undefined, or null:', this.config.patientRegionId);
+    }
+    
+    // Hitung durasi otomatis LANGSUNG setelah set waktu
+    console.log('=== CALCULATING INITIAL DURATION ===');
+    setTimeout(() => {
+      this.calculateDuration();
+    }, 150);
+
     $(form).find(":input").prop("readonly", false);
     $(form).find(":checkbox, :radio").prop("disabled", false);
+    
+    // Pastikan timeConsume tetap readonly
+    $('#timeConsume').prop('readonly', true);
 
     [complaintTagify, medhisTagify, resultTagify].forEach((t) => { if (t) { t.removeAllTags(); t.setReadonly(false); } });
 
     $("#history-info, #terapi-form, #pemeriksaan").hide();
     $('#terapi-kejantanan').show();
+    $("#history-type").val("posted");
+    $("#save-draft-button").text("Simpan sebagai Draft").show();
     $("#save-button").prop('disabled', false).html('Simpan Data').show();
-    $("#region_history").prop('disabled', false).val("").trigger("change");
+    $("#region_history").prop('disabled', false);
     $(".terapis").prop("disabled", false).val([]).trigger("change");
   },
 
@@ -433,6 +605,56 @@ const PatientHistoryPage = {
       if (hId && hId !== "undefined" && hId !== "") setTimeout(() => this.show(hId), 500);
     }
   },
+
+  // Load terapis berdasarkan region yang dipilih
+  loadTerapisByRegion(regionId) {
+    console.log('=== LOADING TERAPIS BY REGION ===');
+    console.log('Region ID:', regionId);
+    console.log('URL:', this.config.urls.terapisByRegion);
+    
+    const self = this;
+    
+    // Show loading state
+    $('.terapis').empty().append('<option value="">Memuat terapis...</option>').trigger('change');
+    
+    $.ajax({
+      url: self.config.urls.terapisByRegion,
+      type: 'GET',
+      data: { region_id: regionId },
+      dataType: 'json',
+      success: function(response) {
+        console.log('Terapis response:', response);
+        
+        $('.terapis').empty();
+        
+        if (response.status && response.data && response.data.length > 0) {
+          $('.terapis').append('<option value="">Pilih Terapis</option>');
+          
+          response.data.forEach(function(terapis) {
+            $('.terapis').append(
+              $('<option>', {
+                value: terapis.id,
+                text: terapis.nama
+              })
+            );
+          });
+          
+          console.log('Loaded', response.data.length, 'terapis');
+        } else {
+          $('.terapis').append('<option value="">Tidak ada terapis di wilayah ini</option>');
+          console.warn('No terapis found for region:', regionId);
+        }
+        
+        $('.terapis').trigger('change');
+      },
+      error: function(xhr, status, error) {
+        console.error('Error loading terapis:', error);
+        console.error('Response:', xhr.responseText);
+        $('.terapis').empty().append('<option value="">Error memuat terapis</option>').trigger('change');
+      }
+    });
+  },
+
   initEventListeners() {
     const self = this;
     document.getElementById("btn-add-history")?.addEventListener("click", () => self.add());
@@ -449,60 +671,31 @@ const PatientHistoryPage = {
     });
     $("#region_history, .terapis").select2({ dropdownParent: $("#exampleModal"), width: "100%" });
 
+    // Event listener untuk perubahan wilayah periksa - update dropdown terapis
+    $(document).on('change', '#region_history', function() {
+      const regionId = $(this).val();
+      console.log('=== REGION CHANGED ===');
+      console.log('Selected region ID:', regionId);
+      
+      if (regionId) {
+        self.loadTerapisByRegion(regionId);
+      } else {
+        // Jika wilayah kosong, kosongkan juga terapis
+        $('.terapis').empty().append('<option value="">Pilih Terapis</option>').trigger('change');
+      }
+    });
+
     // --- SIMPAN BUTTON ---
     $(document).on("click", "#save-button", function (e) {
       e.preventDefault();
-      const btn = $(this);
-      const form = $("#save_data");
-      const formData = new FormData(form[0]);
-      if (complaintTagify) {
-        const val = complaintTagify.value;
-        formData.set("complaint", Array.isArray(val) ? val.map(t => t.value).join(', ') : "");
-      }
-      if (medhisTagify) {
-        const val = medhisTagify.value;
-        formData.set("medhis", Array.isArray(val) ? val.map(t => t.value).join(', ') : "");
-      }
-      if (resultTagify) {
-        const val = resultTagify.value;
-        formData.set("results", Array.isArray(val) ? val.map(t => t.value).join(', ') : "");
-      }
-      formData.set(self.config.csrfTokenName, self.currentCsrfHash);
-      btn.prop("disabled", true).html('<i class="fas fa-spinner fa-spin mr-2"></i> Menyimpan...');
-      $.ajax({
-        url: form.attr('action'),
-        type: "POST",
-        data: formData,
-        processData: false,
-        contentType: false,
-        headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        success: (res) => {
-          const freshToken = res.new_token || res.csrf_hash;
-          if (freshToken) self.updateCsrf(freshToken);
-          if (res.status) {
-            closeModal(document.getElementById("exampleModal"));
-            self.loadTableData(self.currentPage);
-            if (window.Swal?.fire) window.Swal.fire({ icon: "success", title: "Berhasil!", text: res.message, timer: 2000, showConfirmButton: false });
-          } else {
-            if (window.Swal?.fire) window.Swal.fire({ icon: "error", title: "Gagal!", text: res.message });
-          }
-          btn.prop("disabled", false).html('Simpan Data');
-        },
-        error: (xhr) => {
-          btn.prop("disabled", false).html('Simpan Data');
-          if (xhr.status === 500) {
-            if (window.Swal) {
-              Swal.fire({
-                icon: "error",
-                title: "Error 500 (Server Crash)",
-                text: "Terdapat kesalahan di CodeIgniter! Kemungkinan karena Checkbox kosong menyebabkan error implode() di Backend. Cek file Controller Anda.",
-              });
-            }
-          } else {
-            if (window.Swal) Swal.fire('Gagal Menyimpan', 'Terjadi masalah jaringan atau server.', 'error');
-          }
-        }
-      });
+      $("#history-type").val("posted");
+      self.submitForm($(this));
+    });
+
+    $(document).on("click", "#save-draft-button", function (e) {
+      e.preventDefault();
+      $("#history-type").val("draft");
+      self.submitForm($(this));
     });
 
     // --- DELETE KONFIRMASI ---
@@ -532,7 +725,23 @@ const PatientHistoryPage = {
       });
     });
 
-    //  --- CHECKBOX LOGIC UNTUK MATRIX ---
+    // --- THERAPY DURATION (Auto-calculate, field is readonly) ---
+    // Gunakan event delegation untuk memastikan event tetap bekerja
+    $(document).on('change', '#processAt, #finishAt', function() {
+      console.log('=== TIME INPUT CHANGED ===');
+      console.log('Changed element:', this.name, 'New value:', this.value);
+      self.calculateDuration();
+      // Pastikan field timeConsume tetap readonly setelah perhitungan
+      $('#timeConsume').prop('readonly', true);
+    });
+    
+    // Tambahan: trigger saat user mengetik (untuk real-time update)
+    $(document).on('input', '#processAt, #finishAt', function() {
+      console.log('=== TIME INPUT (typing) ===');
+      self.calculateDuration();
+      $('#timeConsume').prop('readonly', true);
+    });
+
     $(document).on('change', '#pemeriksaan input[type="checkbox"]', function () {
       const name = $(this).attr('name');
       if (!name) return;
@@ -558,6 +767,117 @@ const PatientHistoryPage = {
       const closeBtn = e.target.closest("[data-modal-close]");
       if (closeBtn) closeModal(closeBtn.closest(".modal-wrapper"));
       if (e.target.classList.contains("modal-wrapper")) closeModal(e.target);
+    });
+  },
+
+  calculateDuration() {
+    console.log('=== CALCULATE DURATION CALLED ===');
+    const modal = $('#exampleModal');
+    if (!modal.length) {
+      console.log('Modal not found');
+      return;
+    }
+
+    const startVal = modal.find('#processAt').val();
+    const endVal = modal.find('#finishAt').val();
+    const timeConsumeField = modal.find('#timeConsume');
+
+    console.log('Process At value:', startVal);
+    console.log('Finish At value:', endVal);
+
+    if (startVal && endVal) {
+      try {
+        // Parse datetime-local format (YYYY-MM-DDTHH:mm)
+        const startTime = new Date(startVal);
+        const endTime = new Date(endVal);
+
+        console.log('Start Time parsed:', startTime);
+        console.log('End Time parsed:', endTime);
+
+        if (!isNaN(startTime.getTime()) && !isNaN(endTime.getTime())) {
+          // Calculate difference in minutes
+          const diffMs = endTime.getTime() - startTime.getTime();
+          const diffMins = Math.floor(diffMs / (1000 * 60));
+          
+          console.log('Difference in milliseconds:', diffMs);
+          console.log('Calculated duration in minutes:', diffMins);
+          
+          // Update the timeConsume field (readonly, auto-calculated)
+          const finalValue = diffMins > 0 ? diffMins : 0;
+          timeConsumeField.val(finalValue);
+          console.log('Set timeConsume field to:', finalValue);
+          
+          // Pastikan field tetap readonly
+          timeConsumeField.prop('readonly', true);
+        } else {
+          console.error('Invalid date/time values');
+        }
+      } catch (e) {
+        console.error('Error calculating duration:', e);
+        timeConsumeField.val('');
+      }
+    } else {
+      // Jika salah satu waktu kosong, kosongkan juga total waktu
+      console.log('One or both times are empty, clearing timeConsume');
+      timeConsumeField.val('');
+    }
+  },
+
+  submitForm(btn) {
+    const self = this;
+    const form = $("#save_data");
+    const formData = new FormData(form[0]);
+    const originalBtnHtml = btn.html();
+
+    if (complaintTagify) {
+      const val = complaintTagify.value;
+      formData.set("complaint", Array.isArray(val) ? val.map(t => t.value).join(', ') : "");
+    }
+    if (medhisTagify) {
+      const val = medhisTagify.value;
+      formData.set("medhis", Array.isArray(val) ? val.map(t => t.value).join(', ') : "");
+    }
+    if (resultTagify) {
+      const val = resultTagify.value;
+      formData.set("results", Array.isArray(val) ? val.map(t => t.value).join(', ') : "");
+    }
+
+    formData.set(self.config.csrfTokenName, self.currentCsrfHash);
+    btn.prop("disabled", true).html('<i class="fas fa-spinner fa-spin mr-2"></i> Memproses...');
+
+    $.ajax({
+      url: form.attr('action'),
+      type: "POST",
+      data: formData,
+      processData: false,
+      contentType: false,
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      success: (res) => {
+        const freshToken = res.new_token || res.csrf_hash;
+        if (freshToken) self.updateCsrf(freshToken);
+        if (res.status) {
+          closeModal(document.getElementById("exampleModal"));
+          self.loadTableData(self.currentPage);
+          if (window.Swal?.fire) window.Swal.fire({ icon: "success", title: "Berhasil!", text: res.message, timer: 2000, showConfirmButton: false });
+        } else {
+          if (window.Swal?.fire) window.Swal.fire({ icon: "error", title: "Gagal!", text: res.message });
+        }
+        btn.prop("disabled", false).html(originalBtnHtml);
+      },
+      error: (xhr) => {
+        btn.prop("disabled", false).html(originalBtnHtml);
+        if (xhr.status === 500) {
+          if (window.Swal) {
+            Swal.fire({
+              icon: "error",
+              title: "Error 500 (Server Crash)",
+              text: "Terdapat kesalahan di server. Cek log error.",
+            });
+          }
+        } else {
+          if (window.Swal) Swal.fire('Gagal Menyimpan', 'Terjadi masalah jaringan atau server.', 'error');
+        }
+      }
     });
   },
 };
@@ -592,3 +912,25 @@ if (document.readyState === "loading") {
 } else {
   PatientHistoryPage.init();
 }
+
+// Expose fungsi global untuk dipanggil dari halaman lain (seperti antrean)
+window.loadHistoryData = function(historyId) {
+  if (PatientHistoryPage && typeof PatientHistoryPage.editHistory === 'function') {
+    PatientHistoryPage.editHistory(historyId);
+  }
+};
+
+window.resetHistoryForm = function() {
+  const form = document.getElementById('formRiwayat');
+  if (form) {
+    form.reset();
+    // Reset tagify
+    if (complaintTagify) complaintTagify.removeAllTags();
+    if (medhisTagify) medhisTagify.removeAllTags();
+    if (resultTagify) resultTagify.removeAllTags();
+    
+    // Set mode tambah
+    document.getElementById('history_id').value = '';
+    document.getElementById('modalRiwayatLabel').textContent = 'Tambah Rekam Medis';
+  }
+};
