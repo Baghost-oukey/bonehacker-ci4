@@ -10,6 +10,12 @@ $listRegions = session()->get('list_regions_global') ?? [];
     <div class="mx-auto flex h-14 max-w-screen-2xl items-center justify-between gap-1 px-3 md:px-6">
         
         <div class="flex items-center gap-1.5 min-w-0">
+            <!-- MENU BUTTON MOBILE -->
+            <a href="<?= base_url('menu') ?>" 
+                class="lg:hidden inline-flex items-center justify-center rounded-xl p-1.5 text-slate-600 hover:bg-slate-100 active:scale-95 transition-all">
+                <i class="fas fa-th-large text-base"></i>
+            </a>
+
             <!-- TOGGLE BUTTON DESKTOP -->
             <button id="sidebarToggle"
                 class="hidden lg:inline-flex items-center justify-center rounded-xl p-1.5 text-slate-600 hover:bg-slate-100 active:scale-95 transition-all">
