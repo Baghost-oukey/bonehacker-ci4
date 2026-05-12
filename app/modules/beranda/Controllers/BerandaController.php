@@ -150,4 +150,17 @@ class BerandaController extends BaseController
 
     return view('App\Modules\Beranda\Views\index', $data);
   }
+
+  public function menu()
+  {
+    $session = session();
+    $data = [
+      'role' => $session->get('role'),
+      'title' => 'Menu Utama',
+      'base_url' => base_url(),
+      'current_segment' => 'menu',
+    ];
+
+    return view('App\Modules\Beranda\Views\menu', $data);
+  }
 }

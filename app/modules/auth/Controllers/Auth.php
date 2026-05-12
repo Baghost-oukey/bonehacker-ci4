@@ -22,6 +22,10 @@ class Auth extends BaseController
     {
         // Cek apakah sudah login
         if (session()->get('isLogin')) {
+            $agent = $this->request->getUserAgent();
+            if ($agent->isMobile() || preg_match('/Mobile|Android|iPhone|Flutter|BoneHacker-App/i', $agent->getAgentString())) {
+                return redirect()->to(base_url('menu'));
+            }
             return redirect()->to(base_url('beranda'));
         }
 
@@ -43,6 +47,10 @@ class Auth extends BaseController
                     if (password_verify($token, $user->remember_token)) {
                         // Token valid, auto-login
                         $this->setSession($user);
+                        $agent = $this->request->getUserAgent();
+                        if ($agent->isMobile() || preg_match('/Mobile|Android|iPhone|Flutter|BoneHacker-App/i', $agent->getAgentString())) {
+                            return redirect()->to(base_url('menu'));
+                        }
                         return redirect()->to(base_url('beranda'));
                     }
                 }
@@ -126,6 +134,10 @@ class Auth extends BaseController
                     $this->response->setCookie($rememberCookie);
                 }
 
+                $agent = $this->request->getUserAgent();
+                if ($agent->isMobile() || preg_match('/Mobile|Android|iPhone|Flutter|BoneHacker-App/i', $agent->getAgentString())) {
+                    return redirect()->to(base_url('menu'));
+                }
                 return redirect()->to(base_url('beranda'));
             }
         }

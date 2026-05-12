@@ -10,9 +10,9 @@ $listRegions = session()->get('list_regions_global') ?? [];
     <div class="mx-auto flex h-14 max-w-screen-2xl items-center justify-between gap-1 px-3 md:px-6">
         
         <div class="flex items-center gap-1.5 min-w-0">
-            <!-- TOGGLE BUTTON MOBILE -->
+            <!-- TOGGLE BUTTON DESKTOP -->
             <button id="sidebarToggle"
-                class="lg:hidden inline-flex items-center justify-center rounded-xl p-1.5 text-slate-600 hover:bg-slate-100 active:scale-95 transition-all">
+                class="hidden lg:inline-flex items-center justify-center rounded-xl p-1.5 text-slate-600 hover:bg-slate-100 active:scale-95 transition-all">
                 <i class="fas fa-bars text-base"></i>
             </button>
 
@@ -31,14 +31,14 @@ $listRegions = session()->get('list_regions_global') ?? [];
             <!-- Global Region Filter (Mobile Optimized) -->
             <div class="relative group">
                 <select id="globalRegionFilter" 
-                    class="block w-24 sm:w-32 md:w-48 appearance-none bg-slate-50 border border-slate-200 text-slate-700 text-[10px] md:text-sm rounded-xl py-1.5 pl-2 pr-7 focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all cursor-pointer">
+                    class="block w-32 sm:w-36 md:w-48 appearance-none bg-slate-50 border border-slate-200 text-slate-700 text-xs md:text-sm rounded-xl py-2 pl-3 pr-8 focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all cursor-pointer truncate">
                     <?php 
                         $allowed = session()->get('region_patient_allowed');
                         $hasMultipleRegions = is_array($allowed) && count($allowed) > 1;
                         $showAllOption = ($role === 'superadmin') || ($role === 'owner' && $hasMultipleRegions);
                     ?>
                     <?php if ($showAllOption): ?>
-                        <option value="all" <?= $activeRegion === 'all' ? 'selected' : '' ?>>Semua</option>
+                        <option value="all" <?= $activeRegion === 'all' ? 'selected' : '' ?>>Semua Cabang</option>
                     <?php endif; ?>
                     
                     <?php foreach ($listRegions as $region): ?>
@@ -56,13 +56,13 @@ $listRegions = session()->get('list_regions_global') ?? [];
                         <?php endif; ?>
                     <?php endforeach; ?>
                 </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1.5 text-slate-400">
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
                     <i class="fas fa-chevron-down text-[9px]"></i>
                 </div>
             </div>
 
-            <!-- Clock -->
-            <div>
+            <!-- Clock (Hidden on mobile) -->
+            <div class="hidden md:block">
                 <?= $this->include('App\Views\components\clock') ?>
             </div>
 

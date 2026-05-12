@@ -1,6 +1,7 @@
 <?= $this->extend('layout/layout') ?>
 <?= $this->section('content') ?>
 
+
 <?php $summary_cards = [
     [
         'label' => 'Antrean Hari Ini',

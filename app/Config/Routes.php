@@ -18,8 +18,9 @@ $routes->group('auth', ['namespace' => 'App\Modules\auth\Controllers'], function
 
 // API Routes Consolidated at the end of file
 
-// Beranda
+// Beranda & Hub
 $routes->get('beranda', 'BerandaController::index', ['namespace' => 'App\Modules\Beranda\Controllers', 'filter' => 'auth']);
+$routes->get('menu', 'BerandaController::menu', ['namespace' => 'App\Modules\Beranda\Controllers', 'filter' => 'auth']);
 
 // Antrean Public
 $routes->get('antrean/daftar-antrean', '\App\Modules\Antrean\Controllers\AntreanController::daftarAntrean');
