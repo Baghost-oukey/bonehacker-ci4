@@ -106,8 +106,8 @@ class JournalController extends BaseController
 
         $datatables->addColumn('nama', function ($row) {
             $name = esc($row->nama);
-            // Click name goes to full profile (bio, files, history)
-            $url = site_url('patient/show/' . $row->patient_id);
+            // Link langsung ke riwayat kunjungan pasien
+            $url = site_url('patient/history/show/' . $row->patient_id);
 
             $phone = !empty($row->nowa)
                 ? '<br><small class="text-slate-400">(' . esc($row->nowa) . ')</small>'

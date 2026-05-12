@@ -50,7 +50,7 @@ class Mabsensikaryawan extends Model
         $bulanBagus = str_pad((string)$bulan, 2, '0', STR_PAD_LEFT);
         $tanggalAwal = "$tahun-$bulanBagus-01";
         $tanggalAkhir = date('Y-m-t', strtotime($tanggalAwal));
-        
+
         return $this->where('terapis_id', $terapisId)
             ->where('status', 'Hadir')
             ->where('tanggal >=', $tanggalAwal)
@@ -63,13 +63,15 @@ class Mabsensikaryawan extends Model
         $builder = $this->select('absensi_karyawan.tanggal')
             ->select('SUM(CASE WHEN absensi_karyawan.status = "Hadir" THEN 1 ELSE 0 END) as total_hadir', false)
             ->select('SUM(CASE WHEN absensi_karyawan.status = "Tidak Hadir" THEN 1 ELSE 0 END) as total_tidak_hadir', false)
+            ->select('SUM(CASE WHEN absensi_karyawan.status = "Izin" THEN 1 ELSE 0 END) as total_izin', false)
+            ->select('SUM(CASE WHEN absensi_karyawan.status = "Cuti" THEN 1 ELSE 0 END) as total_cuti', false)
             ->join('terapis', 'terapis.id = absensi_karyawan.terapis_id', 'inner')
             ->where('terapis.is_active', 1) // Filter hanya terapis aktif
             ->where('terapis.is_presensi', 1); // Filter hanya terapis yang ikut presensi
 
         if ($bulan && $tahun) {
             $builder->where('MONTH(absensi_karyawan.tanggal)', $bulan)
-                    ->where('YEAR(absensi_karyawan.tanggal)', $tahun);
+                ->where('YEAR(absensi_karyawan.tanggal)', $tahun);
         }
 
         // Filter by region

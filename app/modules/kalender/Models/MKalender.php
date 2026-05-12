@@ -153,4 +153,22 @@ class MKalender extends Model
 
         return $tanggalLibur;
     }
+
+    /**
+     * Hitung total hari kerja dalam 1 bulan (Total hari - Libur Rutin - Libur Khusus)
+     */
+    public function getHariKerjaBulanan(int $bulan, int $tahun, $regionId = null): int
+    {
+        $totalHari = (int) date('t', mktime(0, 0, 0, $bulan, 1, $tahun));
+        $hariKerja = 0;
+
+        for ($d = 1; $d <= $totalHari; $d++) {
+            $tanggal = sprintf('%04d-%02d-%02d', $tahun, $bulan, $d);
+            if (!$this->isLibur($tanggal, $regionId)) {
+                $hariKerja++;
+            }
+        }
+
+        return $hariKerja;
+    }
 }

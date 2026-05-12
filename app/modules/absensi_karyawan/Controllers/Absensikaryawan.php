@@ -60,22 +60,89 @@ class Absensikaryawan extends BaseController
 
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Rekap Presensi');
 
-        $sheet->setCellValue('A1', 'No')
-              ->setCellValue('B1', 'Tanggal')
-              ->setCellValue('C1', 'Total Hadir')
-              ->setCellValue('D1', 'Total Tidak Hadir');
+        // --- 1. JUDUL & INFORMASI ---
+        $bulan_list = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+        $nama_bulan = $bulan_list[(int)$bulan];
 
-        $row = 2;
+        $sheet->setCellValue('A1', 'LAPORAN REKAP PRESENSI HARIAN TERAPIS');
+        $sheet->mergeCells('A1:D1');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+        $sheet->setCellValue('A2', "Periode: $nama_bulan $tahun");
+        $sheet->mergeCells('A2:D2');
+        $sheet->getStyle('A2')->getFont()->setBold(true);
+        $sheet->getStyle('A2')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+        // --- 2. HEADER TABEL ---
+        $sheet->setCellValue('A4', 'No')
+            ->setCellValue('B4', 'Tanggal')
+            ->setCellValue('C4', 'Hadir')
+            ->setCellValue('D4', 'Tanpa Keterangan')
+            ->setCellValue('E4', 'Izin')
+            ->setCellValue('F4', 'Cuti');
+
+        // Styling Header (Blue Theme like user screenshot)
+        $headerStyle = [
+            'font' => [
+                'bold'  => true,
+                'color' => ['rgb' => 'FFFFFF'],
+            ],
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                ],
+            ],
+            'fill' => [
+                'fillType'   => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'startColor' => ['rgb' => '1E40AF'], // Blue-800
+            ],
+        ];
+        $sheet->getStyle('A4:F4')->applyFromArray($headerStyle);
+        $sheet->getRowDimension(4)->setRowHeight(25);
+
+        // --- 3. ISI DATA ---
+        $row = 5;
         foreach ($rekap as $index => $r) {
             $sheet->setCellValue('A' . $row, $index + 1)
-                  ->setCellValue('B' . $row, date('d-m-Y', strtotime($r['tanggal'])))
-                  ->setCellValue('C' . $row, $r['total_hadir'])
-                  ->setCellValue('D' . $row, $r['total_tidak_hadir']);
+                ->setCellValue('B' . $row, date('d-m-Y', strtotime($r['tanggal'])))
+                ->setCellValue('C' . $row, $r['total_hadir'])
+                ->setCellValue('D' . $row, $r['total_tidak_hadir'])
+                ->setCellValue('E' . $row, $r['total_izin'])
+                ->setCellValue('F' . $row, $r['total_cuti']);
+
+            // Style baris data
+            $sheet->getStyle('A' . $row . ':F' . $row)->applyFromArray([
+                'alignment' => [
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                ],
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        'color'       => ['rgb' => 'E2E8F0'], // Slate-200
+                    ],
+                ],
+            ]);
+            
             $row++;
         }
 
-        $filename = 'Rekap_Presensi_' . $bulan . '_' . $tahun . '.xlsx';
+        // Auto size columns
+        foreach (range('A', 'F') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $filename = 'Rekap_Presensi_' . $nama_bulan . '_' . $tahun . '.xlsx';
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $filename . '"');
@@ -104,8 +171,11 @@ class Absensikaryawan extends BaseController
 
         $terapisQuery = $this->model_terapis->where('is_active', 1)->where('is_presensi', 1);
         if (!empty($allowed_regions)) {
-            if (is_array($allowed_regions)) { $terapisQuery->whereIn('region_id', $allowed_regions); }
-            else { $terapisQuery->where('region_id', $allowed_regions); }
+            if (is_array($allowed_regions)) {
+                $terapisQuery->whereIn('region_id', $allowed_regions);
+            } else {
+                $terapisQuery->where('region_id', $allowed_regions);
+            }
         }
 
         $data = [
@@ -137,12 +207,12 @@ class Absensikaryawan extends BaseController
             ->join('regions', 'regions.id = terapis.region_id', 'left')
             ->where('terapis.is_active', 1)
             ->where('terapis.is_presensi', 1);
-        
+
         if (!empty($allowed_regions)) {
-            if (is_array($allowed_regions)) { 
-                $terapisQuery->whereIn('terapis.region_id', $allowed_regions); 
-            } else { 
-                $terapisQuery->where('terapis.region_id', $allowed_regions); 
+            if (is_array($allowed_regions)) {
+                $terapisQuery->whereIn('terapis.region_id', $allowed_regions);
+            } else {
+                $terapisQuery->where('terapis.region_id', $allowed_regions);
             }
         }
 
@@ -161,7 +231,7 @@ class Absensikaryawan extends BaseController
 
         if (empty($tanggal) || empty($terapisIds)) {
             return $this->response->setJSON([
-                'status' => 'error', 
+                'status' => 'error',
                 'message' => 'Tanggal dan terapis wajib dipilih'
             ]);
         }
@@ -170,7 +240,7 @@ class Absensikaryawan extends BaseController
         $today = date('Y-m-d');
         if ($tanggal > $today) {
             return $this->response->setJSON([
-                'status' => 'error', 
+                'status' => 'error',
                 'message' => 'Tidak dapat input presensi untuk tanggal masa depan'
             ]);
         }
@@ -188,17 +258,17 @@ class Absensikaryawan extends BaseController
         // DATABASE TRANSACTION
         $db = \Config\Database::connect();
         $db->transStart();
-        
+
         // Hapus presensi existing untuk terapis yang dipilih di tanggal ini
         $this->model_absensi->whereIn('terapis_id', $terapisIds)
-                            ->where('tanggal', $tanggal)
-                            ->delete();
-        
+            ->where('tanggal', $tanggal)
+            ->delete();
+
         // Insert presensi baru
         $this->model_absensi->insertBatch($dataInsert);
 
         $db->transComplete();
-        
+
         if ($db->transStatus() === true) {
             $jumlahTerapis = count($terapisIds);
             return $this->response->setJSON([
@@ -207,9 +277,9 @@ class Absensikaryawan extends BaseController
                 'csrfHash' => csrf_hash()
             ]);
         }
-        
+
         return $this->response->setJSON([
-            'status' => 'error', 
+            'status' => 'error',
             'message' => 'Gagal menyimpan ke database. Sistem telah membatalkan perubahan.'
         ]);
     }
@@ -239,7 +309,7 @@ class Absensikaryawan extends BaseController
         $this->model_absensi->where('tanggal', $tanggal)->delete();
         $this->model_absensi->insertBatch($dataInsert);
 
-        $db->transComplete(); 
+        $db->transComplete();
         if ($db->transStatus() === true) {
             return $this->response->setJSON([
                 'status'   => 'success',

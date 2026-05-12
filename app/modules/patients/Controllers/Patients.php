@@ -14,6 +14,11 @@ class Patients extends BaseController
 
 
     protected $jenisKelamin = ['Man' => 'Laki-laki', 'Woman' => 'Perempuan'];
+    protected $bulan_indo = [
+        1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+        5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+        9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+    ];
     protected $patientModel;
     protected $session;
 
@@ -181,18 +186,13 @@ class Patients extends BaseController
         $totalData = $this->patientModel->countAllResults();
 
         $no = $start + 1;
-        $bulan_indo = [
-            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
-            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
-            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
-        ];
         
         foreach ($dataOutput as &$value) {
             $value->no = $no;
 
             if (!empty($value->date)) {
                 $tgl = date('d', strtotime($value->date));
-                $bln = $bulan_indo[(int)date('m', strtotime($value->date))];
+                $bln = $this->bulan_indo[(int)date('m', strtotime($value->date))];
                 $thn = date('Y', strtotime($value->date));
                 $value->date = "$tgl $bln $thn";
             } else {
@@ -318,7 +318,7 @@ class Patients extends BaseController
             $dateFormatted = '-';
             if (!empty($row->last_visit_date)) {
                 $tgl = date('d', strtotime($row->last_visit_date));
-                $bln = $bulan_indo[(int)date('m', strtotime($row->last_visit_date))];
+                $bln = $this->bulan_indo[(int)date('m', strtotime($row->last_visit_date))];
                 $thn = date('Y', strtotime($row->last_visit_date));
                 $dateFormatted = "$tgl $bln $thn";
             }
@@ -803,36 +803,78 @@ class Patients extends BaseController
         ini_set('memory_limit', '512M');
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
-        $headers = ['No', 'ID Pasien', 'Name', 'Gender', 'Age', 'Address', 'Phone', 'Rentan', 'Region', 'Date', 'Total RM'];
-        $sheet->fromArray($headers, NULL, 'A1');
+        $sheet->setTitle('Data Pasien');
+
+        // --- 1. JUDUL LAPORAN ---
+        $sheet->setCellValue('A1', 'LAPORAN DATA PASIEN BONEHACKER');
+        $sheet->mergeCells('A1:K1');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(16);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+        $sheet->setCellValue('A2', 'Dicetak pada: ' . date('d/m/Y H:i:s'));
+        $sheet->mergeCells('A2:K2');
+        $sheet->getStyle('A2')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+        // --- 2. HEADER TABEL ---
+        $headers = ['No', 'ID Pasien', 'Nama Pasien', 'L/P', 'Usia', 'Alamat', 'No. Telp', 'Rentan', 'Wilayah', 'Visit Terakhir', 'Total RM'];
+        $sheet->fromArray($headers, NULL, 'A4');
 
         $headerStyle = [
             'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
-            'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => '2E7D32']],
-            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER]
+            'fill' => [
+                'fillType'   => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 
+                'startColor' => ['rgb' => '1E40AF'] // Blue-800
+            ],
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                ],
+            ],
         ];
-        $sheet->getStyle('A1:K1')->applyFromArray($headerStyle);
+        $sheet->getStyle('A4:K4')->applyFromArray($headerStyle);
+        $sheet->getRowDimension(4)->setRowHeight(25);
 
-        $row = 2;
+        // --- 3. ISI DATA ---
+        $row = 5;
         $no = 1;
         while ($item = $data->getUnbufferedRow()) {
             $sheet->setCellValue('A' . $row, $no);
             $sheet->setCellValue('B' . $row, $item->id);
             $sheet->setCellValue('C' . $row, $item->name);
-            $sheet->setCellValue('D' . $row, $item->gender);
+            $sheet->setCellValue('D' . $row, ($item->gender == 'Man' ? 'L' : 'P'));
             $sheet->setCellValue('E' . $row, $item->age);
             $sheet->setCellValue('F' . $row, $item->address);
             $sheet->setCellValue('G' . $row, $item->phone);
             $sheet->setCellValue('H' . $row, $item->is_suspective ? 'Ya' : 'Tidak');
             $sheet->setCellValue('I' . $row, $item->name_region);
-            // $sheet->setCellValue('J' . $row, $item->desa_nama);
-            // $sheet->setCellValue('K' . $row, $item->kecamatan_nama);
-            // $sheet->setCellValue('L' . $row, $item->kabupaten_nama);
-            $sheet->setCellValue('J' . $row, $item->last_visit);
+            $sheet->setCellValue('J' . $row, $item->last_visit ? date('d/m/Y', strtotime($item->last_visit)) : '-');
             $sheet->setCellValue('K' . $row, $item->total_history);
 
+            // Row styling
+            $sheet->getStyle('A' . $row . ':K' . $row)->applyFromArray([
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        'color'       => ['rgb' => 'E2E8F0'],
+                    ],
+                ],
+                'alignment' => [
+                    'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                ],
+            ]);
+
+            // Alignment spesifik
+            $sheet->getStyle('A' . $row . ':B' . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('D' . $row . ':E' . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('H' . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('J' . $row . ':K' . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
             if (isset($item->is_delete) && $item->is_delete == 1) {
-                $sheet->getStyle('A' . $row . ':N' . $row)->getFill()
+                $sheet->getStyle('A' . $row . ':K' . $row)->getFill()
                     ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
                     ->getStartColor()->setARGB('FFFFCCCC');
             }
@@ -841,9 +883,9 @@ class Patients extends BaseController
             $no++;
         }
 
-        $widths = ['A' => 5, 'B' => 10, 'C' => 25, 'D' => 10, 'E' => 8, 'F' => 30, 'G' => 15, 'H' => 10, 'I' => 15, 'J' => 15, 'K' => 15, 'L' => 15, 'M' => 18, 'N' => 10];
-        foreach ($widths as $col => $w) {
-            $sheet->getColumnDimension($col)->setWidth($w);
+        // Auto size columns
+        foreach (range('A', 'K') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
         // DOWNLOAD PROSES

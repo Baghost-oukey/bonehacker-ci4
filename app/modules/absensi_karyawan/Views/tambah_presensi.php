@@ -10,7 +10,7 @@
                 <i class="fas fa-arrow-left"></i> Kembali
             </a>
             <div>
-                <h1 class="text-3xl font-black text-slate-900 tracking-tight">Tambah Presensi</h1>
+                <h1 class="text-3xl font-bold text-slate-900 tracking-tight">Tambah Presensi</h1>
                 <p class="text-slate-500 text-sm mt-1">Pilih tanggal dan terapis untuk menambah presensi</p>
             </div>
         </div>
@@ -22,20 +22,20 @@
             <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                 <!-- Pilih Tanggal -->
                 <div class="space-y-2 mb-6">
-                    <label class="text-sm font-bold text-slate-800">Tanggal Presensi <span class="text-red-500">*</span></label>
+                    <label class="text-sm font-semibold text-slate-800">Tanggal Presensi <span class="text-red-500">*</span></label>
                     <input type="date" name="tanggal" id="tanggal_presensi" required
                         value="<?= date('Y-m-d') ?>"
                         max="<?= date('Y-m-d') ?>"
-                        class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white">
+                        class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white">
                     <p class="text-xs text-slate-500">Pilih tanggal untuk presensi (maksimal hari ini)</p>
                 </div>
 
                 <!-- Pilih Terapis -->
                 <div class="space-y-2">
-                    <label class="text-sm font-bold text-slate-800">Pilih Terapis <span class="text-red-500">*</span></label>
+                    <label class="text-sm font-semibold text-slate-800">Pilih Terapis <span class="text-red-500">*</span></label>
                     
                     <?php if (empty($terapis)): ?>
-                        <div class="bg-slate-50 rounded-2xl border border-slate-200 p-6 text-center text-slate-400 font-bold">
+                        <div class="bg-slate-50 rounded-2xl border border-slate-200 p-6 text-center text-slate-400 font-semibold">
                             Tidak ada terapis aktif yang ikut presensi
                         </div>
                     <?php else: ?>
@@ -61,8 +61,8 @@
                         <div class="mt-4 pt-4 border-t border-slate-200">
                             <label class="inline-flex items-center gap-2 cursor-pointer">
                                 <input type="checkbox" id="selectAll" 
-                                    class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" checked>
-                                <span class="text-sm font-bold text-slate-700">Pilih Semua Terapis</span>
+                                    class="w-4 h-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500" checked>
+                                <span class="text-sm font-semibold text-slate-700">Pilih Semua Terapis</span>
                             </label>
                         </div>
                     <?php endif; ?>
@@ -87,11 +87,11 @@
             <!-- Submit Button -->
             <div class="flex items-center justify-end gap-3">
                 <a href="<?= base_url('kehadiran') ?>" 
-                    class="inline-flex items-center justify-center rounded-2xl border border-slate-300 bg-white px-6 py-3 text-sm font-black text-slate-700 hover:bg-slate-50 transition-all">
+                    class="inline-flex items-center justify-center rounded-2xl border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-all">
                     Batal
                 </a>
                 <button type="submit" id="btnSimpan" 
-                    class="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-8 py-3 text-sm font-black uppercase tracking-[0.2em] text-white shadow-lg shadow-indigo-200 transition-all hover:bg-indigo-700">
+                    class="inline-flex items-center justify-center rounded-2xl bg-teal-600 px-8 py-3 text-sm font-bold uppercase tracking-[0.2em] text-white shadow-lg shadow-indigo-200 transition-all hover:bg-indigo-700">
                     <i class="fas fa-save mr-2"></i> Simpan Presensi
                 </button>
             </div>

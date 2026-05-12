@@ -113,9 +113,6 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
     <!-- HEADER -->
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center px-2">
         <div class="flex items-center gap-4">
-            <div class="text-slate-300 text-6xl drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
-                <i class="fas fa-bone"></i>
-            </div>
             <div>
                 <h1 class="text-4xl md:text-5xl font-black tracking-widest text-slate-100 drop-shadow-lg">
                     MONITOR ANTRIAN
