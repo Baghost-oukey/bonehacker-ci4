@@ -8,6 +8,19 @@
             <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">Riwayat Pasien</h1>
             <p class="text-sm text-slate-500 mt-1">Statistik Pasien Berdasarkan Kunjungan Pasien</p>
         </div>
+
+        <!-- DROPDOWN NAVIGASI MOBILE -->
+        <div class="w-full md:hidden mt-2">
+            <select onchange="window.location.href=this.value" class="w-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-sm font-bold rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500/20">
+                <option value="<?= site_url('statistiktag') ?>">📊 Statistik Keluhan</option>
+                <option value="<?= site_url('statistik') ?>" selected>📈 Riwayat Pasien</option>
+                <option value="<?= site_url('statistikresource') ?>">📱 Sosial Media</option>
+                <option value="<?= site_url('statistikresult') ?>">📋 Hasil Pemeriksaan</option>
+                <option value="<?= site_url('statistikgender') ?>">🚻 Jenis Kelamin</option>
+                <option value="<?= site_url('statistikdaerah') ?>">📍 Sebaran Daerah</option>
+            </select>
+        </div>
+
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center w-full md:w-auto">
             <div id="reportrange" class="flex items-center gap-3 bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 cursor-pointer transition-all w-full sm:min-w-[240px] justify-between shadow-sm">
                 <div class="flex items-center gap-2 pointer-events-none text-indigo-600">

@@ -9,6 +9,18 @@
             <h1 class="text-2xl font-black text-slate-800 tracking-tight">Hasil Pemeriksaan</h1>
             <p class="text-sm text-slate-500 mt-1">Laporan distribusi dan statistik detail hasil pemeriksaan medis.</p>
         </div>
+
+        <!-- DROPDOWN NAVIGASI MOBILE -->
+        <div class="w-full md:hidden mt-2">
+            <select onchange="window.location.href=this.value" class="w-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-sm font-bold rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500/20">
+                <option value="<?= site_url('statistiktag') ?>">📊 Statistik Keluhan</option>
+                <option value="<?= site_url('statistik') ?>">📈 Riwayat Pasien</option>
+                <option value="<?= site_url('statistikresource') ?>">📱 Sosial Media</option>
+                <option value="<?= site_url('statistikresult') ?>" selected>📋 Hasil Pemeriksaan</option>
+                <option value="<?= site_url('statistikgender') ?>">🚻 Jenis Kelamin</option>
+                <option value="<?= site_url('statistikdaerah') ?>">📍 Sebaran Daerah</option>
+            </select>
+        </div>
     </div>
 
     <div class="flex flex-col gap-6">
