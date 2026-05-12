@@ -19,8 +19,8 @@
         <!-- Kolom Kiri: Estimasi Bulan Ini -->
         <div class="lg:col-span-1 space-y-6">
             <div class="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
-                <div class="bg-slate-900 px-6 py-5">
-                    <h3 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Estimasi Bulan Ini</h3>
+                <div class="bg-teal-600 px-6 py-5">
+                    <h3 class="text-xs font-black text-white uppercase tracking-[0.2em]">Estimasi Bulan Ini</h3>
                     <p class="text-white text-lg font-black mt-1 uppercase tracking-tight"><?= date('F Y') ?></p>
                 </div>
                 

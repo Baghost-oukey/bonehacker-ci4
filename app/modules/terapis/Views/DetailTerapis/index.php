@@ -487,45 +487,85 @@
         }
     }
 
+    function openCreateAccountModal() {
+        $('#modalCreateAccount').removeClass('hidden').addClass('flex');
+        document.body.style.overflow = "hidden";
+    }
+
+    function closeCreateAccountModal() {
+        $('#modalCreateAccount').addClass('hidden').removeClass('flex');
+        document.body.style.overflow = "";
+    }
+
     function submitCreateAccount() {
         const username = $('#new-username').val().trim();
         const password = $('#new-password').val();
 
         if (!username || !password) {
-            alert('Username dan Password wajib diisi');
+            Swal.fire({
+                icon: 'warning',
+                title: 'Peringatan',
+                text: 'Username dan Password wajib diisi',
+                confirmButtonColor: '#0d9488'
+            });
             return;
         }
 
-        if (!confirm('Apakah Anda yakin ingin membuat akun ini?')) {
-            return;
-        }
-
-        $.ajax({
-            url: window.detailTerapisConfig.generateUserUrl,
-            type: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': window.detailTerapisConfig.csrfHash
-            },
-            data: {
-                terapis_id: window.detailTerapisConfig.currentId,
-                username: username,
-                password: password
-            },
-            dataType: 'json',
-            success: function(response) {
-                if (response.csrfHash) {
-                    window.detailTerapisConfig.csrfHash = response.csrfHash;
-                }
-                
-                if (response.status === 'success') {
-                    alert(response.message);
-                    location.reload();
-                } else {
-                    alert('Error: ' + response.message);
-                }
-            },
-            error: function() {
-                alert('Terjadi kesalahan pada server saat membuat akun.');
+        Swal.fire({
+            title: 'Buat Akun Login?',
+            text: "Pastikan data username dan password sudah benar.",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#0d9488',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Ya, Buat Akun',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: window.detailTerapisConfig.generateUserUrl,
+                    type: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': window.detailTerapisConfig.csrfHash
+                    },
+                    data: {
+                        terapis_id: window.detailTerapisConfig.currentId,
+                        username: username,
+                        password: password
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.csrfHash) {
+                            window.detailTerapisConfig.csrfHash = response.csrfHash;
+                        }
+                        
+                        if (response.status === 'success') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil!',
+                                text: response.message,
+                                confirmButtonColor: '#0d9488'
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Gagal!',
+                                text: response.message,
+                                confirmButtonColor: '#0d9488'
+                            });
+                        }
+                    },
+                    error: function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Terjadi kesalahan pada server saat membuat akun.',
+                            confirmButtonColor: '#0d9488'
+                        });
+                    }
+                });
             }
         });
     }
@@ -543,72 +583,127 @@
     function submitLinkAccount() {
         const userId = $('#select-user-link').val();
         if (!userId) {
-            alert('Silakan pilih user terlebih dahulu');
+            Swal.fire({
+                icon: 'warning',
+                title: 'Pilih User',
+                text: 'Silakan pilih user terlebih dahulu',
+                confirmButtonColor: '#0d9488'
+            });
             return;
         }
 
-        if (!confirm('Apakah Anda yakin ingin menghubungkan akun ini dengan terapis ini?')) {
-            return;
-        }
-
-        $.ajax({
-            url: window.detailTerapisConfig.linkUserUrl,
-            type: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': window.detailTerapisConfig.csrfHash
-            },
-            data: {
-                user_id: userId,
-                terapis_id: window.detailTerapisConfig.currentId
-            },
-            dataType: 'json',
-            success: function(response) {
-                if (response.csrfHash) {
-                    window.detailTerapisConfig.csrfHash = response.csrfHash;
-                }
-                
-                if (response.status === 'success') {
-                    alert(response.message);
-                    location.reload();
-                } else {
-                    alert('Error: ' + response.message);
-                }
-            },
-            error: function() {
-                alert('Terjadi kesalahan pada server saat menghubungkan akun.');
+        Swal.fire({
+            title: 'Hubungkan Akun?',
+            text: "Akun user yang dipilih akan terhubung dengan profil terapis ini.",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#0d9488',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Ya, Hubungkan',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: window.detailTerapisConfig.linkUserUrl,
+                    type: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': window.detailTerapisConfig.csrfHash
+                    },
+                    data: {
+                        user_id: userId,
+                        terapis_id: window.detailTerapisConfig.currentId
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.csrfHash) {
+                            window.detailTerapisConfig.csrfHash = response.csrfHash;
+                        }
+                        
+                        if (response.status === 'success') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil!',
+                                text: response.message,
+                                confirmButtonColor: '#0d9488'
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Gagal!',
+                                text: response.message,
+                                confirmButtonColor: '#0d9488'
+                            });
+                        }
+                    },
+                    error: function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Terjadi kesalahan pada server saat menghubungkan akun.',
+                            confirmButtonColor: '#0d9488'
+                        });
+                    }
+                });
             }
         });
     }
 
     function generateUser(terapis_id) {
-        if (!confirm('Apakah Anda yakin ingin membuat akun login untuk Terapis ini?')) {
-            return;
-        }
-
-        $.ajax({
-            url: window.detailTerapisConfig.generateUserUrl,
-            type: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': window.detailTerapisConfig.csrfHash
-            },
-            data: {
-                terapis_id: terapis_id
-            },
-            dataType: 'json',
-            success: function(response) {
-                if (response.csrfHash) {
-                    window.detailTerapisConfig.csrfHash = response.csrfHash;
-                }
-                
-                if (response.status === 'success') {
-                    alert(response.message);
-                    location.reload(); // Reload to show the user info
-                } else {
-                    alert('Error: ' + response.message);
-                }
-            },
-            error: function() {
-                alert('Terjadi kesalahan pada server saat membuat akun.');
+        Swal.fire({
+            title: 'Buat Akun Login?',
+            text: "Sistem akan membuatkan username dan password default untuk terapis ini.",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#0d9488',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Ya, Buat Akun',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: window.detailTerapisConfig.generateUserUrl,
+                    type: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': window.detailTerapisConfig.csrfHash
+                    },
+                    data: {
+                        terapis_id: terapis_id
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.csrfHash) {
+                            window.detailTerapisConfig.csrfHash = response.csrfHash;
+                        }
+                        
+                        if (response.status === 'success') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil!',
+                                text: response.message,
+                                confirmButtonColor: '#0d9488'
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Gagal!',
+                                text: response.message,
+                                confirmButtonColor: '#0d9488'
+                            });
+                        }
+                    },
+                    error: function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Terjadi kesalahan pada server saat membuat akun.',
+                            confirmButtonColor: '#0d9488'
+                        });
+                    }
+                });
             }
         });
     }
@@ -622,7 +717,6 @@
         const btnDeletePhoto = document.getElementById('btnDeletePhoto');
 
         if (isEdit) {
-            // Enable editing
             formInputs.forEach(input => {
                 input.removeAttribute('readonly');
                 input.removeAttribute('disabled');
@@ -630,23 +724,33 @@
                 input.classList.add('bg-white');
             });
             
-            // Show/Hide buttons
             btnEdit.classList.add('hidden');
             btnEdit.classList.remove('inline-flex');
-
             btnBatal.classList.remove('hidden');
             btnBatal.classList.add('inline-flex');
-
             btnSimpan.classList.remove('hidden');
             btnSimpan.classList.add('inline-flex');
             
             if (btnEditPhoto) btnEditPhoto.classList.remove('hidden');
             if (btnDeletePhoto) btnDeletePhoto.classList.remove('hidden');
         } else {
-            // Cancel/Read-only
-            if (confirm('Batalkan perubahan? Data yang sudah diubah tidak akan disimpan.')) {
-                location.reload();
-            }
+            Swal.fire({
+                title: 'Batalkan Perubahan?',
+                text: "Data yang sudah diubah tidak akan disimpan.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#64748b',
+                cancelButtonColor: '#f1f5f9',
+                confirmButtonText: 'Ya, Batalkan',
+                cancelButtonText: 'Kembali Edit',
+                customClass: {
+                    cancelButton: 'text-slate-700 border border-slate-200'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    location.reload();
+                }
+            });
         }
     }
 

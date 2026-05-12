@@ -196,14 +196,16 @@
                     </div>
 
                     <div class="space-y-1">
-                        <label class="text-sm font-medium text-slate-700">Jabatan</label>
+                        <label class="text-sm font-medium text-slate-700">Jabatan <span class="text-red-500">*</span></label>
                         <select name="jabatan_id" id="jabatan_id"
-                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                            required>
                             <option value="">-- Pilih Jabatan --</option>
                             <?php foreach ($jabatan as $j): ?>
                                 <option value="<?= $j->id ?>"><?= $j->nama_jabatan ?></option>
                             <?php endforeach; ?>
                         </select>
+                        <div class="invalid-feedback text-xs text-red-500 mt-1 hidden">Jabatan harus dipilih</div>
                     </div>
                 </div>
 
@@ -317,10 +319,29 @@
     }
 
     function generateUser(terapis_id) {
-        if (!confirm('Apakah Anda yakin ingin membuat akun login untuk Terapis ini?')) {
+        if (typeof Swal === 'undefined') {
+            if (!confirm('Apakah Anda yakin ingin membuat akun login untuk Terapis ini?')) return;
+        } else {
+            Swal.fire({
+                title: 'Buat Akun Login?',
+                text: "Sistem akan membuatkan username dan password default untuk terapis ini.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#0d9488',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Ya, Buat Akun',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    processGenerateUser(terapis_id);
+                }
+            });
             return;
         }
+        processGenerateUser(terapis_id);
+    }
 
+    function processGenerateUser(terapis_id) {
         $.ajax({
             url: window.terapisConfig.generateUserUrl,
             type: 'POST',
@@ -337,13 +358,40 @@
                 }
                 
                 if (response.status === 'success') {
-                    alert(response.message);
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: response.message,
+                            confirmButtonColor: '#0d9488'
+                        });
+                    } else {
+                        alert(response.message);
+                    }
                 } else {
-                    alert('Error: ' + response.message);
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal!',
+                            text: response.message,
+                            confirmButtonColor: '#0d9488'
+                        });
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
                 }
             },
             error: function() {
-                alert('Terjadi kesalahan pada server saat membuat akun.');
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Kesalahan Sistem',
+                        text: 'Terjadi kesalahan pada server saat membuat akun.',
+                        confirmButtonColor: '#0d9488'
+                    });
+                } else {
+                    alert('Terjadi kesalahan pada server saat membuat akun.');
+                }
             }
         });
     }

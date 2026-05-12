@@ -47,10 +47,15 @@ class MAuth extends Model
         $defaultName   = ($user->role === 'superadmin') ? 'Semua Wilayah' : ($regionDetail ? $regionDetail->name : 'Cabang');
 
         $avatarUrl = null;
+        $terapisIdInt = null;
+
         if (!empty($user->terapis_id)) {
-            $terapis = $db->table('terapis')->select('foto')->where('terapis_id', $user->terapis_id)->get()->getRow();
-            if ($terapis && $terapis->foto) {
-                $avatarUrl = base_url('foto_terapis/' . $terapis->foto);
+            $terapis = $db->table('terapis')->select('id, foto')->where('terapis_id', $user->terapis_id)->get()->getRow();
+            if ($terapis) {
+                $terapisIdInt = $terapis->id;
+                if ($terapis->foto) {
+                    $avatarUrl = base_url('foto_terapis/' . $terapis->foto);
+                }
             }
         }
 
@@ -68,7 +73,8 @@ class MAuth extends Model
             'list_regions_global' => $get_region,
             'active_region'       => $defaultActive,
             'active_region_name'  => $defaultName,
-            'terapis_id'      => $user->terapis_id,
+            'terapis_id'      => $user->terapis_id, // Tetap simpan string ID untuk kebutuhan lain
+            'terapis_id_int'  => $terapisIdInt,    // Tambahkan integer ID untuk sinkronisasi database
         ];
     }
 

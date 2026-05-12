@@ -268,6 +268,7 @@ const PatientHistoryPage = {
                         </td>`);
             tr.append(`<td class="px-6 py-3.5 text-center">
                             <div class="flex items-center justify-center gap-2">
+                                <button type="button" class="btn-view-history text-slate-500 hover:bg-slate-100 p-1.5 rounded" data-id="${row.id}" title="Lihat"><i class="fas fa-eye"></i></button>
                                 <button type="button" class="btn-edit-history text-teal-600 hover:bg-teal-50 p-1.5 rounded" data-id="${row.id}" title="Edit"><i class="fas fa-edit"></i></button>
                                 <button type="button" class="btn-copy-history text-blue-600 hover:bg-blue-50 p-1.5 rounded" data-id="${row.id}" title="Duplikat"><i class="fas fa-copy"></i></button>
                                 <button type="button" class="btn-delete-history text-red-600 hover:bg-red-50 p-1.5 rounded" data-id="${row.id}" title="Hapus"><i class="fas fa-trash"></i></button>
@@ -302,6 +303,9 @@ const PatientHistoryPage = {
                 <div class="flex items-center justify-between pt-2">
                   <span class="text-[10px] font-bold text-slate-500">Durasi: ${row.duration || "-"}</span>
                   <div class="flex items-center gap-1">
+                    <button type="button" class="btn-view-history w-9 h-9 flex items-center justify-center rounded-lg bg-slate-50 text-slate-500 border border-slate-100" data-id="${row.id}">
+                      <i class="fas fa-eye text-xs"></i>
+                    </button>
                     <button type="button" class="btn-edit-history w-9 h-9 flex items-center justify-center rounded-lg bg-teal-50 text-teal-600 border border-teal-100" data-id="${row.id}">
                       <i class="fas fa-edit text-xs"></i>
                     </button>
@@ -513,32 +517,30 @@ const PatientHistoryPage = {
         $('#hubungan-lainnya-textbox').val(data.frekuensi_ranjang_lain);
       }
     }
-    if (data.selected_terapis && data.active_terapis) {
-      $('.terapis').empty();
-      let selectedIds = data.selected_terapis.map(t => t.id.toString());
-      data.active_terapis.forEach(t => {
-        $('.terapis').append(new Option(t.nama, t.id, false, selectedIds.includes(t.id.toString())));
-      });
-      data.selected_terapis.forEach(t => {
-        if (!$('.terapis option[value="' + t.id + '"]').length) {
-          $('.terapis').append($('<option>', { value: t.id, text: t.nama + ' (Non-Aktif)', disabled: true, selected: true }));
-        }
-      });
-      $('.terapis').trigger('change');
+    // Ambil ID terapis yang terpilih
+    let selectedTerapisIds = [];
+    if (data.selected_terapis) {
+      selectedTerapisIds = data.selected_terapis.map(t => t.id.toString());
     }
-    if (data.history_region) $('#region_history').val(data.history_region).trigger('change');
+
+    if (data.history_region) {
+      // Set region dan trigger change dengan menyertakan data terapis yang terpilih
+      $('#region_history').val(data.history_region).trigger('change', [{
+        selectedTerapisIds: selectedTerapisIds
+      }]);
+    }
     if (!isDuplicate) {
       const timeDiff = Math.abs(new Date() - new Date(data.date_modified));
       const dayDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
       if (dayDiff > 1 && data.type !== 'draft') {
-        $('#modalRiwayatPasien form :input').prop('readonly', true);
-        $('#modalRiwayatPasien form :checkbox, #modalRiwayatPasien form :radio, #region_history, .terapis').prop('disabled', true);
+        $('#exampleModal form :input').prop('readonly', true);
+        $('#exampleModal form :checkbox, #exampleModal form :radio, #region_history, .terapis').prop('disabled', true);
         [complaintTagify, medhisTagify, resultTagify].forEach(t => { if (t) t.setReadonly(true); });
         $('#save-button').hide();
       } else {
-        $('#modalRiwayatPasien form :input').prop('readonly', false);
+        $('#exampleModal form :input').prop('readonly', false);
         $('#processAt, #finishAt, #timeConsume').prop('readonly', true);
-        $('#modalRiwayatPasien form :checkbox, #modalRiwayatPasien form :radio, #region_history, .terapis').prop('disabled', false);
+        $('#exampleModal form :checkbox, #exampleModal form :radio, #region_history, .terapis').prop('disabled', false);
         [complaintTagify, medhisTagify, resultTagify].forEach(t => { if (t) t.setReadonly(false); });
         $('#save-button').prop('disabled', false).show();
       }
@@ -561,10 +563,9 @@ const PatientHistoryPage = {
   // --- ADD RIWAYAT ---
   add() {
     this.setFormReadOnly(false);
-    const modal = document.getElementById("modalRiwayatPasien");
+    const modal = document.getElementById("exampleModal");
     const form = document.getElementById("save_data");
     if (!modal || !form) {
-
       return;
     }
 
@@ -653,7 +654,7 @@ const PatientHistoryPage = {
       type: "GET",
       dataType: "json",
       success: function (data) {
-        const modal = document.getElementById("modalRiwayatPasien");
+        const modal = document.getElementById("exampleModal");
         openModal(modal);
 
         let title = "Detail Riwayat Pasien";
@@ -674,6 +675,7 @@ const PatientHistoryPage = {
   },
 
   setFormReadOnly(isReadOnly) {
+    const modal = $("#exampleModal");
     const form = $("#save_data");
     const saveBtn = $("#save-button");
     const draftBtn = $("#save-draft-button");
@@ -722,10 +724,7 @@ const PatientHistoryPage = {
   },
 
   // Load terapis berdasarkan region yang dipilih
-  loadTerapisByRegion(regionId) {
-
-
-
+  loadTerapisByRegion(regionId, selectedIds = []) {
     const self = this;
 
     // Show loading state
@@ -737,31 +736,22 @@ const PatientHistoryPage = {
       data: { region_id: regionId },
       dataType: 'json',
       success: function (response) {
-
         $('.terapis').empty();
 
         if (response.status && response.data && response.data.length > 0) {
           $('.terapis').append('<option value="">Pilih Terapis</option>');
 
           response.data.forEach(function (terapis) {
-            $('.terapis').append(
-              $('<option>', {
-                value: terapis.id,
-                text: terapis.nama
-              })
-            );
+            const isSelected = selectedIds.includes(terapis.id.toString());
+            $('.terapis').append(new Option(terapis.nama, terapis.id, false, isSelected));
           });
-
         } else {
           $('.terapis').append('<option value="">Tidak ada terapis di wilayah ini</option>');
-
         }
 
         $('.terapis').trigger('change');
       },
       error: function (xhr, status, error) {
-
-
         $('.terapis').empty().append('<option value="">Error memuat terapis</option>').trigger('change');
       }
     });
@@ -770,6 +760,7 @@ const PatientHistoryPage = {
   initEventListeners() {
     const self = this;
     document.getElementById("btn-add-history")?.addEventListener("click", () => self.add());
+    $(document).on("click", ".btn-view-history", function () { self.show($(this).data('id'), false, true); });
     $(document).on("click", ".btn-edit-history", function () { self.show($(this).data('id')); });
     $(document).on("click", ".btn-copy-history", function () { self.show($(this).data('id'), true); });
     $(document).on("click", ".btn-delete-history", function (e) {
@@ -781,15 +772,15 @@ const PatientHistoryPage = {
       }
       self.destroy(id);
     });
-    $("#region_history, .terapis").select2({ dropdownParent: $("#modalRiwayatPasien"), width: "100%" });
+    $("#region_history, .terapis").select2({ dropdownParent: $("#exampleModal"), width: "100%" });
 
     // Event listener untuk perubahan wilayah periksa - update dropdown terapis
-    $(document).on('change', '#region_history', function () {
+    $(document).on('change', '#region_history', function (e, extra) {
       const regionId = $(this).val();
-
+      const selectedIds = (extra && extra.selectedTerapisIds) ? extra.selectedTerapisIds : [];
 
       if (regionId) {
-        self.loadTerapisByRegion(regionId);
+        self.loadTerapisByRegion(regionId, selectedIds);
       } else {
         // Jika wilayah kosong, kosongkan juga terapis
         $('.terapis').empty().append('<option value="">Pilih Terapis</option>').trigger('change');
@@ -899,7 +890,7 @@ const PatientHistoryPage = {
 
   calculateDuration() {
 
-    const modal = $('#modalRiwayatPasien');
+    const modal = $('#exampleModal');
     if (!modal.length) {
 
       return;
@@ -976,7 +967,7 @@ const PatientHistoryPage = {
         const freshToken = res.new_token || res.csrf_hash;
         if (freshToken) self.updateCsrf(freshToken);
         if (res.status) {
-          closeModal(document.getElementById("modalRiwayatPasien"));
+          closeModal(document.getElementById("exampleModal"));
           self.loadTableData(self.currentPage);
           if (window.Swal?.fire) window.Swal.fire({ icon: "success", title: "Berhasil!", text: res.message, timer: 2000, showConfirmButton: false });
         } else {
@@ -1038,22 +1029,20 @@ if (document.readyState === "loading") {
 
 // Expose fungsi global untuk dipanggil dari halaman lain (seperti antrean)
 window.loadHistoryData = function (historyId) {
-  if (PatientHistoryPage && typeof PatientHistoryPage.editHistory === 'function') {
-    PatientHistoryPage.editHistory(historyId);
+  if (PatientHistoryPage && typeof PatientHistoryPage.show === 'function') {
+    PatientHistoryPage.show(historyId);
   }
 };
 
 window.resetHistoryForm = function () {
-  const form = document.getElementById('formRiwayat');
+  const form = document.getElementById('save_data');
   if (form) {
     form.reset();
-    // Reset tagify
     if (complaintTagify) complaintTagify.removeAllTags();
     if (medhisTagify) medhisTagify.removeAllTags();
     if (resultTagify) resultTagify.removeAllTags();
-
-    // Set mode tambah
     document.getElementById('history_id').value = '';
-    document.getElementById('modalRiwayatLabel').textContent = 'Tambah Rekam Medis';
+    const modal = document.getElementById('exampleModal');
+    if (modal) modal.querySelector('.modal-title').textContent = 'Tambah Rekam Medis';
   }
 };

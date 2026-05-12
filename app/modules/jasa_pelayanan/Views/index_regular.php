@@ -13,7 +13,7 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
-            <a href="<?= site_url('jasa-pelayanan/settings') ?>" 
+            <a href="<?= site_url('jasa-pelayanan/settings') ?>"
                 class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
                 <i class="fas fa-cog text-slate-500"></i>
                 Pengaturan Jaspel
@@ -52,11 +52,11 @@
 
                     <div class="flex items-center gap-2">
                         <label class="text-sm font-medium text-slate-600">Bulan:</label>
-                        <input type="month" id="monthFilter" value="<?= $current_month ?>" 
+                        <input type="month" id="monthFilter" value="<?= $current_month ?>"
                             class="rounded-lg border border-slate-200 px-3 py-2 text-sm transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15">
                     </div>
 
-                    <button type="button" id="btnFilter" 
+                    <button type="button" id="btnFilter"
                         class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-700">
                         <i class="fas fa-filter"></i>
                         Tampilkan
@@ -146,17 +146,38 @@
                         alert('Terjadi kesalahan saat memuat data');
                     }
                 },
-                columns: [
-                    { data: 'no', className: 'text-center' },
-                    { data: 'tanggal' },
-                    { data: 'total_pasien', className: 'text-center' },
-                    { data: 'terapis_hadir', className: 'text-center' },
-                    { data: 'nama_terapis' },
-                    { data: 'total_jaspel', className: 'text-right font-semibold text-teal-600' },
-                    { data: 'jaspel_per_terapis', className: 'text-right font-semibold text-emerald-600' }
+                columns: [{
+                        data: 'no',
+                        className: 'text-center'
+                    },
+                    {
+                        data: 'tanggal'
+                    },
+                    {
+                        data: 'total_pasien',
+                        className: 'text-center'
+                    },
+                    {
+                        data: 'terapis_hadir',
+                        className: 'text-center'
+                    },
+                    {
+                        data: 'nama_terapis'
+                    },
+                    {
+                        data: 'total_jaspel',
+                        className: 'text-right font-semibold text-teal-600'
+                    },
+                    {
+                        data: 'jaspel_per_terapis',
+                        className: 'text-right font-semibold text-emerald-600'
+                    }
                 ],
                 pageLength: 25,
-                lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+                lengthMenu: [
+                    [10, 25, 50, 100],
+                    [10, 25, 50, 100]
+                ],
                 language: {
                     processing: '<i class="fas fa-spinner fa-spin"></i> Memuat data...',
                     lengthMenu: 'Tampilkan _MENU_ data per halaman',
@@ -172,7 +193,9 @@
                         previous: 'Sebelumnya'
                     }
                 },
-                order: [[1, 'desc']] // Sort by tanggal descending
+                order: [
+                    [1, 'desc']
+                ] // Sort by tanggal descending
             });
         });
 

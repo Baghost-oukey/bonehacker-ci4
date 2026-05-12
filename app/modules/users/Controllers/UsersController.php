@@ -62,7 +62,7 @@ class UsersController extends BaseController
         $raw = $value->regions_patient;
         $ids = is_string($raw) ? (json_decode($raw, true) ?: []) : (is_array($raw) ? $raw : []);
         if (is_array($ids)) {
-            $all_region_ids = array_merge($all_region_ids, $ids);
+          $all_region_ids = array_merge($all_region_ids, $ids);
         }
       }
     }
@@ -94,11 +94,11 @@ class UsersController extends BaseController
         $regions_patient_ids = is_string($raw) ? (json_decode($raw, true) ?: []) : (is_array($raw) ? $raw : []);
         $names = [];
         if (is_array($regions_patient_ids)) {
-            foreach ($regions_patient_ids as $rid) {
-              if (isset($region_map[$rid])) {
-                $names[] = $region_map[$rid];
-              }
+          foreach ($regions_patient_ids as $rid) {
+            if (isset($region_map[$rid])) {
+              $names[] = $region_map[$rid];
             }
+          }
         }
         $value->region_name = !empty($names) ? implode(', ', $names) : '-';
       }
@@ -226,7 +226,7 @@ class UsersController extends BaseController
       }
       $this->session->setFlashdata('message', ['danger', 'Gagal memperbarui data']);
     }
- 
+
     return redirect()->to('users');
   }
 
