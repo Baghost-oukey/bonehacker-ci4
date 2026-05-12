@@ -15,6 +15,15 @@
             </div>
         </div>
 
+        <!-- DROPDOWN NAVIGASI MOBILE -->
+        <div class="w-full lg:hidden">
+            <select onchange="window.location.href=this.value" class="w-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-sm font-bold rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500/20">
+                <option value="<?= base_url('kehadiran') ?>">📅 Rekap Presensi</option>
+                <option value="<?= base_url('kehadiran/tambah') ?>" selected>✍️ Input Presensi Baru</option>
+                <option value="<?= base_url('kehadiran/cuti') ?>">🏖️ Cuti Karyawan</option>
+            </select>
+        </div>
+
         <!-- Form -->
         <form id="formTambahPresensi" class="space-y-6">
             <?= csrf_field() ?>

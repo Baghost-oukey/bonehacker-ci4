@@ -5,6 +5,17 @@
     <div class="mb-8">
         <h1 class="text-2xl font-black text-slate-800 tracking-tight"><?= $title ?></h1>
         <p class="text-sm text-slate-500 mt-1">Kelola template teks salam untuk dikirimkan ke pasien.</p>
+
+        <!-- DROPDOWN NAVIGASI MOBILE -->
+        <div class="w-full md:hidden mt-4">
+            <select onchange="window.location.href=this.value" class="w-full bg-slate-50 border border-slate-100 text-slate-700 text-sm font-bold rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-slate-500/20">
+                <option value="<?= site_url('logs') ?>">Logs</option>
+                <option value="<?= site_url('whatsapp') ?>">WhatsApp</option>
+                <option value="<?= site_url('log_whatsapp') ?>">Log WhatsApp</option>
+                <option value="<?= site_url('jabatan') ?>">Jabatan</option>
+                <option value="<?= site_url('greeting') ?>" selected>Greetings</option>
+            </select>
+        </div>
     </div>
 
     <div class="flex flex-col gap-8">

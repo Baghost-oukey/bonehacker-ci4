@@ -8,6 +8,17 @@
             <h1 class="text-2xl md:text-3xl font-black tracking-tight text-slate-900">WhatsApp API</h1>
             <p class="text-xs md:text-sm font-medium text-slate-500 mt-1">Konfigurasi integrasi pesan WhatsApp otomatis.</p>
         </div>
+
+        <!-- DROPDOWN NAVIGASI MOBILE -->
+        <div class="w-full md:hidden">
+            <select onchange="window.location.href=this.value" class="w-full bg-slate-50 border border-slate-100 text-slate-700 text-sm font-bold rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-slate-500/20">
+                <option value="<?= site_url('logs') ?>">Logs</option>
+                <option value="<?= site_url('whatsapp') ?>" selected>WhatsApp</option>
+                <option value="<?= site_url('log_whatsapp') ?>">Log WhatsApp</option>
+                <option value="<?= site_url('jabatan') ?>">Jabatan</option>
+                <option value="<?= site_url('greeting') ?>">Greetings</option>
+            </select>
+        </div>
         <button id="btn-add-wa" type="button" class="w-full md:w-auto flex items-center justify-center gap-3 px-6 py-3.5 rounded-2xl bg-teal-600 text-white text-sm font-black hover:bg-teal-700 transition-all shadow-lg shadow-teal-500/25 active:scale-[0.98] outline-none">
             <i class="fas fa-plus text-xs"></i> 
             <span class="uppercase tracking-widest">Tambah Data</span>

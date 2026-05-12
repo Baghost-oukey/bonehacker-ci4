@@ -8,6 +8,17 @@
             <h1 class="text-2xl md:text-3xl font-black text-slate-800 tracking-tight"><?= $title ?></h1>
             <p class="text-xs md:text-sm font-medium text-slate-500 mt-1">Pantau riwayat pengiriman pesan WhatsApp secara real-time.</p>
         </div>
+
+        <!-- DROPDOWN NAVIGASI MOBILE -->
+        <div class="w-full md:hidden mt-2">
+            <select onchange="window.location.href=this.value" class="w-full bg-slate-50 border border-slate-100 text-slate-700 text-sm font-bold rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-slate-500/20">
+                <option value="<?= site_url('logs') ?>">Logs</option>
+                <option value="<?= site_url('whatsapp') ?>">WhatsApp</option>
+                <option value="<?= site_url('log_whatsapp') ?>" selected>Log WhatsApp</option>
+                <option value="<?= site_url('jabatan') ?>">Jabatan</option>
+                <option value="<?= site_url('greeting') ?>">Greetings</option>
+            </select>
+        </div>
     </div>
 
     <!-- MAIN CONTAINER -->

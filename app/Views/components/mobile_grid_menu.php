@@ -25,10 +25,14 @@ if ($role !== 'user') {
     $menus[] = ['label' => 'Kalender Kerja', 'url' => site_url('kalender'), 'icon' => 'fa-calendar-days', 'color' => 'bg-amber-500'];
     $menus[] = ['label' => 'Jurnal', 'url' => site_url('journal'), 'icon' => 'fa-book', 'color' => 'bg-violet-500'];
 
-    // Transaksi & Kehadiran (Owner, Admin, Superadmin)
+    // Transaksi & Presensi Karyawan (Owner, Admin, Superadmin)
     if (in_array($role, ['owner', 'admin', 'superadmin'])) {
         $menus[] = ['label' => 'Transaksi', 'url' => site_url('transaksi'), 'icon' => 'fa-money-bill-wave', 'color' => 'bg-green-500'];
-        $menus[] = ['label' => 'Kehadiran', 'url' => site_url('kehadiran'), 'icon' => 'fa-user-clock', 'color' => 'bg-sky-500'];
+        $menus[] = ['label' => 'Presensi Karyawan', 'url' => site_url('kehadiran'), 'icon' => 'fa-user-clock', 'color' => 'bg-sky-500'];
+
+        if ($role === 'superadmin') {
+            $menus[] = ['label' => 'Keuangan', 'url' => site_url('kas/categories'), 'icon' => 'fa-credit-card', 'color' => 'bg-slate-600'];
+        }
     }
 
     // Kelola Gaji & Kasbon (Hanya Owner)
@@ -46,17 +50,15 @@ if ($role !== 'user') {
     $menus[] = ['label' => 'Statistik', 'url' => site_url('statistiktag'), 'icon' => 'fa-chart-pie', 'color' => 'bg-indigo-600'];
 }
 
-// Manajemen Tags & Karyawan
-if ($role === 'superadmin' || $role === 'owner') {
-    $menus[] = ['label' => 'Tag Keluhan', 'url' => site_url('tag-keluhan'), 'icon' => 'fa-tags', 'color' => 'bg-teal-500'];
-    $menus[] = ['label' => 'Karyawan', 'url' => site_url('terapis'), 'icon' => 'fa-user-md', 'color' => 'bg-blue-500'];
-}
-
-// Khusus Superadmin
+// Manajemen Tags, Karyawan & Pengaturan
 if ($role === 'superadmin') {
-    $menus[] = ['label' => 'WhatsApp', 'url' => site_url('whatsapp'), 'icon' => 'fa-brands fa-whatsapp', 'color' => 'bg-green-600'];
+    $menus[] = ['label' => 'Tags', 'url' => site_url('tag-keluhan'), 'icon' => 'fa-tags', 'color' => 'bg-teal-500'];
+    $menus[] = ['label' => 'Pengaturan', 'url' => site_url('logs'), 'icon' => 'fa-cog', 'color' => 'bg-slate-700'];
     $menus[] = ['label' => 'Users', 'url' => site_url('users'), 'icon' => 'fa-users', 'color' => 'bg-blue-600'];
-    $menus[] = ['label' => 'Logs', 'url' => site_url('logs'), 'icon' => 'fa-terminal', 'color' => 'bg-slate-800'];
+    $menus[] = ['label' => 'Karyawan', 'url' => site_url('terapis'), 'icon' => 'fa-user-md', 'color' => 'bg-blue-500'];
+} else if ($role === 'owner') {
+    $menus[] = ['label' => 'Tags', 'url' => site_url('tag-keluhan'), 'icon' => 'fa-tags', 'color' => 'bg-teal-500'];
+    $menus[] = ['label' => 'Karyawan', 'url' => site_url('terapis'), 'icon' => 'fa-user-md', 'color' => 'bg-blue-500'];
 }
 ?>
 

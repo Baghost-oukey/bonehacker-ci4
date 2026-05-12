@@ -8,6 +8,15 @@
             <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Manajemen Cuti Karyawan</h1>
             <p class="text-slate-500 text-sm mt-1">Atur kuota dan input cuti karyawan Bone Hacker.</p>
         </div>
+
+        <!-- DROPDOWN NAVIGASI MOBILE -->
+        <div class="w-full md:hidden mt-4">
+            <select onchange="window.location.href=this.value" class="w-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-sm font-bold rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500/20">
+                <option value="<?= base_url('kehadiran') ?>">📅 Rekap Presensi</option>
+                <option value="<?= base_url('kehadiran/tambah') ?>">✍️ Input Presensi Baru</option>
+                <option value="<?= base_url('kehadiran/cuti') ?>" selected>🏖️ Cuti Karyawan</option>
+            </select>
+        </div>
         <div class="flex items-center gap-3">
             <button onclick="openModalTambahCuti()" class="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-teal-100">
                 <i class="fas fa-plus"></i>

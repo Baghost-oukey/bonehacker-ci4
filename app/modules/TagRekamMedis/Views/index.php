@@ -13,6 +13,15 @@
             </p>
         </div>
 
+        <!-- DROPDOWN NAVIGASI MOBILE -->
+        <div class="w-full md:hidden">
+            <select onchange="window.location.href=this.value" class="w-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-sm font-bold rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500/20">
+                <option value="<?= site_url('tag-keluhan') ?>">Tag Keluhan</option>
+                <option value="<?= site_url('tag-rekam-medis') ?>" selected>Tag Rekam Medis</option>
+                <option value="<?= site_url('tag-pemeriksaan') ?>">Tag Pemeriksaan</option>
+            </select>
+        </div>
+
         <div class="flex items-center gap-3 w-full md:w-auto">
             <button type="button" data-modal-open="modalTambah"
                 class="inline-flex items-center justify-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-teal-700 w-full md:w-auto shadow-sm active:scale-95">
