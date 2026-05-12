@@ -6,22 +6,37 @@ function initHeaderPage() {
 
 	// Bersihkan semua backdrop yang mungkin tersisa dari session sebelumnya
 	const cleanupBackdrops = () => {
-		// Hapus Select2 backdrop
-		$('.select2-container--open').removeClass('select2-container--open');
-		$('.select2-dropdown').remove();
-		
-		// Hapus SweetAlert backdrop
-		if (window.Swal && Swal.isVisible()) {
-			Swal.close();
-		}
-		
-		// Hapus semua backdrop yang mungkin tersisa
+		// 1. SweetAlert
+		if (window.Swal && Swal.isVisible()) Swal.close();
 		$('.swal2-container').remove();
 		$('.swal2-backdrop-show').remove();
-		
-		// Reset body overflow
+
+		// 2. Select2
+		$('.select2-container--open').removeClass('select2-container--open');
+		$('.select2-dropdown').remove();
+
+		// 3. Offcanvas backdrop (gaji)
+		$('#offcanvasBackdrop').addClass('hidden');
+		$('#offcanvasProses').addClass('translate-x-full');
+		$('.offcanvas-backdrop').addClass('hidden');
+
+		// 4. Semua modal dengan pola hidden/flex
+		$('.modal-wrapper').removeClass('flex').addClass('hidden');
+
+		// 5. Modal dengan pola opacity transition (users, whatsapp)
+		$('.fixed.inset-0').not('#appHeader, #appSidebar, #sidebarBackdrop').each(function () {
+			$(this).addClass('hidden').removeClass('flex');
+			$(this).addClass('opacity-0').removeClass('opacity-100');
+		});
+
+		// 6. Modal kalender (tidak pakai modal-wrapper)
+		$('#modalTambahLibur, #modalTambahRutin').addClass('hidden').removeClass('flex');
+
+		// 7. body/html overflow yang mungkin terkunci (journal, dll)
 		document.body.style.overflow = '';
 		document.body.style.paddingRight = '';
+		document.documentElement.style.overflow = '';
+		document.body.classList.remove('overflow-hidden');
 	};
 
 	// Jalankan cleanup saat halaman dimuat
@@ -102,63 +117,151 @@ function initHeaderPage() {
 		}
 	});
 
-	// Initialize Select2 for Global Region Filter
-	if ($('#globalRegionFilter').length) {
-		$('#globalRegionFilter').select2({
-			theme: "classic",
-			width: '100%'
-		}).on('change', function() {
-			const selectedId = $(this).val();
-			const selectedName = $(this).find('option:selected').text().trim();
-			const csrfName = $('meta[name="csrf-token-name"]').attr('content') || 'csrf_test_name';
-			const csrfHash = $('meta[name="csrf-token-hash"]').attr('content') || $('meta[name="csrf-token"]').attr('content');
+	// ---- CUSTOM REGION DROPDOWN ----
+	const regionBtn     = document.getElementById('regionDropdownBtn');
+	const regionMenu    = document.getElementById('regionDropdownMenu');
+	const regionChevron = document.getElementById('regionDropdownChevron');
+	const regionLabel   = document.getElementById('regionDropdownLabel');
+	const regionSelect  = document.getElementById('globalRegionFilter');
 
-			Swal.fire({
-				title: 'Mengganti Wilayah...',
-				allowOutsideClick: false,
-				showConfirmButton: false,
-				didOpen: () => { Swal.showLoading(); }
+	if (regionBtn && regionMenu) {
+		// Toggle dropdown
+		regionBtn.addEventListener('click', function (e) {
+			e.stopPropagation();
+			const isHidden = regionMenu.classList.contains('hidden');
+			regionMenu.classList.toggle('hidden', !isHidden);
+			regionChevron?.classList.toggle('rotate-180', isHidden);
+		});
+
+		// Close on outside click
+		document.addEventListener('click', function (e) {
+			if (!regionBtn.contains(e.target) && !regionMenu.contains(e.target)) {
+				regionMenu.classList.add('hidden');
+				regionChevron?.classList.remove('rotate-180');
+				// Reset search
+				if (regionSearchInput) {
+					regionSearchInput.value = '';
+					regionSearchInput.dispatchEvent(new Event('input'));
+				}
+			}
+		});
+
+		// Search filter
+		const regionSearchInput = document.getElementById('regionSearchInput');
+		const regionOptionsList = document.getElementById('regionOptionsList');
+		const regionEmptyState  = document.getElementById('regionEmptyState');
+
+		if (regionSearchInput) {
+			regionSearchInput.addEventListener('input', function () {
+				const keyword = this.value.toLowerCase().trim();
+				let visibleCount = 0;
+
+				regionOptionsList.querySelectorAll('.region-option').forEach(function (btn) {
+					const label = btn.dataset.label?.toLowerCase() || '';
+					const match = label.includes(keyword);
+					btn.style.display = match ? '' : 'none';
+					if (match) visibleCount++;
+				});
+
+				// Divider visibility
+				const divider = regionOptionsList.querySelector('.border-t');
+				if (divider) divider.style.display = keyword ? 'none' : '';
+
+				// Empty state
+				if (regionEmptyState) {
+					regionEmptyState.classList.toggle('hidden', visibleCount > 0);
+				}
 			});
 
-			let data = {
-				region_id: selectedId,
-				region_name: selectedName
-			};
-			data[csrfName] = csrfHash;
+			// Focus search when dropdown opens
+			regionBtn.addEventListener('click', function () {
+				setTimeout(() => regionSearchInput.focus(), 50);
+			});
+		}
 
-			$.ajax({
-				url: '/auth/switch_region', // Adjust base_url if necessary, but /auth/switch_region usually works if app is at root
-				type: 'POST',
-				data: data,
-				success: function(response) {
-					if (response.status === 'success') {
-						window.location.reload();
-					} else {
-						Swal.close(); // Tutup loading sebelum menampilkan error
-						Swal.fire('Error', response.message || 'Gagal mengganti wilayah', 'error');
-					}
-				},
-				error: function(xhr) {
-					Swal.close(); // Tutup loading sebelum menampilkan error
-					let msg = 'Terjadi kesalahan sistem';
-					if (xhr.responseJSON && xhr.responseJSON.message) {
-						msg = xhr.responseJSON.message;
-					}
-					Swal.fire('Error', msg, 'error');
-					// Revert selection on error
-					$('#globalRegionFilter').val($('#activeRegion').val() || 'all').trigger('change.select2');
-				},
-				complete: function() {
-					// Pastikan loading tertutup dalam kondisi apapun
-					setTimeout(function() {
-						if (Swal.isVisible()) {
-							Swal.close();
-						}
-					}, 500);
+		// Handle option click
+		regionMenu.querySelectorAll('.region-option').forEach(function (btn) {
+			btn.addEventListener('click', function () {
+				const selectedId   = this.dataset.value;
+				const selectedName = this.dataset.label;
+
+				// Update label
+				if (regionLabel) regionLabel.textContent = selectedName;
+
+				// Update hidden select
+				if (regionSelect) {
+					regionSelect.value = selectedId;
 				}
+
+				// Close dropdown
+				regionMenu.classList.add('hidden');
+				regionChevron?.classList.remove('rotate-180');
+
+				// Switch region via AJAX
+				const csrfName = document.querySelector('meta[name="csrf-token-name"]')?.getAttribute('content') || 'csrf_test_name';
+				const csrfHash = document.querySelector('meta[name="csrf-token-hash"]')?.getAttribute('content')
+					|| document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+				Swal.fire({
+					title: 'Mengganti Wilayah...',
+					allowOutsideClick: false,
+					showConfirmButton: false,
+					didOpen: () => Swal.showLoading()
+				});
+
+				const data = { region_id: selectedId, region_name: selectedName };
+				data[csrfName] = csrfHash;
+
+				$.ajax({
+					url: '/auth/switch_region',
+					type: 'POST',
+					data: data,
+					success: function (response) {
+						if (response.status === 'success') {
+							window.location.reload();
+						} else {
+							Swal.fire('Error', response.message || 'Gagal mengganti wilayah', 'error');
+						}
+					},
+					error: function (xhr) {
+						Swal.close();
+						const msg = xhr.responseJSON?.message || 'Terjadi kesalahan sistem';
+						Swal.fire('Error', msg, 'error');
+					},
+					complete: function () {
+						setTimeout(() => { if (Swal.isVisible()) Swal.close(); }, 500);
+					}
+				});
 			});
 		});
 	}
 }
 
 document.addEventListener("DOMContentLoaded", initHeaderPage);
+
+// Global beforeunload cleanup — jalankan sebelum navigasi ke halaman lain
+// Menangani semua pola modal di seluruh aplikasi
+window.addEventListener('beforeunload', () => {
+	// Semua modal
+	document.querySelectorAll('.modal-wrapper').forEach(el => {
+		el.classList.remove('flex');
+		el.classList.add('hidden');
+	});
+
+	// Offcanvas gaji
+	const offcanvasBackdrop = document.getElementById('offcanvasBackdrop');
+	const offcanvasProses   = document.getElementById('offcanvasProses');
+	if (offcanvasBackdrop) offcanvasBackdrop.classList.add('hidden');
+	if (offcanvasProses)   offcanvasProses.classList.add('translate-x-full');
+
+	// Modal opacity transition (whatsapp, users)
+	document.querySelectorAll('.fixed.inset-0').forEach(el => {
+		if (el.id === 'appSidebar' || el.id === 'sidebarBackdrop') return;
+		el.classList.add('hidden', 'opacity-0');
+		el.classList.remove('flex', 'opacity-100');
+	});
+
+	// Body overflow
+	document.body.style.overflow = '';
+	document.body.classList.remove('overflow-hidden');
+});

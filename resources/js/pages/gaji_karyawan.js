@@ -274,3 +274,14 @@ window.tutupOffcanvas = () => {
 
 // 5. INITIALIZE
 document.addEventListener('DOMContentLoaded', setupGajiPage);
+
+// Cleanup saat navigasi pergi dari halaman ini
+window.addEventListener('beforeunload', () => {
+    const backdrop = document.getElementById('offcanvasBackdrop');
+    const offcanvas = document.getElementById('offcanvasProses');
+    const modal = document.getElementById('modalSetting');
+    if (backdrop) backdrop.classList.add('hidden');
+    if (offcanvas) offcanvas.classList.add('translate-x-full');
+    if (modal) modal.classList.replace('flex', 'hidden');
+    document.body.style.overflow = '';
+});
