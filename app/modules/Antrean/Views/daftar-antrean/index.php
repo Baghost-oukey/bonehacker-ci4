@@ -164,6 +164,86 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
         </div>
     </div>
 
+    <!-- BREAK TIME OVERLAY (Full Screen) -->
+    <?php if (isset($breakData) && !empty($breakData)): ?>
+        <div id="breakOverlay" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-900/75 transition-all duration-500 px-8">
+            <!-- White Container -->
+            <div class="relative w-full max-w-2xl bg-white p-10 rounded-2xl shadow-[0_20px_70px_rgba(0,0,0,0.5)] flex flex-col items-center text-center">
+
+                <!-- Icon -->
+                <div class="mb-6">
+                    <div class="relative h-20 w-20 flex items-center justify-center bg-orange-50 rounded-full border-2 border-orange-100 shadow-inner">
+                        <i class="fas fa-coffee text-slate-800 text-4xl relative animate-bounce"></i>
+                    </div>
+                </div>
+
+                <!-- Text -->
+                <div class="space-y-3 mb-8">
+                    <h2 class="text-4xl md:text-5xl font-black text-slate-900 uppercase tracking-tight leading-none">
+                        SEDANG<br>ISTIRAHAT
+                    </h2>
+                    <div class="h-1 w-20 bg-orange-500 mx-auto rounded-full"></div>
+                    <p class="text-slate-500 font-bold tracking-[0.2em] uppercase text-xs mt-3">Mohon menunggu sebentar</p>
+                </div>
+
+                <!-- Timer Box -->
+                <div class="relative px-20 py-8 bg-slate-50 rounded-3xl border border-slate-200 shadow-sm">
+
+                    <span class="text-xs font-black text-slate-400 uppercase tracking-[0.5em] block mb-3">Sisa Waktu</span>
+                    <span id="breakTimer" class="text-5xl font-black text-slate-800 font-mono tracking-tighter drop-shadow-sm">
+                        --:--:--
+                    </span>
+                    <script>
+                        (function() {
+                            const endTimeStr = "<?= $breakData['end_time'] ?>";
+                            // Parse standard SQL datetime to JS Date safely
+                            const endTime = new Date(endTimeStr.replace(/-/g, '/')).getTime();
+                            const timerEl = document.getElementById('breakTimer');
+
+                            function updateTimer() {
+                                const now = new Date().getTime();
+                                const distance = endTime - now;
+
+                                if (distance <= 0) {
+                                    timerEl.innerHTML = "00:00:00";
+                                    return;
+                                }
+
+                                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                                timerEl.innerHTML =
+                                    (hours > 0 ? (hours < 10 ? "0" + hours + ":" : hours + ":") : "") +
+                                    (minutes < 10 ? "0" + minutes : minutes) + ":" +
+                                    (seconds < 10 ? "0" + seconds : seconds);
+                            }
+
+                            updateTimer();
+                            setInterval(updateTimer, 1000);
+                        })();
+                    </script>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="w-full max-w-xs bg-slate-200 h-2 rounded-full mt-12 overflow-hidden border border-slate-300">
+                    <div class="h-full bg-orange-500 animate-[loading_60s_linear_infinite] shadow-[0_0_15px_rgba(249,115,22,0.6)]"></div>
+                </div>
+            </div>
+        </div>
+        <style>
+            @keyframes loading {
+                from {
+                    width: 0%;
+                }
+
+                to {
+                    width: 100%;
+                }
+            }
+        </style>
+    <?php endif; ?>
+
     <!-- 3 COLUMNS -->
     <div id="queue-columns" class="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-[40vh]">
 
@@ -264,13 +344,74 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
         </div>
     <?php endif; ?>
 
-    <!-- Load Vite App JS if needed -->
-    <?php if ($shouldUseViteDevServer): ?>
-        <script type="module" src="<?= $viteBrowserUrl ?>/@vite/client"></script>
-        <script type="module" src="<?= $viteBrowserUrl ?>/resources/js/app.js"></script>
-    <?php else: ?>
-        <script type="module" src="<?= base_url('build/assets/app.js') . '?v=' . (is_file(FCPATH . 'build/assets/app.js') ? filemtime(FCPATH . 'build/assets/app.js') : time()) ?>"></script>
-    <?php endif; ?>
+    <script>
+        // --- LIVE TIME & DATE ---
+        function updateLiveClock() {
+            const now = new Date();
+            const timeEl = document.getElementById('liveTime');
+            const dateEl = document.getElementById('liveDate');
+
+            if (timeEl) {
+                timeEl.textContent = now.toLocaleTimeString('id-ID', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
+                });
+            }
+            if (dateEl) {
+                const options = {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                };
+                dateEl.textContent = now.toLocaleDateString('id-ID', options);
+            }
+        }
+        setInterval(updateLiveClock, 1000);
+        updateLiveClock();
+
+        // --- AUTO RELOAD (20 SECONDS) ---
+        setTimeout(() => {
+            window.location.reload();
+        }, 20000);
+
+        // --- AUTO SCROLL ANIMATION ---
+        function initAutoScroll() {
+            const containers = document.querySelectorAll('.auto-scroll-list');
+            containers.forEach(container => {
+                const scrollHeight = container.scrollHeight;
+                const clientHeight = container.clientHeight;
+
+                if (scrollHeight > clientHeight) {
+                    let scrollPos = 0;
+                    let isPaused = false;
+
+                    function scroll() {
+                        if (!isPaused) {
+                            scrollPos += 0.5; // Speed
+                            container.scrollTop = scrollPos;
+
+                            if (scrollPos >= scrollHeight - clientHeight) {
+                                isPaused = true;
+                                setTimeout(() => {
+                                    scrollPos = 0;
+                                    container.scrollTop = 0;
+                                    isPaused = false;
+                                }, 3000); // Wait 3s at bottom before jumping to top
+                            }
+                        }
+
+                        requestAnimationFrame(scroll);
+                    }
+                    // Start after delay
+                    setTimeout(() => requestAnimationFrame(scroll), 3000);
+                }
+            });
+        }
+        window.addEventListener('load', initAutoScroll);
+    </script>
 </body>
 
 </html>

@@ -97,11 +97,20 @@ class AntreanController extends BaseController
             ->setSearchableColumns(['p.name', 'p.phone', 'pa.kabupaten_nama', 'p.id'])
             ->add('date', function ($row) {
                 if (empty($row->queue_date)) return '-';
-                
+
                 $bulan_indo = [
-                    1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
-                    5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
-                    9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+                    1 => 'Januari',
+                    2 => 'Februari',
+                    3 => 'Maret',
+                    4 => 'April',
+                    5 => 'Mei',
+                    6 => 'Juni',
+                    7 => 'Juli',
+                    8 => 'Agustus',
+                    9 => 'September',
+                    10 => 'Oktober',
+                    11 => 'November',
+                    12 => 'Desember'
                 ];
                 $tgl = date('d', strtotime($row->queue_date));
                 $bln = $bulan_indo[(int)date('m', strtotime($row->queue_date))];
@@ -342,6 +351,37 @@ class AntreanController extends BaseController
         }
         $startDate = $this->request->getGet('start_date') ?: date('Y-m-d');
         $endDate = $this->request->getGet('end_date') ?: date('Y-m-d');
+
+        // Check Break Status (from Cache)
+        $cache = \Config\Services::cache();
+        $breakData = null;
+        $now = Time::now('Asia/Jakarta');
+
+        if (!empty($regionId)) {
+            $regionsToCheck = [];
+            if ($regionId === 'all') {
+                $regionsToCheck = array_column($db->table('regions')->select('id')->get()->getResult(), 'id');
+            } elseif (is_array($regionId)) {
+                $regionsToCheck = $regionId;
+            } else {
+                $regionsToCheck = [$regionId];
+            }
+
+            foreach ($regionsToCheck as $rid) {
+                $rid = trim($rid);
+                if (empty($rid)) continue;
+                
+                $cached = $cache->get('break_region_' . $rid);
+                if ($cached) {
+                    $endTime = Time::parse($cached['end_time'], 'Asia/Jakarta');
+                    if ($now->isBefore($endTime)) {
+                        $breakData = $cached;
+                        break;
+                    }
+                }
+            }
+        }
+        $data['breakData'] = $breakData;
         $builder = $db->table('patient_queues pq')
             ->select('pq.*, h.process_at, h.finish_at, p.id as patient_id, p.name as patient_name, p.address, p.phone as patient_phone, p.age as patient_age, r.name as name_region, pa.desa_nama, pa.kecamatan_nama, pa.kabupaten_nama, pa.provinsi_nama')
             ->select('MAX(h_visit.date) AS last_visit_date, COUNT(h_visit.id) AS visit_count')
@@ -408,6 +448,40 @@ class AntreanController extends BaseController
         $data['currentDate'] = $time->toLocalizedString('EEEE, dd/MM/yyyy');
 
         return view('App\modules\antrean\Views\daftar-antrean\index', $data);
+    }
+
+    /**
+     * Set Break Time (Stored in Cache)
+     */
+    public function setBreak()
+    {
+        $regionId = $this->request->getPost('region_id');
+        $duration = $this->request->getPost('duration'); // in minutes
+        $status = $this->request->getPost('status'); // 'start' or 'stop'
+
+        $cache = \Config\Services::cache();
+
+        if ($status === 'stop') {
+            $cache->delete('break_region_' . $regionId);
+            return $this->response->setJSON(['status' => 'success', 'message' => 'Waktu istirahat selesai.']);
+        }
+
+        $endTime = date('Y-m-d H:i:s', strtotime("+$duration minutes"));
+
+        $breakData = [
+            'start_time' => date('Y-m-d H:i:s'),
+            'end_time' => $endTime,
+            'duration' => $duration
+        ];
+
+        // Store in cache for duration + some buffer
+        $cache->save('break_region_' . $regionId, $breakData, ($duration * 60) + 3600);
+
+        return $this->response->setJSON([
+            'status' => 'success',
+            'message' => 'Waktu istirahat dimulai hingga ' . date('H:i', strtotime($endTime)),
+            'data' => $breakData
+        ]);
     }
 
     public function export_excell_antrean()
