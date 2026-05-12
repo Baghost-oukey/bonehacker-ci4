@@ -17,7 +17,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
 <!-- DASHBOAR | ADMIN - SUPERADMIN - OWNER -->
 <div class="no-scrollbar flex min-h-0 flex-1 flex-col gap-0 overflow-y-auto">
     <div class="relative flex w-full min-w-0 flex-col p-2">
-        <div class="sticky top-0 z-10 flex h-8 shrink-0 items-center bg-white px-2 text-xs font-bold uppercase tracking-wider text-slate-500/80">
+        <div class="sticky top-0 z-10 flex h-8 shrink-0 items-center bg-white px-2 text-xs font-semibold uppercase tracking-wider text-slate-500/80">
             Dashboard
         </div>
 
@@ -78,7 +78,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                     </a>
                 </li>
 
-                <?php if (in_array($role, ['owner', 'admin'])): ?>
+                <?php if (in_array($role, ['owner', 'admin', 'superadmin'])): ?>
                     <li>
                         <a href="<?= base_url('transaksi') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'transaksi' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                             <i class="fas fa-money-bill-wave w-4 text-center shrink-0"></i>
@@ -86,17 +86,41 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                         </a>
                     </li>
                     <li>
-                        <a href="<?= base_url('kehadiran') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'kehadiran' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
-                            <i class="fa-solid fa-user-clock w-4 text-center shrink-0"></i>
-                            <span class="truncate">Kehadiran Karyawan</span>
-                        </a>
+                        <details class="group" <?= $current_segment == 'kehadiran' ? 'open' : '' ?>>
+                            <summary class="flex w-full cursor-pointer list-none items-center justify-between rounded-md p-2 text-left text-sm transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 [&::-webkit-details-marker]:hidden">
+                                <span class="flex items-center gap-2">
+                                    <i class="fa-solid fa-user-clock w-4 text-center shrink-0"></i>
+                                    <span class="truncate font-medium">Presensi Karyawan</span>
+                                </span>
+                                <i class="fas fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200 group-open:rotate-180 shrink-0"></i>
+                            </summary>
+                            <ul class="mx-3.5 mt-1 flex min-w-0 translate-x-px flex-col gap-1 border-l border-slate-200 px-2.5 py-0.5">
+                                <li>
+                                    <a href="<?= base_url('kehadiran/tambah') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'kehadiran' && $uri->getSegment(2) == 'tambah' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                        <span class="truncate">Input Presensi</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="<?= base_url('kehadiran') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'kehadiran' && ($uri->getSegment(2) == '' || $uri->getSegment(2) == 'index') ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                        <span class="truncate">Rekap Presensi</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="<?= base_url('kehadiran/cuti') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'kehadiran' && $uri->getSegment(2) == 'cuti' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                        <span class="truncate">Cuti Karyawan</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </details>
                     </li>
-                    <li>
-                        <a href="<?= base_url('kalender') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'kalender' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
-                            <i class="fa-solid fa-calendar-days w-4 text-center shrink-0"></i>
-                            <span class="truncate">Kalender Kerja</span>
-                        </a>
-                    </li>
+                    <?php if ($role !== 'superadmin'): ?>
+                        <li>
+                            <a href="<?= base_url('kalender') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'kalender' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                <i class="fa-solid fa-calendar-days w-4 text-center shrink-0"></i>
+                                <span class="truncate">Kalender Kerja</span>
+                            </a>
+                        </li>
+                    <?php endif; ?>
                 <?php endif; ?>
 
                 <?php if (in_array($role, ['owner'])): ?>
@@ -179,7 +203,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
     <!-- KEUANGAN | OWNER & SUPERADMIN -->
     <?php if ($role === 'owner' || $role === 'superadmin'): ?>
         <div class="relative flex w-full min-w-0 flex-col p-2">
-            <div class="sticky top-0 z-10 flex h-8 shrink-0 items-center bg-white px-2 text-xs font-bold uppercase tracking-wider text-slate-500/80">
+            <div class="sticky top-0 z-10 flex h-8 shrink-0 items-center bg-white px-2 text-xs font-semibold uppercase tracking-wider text-slate-500/80">
                 Kas
             </div>
 
@@ -221,7 +245,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
 
     <!-- STATISTIK | ADMIN - SUPERADMIN - OWNER -->
     <div class="relative flex w-full min-w-0 flex-col p-2">
-        <div class="sticky top-0 z-10 flex h-8 shrink-0 items-center bg-white px-2 text-xs font-bold uppercase tracking-wider text-slate-500/80">
+        <div class="sticky top-0 z-10 flex h-8 shrink-0 items-center bg-white px-2 text-xs font-semibold uppercase tracking-wider text-slate-500/80">
             Analitik
         </div>
         <ul class="flex w-full min-w-0 flex-col gap-1">
@@ -277,7 +301,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
     <!-- TAGIFY & MANAGE USER | SUPERADMIN - OWNER -->
     <?php if ($role === 'superadmin' || $role === 'owner'): ?>
         <div class="relative flex w-full min-w-0 flex-col p-2">
-            <div class="sticky top-0 z-10 flex h-8 shrink-0 items-center bg-white px-2 text-xs font-bold uppercase tracking-wider text-slate-500/80">
+            <div class="sticky top-0 z-10 flex h-8 shrink-0 items-center bg-white px-2 text-xs font-semibold uppercase tracking-wider text-slate-500/80">
                 Manajemen
             </div>
 

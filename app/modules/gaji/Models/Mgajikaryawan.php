@@ -73,6 +73,7 @@ class Mgajikaryawan extends Model
         j.nama_jabatan,
         COALESCE(pg.tipe_gaji, "Belum Diset") as tipe_gaji,
         COALESCE(pg.nominal_gaji, 0) as nominal_gaji,
+        COALESCE(pg.potong_absen, 0) as potong_absen,
         ' . $subQueryTindakan . ' as jml_tindakan, 
         ' . $subQueryKasbon . ' as total_kasbon,
         ' . $subQueryTunjangan . ' as total_tunjangan'
@@ -124,7 +125,7 @@ class Mgajikaryawan extends Model
         $subQueryTindakan = "(SELECT COUNT(h.id) FROM histories h WHERE FIND_IN_SET(t.id, h.terapis_id))";
         $subQueryKasbon = "(SELECT COALESCE(SUM(nominal), 0) FROM kasbon_karyawan WHERE terapis_id = t.id AND status_potongan IN ('belum_lunas', 'belum_dipotong'))";
         $subQueryTunjangan = "(SELECT COALESCE(SUM(nominal), 0) FROM transaksi_tunjangan WHERE terapis_id = t.id AND status_pembayaran = 'Belum Dibayar')";
-        $subQueryKehadiran = "(SELECT COUNT(*) FROM absensi_karyawan WHERE terapis_id = t.id AND status = 'Hadir' AND tanggal >= '$tanggalAwal' AND tanggal <= '$tanggalAkhir')";
+        $subQueryKehadiran = "(SELECT COUNT(*) FROM absensi_karyawan WHERE terapis_id = t.id AND status IN ('Hadir', 'Cuti') AND tanggal >= '$tanggalAwal' AND tanggal <= '$tanggalAkhir')";
 
         $builder = $this->db->table('terapis t');
         $builder->select(
@@ -132,6 +133,7 @@ class Mgajikaryawan extends Model
             t.nama, 
             COALESCE(pg.tipe_gaji, "Belum Diset") as tipe_gaji, 
             COALESCE(pg.nominal_gaji, 0) as nominal_gaji,
+            COALESCE(pg.potong_absen, 0) as potong_absen,
             ' . $subQueryTindakan . ' as jml_tindakan,
             ' . $subQueryKasbon . ' as total_kasbon,
             ' . $subQueryTunjangan . ' as total_tunjangan,
@@ -144,8 +146,26 @@ class Mgajikaryawan extends Model
 
         $terapis = $builder->get()->getRowArray();
 
+        // Hitung Potongan Absen jika tipe bulanan & potong_absen aktif
+        $hari_kerja = 0;
+        $potongan_absen = 0;
+        if ($terapis && $terapis['tipe_gaji'] === 'bulanan' && $terapis['potong_absen'] == 1) {
+            $mKalender = new \App\modules\kalender\Models\MKalender();
+            $hari_kerja = $mKalender->getHariKerjaBulanan($bulan, $tahun, $terapis['region_id'] ?? null);
+            if ($hari_kerja > 0) {
+                $absen = $hari_kerja - (int)$terapis['current_kehadiran'];
+                if ($absen > 0) {
+                    $potongan_absen = ($terapis['nominal_gaji'] / $hari_kerja) * $absen;
+                }
+            }
+        }
+
         return [
-            'terapis'   => $terapis
+            'terapis'   => $terapis,
+            'kalkulasi' => [
+                'hari_kerja'     => $hari_kerja,
+                'potongan_absen' => (int)$potongan_absen
+            ]
         ];
     }
     public function getHistoryByTerapis($terapisId)

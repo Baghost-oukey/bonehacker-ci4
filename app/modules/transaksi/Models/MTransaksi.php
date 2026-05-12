@@ -13,8 +13,8 @@ class MTransaksi extends Model
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
     protected $allowedFields    = [
-        'region_id', 'category_id', 'nominal', 'type', 'kategori', 'keterangan', 'metode_pembayaran', 
-        'rentang_usia', 'status', 'cancel_reason', 'created_at', 'created_by', 'cancelled_by'
+        'region_id', 'category_id', 'nominal', 'type', 'kategori', 'keterangan', 
+        'status', 'cancel_reason', 'created_at', 'created_by', 'cancelled_by'
     ];
 
     protected bool $allowEmptyInserts = false;

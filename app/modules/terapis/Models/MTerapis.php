@@ -25,6 +25,7 @@ class MTerapis extends Model
         'jabatan_id',
         'foto',
         'tgl_mulai_kerja',
+        'jatah_cuti',
         'keterangan'
     ];
 

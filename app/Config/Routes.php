@@ -26,17 +26,17 @@ $routes->get('antrean/daftar-antrean', '\App\Modules\Antrean\Controllers\Antrean
 
 // Antrean
 $routes->group('antrean', ['namespace' => 'App\Modules\Antrean\Controllers', 'filter' => 'auth'], function ($routes) {
-    $routes->get('', 'AntreanController::index');
-    $routes->get('fetchJson', 'AntreanController::fetchJson');
-    $routes->post('fetchDataTable', 'AntreanController::fetchDataTable');
-    $routes->post('fetchPatientDataTables', 'AntreanController::fetchPatientDataTables');
-    $routes->get('getPatientData/(:num)', 'AntreanController::getPatientData/$1');
-    $routes->get('addToQueue/(:num)', 'AntreanController::addToQueue/$1');
-    $routes->post('destroy/(:num)', 'AntreanController::destroy/$1');
-    $routes->get('procesToQueue/(:num)', 'AntreanController::procesToQueue/$1');
-    $routes->get('finishQueue/(:num)', 'AntreanController::finishQueue/$1');
-    $routes->get('export_excell_antrean', 'AntreanController::export_excell_antrean');
-    $routes->get('print_pdf_antrean', 'AntreanController::print_pdf_antrean');
+  $routes->get('', 'AntreanController::index');
+  $routes->get('fetchJson', 'AntreanController::fetchJson');
+  $routes->post('fetchDataTable', 'AntreanController::fetchDataTable');
+  $routes->post('fetchPatientDataTables', 'AntreanController::fetchPatientDataTables');
+  $routes->get('getPatientData/(:num)', 'AntreanController::getPatientData/$1');
+  $routes->get('addToQueue/(:num)', 'AntreanController::addToQueue/$1');
+  $routes->post('destroy/(:num)', 'AntreanController::destroy/$1');
+  $routes->get('procesToQueue/(:num)', 'AntreanController::procesToQueue/$1');
+  $routes->get('finishQueue/(:num)', 'AntreanController::finishQueue/$1');
+  $routes->get('export_excell_antrean', 'AntreanController::export_excell_antrean');
+  $routes->get('print_pdf_antrean', 'AntreanController::print_pdf_antrean');
 });
 
 // Rekam Medis
@@ -375,30 +375,39 @@ $routes->group('kehadiran', ['namespace' => 'App\modules\absensi_karyawan\Contro
   $routes->get('detail/(:any)', 'Absensikaryawan::detail/$1');
   $routes->get('export', 'Absensikaryawan::export');
   $routes->post('simpan_massal', 'Absensikaryawan::simpan_massal');
+
+  // Cuti Karyawan
+  $routes->group('cuti', function ($routes) {
+    $routes->get('/', 'Cutikaryawan::index');
+    $routes->post('simpan', 'Cutikaryawan::simpan');
+    $routes->delete('hapus/(:num)', 'Cutikaryawan::hapus/$1');
+    $routes->post('update_kuota', 'Cutikaryawan::update_kuota');
+    $routes->get('cek_sisa_cuti/(:num)', 'Cutikaryawan::cek_sisa_cuti/$1');
+  });
 });
 
 // Routes - Kalender
 $routes->group('kalender', ['namespace' => 'App\modules\kalender\Controllers', 'filter' => 'auth'], function ($routes) {
-    $routes->get('/', 'Kalender::index');
-    $routes->post('store', 'Kalender::store');
-    $routes->post('store-rutin', 'Kalender::storeRutin');
-    $routes->post('destroy/(:num)', 'Kalender::destroy/$1');
-    $routes->post('copy-global', 'Kalender::copyGlobal');
-    $routes->get('get-data', 'Kalender::getData');
+  $routes->get('/', 'Kalender::index');
+  $routes->post('store', 'Kalender::store');
+  $routes->post('store-rutin', 'Kalender::storeRutin');
+  $routes->post('destroy/(:num)', 'Kalender::destroy/$1');
+  $routes->post('copy-global', 'Kalender::copyGlobal');
+  $routes->get('get-data', 'Kalender::getData');
 });
 
 
-$routes->group('jasa-pelayanan', ['namespace' => 'App\modules\jasa_pelayanan\Controllers', 'filter' => 'auth'], function($routes) {
-    $routes->get('reguler', 'Jasapelayanan::reguler');
-    $routes->get('kejantanan', 'Jasapelayanan::kejantanan');
-    $routes->get('settings', 'Jasapelayanan::settings');
-    $routes->post('saveSettings', 'Jasapelayanan::saveSettings');
-    $routes->post('getJaspelPerHari', 'Jasapelayanan::getJaspelPerHari');
-    $routes->post('getJaspelKejantananPerHari', 'Jasapelayanan::getJaspelKejantananPerHari');
-    $routes->post('fetch', 'Jasapelayanan::fetch');
-    $routes->post('fetchPatients', 'Jasapelayanan::fetchPatients');
-    $routes->get('show/(:num)', 'Jasapelayanan::show/$1');
-    $routes->get('detail-reguler/(:num)', 'Jasapelayanan::showReguler/$1');
-    $routes->get('detail-kejantanan/(:num)', 'Jasapelayanan::showKejantanan/$1');
-    $routes->post('destroy/(:num)', 'Jasapelayanan::destroy/$1'); 
+$routes->group('jasa-pelayanan', ['namespace' => 'App\modules\jasa_pelayanan\Controllers', 'filter' => 'auth'], function ($routes) {
+  $routes->get('reguler', 'Jasapelayanan::reguler');
+  $routes->get('kejantanan', 'Jasapelayanan::kejantanan');
+  $routes->get('settings', 'Jasapelayanan::settings');
+  $routes->post('saveSettings', 'Jasapelayanan::saveSettings');
+  $routes->post('getJaspelPerHari', 'Jasapelayanan::getJaspelPerHari');
+  $routes->post('getJaspelKejantananPerHari', 'Jasapelayanan::getJaspelKejantananPerHari');
+  $routes->post('fetch', 'Jasapelayanan::fetch');
+  $routes->post('fetchPatients', 'Jasapelayanan::fetchPatients');
+  $routes->get('show/(:num)', 'Jasapelayanan::show/$1');
+  $routes->get('detail-reguler/(:num)', 'Jasapelayanan::showReguler/$1');
+  $routes->get('detail-kejantanan/(:num)', 'Jasapelayanan::showKejantanan/$1');
+  $routes->post('destroy/(:num)', 'Jasapelayanan::destroy/$1');
 });

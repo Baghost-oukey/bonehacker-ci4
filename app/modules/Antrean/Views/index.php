@@ -443,6 +443,7 @@
         try {
             info = JSON.parse(raw);
         } catch (e) {
+            console.error("Gagal memproses data medis:", e, raw);
             return;
         }
 
@@ -475,9 +476,11 @@
         // Jika sudah ada history → buka detail, jika belum → buka tambah baru
         if (window.PatientHistoryPage) {
             // Set config terlebih dahulu
-            window.PatientHistoryPage.config.patientId = patientId;
-            window.PatientHistoryPage.config.queueId = queueId;
-            if (regionId) window.PatientHistoryPage.config.patientRegionId = regionId;
+            if (window.PatientHistoryPage.config) {
+                window.PatientHistoryPage.config.patientId = patientId;
+                window.PatientHistoryPage.config.queueId = queueId;
+                if (regionId) window.PatientHistoryPage.config.patientRegionId = regionId;
+            }
 
             if (historyId) {
                 // Ada history → edit/lihat detail

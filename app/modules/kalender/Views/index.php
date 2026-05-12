@@ -60,15 +60,15 @@
             </div>
 
             <!-- Grid Kalender -->
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden text-sm">
                 <div class="grid grid-cols-7 border-b border-slate-100">
                     <?php foreach (['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'] as $i => $hari): ?>
-                        <div class="py-3 text-center text-[11px] font-black uppercase tracking-widest <?= $i === 5 ? 'text-red-500' : 'text-slate-400' ?>">
+                        <div class="py-2 text-center text-[10px] font-bold uppercase tracking-wider <?= $i === 0 ? 'text-red-500' : 'text-slate-500' ?>">
                             <?= $hari ?>
                         </div>
                     <?php endforeach; ?>
                 </div>
-                <div id="gridKalender" class="grid grid-cols-7"></div>
+                <div id="gridKalender" class="grid grid-cols-7 gap-px bg-slate-100"></div>
             </div>
 
             <!-- Legend -->
@@ -282,7 +282,7 @@ $(document).ready(function () {
 
         // Padding awal
         for (let i = 0; i < firstDay; i++) {
-            grid.append('<div class="aspect-square p-1"></div>');
+            grid.append('<div class="h-14 lg:h-20 bg-white"></div>');
         }
 
         for (let d = 1; d <= daysInMonth; d++) {
@@ -294,26 +294,30 @@ $(document).ready(function () {
             const dayOfWeek = new Date(tahun, bulan - 1, d).getDay();
             const isFriday = dayOfWeek === 5;
 
-            let cls = 'aspect-square flex items-center justify-center text-xs font-semibold rounded-lg m-0.5 cursor-default transition ';
+            let cls = 'h-14 lg:h-20 bg-white flex flex-col items-center justify-center text-sm font-medium transition cursor-default relative ';
 
             if (isToday) {
-                cls += 'bg-indigo-600 text-white shadow-md shadow-indigo-200';
+                cls += 'text-indigo-700 font-bold';
             } else if (isLibur) {
-                cls += 'bg-red-100 text-red-600 border border-red-200';
-            } else if (isFriday) {
-                cls += 'text-red-400 hover:bg-slate-50';
+                cls += 'bg-red-50 text-red-600';
+            } else if (dayOfWeek === 0) { // Minggu
+                cls += 'text-red-500';
             } else {
                 cls += 'text-slate-700 hover:bg-slate-50';
             }
 
             // Tooltip keterangan libur
             let title = '';
+            let indicator = '';
             if (isLibur) {
                 const found = cfg.liburKhusus.find(l => l.tanggal === tgl);
                 title = found ? ` title="${found.keterangan}"` : ' title="Libur Rutin"';
+                indicator = '<div class="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-red-400"></div>';
+            } else if (isToday) {
+                indicator = '<div class="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-indigo-500"></div>';
             }
 
-            grid.append(`<div class="${cls}"${title}>${d}</div>`);
+            grid.append(`<div class="${cls}"${title}><span>${d}</span>${indicator}</div>`);
         }
     }
 

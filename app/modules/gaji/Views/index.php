@@ -69,7 +69,8 @@
                                         <button class="btn-setting text-slate-400 hover:text-blue-600 transition" 
                                                 data-terapis-id="<?= $row['terapis_id'] ?>" 
                                                 data-tipe-gaji="<?= esc($row['tipe_gaji']) ?>"
-                                                data-nominal="<?= $row['nominal_gaji'] ?? 0 ?>">
+                                                data-nominal="<?= $row['nominal_gaji'] ?? 0 ?>"
+                                                data-potong="<?= $row['potong_absen'] ?? 0 ?>">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -204,6 +205,10 @@
                     <span class="text-slate-500 text-red-500">Potongan Kasbon</span>
                     <input type="text" name="total_potongan" id="oc_potongan" class="text-right font-medium text-red-600 border-none bg-transparent p-0 w-1/2 focus:ring-0" readonly>
                 </div>
+                <div class="flex justify-between items-center" id="oc_potongan_absen_group">
+                    <span class="text-slate-500 text-amber-600">Potongan Hari (Absen)</span>
+                    <input type="text" id="oc_potongan_absen" class="text-right font-medium text-amber-600 border-none bg-transparent p-0 w-1/2 focus:ring-0" readonly>
+                </div>
                 <div class="flex justify-between items-center pt-4 border-t border-slate-200 mt-4">
                     <span class="font-bold text-slate-800 text-base">Gaji Bersih (Take Home)</span>
                     <input type="text" name="gaji_bersih" id="oc_bersih" class="text-right font-bold text-green-600 text-lg border-none bg-transparent p-0 w-1/2 focus:ring-0" readonly>
@@ -243,6 +248,14 @@
                     <option value="bulanan">Bulanan (Gaji Tetap)</option>
                     <option value="harian">Harian (Per Kehadiran)</option>
                 </select>
+            </div>
+
+            <div class="mb-4" id="div_potong_absen">
+                <label class="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
+                    <input type="checkbox" name="potong_absen" id="set_potong_absen" value="1" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                    Potong absen untuk gaji bulanan?
+                </label>
+                <p class="text-[11px] text-slate-500 mt-1 ml-6 leading-tight">Jika dicentang, gaji akan dipotong berdasarkan hari absen (Gaji / Hari Kerja Bulan Ini).</p>
             </div>
 
             <div class="mb-6">
@@ -290,6 +303,116 @@
                 targetBtn.classList.remove('border-transparent', 'text-slate-500');
             }
         }
+
+        // Tampilkan Modal Setting
+        document.querySelectorAll('.btn-setting').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const terapisId = this.getAttribute('data-terapis-id');
+                const tipeGaji = this.getAttribute('data-tipe-gaji');
+                const nominal = this.getAttribute('data-nominal');
+                const potong = this.getAttribute('data-potong');
+
+                document.getElementById('set_terapis_id').value = terapisId;
+                document.getElementById('set_tipe_gaji').value = (tipeGaji === 'Belum Diset') ? 'bulanan' : tipeGaji.toLowerCase();
+                document.getElementById('set_nominal_gaji').value = new Intl.NumberFormat('id-ID').format(nominal);
+                document.getElementById('set_potong_absen').checked = (potong == '1');
+
+                togglePotongAbsen(); // Update visibility
+
+                const modal = document.getElementById('modalSetting');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            });
+        });
+
+        // Close Modal Setting
+        document.querySelectorAll('.btn-close-modal-setting').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const modal = document.getElementById('modalSetting');
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            });
+        });
+
+        // Handle Potong Absen visibility
+        const tipeGajiSelect = document.getElementById('set_tipe_gaji');
+        function togglePotongAbsen() {
+            const divPotong = document.getElementById('div_potong_absen');
+            if (tipeGajiSelect.value === 'bulanan') {
+                divPotong.style.display = 'block';
+            } else {
+                divPotong.style.display = 'none';
+            }
+        }
+        tipeGajiSelect.addEventListener('change', togglePotongAbsen);
+
+        // PROSES GAJI - Buka Offcanvas & Fetch Data
+        document.querySelectorAll('.btn-proses-gaji').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const terapisId = this.getAttribute('data-terapis-id');
+                const offcanvas = document.getElementById('offcanvasProses');
+                const backdrop = document.getElementById('offcanvasBackdrop');
+                const loading = document.getElementById('loadingState');
+                const form = document.getElementById('formBayarGaji');
+
+                // Reset & Show Loading
+                offcanvas.classList.remove('translate-x-full');
+                backdrop.classList.remove('hidden');
+                loading.classList.remove('hidden');
+                form.classList.add('hidden');
+
+                try {
+                    const response = await fetch(`${window.gajiConfig.detailUrl}/${terapisId}`);
+                    const result = await response.json();
+
+                    if (result.status === 'success') {
+                        const d = result.data;
+                        const k = result.kalkulasi;
+
+                        document.getElementById('oc_terapis_id').value = d.id;
+                        document.getElementById('oc_nama_terapis').innerText = d.nama;
+                        document.getElementById('oc_tipe_info').innerText = `Tipe Gaji: ${d.tipe_gaji.toUpperCase()}`;
+                        document.getElementById('oc_kehadiran').value = d.current_kehadiran;
+                        document.getElementById('oc_kehadiran_label').innerText = (d.tipe_gaji === 'harian') ? 'Total Kehadiran (Hari)' : 'Kehadiran Terdeteksi (Hari)';
+
+                        // Format Rupiah
+                        const fmt = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num);
+
+                        document.getElementById('oc_gaji_pokok').value = fmt(d.nominal_gaji);
+                        document.getElementById('oc_tunjangan').value = fmt(d.total_tunjangan);
+                        document.getElementById('oc_potongan').value = fmt(d.total_kasbon);
+                        
+                        // Potongan Absen
+                        const groupAbsen = document.getElementById('oc_potongan_absen_group');
+                        if (k && k.potongan_absen > 0) {
+                            groupAbsen.classList.remove('hidden');
+                            document.getElementById('oc_potongan_absen').value = `- ${fmt(k.potongan_absen)}`;
+                        } else {
+                            groupAbsen.classList.add('hidden');
+                        }
+
+                        // Bersih
+                        const totalGaji = (d.tipe_gaji === 'harian') ? (d.nominal_gaji * d.current_kehadiran) : (d.nominal_gaji - (k ? k.potongan_absen : 0));
+                        const bersih = totalGaji + parseInt(d.total_tunjangan) - parseInt(d.total_kasbon);
+                        document.getElementById('oc_bersih').value = fmt(Math.max(0, bersih));
+
+                        loading.classList.add('hidden');
+                        form.classList.remove('hidden');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('Gagal mengambil data rincian gaji.');
+                }
+            });
+        });
+
+        // Close Offcanvas
+        document.querySelectorAll('.btn-close-offcanvas, .offcanvas-backdrop').forEach(el => {
+            el.addEventListener('click', function() {
+                document.getElementById('offcanvasProses').classList.add('translate-x-full');
+                document.getElementById('offcanvasBackdrop').classList.add('hidden');
+            });
+        });
     });
 </script>
-<?= $this->endSection() ?>
+<?= $this->endSection() ?>

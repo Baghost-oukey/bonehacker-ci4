@@ -47,11 +47,14 @@ class Gajikaryawan extends BaseController
         $terapisId   = $this->request->getPost('terapis_id');
         $tipeGaji    = $this->request->getPost('tipe_gaji');
         $nominalGaji = preg_replace('/[^0-9]/', '', $this->request->getPost('nominal_gaji'));
+        $potongAbsen = $this->request->getPost('potong_absen') ? 1 : 0;
+        
         $builder = $this->db->table('gaji_karyawan');
         $cekData = $builder->where('terapis_id', $terapisId)->get()->getRowArray();
         $dataSimpan = [
             'terapis_id'   => $terapisId,
             'tipe_gaji'    => $tipeGaji,
+            'potong_absen' => $potongAbsen,
             'nominal_gaji' => $nominalGaji,
             'updated_at'   => date('Y-m-d H:i:s')
         ];
@@ -129,6 +132,22 @@ class Gajikaryawan extends BaseController
         }
 
         $gajiPokokTotal = ($tipeGaji === 'harian') ? ($nominalGaji * $totalKehadiran) : $nominalGaji;
+
+        // Potongan Absen untuk Gaji Bulanan
+        $potonganAbsen = 0;
+        if ($tipeGaji === 'bulanan' && isset($gajiData['potong_absen']) && $gajiData['potong_absen'] == 1) {
+            $mKalender = new \App\modules\kalender\Models\MKalender();
+            // Estimasi hari kerja berdasarkan bulan ini
+            $hariKerja = $mKalender->getHariKerjaBulanan(date('n'), date('Y'), $terapis['region_id'] ?? null);
+            if ($hariKerja > 0) {
+                $absenHari = $hariKerja - $totalKehadiran;
+                if ($absenHari > 0) {
+                    $potonganPerHari = $nominalGaji / $hariKerja;
+                    $potonganAbsen = $potonganPerHari * $absenHari;
+                    $gajiPokokTotal = $nominalGaji - $potonganAbsen;
+                }
+            }
+        }
 
         $totalPotongan = (int)($this->db->table('kasbon_karyawan')
             ->selectSum('nominal', 'total')
@@ -221,26 +240,71 @@ class Gajikaryawan extends BaseController
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Riwayat Penggajian');
 
-        $headers = ['No', 'Tanggal Bayar', 'Nama Karyawan', 'Wilayah', 'Periode', 'Gaji Pokok', 'Tunjangan', 'Potongan', 'Gaji Bersih'];
-        $sheet->fromArray($headers, NULL, 'A1');
+        // --- 1. JUDUL LAPORAN ---
+        $nama_bulan = date('F', mktime(0, 0, 0, $bulan, 1));
+        $sheet->setCellValue('A1', 'LAPORAN RIWAYAT PENGGAJIAN KARYAWAN');
+        $sheet->mergeCells('A1:I1');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(16);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
-        $rowNum = 2;
+        $sheet->setCellValue('A2', "Periode: $nama_bulan $tahun | Dicetak: " . date('d/m/Y H:i'));
+        $sheet->mergeCells('A2:I2');
+        $sheet->getStyle('A2')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+        // --- 2. HEADER TABEL ---
+        $headers = ['No', 'Tanggal Bayar', 'Nama Karyawan', 'Wilayah', 'Periode', 'Gaji Pokok', 'Tunjangan', 'Potongan', 'Gaji Bersih'];
+        $sheet->fromArray($headers, NULL, 'A4');
+
+        // Styling Header
+        $headerStyle = [
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+            'fill' => [
+                'fillType'   => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'startColor' => ['rgb' => '1E40AF'],
+            ],
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                ],
+            ],
+        ];
+        $sheet->getStyle('A4:I4')->applyFromArray($headerStyle);
+        $sheet->getRowDimension(4)->setRowHeight(25);
+
+        // --- 3. ISI DATA ---
+        $rowNum = 5;
         foreach ($data as $i => $row) {
-            $sheet->fromArray([
-                $i + 1,
-                date('d/m/Y', strtotime($row['tanggal_bayar'])),
-                $row['nama'],
-                $row['wilayah'],
-                date('F', mktime(0, 0, 0, $row['periode_bulan'], 1)) . ' ' . $row['periode_tahun'],
-                $row['gaji_pokok_total'],
-                $row['total_tunjangan'],
-                $row['total_potongan'],
-                $row['gaji_bersih']
-            ], NULL, 'A' . $rowNum);
+            $sheet->setCellValue('A' . $rowNum, $i + 1);
+            $sheet->setCellValue('B' . $rowNum, date('d/m/Y', strtotime($row['tanggal_bayar'])));
+            $sheet->setCellValue('C' . $rowNum, $row['nama']);
+            $sheet->setCellValue('D' . $rowNum, $row['wilayah']);
+            $sheet->setCellValue('E' . $rowNum, date('F', mktime(0, 0, 0, $row['periode_bulan'], 1)) . ' ' . $row['periode_tahun']);
+            $sheet->setCellValue('F' . $rowNum, $row['gaji_pokok_total']);
+            $sheet->setCellValue('G' . $rowNum, $row['total_tunjangan']);
+            $sheet->setCellValue('H' . $rowNum, $row['total_potongan']);
+            $sheet->setCellValue('I' . $rowNum, $row['gaji_bersih']);
+
+            // Styling baris data
+            $sheet->getStyle('A' . $rowNum . ':I' . $rowNum)->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+            $sheet->getStyle('A' . $rowNum . ':B' . $rowNum)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('E' . $rowNum)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+            // Format Currency (Rupiah)
+            $sheet->getStyle('F' . $rowNum . ':I' . $rowNum)->getNumberFormat()->setFormatCode('#,##0');
+            
             $rowNum++;
         }
 
-        $filename = 'Laporan_Gaji_' . date('F', mktime(0, 0, 0, $bulan, 1)) . '_' . $tahun . '.xlsx';
+        // Auto size columns
+        foreach (range('A', 'I') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $filename = 'Laporan_Gaji_' . $nama_bulan . '_' . $tahun . '.xlsx';
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $filename . '"');
         header('Cache-Control: max-age=0');

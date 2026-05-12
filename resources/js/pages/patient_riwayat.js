@@ -10,6 +10,7 @@ const openModal = (modal) => {
   if (!modal) return;
   modal.classList.remove(MODAL_HIDDEN_CLASS);
   modal.classList.add(MODAL_VISIBLE_CLASS);
+  modal.style.display = 'flex'; // Override any leftover inline display:none
   document.body.style.overflow = "hidden";
 };
 
@@ -17,6 +18,7 @@ const closeModal = (modal) => {
   if (!modal) return;
   modal.classList.remove(MODAL_VISIBLE_CLASS);
   modal.classList.add(MODAL_HIDDEN_CLASS);
+  modal.style.display = ''; // Clear inline style, let CSS class take over
   document.body.style.overflow = "";
 };
 
@@ -399,7 +401,7 @@ const PatientHistoryPage = {
     const hasSakit = arr.includes('sakit');
     const grade = arr.find(item => item.startsWith('grade')) || null;
 
-    if (hasSakit || grade) {
+    if (hasSakit) {
       $(`input[name="${name}"]`).prop('checked', true);
     }
     if (grade) {
@@ -533,14 +535,14 @@ const PatientHistoryPage = {
       const timeDiff = Math.abs(new Date() - new Date(data.date_modified));
       const dayDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
       if (dayDiff > 1 && data.type !== 'draft') {
-        $('#exampleModal form :input').prop('readonly', true);
-        $('#exampleModal form :checkbox, #exampleModal form :radio, #region_history, .terapis').prop('disabled', true);
+        $('#modalRiwayatPasien form :input').prop('readonly', true);
+        $('#modalRiwayatPasien form :checkbox, #modalRiwayatPasien form :radio, #region_history, .terapis').prop('disabled', true);
         [complaintTagify, medhisTagify, resultTagify].forEach(t => { if (t) t.setReadonly(true); });
         $('#save-button').hide();
       } else {
-        $('#exampleModal form :input').prop('readonly', false);
+        $('#modalRiwayatPasien form :input').prop('readonly', false);
         $('#processAt, #finishAt, #timeConsume').prop('readonly', true);
-        $('#exampleModal form :checkbox, #exampleModal form :radio, #region_history, .terapis').prop('disabled', false);
+        $('#modalRiwayatPasien form :checkbox, #modalRiwayatPasien form :radio, #region_history, .terapis').prop('disabled', false);
         [complaintTagify, medhisTagify, resultTagify].forEach(t => { if (t) t.setReadonly(false); });
         $('#save-button').prop('disabled', false).show();
       }
@@ -563,7 +565,7 @@ const PatientHistoryPage = {
   // --- ADD RIWAYAT ---
   add() {
     this.setFormReadOnly(false);
-    const modal = document.getElementById("exampleModal");
+    const modal = document.getElementById("modalRiwayatPasien");
     const form = document.getElementById("save_data");
     if (!modal || !form) {
       return;
@@ -654,7 +656,7 @@ const PatientHistoryPage = {
       type: "GET",
       dataType: "json",
       success: function (data) {
-        const modal = document.getElementById("exampleModal");
+        const modal = document.getElementById("modalRiwayatPasien");
         openModal(modal);
 
         let title = "Detail Riwayat Pasien";
@@ -675,7 +677,7 @@ const PatientHistoryPage = {
   },
 
   setFormReadOnly(isReadOnly) {
-    const modal = $("#exampleModal");
+    const modal = $("#modalRiwayatPasien");
     const form = $("#save_data");
     const saveBtn = $("#save-button");
     const draftBtn = $("#save-draft-button");
@@ -772,7 +774,7 @@ const PatientHistoryPage = {
       }
       self.destroy(id);
     });
-    $("#region_history, .terapis").select2({ dropdownParent: $("#exampleModal"), width: "100%" });
+    $("#region_history, .terapis").select2({ dropdownParent: $("#modalRiwayatPasien"), width: "100%" });
 
     // Event listener untuk perubahan wilayah periksa - update dropdown terapis
     $(document).on('change', '#region_history', function (e, extra) {
@@ -788,20 +790,20 @@ const PatientHistoryPage = {
     });
 
     // Auto check/uncheck Sakit/Tidak berdasarkan Grade
-    $(document).on('change', '#pemeriksaan input[type="radio"][name$="_grade"]', function () {
-      if ($(this).is(':checked')) {
-        const checkboxName = $(this).attr('name').replace('_grade', '');
-        $(`#pemeriksaan input[type="checkbox"][name="${checkboxName}"]`).prop('checked', true);
-      }
-    });
+    // $(document).on('change', '#pemeriksaan input[type="radio"][name$="_grade"]', function () {
+    //   if ($(this).is(':checked')) {
+    //     const checkboxName = $(this).attr('name').replace('_grade', '');
+    //     $(`#pemeriksaan input[type="checkbox"][name="${checkboxName}"]`).prop('checked', true);
+    //   }
+    // });
 
     // Auto clear Grade jika Sakit/Tidak di-uncheck
-    $(document).on('change', '#pemeriksaan input[type="checkbox"][value="sakit"]', function () {
-      if (!$(this).is(':checked')) {
-        const radioName = $(this).attr('name') + '_grade';
-        $(`#pemeriksaan input[type="radio"][name="${radioName}"]`).prop('checked', false);
-      }
-    });
+    // $(document).on('change', '#pemeriksaan input[type="checkbox"][value="sakit"]', function () {
+    //   if (!$(this).is(':checked')) {
+    //     const radioName = $(this).attr('name') + '_grade';
+    //     $(`#pemeriksaan input[type="radio"][name="${radioName}"]`).prop('checked', false);
+    //   }
+    // });
 
     // --- SIMPAN BUTTON ---
     $(document).on("click", "#save-button", function (e) {
@@ -890,7 +892,7 @@ const PatientHistoryPage = {
 
   calculateDuration() {
 
-    const modal = $('#exampleModal');
+    const modal = $('#modalRiwayatPasien');
     if (!modal.length) {
 
       return;
@@ -967,7 +969,7 @@ const PatientHistoryPage = {
         const freshToken = res.new_token || res.csrf_hash;
         if (freshToken) self.updateCsrf(freshToken);
         if (res.status) {
-          closeModal(document.getElementById("exampleModal"));
+          closeModal(document.getElementById("modalRiwayatPasien"));
           self.loadTableData(self.currentPage);
           if (window.Swal?.fire) window.Swal.fire({ icon: "success", title: "Berhasil!", text: res.message, timer: 2000, showConfirmButton: false });
         } else {
@@ -1042,7 +1044,7 @@ window.resetHistoryForm = function () {
     if (medhisTagify) medhisTagify.removeAllTags();
     if (resultTagify) resultTagify.removeAllTags();
     document.getElementById('history_id').value = '';
-    const modal = document.getElementById('exampleModal');
+    const modal = document.getElementById('modalRiwayatPasien');
     if (modal) modal.querySelector('.modal-title').textContent = 'Tambah Rekam Medis';
   }
 };

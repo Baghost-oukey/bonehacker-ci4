@@ -10,7 +10,7 @@
                     <i class="fas fa-arrow-left"></i> Kembali
                 </a>
                 <div>
-                    <h1 class="text-3xl font-black text-slate-900 tracking-tight">Presensi Harian</h1>
+                    <h1 class="text-3xl font-bold text-slate-900 tracking-tight">Presensi Harian</h1>
                     <p class="text-slate-500 text-sm mt-1">Sistem rekam kehadiran cepat (otomatis pilih Hadir).</p>
                 </div>
             </div>
@@ -20,8 +20,8 @@
                     <i class="fas fa-calendar-alt"></i>
                 </div>
                 <div>
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tanggal Absensi</p>
-                    <input type="date" id="tanggal_absen" value="<?= esc($tanggal) ?>" class="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tanggal Absensi</p>
+                    <input type="date" id="tanggal_absen" value="<?= esc($tanggal) ?>" class="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-900 outline-none transition-all focus:border-teal-500 focus:bg-white">
                 </div>
             </div>
         </div>
@@ -31,27 +31,27 @@
             <input type="hidden" name="tanggal" id="tanggal_absen_hidden" value="<?= esc($tanggal) ?>">
 
             <?php if (empty($terapis)): ?>
-                <div class="bg-white rounded-4xl border border-slate-200 p-8 text-center text-slate-400 font-bold shadow-sm">
+                <div class="bg-white rounded-4xl border border-slate-200 p-8 text-center text-slate-400 font-semibold shadow-sm">
                     Belum ada data terapis aktif.
                 </div>
-            <?php else: ?>
+<?php else: ?>
                 <?php foreach ($terapis as $index => $t): ?>
                     <?php $existing = $rekap_by_tanggal[$t->id] ?? null; ?>
                     <div class="rounded-4xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-indigo-300 hover:shadow-md">
                         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                             <div class="flex items-center gap-4">
-                                <div class="flex h-14 w-14 items-center justify-center rounded-full bg-indigo-100 text-indigo-700 font-black text-xl">
+                                <div class="flex h-14 w-14 items-center justify-center rounded-full bg-teal-100 text-teal-700 font-bold text-xl">
                                     <?= strtoupper(substr($t->nama, 0, 1)) ?>
                                 </div>
                                 <div>
-                                    <p class="text-base font-black text-slate-900 uppercase tracking-tight"><?= esc($t->nama) ?></p>
-                                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1">Terapis</p>
+                                    <p class="text-base font-bold text-slate-900 uppercase tracking-tight"><?= esc($t->nama) ?></p>
+                                    <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mt-1">Terapis</p>
                                 </div>
                             </div>
 
                             <div class="flex items-center gap-3">
-                                <span class="text-xs font-bold uppercase tracking-[0.3em] text-slate-400">Keterangan</span>
-                                <input type="text" name="absen[<?= $index ?>][keterangan]" value="<?= esc($existing['keterangan'] ?? '') ?>" placeholder="Sakit / Izin..." class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none focus:border-indigo-500 focus:bg-white transition-all">
+                                <span class="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Keterangan</span>
+                                <input type="text" name="absen[<?= $index ?>][keterangan]" value="<?= esc($existing['keterangan'] ?? '') ?>" placeholder="Sakit / Izin..." class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 outline-none focus:border-teal-500 focus:bg-white transition-all">
                             </div>
                         </div>
 
@@ -60,13 +60,13 @@
                                 <input type="hidden" name="absen[<?= $index ?>][terapis_id]" value="<?= $t->id ?>">
                                 <label class="cursor-pointer flex-1">
                                     <input type="radio" name="absen[<?= $index ?>][status]" value="Hadir" class="peer sr-only" <?= !$existing || $existing['status'] === 'Hadir' ? 'checked' : '' ?> >
-                                    <div class="flex items-center justify-center gap-2 rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-500 transition-all peer-checked:border-emerald-500 peer-checked:bg-emerald-50 peer-checked:text-emerald-700">
+                                    <div class="flex items-center justify-center gap-2 rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-500 transition-all peer-checked:border-emerald-500 peer-checked:bg-emerald-50 peer-checked:text-emerald-700">
                                         <i class="fas fa-check-circle"></i> Hadir
                                     </div>
                                 </label>
                                 <label class="cursor-pointer flex-1">
                                     <input type="radio" name="absen[<?= $index ?>][status]" value="Tidak Hadir" class="peer sr-only" <?= $existing && $existing['status'] === 'Tidak Hadir' ? 'checked' : '' ?> >
-                                    <div class="flex items-center justify-center gap-2 rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-500 transition-all peer-checked:border-rose-500 peer-checked:bg-rose-50 peer-checked:text-rose-700">
+                                    <div class="flex items-center justify-center gap-2 rounded-2xl border-2 border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-500 transition-all peer-checked:border-rose-500 peer-checked:bg-rose-50 peer-checked:text-rose-700">
                                         <i class="fas fa-times-circle"></i> Tidak Hadir
                                     </div>
                                 </label>
@@ -78,7 +78,7 @@
 
             <div class="sticky bottom-0 z-40 bg-slate-50/80 pt-4 backdrop-blur-sm">
                 <div class="mx-auto flex w-full max-w-6xl justify-center px-4 py-3">
-                    <button type="submit" id="btnSimpanAbsen" class="inline-flex items-center justify-center rounded-3xl bg-indigo-600 px-8 py-4 text-sm font-black uppercase tracking-[0.2em] text-white shadow-lg shadow-indigo-200 transition-all hover:bg-indigo-700">
+                    <button type="submit" id="btnSimpanAbsen" class="inline-flex items-center justify-center rounded-3xl bg-teal-600 px-8 py-4 text-sm font-bold uppercase tracking-[0.2em] text-white shadow-lg shadow-teal-200 transition-all hover:bg-teal-700">
                         <i class="fas fa-save mr-3"></i> Simpan Absensi Hari Ini
                     </button>
                 </div>

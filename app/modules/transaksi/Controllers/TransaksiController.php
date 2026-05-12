@@ -180,8 +180,6 @@ class TransaksiController extends BaseController
             'type'              => $typeInput,
             'kategori'          => $kategoriAuto,
             'keterangan'        => $this->request->getPost('keterangan'),
-            'metode_pembayaran' => $this->request->getPost('metode_pembayaran'),
-            'rentang_usia'      => $this->request->getPost('rentang_usia'),
             'created_at'        => date('Y-m-d H:i:s'),
             'created_by'        => session()->get('userId')
         ];
@@ -262,41 +260,78 @@ class TransaksiController extends BaseController
         $data = $this->export_data();
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Laporan Transaksi');
+
+        // --- 1. JUDUL LAPORAN ---
+        $sheet->setCellValue('A1', 'LAPORAN RIWAYAT TRANSAKSI KEUANGAN');
+        $sheet->mergeCells('A1:D1');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(16);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+        $sheet->setCellValue('A2', 'Dicetak pada: ' . date('d/m/Y H:i:s'));
+        $sheet->mergeCells('A2:D2');
+        $sheet->getStyle('A2')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+        // --- 2. HEADER TABEL ---
+        $sheet->setCellValue('A4', 'No')
+            ->setCellValue('B4', 'Tanggal')
+            ->setCellValue('C4', 'Keterangan')
+            ->setCellValue('D4', 'Nominal');
 
         // Header Styling
         $styleHeader = [
-            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
-            'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => '4E73DF']],
-            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER]
+            'font' => [
+                'bold'  => true,
+                'color' => ['rgb' => 'FFFFFF']
+            ],
+            'fill' => [
+                'fillType'   => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'startColor' => ['rgb' => '1E40AF'] // Dark Blue
+            ],
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                ],
+            ],
         ];
+        $sheet->getStyle('A4:D4')->applyFromArray($styleHeader);
+        $sheet->getRowDimension(4)->setRowHeight(25);
 
-        // Header Tabel
-        $sheet->setCellValue('A1', 'No')
-            ->setCellValue('B1', 'Tanggal')
-            ->setCellValue('C1', 'Metode')
-            ->setCellValue('D1', 'Usia')
-            ->setCellValue('E1', 'Keterangan')
-            ->setCellValue('F1', 'Nominal');
-
-        $sheet->getStyle('A1:F1')->applyFromArray($styleHeader);
-
-        // Isi Data
-        $row = 2;
+        // --- 3. ISI DATA ---
+        $row = 5;
         foreach ($data as $index => $t) {
             $sheet->setCellValue('A' . $row, $index + 1)
                 ->setCellValue('B' . $row, date('d/m/Y H:i', strtotime($t['created_at'])))
-                ->setCellValue('C' . $row, strtoupper($t['metode_pembayaran']))
-                ->setCellValue('D' . $row, $t['rentang_usia'])
-                ->setCellValue('E' . $row, $t['keterangan'])
-                ->setCellValue('F' . $row, $t['nominal']);
+                ->setCellValue('C' . $row, $t['keterangan'])
+                ->setCellValue('D' . $row, $t['nominal']);
 
-            // Format Rupiah di kolom F
-            $sheet->getStyle('F' . $row)->getNumberFormat()->setFormatCode('#,##0');
+            // Styling baris data
+            $sheet->getStyle('A' . $row . ':D' . $row)->applyFromArray([
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        'color'       => ['rgb' => 'E2E8F0'],
+                    ],
+                ],
+                'alignment' => [
+                    'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                ],
+            ]);
+
+            // Alignment spesifik
+            $sheet->getStyle('A' . $row . ':B' . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            
+            // Format Rupiah di kolom D (sebelumnya F)
+            $sheet->getStyle('D' . $row)->getNumberFormat()->setFormatCode('#,##0');
             $row++;
         }
 
         // Auto size kolom
-        foreach (range('A', 'F') as $columnID) {
+        foreach (range('A', 'D') as $columnID) {
             $sheet->getColumnDimension($columnID)->setAutoSize(true);
         }
 
