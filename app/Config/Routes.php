@@ -35,6 +35,7 @@ $routes->group('antrean', ['namespace' => 'App\Modules\Antrean\Controllers', 'fi
   $routes->post('destroy/(:num)', 'AntreanController::destroy/$1');
   $routes->get('procesToQueue/(:num)', 'AntreanController::procesToQueue/$1');
   $routes->get('finishQueue/(:num)', 'AntreanController::finishQueue/$1');
+  $routes->post('set-break', 'AntreanController::setBreak');
   $routes->get('export_excell_antrean', 'AntreanController::export_excell_antrean');
   $routes->get('print_pdf_antrean', 'AntreanController::print_pdf_antrean');
 });

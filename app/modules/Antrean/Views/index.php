@@ -26,6 +26,12 @@
                 Lihat Antrean
             </a>
 
+            <button type="button" id="btnBreakTime"
+                class="inline-flex items-center gap-2 rounded-lg border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-medium text-orange-700 transition hover:bg-orange-100">
+                <i class="fas fa-coffee text-orange-500"></i>
+                Istirahat
+            </button>
+
             <button type="button" data-modal-open="exampleModal"
                 class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-700">
                 <i class="fas fa-plus-circle text-white"></i>
@@ -395,6 +401,164 @@
     }
 </style>
 <?= $this->include('App\modules\patients\Views\component\card_riwayat') ?>
+
+<!-- Modal Istirahat -->
+<div id="modalBreakTime" class="modal-wrapper hidden fixed inset-0 z-[60] items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+    <div class="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl">
+        <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+            <h5 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <i class="fas fa-coffee text-orange-500"></i>
+                Set Waktu Istirahat
+            </h5>
+            <button type="button" onclick="closeModal(document.getElementById('modalBreakTime'))" class="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+        </div>
+
+        <div class="p-6 space-y-6">
+            <?php if (session()->get('role') === 'superadmin'): ?>
+            <div class="space-y-1">
+                <label class="text-sm font-bold text-slate-700 uppercase tracking-wider">Pilih Wilayah</label>
+                <select id="breakRegionId" class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all bg-slate-50 font-bold text-slate-700">
+                    <option value="">-- Pilih Wilayah --</option>
+                    <?php foreach ($wilayah as $w): ?>
+                        <option value="<?= $w->id ?>" <?= session()->get('active_region') == $w->id ? 'selected' : '' ?>><?= esc($w->name) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <?php else: ?>
+                <input type="hidden" id="breakRegionId" value="<?= is_array(session()->get('region_patient')) ? session()->get('region_patient')[0] : session()->get('region_patient') ?>">
+            <?php endif; ?>
+
+            <div class="space-y-4">
+                <label class="text-sm font-bold text-slate-700 uppercase tracking-wider">Durasi Istirahat</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <button type="button" data-duration="15" class="btn-duration border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-600 hover:border-teal-500 hover:text-teal-600 transition-all flex flex-col items-center gap-1">
+                        <span class="text-xl">15</span>
+                        <span class="text-[10px] uppercase">Menit</span>
+                    </button>
+                    <button type="button" data-duration="30" class="btn-duration border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-600 hover:border-teal-500 hover:text-teal-600 transition-all flex flex-col items-center gap-1">
+                        <span class="text-xl">30</span>
+                        <span class="text-[10px] uppercase">Menit</span>
+                    </button>
+                    <button type="button" data-duration="45" class="btn-duration border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-600 hover:border-teal-500 hover:text-teal-600 transition-all flex flex-col items-center gap-1">
+                        <span class="text-xl">45</span>
+                        <span class="text-[10px] uppercase">Menit</span>
+                    </button>
+                    <button type="button" data-duration="60" class="btn-duration border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-600 hover:border-teal-500 hover:text-teal-600 transition-all flex flex-col items-center gap-1">
+                        <span class="text-xl">60</span>
+                        <span class="text-[10px] uppercase">Menit</span>
+                    </button>
+                </div>
+                
+                <div class="relative pt-2">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-clock text-slate-400"></i>
+                    </div>
+                    <input type="number" id="customDuration" placeholder="Atur menit lainnya..." 
+                        class="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all">
+                </div>
+            </div>
+
+            <div class="pt-2">
+                <button type="button" id="btnStartBreak" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-teal-600/30 transition-all flex items-center justify-center gap-2">
+                    <i class="fas fa-play"></i>
+                    Mulai Istirahat Sekarang
+                </button>
+                <button type="button" id="btnStopBreak" class="hidden w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl shadow-lg shadow-slate-800/30 transition-all flex items-center justify-center gap-2 mt-2">
+                    <i class="fas fa-stop"></i>
+                    Hentikan Istirahat
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const modalBreak = document.getElementById('modalBreakTime');
+        const btnOpenBreak = document.getElementById('btnBreakTime');
+        const btnStartBreak = document.getElementById('btnStartBreak');
+        const btnStopBreak = document.getElementById('btnStopBreak');
+        const durationButtons = document.querySelectorAll('.btn-duration');
+        const customInput = document.getElementById('customDuration');
+        let selectedDuration = null;
+
+        if (btnOpenBreak) {
+            btnOpenBreak.addEventListener('click', () => openModal(modalBreak));
+        }
+
+        durationButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                durationButtons.forEach(b => b.classList.remove('border-teal-500', 'text-teal-600', 'bg-teal-50'));
+                this.classList.add('border-teal-500', 'text-teal-600', 'bg-teal-50');
+                selectedDuration = this.dataset.duration;
+                customInput.value = '';
+            });
+        });
+
+        customInput.addEventListener('input', function() {
+            if (this.value) {
+                durationButtons.forEach(b => b.classList.remove('border-teal-500', 'text-teal-600', 'bg-teal-50'));
+                selectedDuration = this.value;
+            }
+        });
+
+        btnStartBreak.addEventListener('click', function() {
+            const duration = selectedDuration || customInput.value;
+            const regionId = document.getElementById('breakRegionId').value;
+
+            if (!regionId) {
+                Swal.fire('Peringatan', 'Silakan pilih wilayah terlebih dahulu.', 'warning');
+                return;
+            }
+            if (!duration) {
+                Swal.fire('Peringatan', 'Silakan pilih atau masukkan durasi istirahat.', 'warning');
+                return;
+            }
+
+            $.ajax({
+                url: '<?= site_url("antrean/set-break") ?>',
+                type: 'POST',
+                data: {
+                    region_id: regionId,
+                    duration: duration,
+                    status: 'start',
+                    <?= csrf_token() ?>: '<?= csrf_hash() ?>'
+                },
+                success: function(res) {
+                    if (res.status === 'success') {
+                        Swal.fire('Berhasil', res.message, 'success');
+                        closeModal(modalBreak);
+                    } else {
+                        Swal.fire('Gagal', res.message, 'error');
+                    }
+                }
+            });
+        });
+
+        btnStopBreak.addEventListener('click', function() {
+            const regionId = document.getElementById('breakRegionId').value;
+            if (!regionId) return;
+
+            $.ajax({
+                url: '<?= site_url("antrean/set-break") ?>',
+                type: 'POST',
+                data: {
+                    region_id: regionId,
+                    status: 'stop',
+                    <?= csrf_token() ?>: '<?= csrf_hash() ?>'
+                },
+                success: function(res) {
+                    if (res.status === 'success') {
+                        Swal.fire('Berhasil', res.message, 'success');
+                        closeModal(modalBreak);
+                    }
+                }
+            });
+        });
+    });
+</script>
 
 <?= $this->endSection() ?>
 
