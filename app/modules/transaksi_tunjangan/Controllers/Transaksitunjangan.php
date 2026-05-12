@@ -43,7 +43,11 @@ class Transaksitunjangan extends BaseController
         $start  = $this->request->getPost('start');
         $length = $this->request->getPost('length');
         $search = $this->request->getPost('search')['value'];
-        $dataRaw = $this->model_transaksi_karyawan->get_datatables_terapis($search, $start, $length);
+
+        $region_patient = session()->get('region_patient');
+        $regionFilter = ($region_patient !== 'all' && !empty($region_patient)) ? $region_patient : null;
+
+        $dataRaw = $this->model_transaksi_karyawan->get_datatables_terapis($search, $start, $length, $regionFilter);
         $data = [];
 
         foreach ($dataRaw as $row) {
@@ -61,8 +65,8 @@ class Transaksitunjangan extends BaseController
 
         return $this->response->setJSON([
             "draw"            => intval($draw),
-            "recordsTotal"    => $this->model_transaksi_karyawan->count_all_terapis(),
-            "recordsFiltered" => $this->model_transaksi_karyawan->count_filtered_terapis($search),
+            "recordsTotal"    => $this->model_transaksi_karyawan->count_all_terapis($regionFilter),
+            "recordsFiltered" => $this->model_transaksi_karyawan->count_filtered_terapis($search, $regionFilter),
             "data"            => $data,
             "csrfHash"        => csrf_hash()
         ]);
@@ -101,9 +105,18 @@ class Transaksitunjangan extends BaseController
         $this->db->transStart();
 
         if ($tipeInput === 'massal') {
-            // $terapisAktif = $this->model_terapis->where('status', 'Aktif')->findAll();
-            // $terapisAktif = $this->model_terapis->findAll();
-            $terapisAktif = $this->model_terapis->where('is_active', 1)->findAll();
+            $region_patient = session()->get('region_patient');
+            $terapisQuery = $this->model_terapis->where('is_active', 1);
+
+            if (!empty($region_patient) && $region_patient !== 'all') {
+                if (is_array($region_patient)) {
+                    $terapisQuery->whereIn('region_id', $region_patient);
+                } else {
+                    $terapisQuery->where('region_id', $region_patient);
+                }
+            }
+
+            $terapisAktif = $terapisQuery->findAll();
             if (empty($terapisAktif)) {
                 return $this->response->setJSON(['status' => 'error', 'message' => 'Tidak ada terapis aktif ditemukan.']);
             }

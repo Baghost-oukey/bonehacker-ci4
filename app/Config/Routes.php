@@ -377,6 +377,16 @@ $routes->group('kehadiran', ['namespace' => 'App\modules\absensi_karyawan\Contro
   $routes->post('simpan_massal', 'Absensikaryawan::simpan_massal');
 });
 
+// Routes - Kalender
+$routes->group('kalender', ['namespace' => 'App\modules\kalender\Controllers', 'filter' => 'auth'], function ($routes) {
+    $routes->get('/', 'Kalender::index');
+    $routes->post('store', 'Kalender::store');
+    $routes->post('store-rutin', 'Kalender::storeRutin');
+    $routes->post('destroy/(:num)', 'Kalender::destroy/$1');
+    $routes->post('copy-global', 'Kalender::copyGlobal');
+    $routes->get('get-data', 'Kalender::getData');
+});
+
 
 $routes->group('jasa-pelayanan', ['namespace' => 'App\modules\jasa_pelayanan\Controllers', 'filter' => 'auth'], function($routes) {
     $routes->get('reguler', 'Jasapelayanan::reguler');
