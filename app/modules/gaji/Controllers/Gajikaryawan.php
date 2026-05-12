@@ -251,8 +251,19 @@ class Gajikaryawan extends BaseController
     }
     public function monitor()
     {
-        $terapis_id = session()->get('terapis_id');
+        // Gunakan Integer ID untuk sinkronisasi database
+        $terapis_id = session()->get('terapis_id_int');
         
+        // Fallback: Jika session baru belum ada (user belum relogin), cari manual berdasarkan string ID
+        if (!$terapis_id && session()->get('terapis_id')) {
+            $terapisStringId = session()->get('terapis_id');
+            $terapis = $this->db->table('terapis')->select('id')->where('terapis_id', $terapisStringId)->get()->getRow();
+            if ($terapis) {
+                $terapis_id = $terapis->id;
+                session()->set('terapis_id_int', $terapis_id); // Simpan ke session untuk request berikutnya
+            }
+        }
+
         if (!$terapis_id) {
             return redirect()->to(base_url('beranda'))->with('error', 'Akun Anda tidak terhubung dengan data Terapis.');
         }

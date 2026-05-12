@@ -144,31 +144,7 @@
                                     </select>
                                 </div>
                             </div>
-                                            <?php
-                                            // Prioritas: region_id dari patient (biodata)
-                                            $selected = '';
-                                            if (isset($patient->region_id) && $value->id == $patient->region_id) {
-                                                $selected = 'selected';
-                                            }
-                                            ?>
-                                            <option value="<?= $value->id ?>" <?= $selected ?>><?= esc($value->name) ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                            </div>
-                                            <?php
-                                            $selected = '';
-                                            if (isset($regions_patient[0]) && $value->id == $regions_patient[0]) {
-                                                $selected = 'selected';
-                                            } elseif (isset($patient->region_id) && $value->id == $patient->region_id) {
-                                                $selected = 'selected';
-                                            }
-                                            ?>
-                                            <option value="<?= $value->id ?>" <?= $selected ?>><?= esc($value->name) ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                            </div>
+
                         </div>
                     </div>
                 </div>

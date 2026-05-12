@@ -73,17 +73,41 @@ class TerapisController extends BaseController
 
     $queryBuilder = $this->model_terapis->getTerapis($region, $allowed_regions);
 
+    // Tambahkan pencarian manual jika ada searchValue
+    $search = $this->request->getPost('search');
+    $searchValue = is_array($search) ? ($search['value'] ?? '') : '';
+
+    if (!empty($searchValue)) {
+      $queryBuilder->groupStart()
+        ->like('t.nama', $searchValue)
+        ->orLike('t.terapis_id', $searchValue)
+        ->orLike('t.alamat', $searchValue)
+        ->orLike('r.name', $searchValue)
+        ->groupEnd();
+    }
+
     $datatables = new \Ngekoding\CodeIgniterDataTables\DataTables($queryBuilder, '4');
+    $datatables->only(['no', 'nama', 'region_name', 'alamat', 'jml_tindakan', 'is_active', 'action']);
 
     $start = $this->request->getPost('start') ?? 0;
     $datatables->addColumn('no', function ($row) use (&$start) {
       return ++$start;
     });
 
-    $datatables->addColumn('jml_tindakan', function ($row) {
-      $row = (object) $row;
-      $jumlah = $row->jml_tindakan ?? 0;
+    $datatables->addColumn('nama', function ($row) {
+      return esc($row->nama);
+    });
 
+    $datatables->addColumn('region_name', function ($row) {
+      return esc($row->region_name);
+    });
+
+    $datatables->addColumn('alamat', function ($row) {
+      return esc($row->alamat ?? '-');
+    });
+
+    $datatables->addColumn('jml_tindakan', function ($row) {
+      $jumlah = $row->jml_tindakan ?? 0;
       if ($jumlah == 0) {
         return '<span class="badge badge-danger">0 Tindakan</span>';
       } else {
@@ -92,7 +116,6 @@ class TerapisController extends BaseController
     });
 
     $datatables->addColumn('is_active', function ($row) {
-      $row = (object) $row;
       if ($row->is_active == 1) {
         return '<span class="badge badge-success">Aktif</span>';
       } else {
@@ -101,17 +124,15 @@ class TerapisController extends BaseController
     });
 
     $datatables->addColumn('action', function ($row) {
-      $row = (object) $row;
       $type = $row->is_active == 1 ? 'delete' : 'active';
-      $btn_status = $row->is_active == 1 ? '<a href="javascript:void(0)" data-href="' . base_url('terapis/nonActive/' . $row->id) . '" data-type="delete" class="btn btn-danger btn_status"><i class="fas fa-window-close"></i></a>' : '<a href="javascript:void(0)" data-href="' . base_url('terapis/active/' . $row->id) . '" data-type="active" class="btn btn-primary btn_status mr-1"><i class="fas fa-check-square"></i></a>';
+      $btn_status = $row->is_active == 1 
+        ? '<a href="javascript:void(0)" data-href="' . base_url('terapis/nonActive/' . $row->id) . '" data-type="delete" class="btn btn-danger btn_status"><i class="fas fa-window-close"></i></a>' 
+        : '<a href="javascript:void(0)" data-href="' . base_url('terapis/active/' . $row->id) . '" data-type="active" class="btn btn-primary btn_status mr-1"><i class="fas fa-check-square"></i></a>';
 
       return '
-            <a href="' .
-        base_url('terapis/detail-terapis/' . $row->terapis_id) .
-        '" class="btn btn-primary btn-sm"><i class="fas fa-eye"></i></a> ' .
+            <a href="' . base_url('terapis/detail-terapis/' . $row->terapis_id) . '" class="btn btn-primary btn-sm"><i class="fas fa-eye"></i></a> ' .
         '<button type="button" onclick="generateUser(\'' . $row->terapis_id . '\')" class="btn btn-warning btn-sm" title="Buat Akun Login"><i class="fas fa-user-plus"></i></button> ' .
         $btn_status;
-      // 'button type="button" data-href="' . base_url("terapis/destroy/" . $row->id) . '" class="btn btn-danger btn-sm btn_delete"><i class="fas fa-trash"></i></button>';
     });
 
     $datatables->asObject();
@@ -205,6 +226,8 @@ class TerapisController extends BaseController
     $file = $this->request->getFile('foto');
     $tgl_kerja = $this->request->getPost('tgl_kerja');
 
+    $jabatan_id = $this->request->getPost('jabatan_id');
+
     $data = [
       'terapis_id' => $this->request->getPost('terapis_id'),
       'nama' => $this->request->getPost('nama'),
@@ -212,7 +235,7 @@ class TerapisController extends BaseController
       'tanggal_lahir' => $this->request->getPost('tgl_lahir'),
       'alamat' => $this->request->getPost('alamat') ?: null,
       'region_id' => $this->request->getPost('region_id'),
-      'jabatan_id' => $this->request->getPost('jabatan_id'),
+      'jabatan_id' => !empty($jabatan_id) ? $jabatan_id : null,
       'rank' => $this->request->getPost('rank'),
       'tgl_mulai_kerja' => !empty($tgl_kerja) ? $tgl_kerja . ' ' . date('H:i:s') : null,
       'keterangan' => $this->request->getPost('keterangan'),
@@ -222,10 +245,23 @@ class TerapisController extends BaseController
       $data['foto'] = $foto;
     }
 
-    if ($this->model_terapis->store($data)) {
-      $this->session->setFlashdata('message', ['success', 'Data berhasil disimpan']);
-    } else {
-      $this->session->setFlashdata('message', ['danger', 'Gagal menyimpan data']);
+    try {
+      if ($this->model_terapis->store($data)) {
+        if ($this->request->isAJAX()) {
+          return $this->response->setJSON(['status' => 'success', 'message' => 'Data berhasil disimpan', 'csrfHash' => csrf_hash()]);
+        }
+        $this->session->setFlashdata('message', ['success', 'Data berhasil disimpan']);
+      } else {
+        if ($this->request->isAJAX()) {
+          return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal menyimpan data', 'csrfHash' => csrf_hash()]);
+        }
+        $this->session->setFlashdata('message', ['danger', 'Gagal menyimpan data']);
+      }
+    } catch (\Exception $e) {
+      if ($this->request->isAJAX()) {
+        return $this->response->setJSON(['status' => 'error', 'message' => 'Database Error: ' . $e->getMessage(), 'csrfHash' => csrf_hash()]);
+      }
+      $this->session->setFlashdata('message', ['danger', 'Database Error: ' . $e->getMessage()]);
     }
 
     return redirect()->to('terapis');
@@ -239,6 +275,8 @@ class TerapisController extends BaseController
     $is_presensi = $this->request->getPost('is_presensi') === 'on' ? 1 : 0;
     $file = $this->request->getFile('foto');
 
+    $jabatan_id = $this->request->getPost('jabatan_id');
+
     $data = [
       'terapis_id' => $terapis_id,
       'nama' => $this->request->getPost('nama'),
@@ -246,7 +284,7 @@ class TerapisController extends BaseController
       'tanggal_lahir' => $this->request->getPost('tgl_lahir'),
       'alamat' => $this->request->getPost('alamat') ?: null,
       'region_id' => $this->request->getPost('region_id'),
-      'jabatan_id' => $this->request->getPost('jabatan_id'),
+      'jabatan_id' => !empty($jabatan_id) ? $jabatan_id : null,
       'rank' => $this->request->getPost('rank'),
       'tgl_mulai_kerja' => $this->request->getPost('tgl_kerja'),
       'keterangan' => $this->request->getPost('keterangan'),
