@@ -111,7 +111,55 @@ const setupTransaksiTunjanganPage = () => {
                 emptyTable: "Belum ada data terapis aktif.",
                 processing: "<span class='text-indigo-600 font-bold'>Memuat Data...</span>"
             },
-            drawCallback: function () {
+            drawCallback: function (settings) {
+                const api = this.api();
+                const data = api.rows({ page: 'current' }).data().toArray();
+                
+                // RENDER MOBILE CARDS
+                const mobileContainer = document.getElementById('mobile-card-container');
+                if (mobileContainer) {
+                    mobileContainer.innerHTML = '';
+                    if (data.length === 0) {
+                        mobileContainer.innerHTML = `
+                            <div class="text-center py-10 text-slate-400 italic text-sm bg-white rounded-2xl border border-dashed border-slate-200">
+                                Belum ada data terapis aktif.
+                            </div>
+                        `;
+                    } else {
+                        data.forEach(row => {
+                            const tunjanganLabel = row.tunjangan_raw > 0
+                                ? `<span class="text-indigo-600 font-black text-xs">${row.tunjangan_info}</span>`
+                                : `<span class="text-slate-400 italic text-[10px]">Belum ada setting</span>`;
+
+                            const card = `
+                                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                                    <div class="flex justify-between items-start">
+                                        <div class="flex flex-col gap-1">
+                                            <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">${row.nama}</h3>
+                                            <span class="inline-flex w-fit items-center px-2 py-0.5 rounded-lg text-[9px] font-bold uppercase tracking-widest bg-slate-100 text-slate-600 border border-slate-200">${row.jabatan}</span>
+                                        </div>
+                                        <a href="${config.urlDetail}/${row.id}" class="h-10 w-10 flex items-center justify-center bg-slate-900 text-white rounded-xl shadow-lg shadow-slate-900/20 active:scale-95 transition-all">
+                                            <i class="fas fa-wallet text-sm"></i>
+                                        </a>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50">
+                                        <div class="flex flex-col gap-0.5">
+                                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Gaji Pokok</span>
+                                            <span class="text-xs font-bold text-slate-700">${row.gaji_pokok}</span>
+                                        </div>
+                                        <div class="flex flex-col gap-0.5">
+                                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Tunjangan</span>
+                                            <span class="text-xs font-bold text-right">${tunjanganLabel}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            mobileContainer.insertAdjacentHTML('beforeend', card);
+                        });
+                    }
+                }
+
                 $('.dataTables_wrapper').addClass('flow-root');
                 $('.dataTables_length').addClass('mb-4 text-sm text-slate-500 float-left');
                 $('.dataTables_length select').addClass('border border-slate-200 rounded-lg px-2 py-1 mx-2 bg-slate-50 outline-none');

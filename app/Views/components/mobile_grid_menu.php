@@ -37,7 +37,7 @@ if ($role !== 'user') {
 
     // Kelola Gaji & Kasbon (Hanya Owner)
     if ($role === 'owner') {
-        $menus[] = ['label' => 'Gaji Karyawan', 'url' => site_url('gaji'), 'icon' => 'fa-dollar-sign', 'color' => 'bg-emerald-600'];
+        $menus[] = ['label' => 'Kelola Gaji', 'url' => site_url('gaji'), 'icon' => 'fa-dollar-sign', 'color' => 'bg-emerald-600'];
         $menus[] = ['label' => 'Kasbon', 'url' => site_url('kasbon'), 'icon' => 'fa-hand-holding-dollar', 'color' => 'bg-yellow-600'];
         $menus[] = ['label' => 'Arus Kas', 'url' => site_url('kas'), 'icon' => 'fa-credit-card', 'color' => 'bg-slate-600'];
     }

@@ -2,31 +2,51 @@
 <?= $this->section('content') ?>
 
 <div class="p-4 sm:p-8 bg-slate-50 min-h-screen">
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-        <div>
-            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Tunjangan Karyawan</h1>
-            <p class="text-sm text-slate-500 mt-1.5 font-medium">Pilih karyawan untuk mengelola tunjangan harian atau input massal.</p>
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <div class="w-full md:w-auto">
+            <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Tunjangan Karyawan</h1>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1 font-medium">Kelola tunjangan harian atau input massal.</p>
         </div>
-        <button id="btnInputMassal" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-xl shadow-lg shadow-indigo-200 transition-all flex items-center gap-2 font-black uppercase tracking-widest">
-            <i class="fas fa-users text-lg"></i>
+
+        <!-- DROPDOWN NAVIGASI MOBILE -->
+        <div class="w-full md:hidden">
+            <select onchange="window.location.href=this.value" class="w-full bg-blue-50 border border-blue-100 text-blue-700 text-sm font-bold rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm">
+                <option value="<?= site_url('gaji') ?>">Gaji Karyawan</option>
+                <option value="<?= site_url('transaksi-tunjangan') ?>" selected>Tunjangan Terapis</option>
+                <option value="<?= site_url('master-gaji') ?>">Master Gaji</option>
+                <option value="<?= site_url('kasbon') ?>">Kasbon Karyawan</option>
+            </select>
+        </div>
+
+        <button id="btnInputMassal" class="w-full md:w-auto px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm rounded-xl shadow-lg shadow-indigo-200 transition-all flex items-center justify-center gap-2 font-black uppercase tracking-widest">
+            <i class="fas fa-users text-base"></i>
             Input Tunjangan Massal
         </button>
     </div>
 
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 overflow-hidden">
+    <!-- TAMPILAN DESKTOP (TABLE) -->
+    <div class="hidden md:block bg-white rounded-2xl shadow-sm border border-slate-200 p-6 overflow-hidden">
         <table id="table-tunjangan-terapis" class="table-auto w-full text-left border-collapse">
             <thead>
                 <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 text-[11px] font-bold uppercase tracking-widest">
                     <th class="py-4 px-4 w-12 text-center">No</th>
                     <th class="py-4 px-4">Nama Terapis</th>
                     <th class="py-4 px-4 text-center">Jabatan</th>
-                    <th class="py-4 px-4 text-center">Status Keuangan</th>
+                    <th class="py-4 px-4 text-center text-nowrap">Status Keuangan</th>
                     <th class="py-4 px-4 text-right">Aksi</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 text-sm font-medium text-slate-700">
             </tbody>
         </table>
+    </div>
+
+    <!-- TAMPILAN MOBILE (CARDS) -->
+    <div id="mobile-card-container" class="md:hidden space-y-4 pb-20">
+        <!-- Rendered via JS -->
+        <div class="text-center py-10 text-slate-400 italic text-sm bg-white rounded-2xl border border-dashed border-slate-200">
+            Memuat data terapis...
+        </div>
     </div>
 </div>
 

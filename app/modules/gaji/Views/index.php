@@ -2,10 +2,20 @@
 <?= $this->section('content') ?>
 
 <div id="gajiPage" class="p-6 bg-slate-50 min-h-screen">
-    <div class="mb-6 flex justify-between items-center">
-        <div>
-            <h1 class="text-2xl font-bold text-slate-800">Analisis & Kelola Gaji</h1>
-            <p class="text-sm text-slate-500 mt-1">Sistem penggajian otomatis terintegrasi dengan data kehadiran dan tindakan.</p>
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <div class="w-full md:w-auto">
+            <h1 class="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">Analisis & Kelola Gaji</h1>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1 font-medium">Sistem penggajian otomatis terintegrasi kehadiran.</p>
+        </div>
+
+        <!-- DROPDOWN NAVIGASI MOBILE -->
+        <div class="w-full md:hidden">
+            <select onchange="window.location.href=this.value" class="w-full bg-blue-50 border border-blue-100 text-blue-700 text-sm font-bold rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm">
+                <option value="<?= site_url('gaji') ?>" selected>Gaji Karyawan</option>
+                <option value="<?= site_url('transaksi-tunjangan') ?>">Tunjangan Terapis</option>
+                <option value="<?= site_url('master-gaji') ?>">Master Gaji</option>
+                <option value="<?= site_url('kasbon') ?>">Kasbon Karyawan</option>
+            </select>
         </div>
     </div>
 
@@ -35,8 +45,9 @@
         </div>
 
         <!-- TAB 1: PERIODE BERJALAN (BELUM DIBAYAR) -->
-        <div id="tab-estimasi" class="tab-content p-6 block">
-            <div class="overflow-x-auto">
+        <div id="tab-estimasi" class="tab-content p-4 sm:p-6 block">
+            <!-- DESKTOP TABLE -->
+            <div class="hidden md:block overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
@@ -94,16 +105,68 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- MOBILE CARDS -->
+            <div class="md:hidden space-y-4">
+                <?php foreach ($estimasi_gaji as $row) : ?>
+                    <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm space-y-4">
+                        <div class="flex justify-between items-start">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 font-black text-sm">
+                                    <?= strtoupper(substr($row['nama'], 0, 1)) ?>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-slate-800 text-sm"><?= esc($row['nama']) ?></h4>
+                                    <p class="text-[10px] font-medium text-slate-500 uppercase tracking-wider"><?= esc($row['wilayah']) ?></p>
+                                </div>
+                            </div>
+                            <button class="btn-setting p-2 text-slate-400 bg-slate-50 rounded-lg hover:text-blue-600 transition" 
+                                    data-terapis-id="<?= $row['terapis_id'] ?>" 
+                                    data-tipe-gaji="<?= esc($row['tipe_gaji']) ?>"
+                                    data-nominal="<?= $row['nominal_gaji'] ?? 0 ?>"
+                                    data-potong="<?= $row['potong_absen'] ?? 0 ?>">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 py-3 border-y border-slate-50">
+                            <div>
+                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Tipe Gaji</p>
+                                <?php if ($row['tipe_gaji'] === 'Belum Diset') : ?>
+                                    <span class="text-[10px] font-bold text-red-500 italic">Belum Diset</span>
+                                <?php else : ?>
+                                    <span class="text-[10px] font-bold text-blue-600 uppercase"><?= esc($row['tipe_gaji']) ?></span>
+                                <?php endif; ?>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Gaji Dasar</p>
+                                <span class="text-xs font-bold text-slate-700">Rp <?= number_format($row['nominal_gaji'], 0, ',', '.') ?></span>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-stethoscope text-slate-400 text-xs"></i>
+                                <span class="text-xs font-bold text-slate-600"><?= esc($row['jml_tindakan'] ?? 0) ?> Tindakan</span>
+                            </div>
+                            <button class="btn-proses-gaji px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold shadow-lg shadow-slate-900/10 active:scale-95 transition-all"
+                                    data-terapis-id="<?= $row['terapis_id'] ?>">
+                                Proses Gaji
+                            </button>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
         </div>
 
         <!-- TAB 2: RIWAYAT TRANSAKSI -->
-        <div id="tab-riwayat" class="tab-content p-6 hidden">
+        <div id="tab-riwayat" class="tab-content p-4 sm:p-6 hidden">
             <!-- Filter Riwayat -->
-            <form action="<?= base_url('gaji') ?>" method="GET" class="mb-6 flex flex-wrap items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+            <form action="<?= base_url('gaji') ?>" method="GET" class="mb-6 flex flex-col gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100 sm:flex-row sm:items-center">
                 <input type="hidden" name="tab" value="riwayat">
                 <div class="flex items-center gap-2">
                     <label class="text-xs font-bold text-slate-500 uppercase">Bulan:</label>
-                    <select name="bulan" onchange="this.form.submit()" class="text-sm font-bold border-slate-200 rounded-lg focus:ring-blue-500">
+                    <select name="bulan" onchange="this.form.submit()" class="text-sm font-bold border-slate-200 rounded-lg focus:ring-blue-500 bg-white">
                         <?php for ($m = 1; $m <= 12; $m++): ?>
                             <option value="<?= $m ?>" <?= $filter_bulan == $m ? 'selected' : '' ?>><?= date('F', mktime(0, 0, 0, $m, 1)) ?></option>
                         <?php endfor; ?>
@@ -111,47 +174,73 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <label class="text-xs font-bold text-slate-500 uppercase">Tahun:</label>
-                    <select name="tahun" onchange="this.form.submit()" class="text-sm font-bold border-slate-200 rounded-lg focus:ring-blue-500">
+                    <select name="tahun" onchange="this.form.submit()" class="text-sm font-bold border-slate-200 rounded-lg focus:ring-blue-500 bg-white">
                         <?php for ($y = date('Y'); $y >= date('Y') - 5; $y--): ?>
                             <option value="<?= $y ?>" <?= $filter_tahun == $y ? 'selected' : '' ?>><?= $y ?></option>
                         <?php endfor; ?>
                     </select>
                 </div>
-                <div class="ml-auto flex items-center gap-2">
-                    <p class="text-sm text-slate-500 mr-2">Menampilkan riwayat gaji yang sudah lunas.</p>
+                <div class="sm:ml-auto w-full sm:w-auto">
                     <a href="<?= base_url('gaji/export?bulan=' . $filter_bulan . '&tahun=' . $filter_tahun . '&region_id=' . $filter_region) ?>" 
-                       class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition text-sm font-medium shadow-sm">
-                        <i class="fas fa-file-excel"></i>
+                       class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition text-xs font-bold shadow-md shadow-emerald-600/10 uppercase tracking-widest">
+                        <i class="fas fa-file-excel text-sm"></i>
                         Export Excel
                     </a>
                 </div>
             </form>
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
-                        <th class="p-4">Tanggal Bayar</th>
-                        <th class="p-4">Nama Terapis</th>
-                        <th class="p-4">Periode</th>
-                        <th class="p-4 text-right">Total Dibayar</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 text-sm">
-                    <?php if (empty($riwayat_gaji)): ?>
-                        <tr>
-                            <td colspan="4" class="text-center p-4 text-slate-400">Belum ada riwayat penggajian</td>
+
+            <!-- DESKTOP TABLE -->
+            <div class="hidden md:block overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
+                            <th class="p-4">Tanggal Bayar</th>
+                            <th class="p-4">Nama Terapis</th>
+                            <th class="p-4">Periode</th>
+                            <th class="p-4 text-right">Total Dibayar</th>
                         </tr>
-                    <?php else: ?>
-                        <?php foreach ($riwayat_gaji as $rw): ?>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-sm">
+                        <?php if (empty($riwayat_gaji)): ?>
                             <tr>
-                                <td class="p-4 text-slate-600"><?= date('d M Y', strtotime($rw['tanggal_bayar'])) ?></td>
-                                <td class="p-4 font-medium text-slate-800"><?= esc($rw['nama']) ?></td>
-                                <td class="p-4 text-slate-600"><?= esc($rw['periode_bulan']) . '/' . esc($rw['periode_tahun']) ?></td>
-                                <td class="p-4 text-right font-bold text-green-600">Rp <?= number_format($rw['gaji_bersih'], 0, ',', '.') ?></td>
+                                <td colspan="4" class="text-center p-4 text-slate-400">Belum ada riwayat penggajian</td>
                             </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+                        <?php else: ?>
+                            <?php foreach ($riwayat_gaji as $rw): ?>
+                                <tr>
+                                    <td class="p-4 text-slate-600"><?= date('d M Y', strtotime($rw['tanggal_bayar'])) ?></td>
+                                    <td class="p-4 font-medium text-slate-800"><?= esc($rw['nama']) ?></td>
+                                    <td class="p-4 text-slate-600"><?= esc($rw['periode_bulan']) . '/' . esc($rw['periode_tahun']) ?></td>
+                                    <td class="p-4 text-right font-bold text-green-600">Rp <?= number_format($rw['gaji_bersih'], 0, ',', '.') ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- MOBILE CARDS -->
+            <div class="md:hidden space-y-4">
+                <?php if (empty($riwayat_gaji)): ?>
+                    <div class="text-center py-10 text-slate-400 italic text-sm bg-white rounded-2xl border border-dashed border-slate-200">
+                        Belum ada riwayat penggajian.
+                    </div>
+                <?php else: ?>
+                    <?php foreach ($riwayat_gaji as $rw) : ?>
+                        <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex justify-between items-center">
+                            <div>
+                                <h4 class="font-bold text-slate-800 text-sm"><?= esc($rw['nama']) ?></h4>
+                                <p class="text-[10px] font-medium text-slate-500 mt-0.5">Bayar: <?= date('d M Y', strtotime($rw['tanggal_bayar'])) ?></p>
+                                <p class="text-[9px] font-black text-indigo-500 uppercase tracking-tighter mt-1">Periode: <?= esc($rw['periode_bulan']) ?>/<?= esc($rw['periode_tahun']) ?></p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Diterima</p>
+                                <span class="text-sm font-black text-emerald-600">Rp <?= number_format($rw['gaji_bersih'], 0, ',', '.') ?></span>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
 </div>

@@ -42,6 +42,11 @@ class UsersTable extends Migration
                 'constraint' => 255,
                 'null'       => true,
             ],
+            'terapis_id' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 20,
+                'null'       => true,
+            ],
             'regions_patient' => [
                 'type' => 'LONGTEXT',
                 'null' => true,

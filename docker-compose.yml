@@ -10,7 +10,7 @@ services:
     ports:
       - "8080:80"
     environment:
-      CI_ENVIRONMENT: production
+      CI_ENVIRONMENT: development
     volumes:
       - .:/var/www/html
       - /var/www/html/vendor
