@@ -22,15 +22,26 @@ class Cutikaryawan extends BaseController
 
     public function index()
     {
-        $region_patient = session()->get('region_patient');
+        $region_patient  = session()->get('region_patient');
         $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
 
-        $terapis = $this->model_karyawan->where('is_active', 1)->findAll();
+        // Filter karyawan berdasarkan wilayah dan aktif
+        $terapisQuery = $this->model_karyawan->where('is_active', 1);
+
+        if ($allowed_regions) {
+            if (is_array($allowed_regions)) {
+                $terapisQuery->whereIn('region_id', $allowed_regions);
+            } else {
+                $terapisQuery->where('region_id', $allowed_regions);
+            }
+        }
+
+        $terapis  = $terapisQuery->findAll();
         $terpakai = $this->model_cuti->getTotalCutiTerpakai();
 
         foreach ($terapis as $t) {
             $t->terpakai = $terpakai[$t->id] ?? 0;
-            $t->sisa = (int)$t->jatah_cuti - $t->terpakai;
+            $t->sisa     = (int)$t->jatah_cuti - $t->terpakai;
         }
 
         $data = [
