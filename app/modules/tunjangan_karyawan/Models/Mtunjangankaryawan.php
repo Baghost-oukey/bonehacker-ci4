@@ -14,7 +14,11 @@ class Mtunjangankaryawan extends Model
     protected $protectFields    = true;
     protected $allowedFields    = [
         'nama_tunjangan',
-        'kategori'
+        'kategori',
+        'nominal',
+        'tipe',
+        'terapis_ids',
+        'region_id',
     ];
 
     protected bool $allowEmptyInserts = false;
@@ -52,5 +56,22 @@ class Mtunjangankaryawan extends Model
         return $this->where('kategori', $kategori)
             ->orderBy('nama_tunjangan', 'ASC')
             ->findAll();
+    }
+
+    public function getByRegion($regionId): array
+    {
+        return $this->where('region_id', $regionId)
+                    ->orderBy('kategori', 'ASC')
+                    ->orderBy('nama_tunjangan', 'ASC')
+                    ->findAll();
+    }
+
+    public function getForTerapis(int $terapisId, $regionId): array
+    {
+        $all = $this->getByRegion($regionId);
+        return array_values(array_filter($all, function($item) use ($terapisId) {
+            $ids = json_decode($item['terapis_ids'] ?? '[]', true);
+            return in_array($terapisId, $ids);
+        }));
     }
 }

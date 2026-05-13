@@ -353,7 +353,9 @@ $routes->group('master-gaji', ['namespace' => 'App\modules\tunjangan_karyawan\Co
   $routes->get('/', 'Tunjangankaryawan::index');
   $routes->post('fetch', 'Tunjangankaryawan::fetch');
   $routes->post('store', 'Tunjangankaryawan::store');
+  $routes->get('detail/(:num)', 'Tunjangankaryawan::detail/$1');
   $routes->delete('delete/(:num)', 'Tunjangankaryawan::delete/$1');
+  $routes->post('delete/(:num)', 'Tunjangankaryawan::delete/$1');
 });
 
 // Rutes - transaksi tunjangan

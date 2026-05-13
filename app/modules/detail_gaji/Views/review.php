@@ -89,7 +89,7 @@
                     <div class="bg-rose-50/50 rounded-2xl border border-rose-100 divide-y divide-rose-100">
                         <?php foreach ($komponen['potongan_list'] as $p): ?>
                         <div class="flex justify-between px-5 py-3 text-sm">
-                            <span class="text-slate-600"><?= esc($p['nama_potongan']) ?></span>
+                            <span class="text-slate-600"><?= esc($p['nama']) ?></span>
                             <span class="font-bold text-rose-600">- Rp <?= number_format($p['nominal'], 0, ',', '.') ?></span>
                         </div>
                         <?php endforeach; ?>
