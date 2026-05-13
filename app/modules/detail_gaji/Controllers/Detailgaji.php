@@ -69,7 +69,30 @@ class Detailgaji extends BaseController
         ];
 
         $this->db->transStart();
-        $this->Mgaji->insert($dataGaji);
+        $riwayatId = $this->Mgaji->insert($dataGaji, true); // true = return insert ID
+
+        // Simpan detail komponen sebagai snapshot
+        $detailBatch = [];
+
+        // Take Home
+        $detailBatch[] = ['riwayat_gaji_id' => $riwayatId, 'kelompok' => 'take_home', 'nama_komponen' => 'Gaji Pokok', 'nominal' => $k['gaji_pokok']];
+        if ($k['jaspel_reguler'] > 0)
+            $detailBatch[] = ['riwayat_gaji_id' => $riwayatId, 'kelompok' => 'take_home', 'nama_komponen' => 'Jasa Pelayanan Reguler', 'nominal' => $k['jaspel_reguler']];
+        if ($k['jaspel_kejantanan'] > 0)
+            $detailBatch[] = ['riwayat_gaji_id' => $riwayatId, 'kelompok' => 'take_home', 'nama_komponen' => 'Jasa Terapi Kejantanan', 'nominal' => $k['jaspel_kejantanan']];
+
+        // Benefit
+        foreach ($k['benefit_list'] as $b)
+            $detailBatch[] = ['riwayat_gaji_id' => $riwayatId, 'kelompok' => 'benefit', 'nama_komponen' => $b['nama'], 'nominal' => $b['nominal']];
+
+        // Potongan
+        foreach ($k['potongan_list'] as $p)
+            $detailBatch[] = ['riwayat_gaji_id' => $riwayatId, 'kelompok' => 'potongan', 'nama_komponen' => $p['nama'], 'nominal' => $p['nominal']];
+        if ($k['total_kasbon'] > 0)
+            $detailBatch[] = ['riwayat_gaji_id' => $riwayatId, 'kelompok' => 'potongan', 'nama_komponen' => 'Cicilan Kasbon', 'nominal' => $k['total_kasbon']];
+
+        if (!empty($detailBatch))
+            $this->db->table('riwayat_gaji_detail')->insertBatch($detailBatch);
 
         // Lunasi kasbon
         $this->db->table('kasbon_karyawan')

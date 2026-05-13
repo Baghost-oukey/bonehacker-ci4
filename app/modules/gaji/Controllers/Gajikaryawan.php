@@ -89,120 +89,55 @@ class Gajikaryawan extends BaseController
     public function prosesBayar()
     {
         $terapisId = (int)$this->request->getPost('terapis_id');
-        $totalKehadiran = (int)$this->request->getPost('total_kehadiran');
 
-        // --- VALIDASI SERVER-SIDE ---
         if (empty($terapisId) || $terapisId <= 0) {
             return redirect()->to('/gaji')->with('error', 'ID terapis tidak valid.');
         }
 
-        // Pastikan terapis ada dan aktif
-        $terapis = $this->db->table('terapis')
-            ->where('id', $terapisId)
-            ->where('is_active', 1)
-            ->get()
-            ->getRowArray();
-
-        if (empty($terapis)) {
-            return redirect()->to('/gaji')->with('error', 'Terapis tidak ditemukan atau tidak aktif.');
+        // Hitung ulang dari model
+        $dataDetail = $this->Mriwayatgaji->getDetailPerhitungan($terapisId);
+        if (empty($dataDetail['terapis'])) {
+            return redirect()->to('/gaji')->with('error', 'Data terapis tidak ditemukan.');
         }
 
-        // Pastikan gaji sudah di-set
-        $gajiData = $this->db->table('gaji_karyawan')
-            ->where('terapis_id', $terapisId)
-            ->get()
-            ->getRowArray();
+        $k = $dataDetail['komponen'];
 
-        if (empty($gajiData) || empty($gajiData['tipe_gaji'])) {
-            return redirect()->to('/gaji')->with('error', 'Pengaturan gaji belum diset untuk karyawan ini.');
-        }
-
-        // Validasi total kehadiran berdasarkan tipe gaji
-        $tipeGaji = $gajiData['tipe_gaji'] ?? 'bulanan';
-        
-        if ($tipeGaji === 'harian' && $totalKehadiran <= 0) {
-            return redirect()->to('/gaji')->with('error', 'Total kehadiran harus lebih dari 0 untuk gaji harian.');
-        }
-
-        if ($totalKehadiran < 0) {
-            return redirect()->to('/gaji')->with('error', 'Total kehadiran tidak boleh negatif.');
-        }
-
-        // --- PERHITUNGAN GAJI ---
-        $nominalGaji = isset($gajiData['nominal_gaji']) ? (int)$gajiData['nominal_gaji'] : 0;
-
-        if ($nominalGaji <= 0) {
-            return redirect()->to('/gaji')->with('error', 'Nominal gaji tidak valid.');
-        }
-
-        $gajiPokokTotal = ($tipeGaji === 'harian') ? ($nominalGaji * $totalKehadiran) : $nominalGaji;
-
-        // Potongan Absen untuk Gaji Bulanan
-        $potonganAbsen = 0;
-        if ($tipeGaji === 'bulanan' && isset($gajiData['potong_absen']) && $gajiData['potong_absen'] == 1) {
-            $mKalender = new \App\modules\kalender\Models\MKalender();
-            // Estimasi hari kerja berdasarkan bulan ini
-            $hariKerja = $mKalender->getHariKerjaBulanan(date('n'), date('Y'), $terapis['region_id'] ?? null);
-            if ($hariKerja > 0) {
-                $absenHari = $hariKerja - $totalKehadiran;
-                if ($absenHari > 0) {
-                    $potonganPerHari = $nominalGaji / $hariKerja;
-                    $potonganAbsen = $potonganPerHari * $absenHari;
-                    $gajiPokokTotal = $nominalGaji - $potonganAbsen;
-                }
-            }
-        }
-
-        $totalPotongan = (int)($this->db->table('kasbon_karyawan')
-            ->selectSum('nominal', 'total')
-            ->where('terapis_id', $terapisId)
-            ->whereIn('status_potongan', ['belum_lunas', 'belum_dipotong'])
-            ->get()
-            ->getRowArray()['total'] ?? 0);
-
-        $totalTunjangan = (int)($this->db->table('tunjangan_terapis tt')
-            ->select('COALESCE(SUM(
-                CASE 
-                    WHEN tt.tipe = \'bulanan\' THEN tt.nominal
-                    WHEN tt.tipe = \'harian\' THEN tt.nominal * (
-                        SELECT COUNT(*) FROM absensi_karyawan 
-                        WHERE terapis_id = tt.terapis_id AND status IN (\'Hadir\',\'Cuti\')
-                        AND MONTH(tanggal) = MONTH(NOW()) AND YEAR(tanggal) = YEAR(NOW())
-                    )
-                    ELSE 0
-                END
-            ), 0) as total', false)
-            ->where('tt.terapis_id', $terapisId)
-            ->where('tt.is_active', 1)
-            ->get()
-            ->getRowArray()['total'] ?? 0);
-
-        $gajiBersih = $gajiPokokTotal + $totalTunjangan - $totalPotongan;
-
-        if ($gajiBersih < 0) {
-            return redirect()->to('/gaji')->with('error', 'Gaji bersih tidak boleh negatif (potongan lebih besar dari gaji pokok + tunjangan).');
-        }
-
-        // --- PROSES PEMBAYARAN ---
         $dataGaji = [
             'terapis_id'       => $terapisId,
             'periode_bulan'    => date('n'),
             'periode_tahun'    => date('Y'),
-            'total_kehadiran'  => $totalKehadiran,
-            'gaji_pokok_total' => $gajiPokokTotal,
-            'total_tunjangan'  => $totalTunjangan,
-            'total_potongan'   => $totalPotongan,
-            'gaji_bersih'      => $gajiBersih,
+            'total_kehadiran'  => $k['kehadiran'],
+            'gaji_pokok_total' => $k['gaji_pokok'],
+            'total_tunjangan'  => $k['total_A'] - $k['gaji_pokok'] + $k['total_B'],
+            'total_potongan'   => $k['total_C'],
+            'gaji_bersih'      => $k['gaji_bersih'],
             'tanggal_bayar'    => date('Y-m-d H:i:s'),
             'status'           => 'lunas'
         ];
 
         $this->db->transStart();
-        $this->Mriwayatgaji->insert($dataGaji);
+        $riwayatId = $this->Mriwayatgaji->insert($dataGaji, true);
+
+        // Simpan detail komponen (snapshot)
+        $detailBatch = [];
+        $detailBatch[] = ['riwayat_gaji_id' => $riwayatId, 'kelompok' => 'take_home', 'nama_komponen' => 'Gaji Pokok', 'nominal' => $k['gaji_pokok']];
+        if ($k['jaspel_reguler'] > 0)
+            $detailBatch[] = ['riwayat_gaji_id' => $riwayatId, 'kelompok' => 'take_home', 'nama_komponen' => 'Jasa Pelayanan Reguler', 'nominal' => $k['jaspel_reguler']];
+        if ($k['jaspel_kejantanan'] > 0)
+            $detailBatch[] = ['riwayat_gaji_id' => $riwayatId, 'kelompok' => 'take_home', 'nama_komponen' => 'Jasa Terapi Kejantanan', 'nominal' => $k['jaspel_kejantanan']];
+        foreach ($k['benefit_list'] as $b)
+            $detailBatch[] = ['riwayat_gaji_id' => $riwayatId, 'kelompok' => 'benefit', 'nama_komponen' => $b['nama'], 'nominal' => $b['nominal']];
+        foreach ($k['potongan_list'] as $p)
+            $detailBatch[] = ['riwayat_gaji_id' => $riwayatId, 'kelompok' => 'potongan', 'nama_komponen' => $p['nama'], 'nominal' => $p['nominal']];
+        if ($k['total_kasbon'] > 0)
+            $detailBatch[] = ['riwayat_gaji_id' => $riwayatId, 'kelompok' => 'potongan', 'nama_komponen' => 'Cicilan Kasbon', 'nominal' => $k['total_kasbon']];
+
+        if (!empty($detailBatch))
+            $this->db->table('riwayat_gaji_detail')->insertBatch($detailBatch);
 
         $this->db->table('kasbon_karyawan')
             ->where('terapis_id', $terapisId)
-            ->whereIn('status_potongan', ['belum_lunas', 'belum_dipotong'])
+            ->where('status_potongan', 'belum_lunas')
             ->update(['status_potongan' => 'lunas']);
 
         $this->db->transComplete();
