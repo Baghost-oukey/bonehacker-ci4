@@ -85,7 +85,7 @@ if ($isDevEnvironment) {
         <div id="sidebarBackdrop" class="fixed inset-0 z-20 hidden bg-black/40 lg:hidden"></div>
 
         <!-- ================= MAIN ================= -->
-        <div class="flex flex-col flex-1 min-h-screen lg:pl-64 transition-all duration-300">
+        <div class="flex flex-col flex-1 min-h-screen min-w-0 lg:pl-64 transition-all duration-300">
 
             <!-- HEADER -->
             <?php if (!isset($isPublic) || !$isPublic): ?>
@@ -93,7 +93,7 @@ if ($isDevEnvironment) {
             <?php endif; ?>
 
             <!-- CONTENT -->
-            <main class="flex-1 p-4 md:p-6">
+            <main class="flex-1 p-4 md:p-6 mt-14">
                 <?= $this->renderSection('content') ?>
             </main>
 
