@@ -238,43 +238,38 @@ class Mgajikaryawan extends Model
             }
         }
 
-        // ── TUNJANGAN per kategori ───────────────────────────────────
-        $settingTunjangan = $this->db->table('tunjangan_terapis tt')
-            ->select('tt.nominal, tt.tipe, tk.nama_tunjangan, tk.kategori')
-            ->join('tunjangan_karyawan tk', 'tk.id = tt.tunjangan_karyawan_id')
-            ->where('tt.terapis_id', $id)
-            ->where('tt.is_active', 1)
-            ->get()->getResultArray();
+        // ── TUNJANGAN dari master gaji ───────────────────────────────
+        $mMasterGaji = new \App\modules\tunjangan_karyawan\Models\Mtunjangankaryawan();
+        $settingTunjangan = $mMasterGaji->getForTerapis($id, $terapis['region_id']);
 
-        $penerimaanList = [];
         $benefitList    = [];
-        $totalPenerimaan = 0;
-        $totalBenefit    = 0;
+        $totalBenefit   = 0;
 
         foreach ($settingTunjangan as $t) {
             $nominal = ($t['tipe'] === 'harian')
                 ? (float)$t['nominal'] * $kehadiran
                 : (float)$t['nominal'];
 
-            $item = ['nama' => $t['nama_tunjangan'], 'nominal' => (int)$nominal];
-
-            // Semua tunjangan masuk benefit
+            $item = ['nama' => $t['nama_tunjangan'], 'nominal' => (int)$nominal, 'kategori' => $t['kategori']];
             $benefitList[]  = $item;
             $totalBenefit  += $nominal;
         }
 
-        // ── POTONGAN RUTIN ───────────────────────────────────────────
-        $mPotongan    = new \App\modules\kasbon_karyawan\Models\MPotonganRutin();
-        $potonganList = $mPotongan->getByTerapis($id);
-        $totalPotonganRutin = array_sum(array_column($potonganList, 'nominal'));
+        // ── POTONGAN RUTIN dari master gaji (kategori=potongan) ──────
+        // Sudah termasuk di atas karena getForTerapis ambil semua kategori
+        // Pisahkan benefit dan potongan
+        $benefitOnly  = array_values(array_filter($benefitList, fn($i) => $i['kategori'] === 'tunjangan'));
+        $potonganMaster = array_values(array_filter($benefitList, fn($i) => $i['kategori'] === 'potongan'));
+        $totalBenefitOnly = array_sum(array_column($benefitOnly, 'nominal'));
+        $totalPotonganMaster = array_sum(array_column($potonganMaster, 'nominal'));
 
         // ── TOTAL KASBON ─────────────────────────────────────────────
         $totalKasbon = (int)$terapis['total_kasbon'];
 
         // ── KALKULASI AKHIR ──────────────────────────────────────────
         $totalA      = $gajiPokok + $jaspelReguler + $jaspelKejantanan;
-        $totalB      = $totalBenefit;
-        $totalC      = $totalPotonganRutin + $totalKasbon;
+        $totalB      = $totalBenefitOnly;
+        $totalC      = $totalPotonganMaster + $totalKasbon;
         $gajiBersih  = ($totalA + $totalB) - $totalC;
 
         $terapis['total_tunjangan'] = (int)$totalBenefit;
@@ -288,11 +283,11 @@ class Mgajikaryawan extends Model
                 'jaspel_kejantanan' => (int)$jaspelKejantanan,
                 'total_A'           => (int)$totalA,
                 // Benefit
-                'benefit_list'      => $benefitList,
-                'total_B'           => (int)$totalBenefit,
+                'benefit_list'      => $benefitOnly,
+                'total_B'           => (int)$totalBenefitOnly,
                 // Potongan
-                'potongan_list'     => $potonganList,
-                'total_potongan_rutin' => (int)$totalPotonganRutin,
+                'potongan_list'     => $potonganMaster,
+                'total_potongan_rutin' => (int)$totalPotonganMaster,
                 'total_kasbon'      => $totalKasbon,
                 'total_C'           => (int)$totalC,
                 // Hasil
