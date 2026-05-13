@@ -348,8 +348,8 @@ $routes->group('kasbon', ['namespace' => 'App\modules\kasbon_karyawan\Controller
 });
 
 
-// Rotes - tunjangan karyawan
-$routes->group('tunjangan-karyawan', ['namespace' => 'App\modules\tunjangan_karyawan\Controllers', 'filter' => 'auth'], function ($routes) {
+// Rotes - master gaji
+$routes->group('master-gaji', ['namespace' => 'App\modules\tunjangan_karyawan\Controllers', 'filter' => 'auth'], function ($routes) {
   $routes->get('/', 'Tunjangankaryawan::index');
   $routes->post('fetch', 'Tunjangankaryawan::fetch');
   $routes->post('store', 'Tunjangankaryawan::store');

@@ -79,9 +79,9 @@
     window.masterTunjanganConfig = {
         csrfName: '<?= csrf_token() ?>',
         csrfHash: '<?= csrf_hash() ?>',
-        urlFetch: '<?= base_url('tunjangan-karyawan/fetch') ?>',
-        urlStore: '<?= base_url('tunjangan-karyawan/store') ?>',
-        urlDelete: '<?= base_url('tunjangan-karyawan/delete') ?>'
+        urlFetch: '<?= base_url('master-gaji/fetch') ?>',
+        urlStore: '<?= base_url('master-gaji/store') ?>',
+        urlDelete: '<?= base_url('master-gaji/delete') ?>'
     };
 </script>
 
