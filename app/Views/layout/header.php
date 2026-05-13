@@ -6,7 +6,7 @@ $listRegions = session()->get('list_regions_global') ?? [];
 ?>
 
 <header id="appHeader" data-csrf-refresh-url="<?= site_url('auth/get_csrf') ?>"
-    class="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur-md">
+    class="fixed top-0 left-0 lg:left-64 right-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur-md">
     <div class="mx-auto flex h-14 max-w-screen-2xl items-center justify-between gap-1 px-3 md:px-6">
         
         <div class="flex items-center gap-1.5 min-w-0">
@@ -16,11 +16,7 @@ $listRegions = session()->get('list_regions_global') ?? [];
                 <i class="fas fa-th-large text-base"></i>
             </a>
 
-            <!-- TOGGLE BUTTON DESKTOP -->
-            <button id="sidebarToggle"
-                class="hidden lg:inline-flex items-center justify-center rounded-xl p-1.5 text-slate-600 hover:bg-slate-100 active:scale-95 transition-all">
-                <i class="fas fa-bars text-base"></i>
-            </button>
+
 
             <!-- BREADCRUMBS (Hidden on small mobile) -->
             <div class="hidden sm:block">
@@ -74,7 +70,7 @@ $listRegions = session()->get('list_regions_global') ?? [];
 
                 <!-- Dropdown Menu -->
                 <div id="regionDropdownMenu"
-                    class="absolute left-0 top-full mt-1.5 z-50 hidden w-56 rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-200/60 overflow-hidden">
+                    class="absolute right-0 top-full mt-1.5 z-50 hidden w-56 rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-200/60 overflow-hidden">
                     
                     <!-- Search -->
                     <div class="p-2 border-b border-slate-100">

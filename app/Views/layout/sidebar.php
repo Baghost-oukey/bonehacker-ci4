@@ -367,6 +367,6 @@ $userInitial = strtoupper(substr($realname, 0, 1));
 
 </div>
 
-<div class="sticky bottom-0 z-20 mt-auto border-t border-slate-200 bg-white p-2">
+<div class="mt-auto border-t border-slate-200 bg-white p-2 shrink-0">
     <?= $this->include('App\Views\layout\footer') ?>
 </div>
