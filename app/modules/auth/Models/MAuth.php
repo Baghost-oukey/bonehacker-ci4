@@ -54,7 +54,7 @@ class MAuth extends Model
             if ($terapis) {
                 $terapisIdInt = $terapis->id;
                 if ($terapis->foto) {
-                    $avatarUrl = base_url('foto_terapis/' . $terapis->foto);
+                    $avatarUrl = base_url('foto_karyawan/' . $terapis->foto);
                 }
             }
         }

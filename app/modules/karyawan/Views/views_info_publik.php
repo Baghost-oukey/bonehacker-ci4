@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Informasi Publik Terapis - <?= esc($terapis->nama) ?></title>
+    <title>Informasi Publik Terapis - <?= esc($karyawan->nama) ?></title>
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -129,9 +129,9 @@
         <div class="container-content">
             <div class="profile">
                 <?php 
-                    $fotoPath = ($terapis->foto && file_exists('foto_terapis/' . $terapis->foto)) 
-                                ? base_url('foto_terapis/' . $terapis->foto) 
-                                : base_url('foto_terapis/no_profile.png');
+                    $fotoPath = ($karyawan->foto && file_exists('foto_karyawan/' . $karyawan->foto)) 
+                                ? base_url('foto_karyawan/' . $karyawan->foto) 
+                                : base_url('foto_karyawan/no_profile.png');
                 ?>
                 <img src="<?= $fotoPath ?>" alt="Foto Terapis">
             </div>
@@ -143,7 +143,7 @@
                     <tr>
                         <td class="label">Nama</td>
                         <td class="separator">:</td>
-                        <td class="value"><?= esc(!empty($terapis->nama) ? $terapis->nama : '-') ?></td>
+                        <td class="value"><?= esc(!empty($karyawan->nama) ? $karyawan->nama : '-') ?></td>
                     </tr>
                     <tr>
                         <td class="label">Jabatan</td>
@@ -158,7 +158,7 @@
                     <tr>
                         <td class="label">Rank</td>
                         <td class="separator">:</td>
-                        <td class="value"><strong><?= esc(!empty($terapis->rank) ? $terapis->rank : '-') ?></strong></td>
+                        <td class="value"><strong><?= esc(!empty($karyawan->rank) ? $karyawan->rank : '-') ?></strong></td>
                     </tr>
                 </table>
             </div>

@@ -5,17 +5,17 @@ namespace App\modules\absensi_karyawan\Controllers;
 use App\Controllers\BaseController;
 use CodeIgniter\HTTP\ResponseInterface;
 use App\modules\absensi_karyawan\Models\Mabsensikaryawan;
-use App\modules\terapis\Models\MTerapis;
+use App\Modules\Karyawan\Models\MKaryawan;
 
 class Absensikaryawan extends BaseController
 {
 
-    protected $model_terapis;
+    protected $model_karyawan;
     protected $model_absensi;
 
     public function __construct()
     {
-        $this->model_terapis = new MTerapis();
+        $this->model_karyawan = new MKaryawan();
         $this->model_absensi = new Mabsensikaryawan();
     }
 
@@ -27,7 +27,7 @@ class Absensikaryawan extends BaseController
         $region_patient = session()->get('region_patient');
         $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
 
-        $terapisQuery = $this->model_terapis->where('is_active', 1)->where('is_presensi', 1);
+        $terapisQuery = $this->model_karyawan->where('is_active', 1)->where('is_presensi', 1);
         if (!empty($allowed_regions)) {
             if (is_array($allowed_regions)) {
                 $terapisQuery->whereIn('region_id', $allowed_regions);
@@ -169,7 +169,7 @@ class Absensikaryawan extends BaseController
             $rekapByTanggal[$row['terapis_id']] = $row;
         }
 
-        $terapisQuery = $this->model_terapis->where('is_active', 1)->where('is_presensi', 1);
+        $terapisQuery = $this->model_karyawan->where('is_active', 1)->where('is_presensi', 1);
         if (!empty($allowed_regions)) {
             if (is_array($allowed_regions)) {
                 $terapisQuery->whereIn('region_id', $allowed_regions);
@@ -202,7 +202,7 @@ class Absensikaryawan extends BaseController
         $region_patient = session()->get('region_patient');
         $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
 
-        $terapisQuery = $this->model_terapis
+        $terapisQuery = $this->model_karyawan
             ->select('terapis.*, regions.name as region_name')
             ->join('regions', 'regions.id = terapis.region_id', 'left')
             ->where('terapis.is_active', 1)

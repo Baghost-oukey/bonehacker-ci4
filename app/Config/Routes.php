@@ -203,45 +203,35 @@ $routes->group('greeting', ['namespace' => 'App\Modules\greeting\Controllers', '
   $routes->get('delete/(:num)', 'Greeting::delete/$1');
 });
 
-// Terapis
-$routes->group('terapis', ['namespace' => 'App\Modules\terapis\Controllers', 'filter' => 'auth'], function ($routes) {
-  $routes->get('', 'TerapisController::index');
-  $routes->get('detail-terapis/(:any)', 'TerapisController::detail_terapis/$1');
-  $routes->post('fetch', 'TerapisController::fetch'); // Untuk narik data tabel
-  $routes->post('active/(:num)', 'TerapisController::active/$1');
-  $routes->post('nonActive/(:num)', 'TerapisController::nonActive/$1');
-  $routes->post('checkId', 'TerapisController::checkId');
-  $routes->post('store', 'TerapisController::store');
-  $routes->post('update', 'TerapisController::update');
-  $routes->post('deletefoto', 'TerapisController::deletefoto');
-  $routes->get('destroy/(:num)', 'TerapisController::destroy/$1');
-  $routes->get('public_info/(:any)', 'TerapisController::public_info/$1');
-  $routes->post('generate_user', 'TerapisController::generate_user');
-  $routes->post('link_user', 'TerapisController::link_user');
-  $routes->get('profil_saya', 'TerapisController::profil_saya');
-});
-
-// Untuk Akses info publik
-// $routes->get('p/(:any)', '\App\Controllers\Terapis::public_info/$1');
-
-// Users
-$routes->group('users', ['namespace' => 'App\Modules\Users\Controllers', 'filter' => 'auth'], function ($routes) {
-  $routes->get('', 'UsersController::index');
-  $routes->post('fetch', 'UsersController::fetch');
-  $routes->post('store', 'UsersController::store');
-  $routes->post('update/(:num)', 'UsersController::update/$1');
-  $routes->post('destroy/(:num)', 'UsersController::destroy/$1');
-
-  // Pasien Luar
-
-  $routes->get('view_patient/(:num)', 'Users::view_patient/$1');
-  $routes->post('fetch_patients', 'Users::fetch_patients');
-  $routes->post('add_outside_patient', 'Users::add_outside_patient');
-  $routes->post('fetch_patients_luar', 'Users::fetch_patients_luar');
-  $routes->post('get_outside_patients_select', 'Users::get_outside_patients_select');
-  $routes->post('delete_outside_patient', 'Users::delete_outside_patient');
-  $routes->post('send_notif_patients/(:num)', 'Users::send_notif_patients/$1');
-  $routes->post('check_username_exists', 'Users::check_username_exists');
+// Karyawan (Unified Personnel Management)
+$routes->group('karyawan', ['namespace' => 'App\Modules\Karyawan\Controllers', 'filter' => 'auth'], function ($routes) {
+  $routes->get('', 'KaryawanController::index');
+  $routes->post('fetch', 'KaryawanController::fetch');
+  $routes->post('store', 'KaryawanController::store');
+  $routes->get('show/(:any)', 'KaryawanController::show/$1');
+  
+  // Account operations
+  $routes->post('update_account/(:num)', 'KaryawanController::update_account/$1');
+  $routes->post('delete_account/(:num)', 'KaryawanController::delete_account/$1');
+  $routes->post('check_username_exists', 'KaryawanController::checkUsername');
+  
+  // Profile operations
+  $routes->post('update_profile', 'KaryawanController::update_profile');
+  $routes->post('active/(:num)', 'KaryawanController::active/$1');
+  $routes->post('nonActive/(:num)', 'KaryawanController::nonActive/$1');
+  $routes->get('destroy/(:num)', 'KaryawanController::destroy/$1');
+  
+  // Patient Access
+  $routes->get('view_patient/(:num)', 'KaryawanController::view_patient/$1');
+  $routes->post('fetch_patients', 'KaryawanController::fetch_patients');
+  $routes->post('add_outside_patient', 'KaryawanController::add_outside_patient');
+  $routes->post('fetch_patients_luar', 'KaryawanController::fetch_patients_luar');
+  $routes->post('get_outside_patients_select', 'KaryawanController::get_outside_patients_select');
+  $routes->post('delete_outside_patient', 'KaryawanController::delete_outside_patient');
+  
+  // Extra
+  $routes->get('public_info/(:any)', 'KaryawanController::public_info/$1');
+  $routes->get('profil_saya', 'KaryawanController::profil_saya');
 });
 
 // Patients - Routes

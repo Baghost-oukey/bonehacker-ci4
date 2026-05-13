@@ -5,19 +5,19 @@ namespace App\modules\absensi_karyawan\Controllers;
 use App\Controllers\BaseController;
 use App\modules\absensi_karyawan\Models\Mcutikaryawan;
 use App\modules\absensi_karyawan\Models\Mabsensikaryawan;
-use App\modules\terapis\Models\MTerapis;
+use App\Modules\Karyawan\Models\MKaryawan;
 
 class Cutikaryawan extends BaseController
 {
     protected $model_cuti;
     protected $model_absensi;
-    protected $model_terapis;
+    protected $model_karyawan;
 
     public function __construct()
     {
         $this->model_cuti = new Mcutikaryawan();
         $this->model_absensi = new Mabsensikaryawan();
-        $this->model_terapis = new MTerapis();
+        $this->model_karyawan = new MKaryawan();
     }
 
     public function index()
@@ -25,7 +25,7 @@ class Cutikaryawan extends BaseController
         $region_patient = session()->get('region_patient');
         $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
 
-        $terapis = $this->model_terapis->where('is_active', 1)->findAll();
+        $terapis = $this->model_karyawan->where('is_active', 1)->findAll();
         $terpakai = $this->model_cuti->getTotalCutiTerpakai();
 
         foreach ($terapis as $t) {
@@ -126,7 +126,7 @@ class Cutikaryawan extends BaseController
         $terapis_id = $this->request->getPost('terapis_id');
         $kuota = $this->request->getPost('jatah_cuti');
 
-        $this->model_terapis->update($terapis_id, ['jatah_cuti' => $kuota]);
+        $this->model_karyawan->update($terapis_id, ['jatah_cuti' => $kuota]);
 
         return $this->response->setJSON([
             'status' => 'success',
@@ -137,7 +137,7 @@ class Cutikaryawan extends BaseController
 
     public function cek_sisa_cuti($id)
     {
-        $terapis = $this->model_terapis->find($id);
+        $terapis = $this->model_karyawan->find($id);
         if (!$terapis) {
             return $this->response->setJSON(['status' => 'error', 'message' => 'Karyawan tidak ditemukan.']);
         }

@@ -39,7 +39,7 @@ const closeModal = (modal) => {
 };
 
 const setupUsersPage = () => {
-    const config = window.usersConfig;
+    const config = window.karyawanConfig;
     const page = document.getElementById("usersPage");
 
     if (!config || !page || typeof window.$ === "undefined") return;
@@ -146,6 +146,7 @@ const setupUsersPage = () => {
                     const tr = $(`<tr class="hover:bg-slate-50/50 transition-colors border-b border-slate-50 group"></tr>`);
                     tr.append(`<td class="px-6 py-4 text-xs font-mono text-slate-400 italic">#${row.no || "-"}</td>`);
                     tr.append(`<td class="px-6 py-4 font-black text-slate-800 text-sm">${row.realname || "-"}</td>`);
+                    tr.append(`<td class="px-6 py-4">${row.type_label || "-"}</td>`);
                     tr.append(`<td class="px-6 py-4 text-xs font-bold text-slate-500">${row.username || "-"}</td>`);
                     tr.append(`<td class="px-6 py-4"><span class="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest bg-slate-100 text-slate-500 border border-slate-200">${row.role || "-"}</span></td>`);
                     tr.append(`<td class="px-6 py-4 text-xs font-bold text-slate-400">${row.region_name || "-"}</td>`);
@@ -170,6 +171,7 @@ const setupUsersPage = () => {
                                 </div>
                             </div>
                             <div class="flex flex-wrap gap-2">
+                                ${row.type_label}
                                 <span class="px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest bg-slate-100 text-slate-500 border border-slate-200">
                                     <i class="fas fa-shield-alt mr-1 opacity-50"></i> ${row.role}
                                 </span>
@@ -186,21 +188,31 @@ const setupUsersPage = () => {
         });
     };
 
-    const toggleRegionField = (roleSelect, targetField) => {
+    const toggleExtraFields = (roleSelect) => {
         const role = $(roleSelect).val();
-        const selectElement = $(targetField).find('select');
+        const $extraTerapis = $("#extraTerapisFields");
+        const $regionManagement = $("#regionFieldAdd");
         
-        if (role === 'owner' || role === 'admin' || role === 'user') {
-            $(targetField).fadeIn().removeClass('hidden');
-            selectElement.attr('required', true);
-            const isMultiple = (role === 'owner');
-            if (selectElement.hasClass("select2-hidden-accessible")) selectElement.select2('destroy');
-            selectElement.prop('multiple', isMultiple);
-            initSelect2();
+        // Therapist fields
+        if (role === 'user') {
+            $extraTerapis.fadeIn().removeClass('hidden');
+            $extraTerapis.find('input, select, textarea').prop('required', true);
+            // Regions patient for therapist is usually just their placement region, so hide management region select
+            $regionManagement.fadeOut().addClass('hidden');
         } else {
-            $(targetField).fadeOut().addClass('hidden');
-            selectElement.attr('required', false).val(null).trigger('change');
+            $extraTerapis.fadeOut().addClass('hidden');
+            $extraTerapis.find('input, select, textarea').prop('required', false);
+            
+            // Management regions
+            if (role === 'owner' || role === 'admin') {
+                $regionManagement.fadeIn().removeClass('hidden');
+                $("#regions_add").prop('required', true);
+            } else {
+                $regionManagement.fadeOut().addClass('hidden');
+                $("#regions_add").prop('required', false);
+            }
         }
+        initSelect2();
     };
 
     const checkUsername = (username, feedbackElement, submitBtn, currentUsername = null) => {
@@ -239,7 +251,17 @@ const setupUsersPage = () => {
     $("#paginationPrev").on("click", () => { if (currentPage > 1) loadTableData(currentPage - 1); });
     $("#paginationNext").on("click", () => { if (currentPage < Math.ceil(filteredRecords / pageLength)) loadTableData(currentPage + 1); });
 
-    $('#role_add, #edit_role').on('change', function() { toggleRegionField(this, $(this).data('target')); });
+    $('#role_add').on('change', function() { toggleExtraFields(this); });
+    // Keep old logic for edit modal for now or refactor it too
+    $('#edit_role').on('change', function() { 
+        const role = $(this).val();
+        const $regionEdit = $("#regionFieldEdit");
+        if (role === 'owner' || role === 'admin') {
+            $regionEdit.fadeIn().removeClass('hidden');
+        } else {
+            $regionEdit.fadeOut().addClass('hidden');
+        }
+    });
 
     $('#username_add').on('keyup', debounce(function() { checkUsername($(this).val(), '#formAddUser .username-feedback', '#submitBtnAdd'); }, 500));
     $('#edit_username').on('keyup', debounce(function() { checkUsername($(this).val(), '#formEditUser .edit-username-feedback', '#submitBtnEdit', originalUsername); }, 500));
@@ -286,6 +308,14 @@ const setupUsersPage = () => {
         $('#edit_role').val(d.role).trigger('change');
         if (d.regions_patient) $('#edit_regions').val(String(d.regions_patient).split(',').map(Number)).trigger('change');
         openModal(document.getElementById("modalEdit"));
+    });
+
+    $(document).on('click', '.btn_create_account', function() {
+        const d = $(this).data();
+        $('#role_add').val('user').trigger('change');
+        $('#formAddUser input[name="realname"]').val(d.realname);
+        $('#formAddUser input[name="terapis_id"]').val(d.terapis_id);
+        openModal(document.getElementById("modalAdd"));
     });
 
     $(document).on('click', '.btn_add_patient', function(e) {

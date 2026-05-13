@@ -9,12 +9,12 @@
                 <?= esc($title) ?>
             </h1>
             <p class="text-sm text-slate-500">
-                Detail informasi dan biodata terapis
+                Detail informasi dan biodata karyawan
             </p>
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
-            <a href="<?= site_url('terapis') ?>"
+            <a href="<?= site_url('karyawan') ?>"
                 class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
                 <i class="fas fa-arrow-left text-slate-500"></i>
                 Kembali
@@ -23,16 +23,16 @@
     </div>
 
     <!-- Main Form -->
-    <form action="<?= site_url('terapis/update') ?>" id="detailterapis" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+    <form action="<?= site_url('karyawan/update') ?>" id="detailkaryawan" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
         <?= csrf_field() ?>
-        <input type="hidden" name="id" value="<?= $terapis->id ?>">
+        <input type="hidden" name="id" value="<?= $karyawan->id ?>">
 
         <div class="rounded-2xl bg-white shadow-sm border border-slate-200/50 overflow-hidden">
             <!-- Card Header -->
             <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                     <h3 class="text-lg font-semibold text-slate-800">Biodata Terapis</h3>
-                    <p class="text-sm text-slate-500">Lengkapi data diri terapis dengan benar</p>
+                    <p class="text-sm text-slate-500">Lengkapi data diri karyawan dengan benar</p>
                 </div>
                 <div class="flex items-center gap-2">
                     <button type="button" id="btnEdit" onclick="toggleEditMode(true)" class="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-amber-600">
@@ -59,7 +59,7 @@
                         <div class="flex flex-col items-center space-y-3">
                             <div class="photo-container relative inline-block">
                                 <img id="photo-preview"
-                                    src="<?= base_url('foto_terapis/' . ($terapis->foto ? $terapis->foto : 'no_profile.png')) ?>"
+                                    src="<?= base_url('foto_karyawan/' . ($karyawan->foto ? $karyawan->foto : 'no_profile.png')) ?>"
                                     alt="Foto Profil"
                                     class="w-48 h-48 rounded-xl object-cover border-2 border-slate-200 cursor-pointer">
 
@@ -73,7 +73,7 @@
                                         class="h-9 w-9 rounded-lg bg-white text-slate-700 hover:bg-slate-100 flex items-center justify-center">
                                         <i class="fas fa-eye text-sm"></i>
                                     </button>
-                                    <?php if ($terapis->foto): ?>
+                                    <?php if ($karyawan->foto): ?>
                                     <button type="button" onclick="confirmDeletePhoto()" id="btnDeletePhoto"
                                         class="hidden h-9 w-9 rounded-lg bg-white text-red-600 hover:bg-red-50 flex items-center justify-center">
                                         <i class="fas fa-trash text-sm"></i>
@@ -94,8 +94,8 @@
                         <!-- ID Terapis -->
                         <div class="space-y-1">
                             <label class="text-sm font-medium text-slate-700">ID Terapis <span class="text-red-500">*</span></label>
-                            <input type="text" name="terapis_id" id="terapis_id"
-                                value="<?= esc($terapis->terapis_id) ?>"
+                            <input type="text" name="karyawan_id" id="karyawan_id"
+                                value="<?= esc($karyawan->karyawan_id) ?>"
                                 class="form-input w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-slate-50 cursor-not-allowed"
                                 required readonly>
                             <div class="id-feedback text-xs mt-1 hidden"></div>
@@ -105,7 +105,7 @@
                         <div class="space-y-1">
                             <label class="text-sm font-medium text-slate-700">Nama Lengkap <span class="text-red-500">*</span></label>
                             <input type="text" name="nama" id="nama"
-                                value="<?= esc($terapis->nama) ?>"
+                                value="<?= esc($karyawan->nama) ?>"
                                 class="form-input w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-slate-50 cursor-not-allowed"
                                 required readonly>
                             <div class="invalid-feedback text-xs text-red-500 mt-1 hidden">Nama lengkap tidak boleh kosong</div>
@@ -115,7 +115,7 @@
                         <div class="space-y-1">
                             <label class="text-sm font-medium text-slate-700">Tempat Lahir</label>
                             <input type="text" name="tempat_lahir" id="tempat_lahir"
-                                value="<?= esc($terapis->tempat_lahir) ?>"
+                                value="<?= esc($karyawan->tempat_lahir) ?>"
                                 class="form-input w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-slate-50 cursor-not-allowed"
                                 readonly>
                         </div>
@@ -124,7 +124,7 @@
                         <div class="space-y-1">
                             <label class="text-sm font-medium text-slate-700">Tanggal Lahir</label>
                             <input type="date" name="tgl_lahir" id="tgl_lahir"
-                                value="<?= $terapis->tanggal_lahir ?>"
+                                value="<?= $karyawan->tanggal_lahir ?>"
                                 class="form-input w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-slate-50 cursor-not-allowed"
                                 readonly>
                         </div>
@@ -134,7 +134,7 @@
                             <label class="text-sm font-medium text-slate-700">Alamat</label>
                             <textarea name="alamat" id="alamat" rows="3"
                                 class="form-input w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-slate-50 cursor-not-allowed"
-                                readonly><?= esc($terapis->alamat) ?></textarea>
+                                readonly><?= esc($karyawan->alamat) ?></textarea>
                         </div>
                     </div>
 
@@ -148,7 +148,7 @@
                                 disabled>
                                 <option value="">-- Pilih Wilayah --</option>
                                 <?php foreach ($wilayah as $region): ?>
-                                    <option value="<?= $region->id ?>" <?= $region->id == $terapis->region_id ? 'selected' : '' ?>>
+                                    <option value="<?= $region->id ?>" <?= $region->id == $karyawan->region_id ? 'selected' : '' ?>>
                                         <?= esc($region->name) ?>
                                     </option>
                                 <?php endforeach; ?>
@@ -163,7 +163,7 @@
                                 disabled>
                                 <option value="">-- Pilih Jabatan --</option>
                                 <?php foreach ($jabatan as $jab): ?>
-                                    <option value="<?= $jab->id ?>" <?= $jab->id == $terapis->jabatan_id ? 'selected' : '' ?>>
+                                    <option value="<?= $jab->id ?>" <?= $jab->id == $karyawan->jabatan_id ? 'selected' : '' ?>>
                                         <?= esc($jab->nama_jabatan) ?>
                                     </option>
                                 <?php endforeach; ?>
@@ -179,7 +179,7 @@
                                 <option value="">-- Pilih Rank --</option>
                                 <?php $ranks = ['SS', 'S', 'A', 'B', 'C']; ?>
                                 <?php foreach ($ranks as $r): ?>
-                                    <option value="<?= $r ?>" <?= $terapis->rank == $r ? 'selected' : '' ?>><?= $r ?></option>
+                                    <option value="<?= $r ?>" <?= $karyawan->rank == $r ? 'selected' : '' ?>><?= $r ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -188,7 +188,7 @@
                         <div class="space-y-1">
                             <label class="text-sm font-medium text-slate-700">Tanggal Mulai Kerja</label>
                             <input type="date" name="tgl_kerja" id="tgl_kerja"
-                                value="<?= isset($terapis->tgl_mulai_kerja) ? date('Y-m-d', strtotime($terapis->tgl_mulai_kerja)) : '' ?>"
+                                value="<?= isset($karyawan->tgl_mulai_kerja) ? date('Y-m-d', strtotime($karyawan->tgl_mulai_kerja)) : '' ?>"
                                 class="form-input w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-slate-50 cursor-not-allowed"
                                 readonly>
                         </div>
@@ -198,16 +198,16 @@
                             <label class="text-sm font-medium text-slate-700">Keterangan</label>
                             <textarea name="keterangan" id="keterangan" rows="3"
                                 class="form-input w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-slate-50 cursor-not-allowed"
-                                readonly><?= esc($terapis->keterangan) ?></textarea>
+                                readonly><?= esc($karyawan->keterangan) ?></textarea>
                         </div>
 
                         <!-- Status -->
                         <div class="space-y-1">
                             <label class="text-sm font-medium text-slate-700">Status</label>
                             <label class="mt-2 inline-flex items-center gap-3 cursor-pointer">
-                                <input type="checkbox" name="status" id="status_checkbox" class="form-input sr-only peer" <?= $terapis->is_active == 1 ? 'checked' : '' ?> disabled>
+                                <input type="checkbox" name="status" id="status_checkbox" class="form-input sr-only peer" <?= $karyawan->is_active == 1 ? 'checked' : '' ?> disabled>
                                 <div class="relative w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:inset-s-0.5 after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
-                                <span class="text-sm font-medium text-slate-700" id="status_label"><?= $terapis->is_active == 1 ? 'Ya' : 'Tidak' ?></span>
+                                <span class="text-sm font-medium text-slate-700" id="status_label"><?= $karyawan->is_active == 1 ? 'Ya' : 'Tidak' ?></span>
                             </label>
                         </div>
 
@@ -215,11 +215,11 @@
                         <div class="space-y-1">
                             <label class="text-sm font-medium text-slate-700">Presensi</label>
                             <label class="mt-2 inline-flex items-center gap-3 cursor-pointer">
-                                <input type="checkbox" name="is_presensi" id="presensi_checkbox" class="form-input sr-only peer" <?= ($terapis->is_presensi ?? 1) == 1 ? 'checked' : '' ?> disabled>
+                                <input type="checkbox" name="is_presensi" id="presensi_checkbox" class="form-input sr-only peer" <?= ($karyawan->is_presensi ?? 1) == 1 ? 'checked' : '' ?> disabled>
                                 <div class="relative w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:inset-s-0.5 after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
-                                <span class="text-sm font-medium text-slate-700" id="presensi_label"><?= ($terapis->is_presensi ?? 1) == 1 ? 'Ya' : 'Tidak' ?></span>
+                                <span class="text-sm font-medium text-slate-700" id="presensi_label"><?= ($karyawan->is_presensi ?? 1) == 1 ? 'Ya' : 'Tidak' ?></span>
                             </label>
-                            <p class="text-xs text-slate-500 mt-1">Jika dinonaktifkan, terapis tidak akan muncul di form presensi harian</p>
+                            <p class="text-xs text-slate-500 mt-1">Jika dinonaktifkan, karyawan tidak akan muncul di form presensi harian</p>
                         </div>
                     </div>
                 </div>
@@ -231,7 +231,7 @@
     <div class="rounded-2xl bg-white shadow-sm border border-slate-200/50 overflow-hidden">
         <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4">
             <h3 class="text-lg font-semibold text-slate-800">Akun User Terhubung</h3>
-            <p class="text-sm text-slate-500">Informasi login terapis di sistem</p>
+            <p class="text-sm text-slate-500">Informasi login karyawan di sistem</p>
         </div>
         <div class="p-6">
             <?php if ($connected_user): ?>
@@ -315,10 +315,10 @@
         <h3 class="text-lg font-semibold text-slate-800">Konfirmasi Hapus Foto</h3>
         <p class="text-sm text-slate-500">Apakah Anda yakin ingin menghapus foto ini?</p>
 
-        <form action="<?= site_url('terapis/deletefoto') ?>" method="POST" class="flex justify-end gap-2">
+        <form action="<?= site_url('karyawan/deletefoto') ?>" method="POST" class="flex justify-end gap-2">
             <?= csrf_field() ?>
-            <input type="hidden" name="id" value="<?= $terapis->id ?>">
-            <input type="hidden" name="terapis_id" value="<?= $terapis->terapis_id ?>">
+            <input type="hidden" name="id" value="<?= $karyawan->id ?>">
+            <input type="hidden" name="karyawan_id" value="<?= $karyawan->karyawan_id ?>">
 
             <button type="button" data-modal-close
                 class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
@@ -341,11 +341,11 @@
         </div>
         
         <div class="space-y-4">
-            <p class="text-sm text-slate-500">Buat akun akses sistem untuk terapis <strong><?= esc($terapis->nama) ?></strong>.</p>
+            <p class="text-sm text-slate-500">Buat akun akses sistem untuk karyawan <strong><?= esc($karyawan->nama) ?></strong>.</p>
             
             <div class="space-y-1">
                 <label class="text-xs font-medium text-slate-700">Username <span class="text-red-500">*</span></label>
-                <input type="text" id="new-username" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500" value="<?= esc($terapis->terapis_id) ?>" placeholder="Masukkan username">
+                <input type="text" id="new-username" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500" value="<?= esc($karyawan->karyawan_id) ?>" placeholder="Masukkan username">
             </div>
 
             <div class="space-y-1">
@@ -382,7 +382,7 @@
         </div>
         
         <div class="space-y-4">
-            <p class="text-sm text-slate-500">Pilih akun user yang ingin dihubungkan dengan terapis <strong><?= esc($terapis->nama) ?></strong>. Setelah dihubungkan, user tersebut akan memiliki akses ke profil terapis ini tanpa mengubah username mereka.</p>
+            <p class="text-sm text-slate-500">Pilih akun user yang ingin dihubungkan dengan karyawan <strong><?= esc($karyawan->nama) ?></strong>. Setelah dihubungkan, user tersebut akan memiliki akses ke profil karyawan ini tanpa mengubah username mereka.</p>
             
             <div class="space-y-1">
                 <label class="text-xs font-medium text-slate-700">Pilih User <span class="text-red-500">*</span></label>
@@ -419,7 +419,7 @@
             <img src="<?= $qr_code_base64 ?>" alt="QR Code Terapis" class="rounded-lg">
         </div>
         <div class="flex justify-center">
-            <a href="<?= $qr_code_base64 ?>" download="qr_code_terapis.png"
+            <a href="<?= $qr_code_base64 ?>" download="qr_code_karyawan.png"
                 class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700">
                 <i class="fas fa-download"></i>
                 Download QR Code
@@ -436,11 +436,11 @@
     window.detailTerapisConfig = {
         csrfName: "<?= csrf_token() ?>",
         csrfHash: "<?= csrf_hash() ?>",
-        checkIdUrl: "<?= base_url('terapis/checkId') ?>",
-        generateUserUrl: "<?= base_url('terapis/generate_user') ?>",
-        linkUserUrl: "<?= base_url('terapis/link_user') ?>",
-        currentId: "<?= $terapis->terapis_id ?>",
-        terapisId: "<?= $terapis->id ?>"
+        checkIdUrl: "<?= base_url('karyawan/checkId') ?>",
+        generateUserUrl: "<?= base_url('karyawan/generate_user') ?>",
+        linkUserUrl: "<?= base_url('karyawan/link_user') ?>",
+        currentId: "<?= $karyawan->karyawan_id ?>",
+        karyawanId: "<?= $karyawan->id ?>"
     };
 
     $(document).ready(function() {
@@ -529,7 +529,7 @@
                         'X-CSRF-TOKEN': window.detailTerapisConfig.csrfHash
                     },
                     data: {
-                        terapis_id: window.detailTerapisConfig.currentId,
+                        karyawan_id: window.detailTerapisConfig.currentId,
                         username: username,
                         password: password
                     },
@@ -594,7 +594,7 @@
 
         Swal.fire({
             title: 'Hubungkan Akun?',
-            text: "Akun user yang dipilih akan terhubung dengan profil terapis ini.",
+            text: "Akun user yang dipilih akan terhubung dengan profil karyawan ini.",
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#0d9488',
@@ -611,7 +611,7 @@
                     },
                     data: {
                         user_id: userId,
-                        terapis_id: window.detailTerapisConfig.currentId
+                        karyawan_id: window.detailTerapisConfig.currentId
                     },
                     dataType: 'json',
                     success: function(response) {
@@ -650,10 +650,10 @@
         });
     }
 
-    function generateUser(terapis_id) {
+    function generateUser(karyawan_id) {
         Swal.fire({
             title: 'Buat Akun Login?',
-            text: "Sistem akan membuatkan username dan password default untuk terapis ini.",
+            text: "Sistem akan membuatkan username dan password default untuk karyawan ini.",
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#0d9488',
@@ -669,7 +669,7 @@
                         'X-CSRF-TOKEN': window.detailTerapisConfig.csrfHash
                     },
                     data: {
-                        terapis_id: terapis_id
+                        karyawan_id: karyawan_id
                     },
                     dataType: 'json',
                     success: function(response) {
