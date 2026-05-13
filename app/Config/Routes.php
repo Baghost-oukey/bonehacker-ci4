@@ -342,6 +342,9 @@ $routes->group('kasbon', ['namespace' => 'App\modules\kasbon_karyawan\Controller
   $routes->get('detail/(:num)', 'Kasbonkaryawan::detail/$1');
   $routes->post('store', 'Kasbonkaryawan::store');
   $routes->post('bayar', 'Kasbonkaryawan::bayar');
+  // Potongan Rutin
+  $routes->post('potongan/store', 'Kasbonkaryawan::storePotongan');
+  $routes->post('potongan/delete/(:num)', 'Kasbonkaryawan::deletePotongan/$1');
 });
 
 

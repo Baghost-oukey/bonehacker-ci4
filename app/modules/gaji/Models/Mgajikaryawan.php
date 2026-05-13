@@ -117,65 +117,194 @@ class Mgajikaryawan extends Model
 
     public function getDetailPerhitungan($id)
     {
-        $bulan = date('n');
-        $tahun = date('Y');
+        $bulan      = date('n');
+        $tahun      = date('Y');
         $bulanBagus = str_pad((string)$bulan, 2, '0', STR_PAD_LEFT);
-        $tanggalAwal = "$tahun-$bulanBagus-01";
+        $tanggalAwal  = "$tahun-$bulanBagus-01";
         $tanggalAkhir = date('Y-m-t', strtotime($tanggalAwal));
 
-        $subQueryTindakan = "(SELECT COUNT(h.id) FROM histories h WHERE FIND_IN_SET(t.id, h.terapis_id))";
-        $subQueryKasbon = "(SELECT COALESCE(SUM(nominal), 0) FROM kasbon_karyawan WHERE terapis_id = t.id AND status_potongan IN ('belum_lunas', 'belum_dipotong'))";
-        $subQueryTunjangan = "(SELECT COALESCE(SUM(
-            CASE 
-                WHEN tt.tipe = 'bulanan' THEN tt.nominal
-                WHEN tt.tipe = 'harian' THEN tt.nominal * (
-                    SELECT COUNT(*) FROM absensi_karyawan 
-                    WHERE terapis_id = t.id AND status IN ('Hadir','Cuti')
-                    AND tanggal >= '$tanggalAwal' AND tanggal <= '$tanggalAkhir'
-                )
-                ELSE 0
-            END
-        ), 0) FROM tunjangan_terapis tt WHERE tt.terapis_id = t.id AND tt.is_active = 1)";
-        $subQueryKehadiran = "(SELECT COUNT(*) FROM absensi_karyawan WHERE terapis_id = t.id AND status IN ('Hadir', 'Cuti') AND tanggal >= '$tanggalAwal' AND tanggal <= '$tanggalAkhir')";
+        $subQueryKehadiran = "(SELECT COUNT(*) FROM absensi_karyawan WHERE terapis_id = t.id AND status IN ('Hadir','Cuti') AND tanggal >= '$tanggalAwal' AND tanggal <= '$tanggalAkhir')";
+        $subQueryKasbon    = "(SELECT COALESCE(SUM(sisa_hutang), 0) FROM kasbon_karyawan WHERE terapis_id = t.id AND status_potongan = 'belum_lunas')";
 
         $builder = $this->db->table('terapis t');
         $builder->select(
-            't.id, 
-            t.nama, 
-            COALESCE(pg.tipe_gaji, "Belum Diset") as tipe_gaji, 
+            't.id, t.nama, t.region_id,
+            COALESCE(pg.tipe_gaji, "Belum Diset") as tipe_gaji,
             COALESCE(pg.nominal_gaji, 0) as nominal_gaji,
             COALESCE(pg.potong_absen, 0) as potong_absen,
-            ' . $subQueryTindakan . ' as jml_tindakan,
-            ' . $subQueryKasbon . ' as total_kasbon,
-            ' . $subQueryTunjangan . ' as total_tunjangan,
-            ' . $subQueryKehadiran . ' as current_kehadiran'
+            ' . $subQueryKehadiran . ' as current_kehadiran,
+            ' . $subQueryKasbon . ' as total_kasbon'
         , false);
         $builder->join('gaji_karyawan pg', 'pg.terapis_id = t.id', 'left');
-
-        // Ambil data spesifik 1 orang yang diklik
         $builder->where('t.id', $id);
 
         $terapis = $builder->get()->getRowArray();
+        if (!$terapis) return ['terapis' => null, 'komponen' => []];
 
-        // Hitung Potongan Absen jika tipe bulanan & potong_absen aktif
-        $hari_kerja = 0;
-        $potongan_absen = 0;
-        if ($terapis && $terapis['tipe_gaji'] === 'bulanan' && $terapis['potong_absen'] == 1) {
+        $kehadiran   = (int) $terapis['current_kehadiran'];
+        $nominalGaji = (float) $terapis['nominal_gaji'];
+        $tipeGaji    = $terapis['tipe_gaji'];
+
+        // ── GAJI POKOK ──────────────────────────────────────────────
+        $gajiPokok = ($tipeGaji === 'harian') ? $nominalGaji * $kehadiran : $nominalGaji;
+
+        // Potongan absen (gaji bulanan)
+        $potonganAbsen = 0;
+        $hariKerja     = 0;
+        if ($tipeGaji === 'bulanan' && $terapis['potong_absen'] == 1) {
             $mKalender = new \App\modules\kalender\Models\MKalender();
-            $hari_kerja = $mKalender->getHariKerjaBulanan($bulan, $tahun, $terapis['region_id'] ?? null);
-            if ($hari_kerja > 0) {
-                $absen = $hari_kerja - (int)$terapis['current_kehadiran'];
-                if ($absen > 0) {
-                    $potongan_absen = ($terapis['nominal_gaji'] / $hari_kerja) * $absen;
+            $hariKerja = $mKalender->getHariKerjaBulanan($bulan, $tahun, $terapis['region_id'] ?? null);
+            if ($hariKerja > 0) {
+                $absen = $hariKerja - $kehadiran;
+                if ($absen > 0) $potonganAbsen = ($nominalGaji / $hariKerja) * $absen;
+            }
+        }
+        $gajiPokok -= $potonganAbsen;
+
+        // ── JASPEL (dari jaspel_settings) ───────────────────────────
+        $mJaspel = new \App\modules\jasa_pelayanan\Models\MJaspelSettings();
+
+        // Jaspel Reguler
+        $jaspelReguler    = 0;
+        $settingReguler   = $mJaspel->getByRegion($terapis['region_id'], 'reguler');
+        if ($settingReguler) {
+            $terapisAllowed = json_decode($settingReguler->terapis_ids, true) ?? [];
+            if (in_array($id, $terapisAllowed)) {
+                // Hitung pasien reguler bulan ini (bukan kejantanan, sudah selesai)
+                $pasienReguler = $this->db->table('patient_queues pq')
+                    ->join('histories h', 'h.patient_queue_id = pq.id', 'inner')
+                    ->where('pq.region_id', $terapis['region_id'])
+                    ->where('h.finish_at IS NOT NULL', null, false)
+                    ->where('(h.kejantanan != \'ya\' OR h.kejantanan IS NULL)', null, false)
+                    ->where('MONTH(pq.queue_date)', $bulan)
+                    ->where('YEAR(pq.queue_date)', $tahun)
+                    ->countAllResults();
+
+                // Cek kehadiran terapis di bulan ini
+                $hadirBulanIni = $this->db->table('absensi_karyawan')
+                    ->where('terapis_id', $id)
+                    ->where('status', 'Hadir')
+                    ->where("tanggal >= '$tanggalAwal'")
+                    ->where("tanggal <= '$tanggalAkhir'")
+                    ->countAllResults();
+
+                // Hitung terapis hadir lain yang berhak
+                $terapisHadir = $this->db->table('absensi_karyawan ak')
+                    ->whereIn('ak.terapis_id', $terapisAllowed)
+                    ->where('ak.status', 'Hadir')
+                    ->where("ak.tanggal >= '$tanggalAwal'")
+                    ->where("ak.tanggal <= '$tanggalAkhir'")
+                    ->select('ak.terapis_id')
+                    ->distinct()
+                    ->countAllResults();
+
+                if ($hadirBulanIni > 0 && $terapisHadir > 0 && $pasienReguler > 0) {
+                    $totalJaspel   = $pasienReguler * $settingReguler->nominal_per_pasien;
+                    $jaspelReguler = $totalJaspel / $terapisHadir;
                 }
             }
         }
 
+        // Jaspel Kejantanan
+        $jaspelKejantanan  = 0;
+        $settingKejantanan = $mJaspel->getByRegion($terapis['region_id'], 'kejantanan');
+        if ($settingKejantanan) {
+            $terapisAllowed = json_decode($settingKejantanan->terapis_ids, true) ?? [];
+            if (in_array($id, $terapisAllowed)) {
+                $pasienKejantanan = $this->db->table('patient_queues pq')
+                    ->join('histories h', 'h.patient_queue_id = pq.id', 'inner')
+                    ->where('pq.region_id', $terapis['region_id'])
+                    ->where('h.finish_at IS NOT NULL', null, false)
+                    ->where('h.kejantanan', 'ya')
+                    ->where('MONTH(pq.queue_date)', $bulan)
+                    ->where('YEAR(pq.queue_date)', $tahun)
+                    ->countAllResults();
+
+                $hadirBulanIni = $this->db->table('absensi_karyawan')
+                    ->where('terapis_id', $id)->where('status', 'Hadir')
+                    ->where("tanggal >= '$tanggalAwal'")->where("tanggal <= '$tanggalAkhir'")
+                    ->countAllResults();
+
+                $terapisHadir = $this->db->table('absensi_karyawan ak')
+                    ->whereIn('ak.terapis_id', $terapisAllowed)
+                    ->where('ak.status', 'Hadir')
+                    ->where("ak.tanggal >= '$tanggalAwal'")->where("ak.tanggal <= '$tanggalAkhir'")
+                    ->select('ak.terapis_id')->distinct()->countAllResults();
+
+                if ($hadirBulanIni > 0 && $terapisHadir > 0 && $pasienKejantanan > 0) {
+                    $totalJaspel      = $pasienKejantanan * $settingKejantanan->nominal_per_pasien;
+                    $jaspelKejantanan = $totalJaspel / $terapisHadir;
+                }
+            }
+        }
+
+        // ── TUNJANGAN per kategori ───────────────────────────────────
+        $settingTunjangan = $this->db->table('tunjangan_terapis tt')
+            ->select('tt.nominal, tt.tipe, tk.nama_tunjangan, tk.kategori')
+            ->join('tunjangan_karyawan tk', 'tk.id = tt.tunjangan_karyawan_id')
+            ->where('tt.terapis_id', $id)
+            ->where('tt.is_active', 1)
+            ->get()->getResultArray();
+
+        $penerimaanList = [];
+        $benefitList    = [];
+        $totalPenerimaan = 0;
+        $totalBenefit    = 0;
+
+        foreach ($settingTunjangan as $t) {
+            $nominal = ($t['tipe'] === 'harian')
+                ? (float)$t['nominal'] * $kehadiran
+                : (float)$t['nominal'];
+
+            $item = ['nama' => $t['nama_tunjangan'], 'nominal' => (int)$nominal];
+
+            if ($t['kategori'] === 'benefit') {
+                $benefitList[]  = $item;
+                $totalBenefit  += $nominal;
+            } else {
+                $penerimaanList[] = $item;
+                $totalPenerimaan += $nominal;
+            }
+        }
+
+        // ── POTONGAN RUTIN ───────────────────────────────────────────
+        $mPotongan    = new \App\modules\kasbon_karyawan\Models\MPotonganRutin();
+        $potonganList = $mPotongan->getByTerapis($id);
+        $totalPotonganRutin = array_sum(array_column($potonganList, 'nominal'));
+
+        // ── TOTAL KASBON ─────────────────────────────────────────────
+        $totalKasbon = (int)$terapis['total_kasbon'];
+
+        // ── KALKULASI AKHIR ──────────────────────────────────────────
+        $totalA      = $gajiPokok + $jaspelReguler + $jaspelKejantanan + $totalPenerimaan;
+        $totalB      = $totalBenefit;
+        $totalC      = $totalPotonganRutin + $totalKasbon;
+        $gajiBersih  = ($totalA + $totalB) - $totalC;
+
+        $terapis['total_tunjangan'] = (int)($totalA - $gajiPokok + $totalB); // untuk backward compat
+
         return [
-            'terapis'   => $terapis,
-            'kalkulasi' => [
-                'hari_kerja'     => $hari_kerja,
-                'potongan_absen' => (int)$potongan_absen
+            'terapis'    => $terapis,
+            'komponen'   => [
+                // A. Penerimaan
+                'gaji_pokok'        => (int)$gajiPokok,
+                'jaspel_reguler'    => (int)$jaspelReguler,
+                'jaspel_kejantanan' => (int)$jaspelKejantanan,
+                'penerimaan_list'   => $penerimaanList,
+                'total_penerimaan'  => (int)$totalPenerimaan,
+                'total_A'           => (int)$totalA,
+                // B. Benefit
+                'benefit_list'      => $benefitList,
+                'total_B'           => (int)$totalBenefit,
+                // C. Potongan
+                'potongan_list'     => $potonganList,
+                'total_potongan_rutin' => (int)$totalPotonganRutin,
+                'total_kasbon'      => $totalKasbon,
+                'total_C'           => (int)$totalC,
+                // Hasil
+                'gaji_bersih'       => (int)$gajiBersih,
+                'kehadiran'         => $kehadiran,
+                'hari_kerja'        => $hariKerja,
             ]
         ];
     }

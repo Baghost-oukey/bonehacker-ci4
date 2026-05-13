@@ -30,8 +30,9 @@ class Detailgaji extends BaseController
         }
 
         $data = [
-            'title'   => 'Review Gaji Karyawan',
-            'terapis' => $dataDetail['terapis']
+            'title'    => 'Review Gaji Karyawan',
+            'terapis'  => $dataDetail['terapis'],
+            'komponen' => $dataDetail['komponen'],
         ];
 
         return view('App\modules\detail_gaji\Views\review', $data);
@@ -39,56 +40,29 @@ class Detailgaji extends BaseController
 
     public function proses_simpan()
     {
-        // Reuse logic from Gajikaryawan or implement here
-        // Since we want to use AJAX (as per review_gaji.js), we return JSON
-        
         $terapisId = (int)$this->request->getPost('terapis_id');
-        $totalKehadiran = (int)$this->request->getPost('total_kehadiran');
 
-        // Validation logic similar to Gajikaryawan::prosesBayar
         if (empty($terapisId)) {
             return $this->response->setJSON(['status' => 'error', 'message' => 'ID terapis tidak valid.', 'csrfHash' => csrf_hash()]);
         }
 
-        // ... (implementing the same logic as prosesBayar but for AJAX)
-        
-        $gajiData = $this->db->table('gaji_karyawan')->where('terapis_id', $terapisId)->get()->getRowArray();
-        if (empty($gajiData)) {
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Pengaturan gaji belum diset.', 'csrfHash' => csrf_hash()]);
+        // Hitung ulang dari model untuk keakuratan
+        $dataDetail = $this->Mgaji->getDetailPerhitungan($terapisId);
+        if (empty($dataDetail['terapis'])) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Data tidak ditemukan.', 'csrfHash' => csrf_hash()]);
         }
 
-        $tipeGaji = $gajiData['tipe_gaji'];
-        $nominalGaji = (int)$gajiData['nominal_gaji'];
-        $gajiPokokTotal = ($tipeGaji === 'harian') ? ($nominalGaji * $totalKehadiran) : $nominalGaji;
-
-        $totalPotongan = (int)($this->db->table('kasbon_karyawan')
-            ->selectSum('nominal', 'total')
-            ->where('terapis_id', $terapisId)
-            ->whereIn('status_potongan', ['belum_lunas', 'belum_dipotong'])
-            ->get()
-            ->getRowArray()['total'] ?? 0);
-
-        $totalTunjangan = (int)($this->db->table('transaksi_tunjangan')
-            ->selectSum('nominal', 'total')
-            ->where('terapis_id', $terapisId)
-            ->where('status_pembayaran', 'Belum Dibayar')
-            ->get()
-            ->getRowArray()['total'] ?? 0);
-
-        $gajiBersih = $gajiPokokTotal + $totalTunjangan - $totalPotongan;
-
-        if ($gajiBersih < 0) {
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Gaji bersih tidak boleh negatif.', 'csrfHash' => csrf_hash()]);
-        }
+        $k          = $dataDetail['komponen'];
+        $gajiBersih = $k['gaji_bersih'];
 
         $dataGaji = [
             'terapis_id'       => $terapisId,
             'periode_bulan'    => date('n'),
             'periode_tahun'    => date('Y'),
-            'total_kehadiran'  => $totalKehadiran,
-            'gaji_pokok_total' => $gajiPokokTotal,
-            'total_tunjangan'  => $totalTunjangan,
-            'total_potongan'   => $totalPotongan,
+            'total_kehadiran'  => $k['kehadiran'],
+            'gaji_pokok_total' => $k['gaji_pokok'],
+            'total_tunjangan'  => $k['total_A'] - $k['gaji_pokok'] + $k['total_B'],
+            'total_potongan'   => $k['total_C'],
             'gaji_bersih'      => $gajiBersih,
             'tanggal_bayar'    => date('Y-m-d H:i:s'),
             'status'           => 'lunas'
@@ -97,15 +71,11 @@ class Detailgaji extends BaseController
         $this->db->transStart();
         $this->Mgaji->insert($dataGaji);
 
+        // Lunasi kasbon
         $this->db->table('kasbon_karyawan')
             ->where('terapis_id', $terapisId)
-            ->whereIn('status_potongan', ['belum_lunas', 'belum_dipotong'])
+            ->where('status_potongan', 'belum_lunas')
             ->update(['status_potongan' => 'lunas']);
-
-        $this->db->table('transaksi_tunjangan')
-            ->where('terapis_id', $terapisId)
-            ->where('status_pembayaran', 'Belum Dibayar')
-            ->update(['status_pembayaran' => 'Sudah Cair']);
 
         $this->db->transComplete();
 
@@ -114,8 +84,8 @@ class Detailgaji extends BaseController
         }
 
         return $this->response->setJSON([
-            'status' => 'success', 
-            'message' => 'Gaji berhasil dibayarkan.', 
+            'status'   => 'success',
+            'message'  => 'Gaji berhasil dibayarkan.',
             'csrfHash' => csrf_hash()
         ]);
     }

@@ -135,19 +135,52 @@ class Kasbonkaryawan extends BaseController
             throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
         }
 
-        // Gunakan fungsi dari Model yang sudah kita buat tadi agar lebih bersih
         $totalHutangAktif = $this->Mkasbon->getTotalHutangAktif($id);
-        $gajiPokok        = $karyawan['gaji_pokok'] ?? 0;
-
         $karyawan['total_kasbon_aktif'] = $totalHutangAktif;
 
+        $mPotongan = new \App\modules\kasbon_karyawan\Models\MPotonganRutin();
+
         $data = [
-            'title'    => 'Detail Kasbon - ' . $karyawan['nama'],
-            'karyawan' => $karyawan,
-            'riwayat'  => $this->Mkasbon->getHistoryByTerapis($id)
+            'title'          => 'Detail Kasbon - ' . $karyawan['nama'],
+            'karyawan'       => $karyawan,
+            'riwayat'        => $this->Mkasbon->getHistoryByTerapis($id),
+            'potongan_rutin' => $mPotongan->getByTerapis((int)$id),
         ];
 
         return view('App\modules\kasbon_karyawan\Views\detail_kasbon', $data);
+    }
+
+    public function storePotongan()
+    {
+        $terapisId    = (int) $this->request->getPost('terapis_id');
+        $namaPotongan = $this->request->getPost('nama_potongan');
+        $nominal      = (float) preg_replace('/[^0-9]/', '', $this->request->getPost('nominal'));
+
+        if (!$terapisId || empty($namaPotongan) || $nominal <= 0) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Data tidak lengkap']);
+        }
+
+        $mPotongan = new \App\modules\kasbon_karyawan\Models\MPotonganRutin();
+        $mPotongan->insert([
+            'terapis_id'    => $terapisId,
+            'nama_potongan' => $namaPotongan,
+            'nominal'       => $nominal,
+            'is_active'     => 1,
+            'created_by'    => session()->get('userId'),
+        ]);
+
+        return $this->response->setJSON([
+            'status'   => 'success',
+            'message'  => 'Potongan rutin berhasil ditambahkan',
+            'csrfHash' => csrf_hash()
+        ]);
+    }
+
+    public function deletePotongan($id)
+    {
+        $mPotongan = new \App\modules\kasbon_karyawan\Models\MPotonganRutin();
+        $mPotongan->delete($id);
+        return $this->response->setJSON(['status' => 'success', 'csrfHash' => csrf_hash()]);
     }
 
     public function bayar()

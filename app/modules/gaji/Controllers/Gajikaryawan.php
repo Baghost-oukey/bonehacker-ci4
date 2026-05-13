@@ -76,7 +76,11 @@ class Gajikaryawan extends BaseController
     {
         $detail = $this->Mriwayatgaji->getDetailPerhitungan($terapisId);
         if (!empty($detail['terapis'])) {
-            return $this->response->setJSON(['status' => 'success', 'data' => $detail['terapis']]);
+            return $this->response->setJSON([
+                'status'   => 'success',
+                'data'     => array_merge($detail['terapis'], ['komponen' => $detail['komponen']]),
+                'csrfHash' => csrf_hash()
+            ]);
         }
         return $this->response->setJSON(['status' => 'error', 'message' => 'Data tidak ditemukan']);
     }

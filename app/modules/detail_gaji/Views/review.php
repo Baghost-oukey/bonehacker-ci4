@@ -2,99 +2,146 @@
 <?= $this->section('content') ?>
 
 <div class="p-6 bg-slate-50 min-h-screen">
-    <div class="mb-8">
-        <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Review Slip Gaji</h1>
-        <p class="text-slate-500 mt-2">Konfirmasi rincian pembayaran sebelum diproses ke sistem keuangan.</p>
+    <div class="mb-6">
+        <a href="<?= base_url('gaji') ?>" class="inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors">
+            <i class="fas fa-arrow-left"></i> Kembali ke Pengelolaan Gaji
+        </a>
     </div>
 
     <div class="max-w-4xl mx-auto">
         <div class="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
-            <!-- Header Card -->
-            <div class="bg-slate-900 p-8 text-white">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <h2 class="text-2xl font-bold"><?= esc($terapis['nama']) ?></h2>
-                        <p class="text-slate-400 mt-1 uppercase tracking-widest text-xs font-bold"><?= date('F Y') ?></p>
-                    </div>
-                    <div class="text-right">
-                        <span class="px-4 py-1.5 bg-blue-500/20 text-blue-400 rounded-full text-xs font-bold uppercase tracking-wider border border-blue-500/30">
-                            <?= esc($terapis['tipe_gaji']) ?>
-                        </span>
-                    </div>
+
+            <!-- Header -->
+            <div class="bg-slate-900 px-8 py-6 text-white flex justify-between items-center">
+                <div>
+                    <h2 class="text-xl font-black"><?= esc($terapis['nama']) ?></h2>
+                    <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">
+                        Slip Gaji <?= date('F Y') ?> &bull; Kehadiran: <?= $komponen['kehadiran'] ?> Hari
+                    </p>
                 </div>
+                <span class="px-3 py-1.5 bg-blue-500/20 text-blue-400 rounded-full text-xs font-bold uppercase border border-blue-500/30">
+                    <?= esc($terapis['tipe_gaji']) ?>
+                </span>
             </div>
 
-            <!-- Body Slip -->
-            <div class="p-8">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
-                    <!-- Sisi Kiri: Pendapatan -->
-                    <div>
-                        <h3 class="text-sm font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
-                            <i class="fas fa-plus-circle text-emerald-500"></i> Pendapatan
-                        </h3>
-                        <div class="space-y-4">
-                            <div class="flex justify-between items-center">
-                                <span class="text-slate-600">Gaji Pokok / Dasar</span>
-                                <span class="font-bold text-slate-800">Rp <?= number_format($terapis['nominal_gaji'], 0, ',', '.') ?></span>
-                            </div>
-                            <?php if ($terapis['tipe_gaji'] === 'harian'): ?>
-                            <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-dashed border-slate-200">
-                                <span class="text-xs text-slate-500 italic">Dikalikan Kehadiran (<?= $terapis['current_kehadiran'] ?> Hari)</span>
-                                <span class="font-bold text-slate-800">Rp <?= number_format($terapis['nominal_gaji'] * $terapis['current_kehadiran'], 0, ',', '.') ?></span>
-                            </div>
-                            <?php endif; ?>
-                            <div class="flex justify-between items-center">
-                                <span class="text-slate-600">Total Tunjangan</span>
-                                <span class="font-bold text-indigo-600">+ Rp <?= number_format($terapis['total_tunjangan'], 0, ',', '.') ?></span>
-                            </div>
-                        </div>
-                    </div>
+            <div class="p-8 space-y-6">
 
-                    <!-- Sisi Kanan: Potongan -->
-                    <div>
-                        <h3 class="text-sm font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
-                            <i class="fas fa-minus-circle text-rose-500"></i> Potongan
-                        </h3>
-                        <div class="space-y-4">
-                            <div class="flex justify-between items-center">
-                                <span class="text-slate-600">Kasbon Karyawan</span>
-                                <span class="font-bold text-rose-600">- Rp <?= number_format($terapis['total_kasbon'], 0, ',', '.') ?></span>
-                            </div>
+                <!-- A. PENERIMAAN -->
+                <div>
+                    <h3 class="text-xs font-black text-emerald-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <i class="fas fa-plus-circle"></i> A. Penerimaan
+                    </h3>
+                    <div class="bg-emerald-50/50 rounded-2xl border border-emerald-100 divide-y divide-emerald-100">
+                        <div class="flex justify-between px-5 py-3 text-sm">
+                            <span class="text-slate-600">Gaji Pokok
+                                <?php if ($terapis['tipe_gaji'] === 'harian'): ?>
+                                    <span class="text-xs text-slate-400">(<?= $terapis['nominal_gaji'] ?>/hari × <?= $komponen['kehadiran'] ?> hari)</span>
+                                <?php endif; ?>
+                            </span>
+                            <span class="font-bold text-slate-800">Rp <?= number_format($komponen['gaji_pokok'], 0, ',', '.') ?></span>
+                        </div>
+                        <?php if ($komponen['jaspel_reguler'] > 0): ?>
+                        <div class="flex justify-between px-5 py-3 text-sm">
+                            <span class="text-slate-600">Jasa Pelayanan Reguler</span>
+                            <span class="font-bold text-slate-800">Rp <?= number_format($komponen['jaspel_reguler'], 0, ',', '.') ?></span>
+                        </div>
+                        <?php endif; ?>
+                        <?php if ($komponen['jaspel_kejantanan'] > 0): ?>
+                        <div class="flex justify-between px-5 py-3 text-sm">
+                            <span class="text-slate-600">Jasa Terapi Kejantanan</span>
+                            <span class="font-bold text-slate-800">Rp <?= number_format($komponen['jaspel_kejantanan'], 0, ',', '.') ?></span>
+                        </div>
+                        <?php endif; ?>
+                        <?php foreach ($komponen['penerimaan_list'] as $p): ?>
+                        <div class="flex justify-between px-5 py-3 text-sm">
+                            <span class="text-slate-600"><?= esc($p['nama']) ?></span>
+                            <span class="font-bold text-slate-800">Rp <?= number_format($p['nominal'], 0, ',', '.') ?></span>
+                        </div>
+                        <?php endforeach; ?>
+                        <div class="flex justify-between px-5 py-3 text-sm bg-emerald-50 rounded-b-2xl">
+                            <span class="font-black text-emerald-700">Total A</span>
+                            <span class="font-black text-emerald-700">Rp <?= number_format($komponen['total_A'], 0, ',', '.') ?></span>
                         </div>
                     </div>
                 </div>
 
-                <hr class="my-10 border-slate-100">
-
-                <!-- Ringkasan Akhir -->
-                <div class="bg-slate-50 rounded-3xl p-8 border border-slate-200">
-                    <div class="flex flex-col md:flex-row justify-between items-center gap-6">
-                        <div>
-                            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Gaji Bersih (Take Home Pay)</p>
-                            <?php 
-                                $pokok = ($terapis['tipe_gaji'] === 'harian') ? ($terapis['nominal_gaji'] * $terapis['current_kehadiran']) : $terapis['nominal_gaji'];
-                                $bersih = $pokok + $terapis['total_tunjangan'] - $terapis['total_kasbon'];
-                            ?>
-                            <h4 class="text-4xl font-black text-slate-900 mt-1">Rp <?= number_format($bersih, 0, ',', '.') ?></h4>
+                <!-- B. BENEFIT -->
+                <?php if (!empty($komponen['benefit_list'])): ?>
+                <div>
+                    <h3 class="text-xs font-black text-blue-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <i class="fas fa-shield-alt"></i> B. Benefit (Ditanggung Perusahaan)
+                    </h3>
+                    <div class="bg-blue-50/50 rounded-2xl border border-blue-100 divide-y divide-blue-100">
+                        <?php foreach ($komponen['benefit_list'] as $b): ?>
+                        <div class="flex justify-between px-5 py-3 text-sm">
+                            <span class="text-slate-600"><?= esc($b['nama']) ?></span>
+                            <span class="font-bold text-slate-800">Rp <?= number_format($b['nominal'], 0, ',', '.') ?></span>
                         </div>
-                        
-                        <form id="formProsesGaji" action="<?= base_url('detail-gaji/proses_simpan') ?>" method="POST" class="w-full md:w-auto">
-                            <?= csrf_field() ?>
-                            <input type="hidden" name="terapis_id" value="<?= $terapis['id'] ?>">
-                            <input type="hidden" name="total_kehadiran" value="<?= $terapis['current_kehadiran'] ?>">
-                            <button type="submit" id="btnKonfirmasi" class="w-full md:w-auto px-10 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl shadow-xl shadow-indigo-200 transition-all active:scale-95 flex items-center justify-center gap-3">
-                                <i class="fas fa-check-double"></i> KONFIRMASI & BAYAR
-                            </button>
-                        </form>
+                        <?php endforeach; ?>
+                        <div class="flex justify-between px-5 py-3 text-sm bg-blue-50 rounded-b-2xl">
+                            <span class="font-black text-blue-700">Total B</span>
+                            <span class="font-black text-blue-700">Rp <?= number_format($komponen['total_B'], 0, ',', '.') ?></span>
+                        </div>
                     </div>
                 </div>
+                <?php endif; ?>
+
+                <!-- C. POTONGAN -->
+                <?php if ($komponen['total_C'] > 0): ?>
+                <div>
+                    <h3 class="text-xs font-black text-rose-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <i class="fas fa-minus-circle"></i> C. Potongan
+                    </h3>
+                    <div class="bg-rose-50/50 rounded-2xl border border-rose-100 divide-y divide-rose-100">
+                        <?php foreach ($komponen['potongan_list'] as $p): ?>
+                        <div class="flex justify-between px-5 py-3 text-sm">
+                            <span class="text-slate-600"><?= esc($p['nama_potongan']) ?></span>
+                            <span class="font-bold text-rose-600">- Rp <?= number_format($p['nominal'], 0, ',', '.') ?></span>
+                        </div>
+                        <?php endforeach; ?>
+                        <?php if ($komponen['total_kasbon'] > 0): ?>
+                        <div class="flex justify-between px-5 py-3 text-sm">
+                            <span class="text-slate-600">Kasbon Karyawan</span>
+                            <span class="font-bold text-rose-600">- Rp <?= number_format($komponen['total_kasbon'], 0, ',', '.') ?></span>
+                        </div>
+                        <?php endif; ?>
+                        <div class="flex justify-between px-5 py-3 text-sm bg-rose-50 rounded-b-2xl">
+                            <span class="font-black text-rose-700">Total C</span>
+                            <span class="font-black text-rose-700">- Rp <?= number_format($komponen['total_C'], 0, ',', '.') ?></span>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <!-- TOTAL PENDAPATAN & BERSIH -->
+                <div class="bg-slate-900 rounded-2xl p-6 text-white">
+                    <div class="flex justify-between text-sm mb-2">
+                        <span class="text-slate-400">Total Pendapatan (A + B)</span>
+                        <span class="font-bold">Rp <?= number_format($komponen['total_A'] + $komponen['total_B'], 0, ',', '.') ?></span>
+                    </div>
+                    <?php if ($komponen['total_C'] > 0): ?>
+                    <div class="flex justify-between text-sm mb-4 pb-4 border-b border-slate-700">
+                        <span class="text-slate-400">Total Potongan (C)</span>
+                        <span class="font-bold text-rose-400">- Rp <?= number_format($komponen['total_C'], 0, ',', '.') ?></span>
+                    </div>
+                    <?php endif; ?>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-black uppercase tracking-widest text-slate-300">Pendapatan Bersih</span>
+                        <span class="text-3xl font-black text-emerald-400">Rp <?= number_format($komponen['gaji_bersih'], 0, ',', '.') ?></span>
+                    </div>
+                </div>
+
+                <!-- Tombol Konfirmasi -->
+                <form id="formProsesGaji" action="<?= base_url('detail-gaji/proses_simpan') ?>" method="POST">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="terapis_id" value="<?= $terapis['id'] ?>">
+                    <button type="submit" id="btnKonfirmasi"
+                        class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl shadow-xl shadow-indigo-200 transition-all active:scale-95 flex items-center justify-center gap-3">
+                        <i class="fas fa-check-double"></i> KONFIRMASI & BAYAR
+                    </button>
+                </form>
+
             </div>
-        </div>
-        
-        <div class="mt-6 text-center">
-            <a href="<?= base_url('gaji') ?>" class="text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors">
-                <i class="fas fa-arrow-left mr-2"></i> Kembali ke Pengelolaan Gaji
-            </a>
         </div>
     </div>
 </div>

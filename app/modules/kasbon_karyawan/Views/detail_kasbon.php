@@ -37,6 +37,9 @@
         <button class="tab-btn pb-4 text-sm font-black text-slate-400 border-b-2 border-transparent hover:text-slate-600 transition-all uppercase tracking-widest" data-target="tab-cicilan">
             <i class="fas fa-plus-circle mr-2"></i> Cicilan Kasbon
         </button>
+        <button class="tab-btn pb-4 text-sm font-black text-slate-400 border-b-2 border-transparent hover:text-slate-600 transition-all uppercase tracking-widest" data-target="tab-potongan">
+            <i class="fas fa-scissors mr-2"></i> Potongan Rutin
+        </button>
     </div>
 
     <div id="tab-riwayat" class="tab-content block animate-in fade-in duration-300">
@@ -96,17 +99,130 @@
         <?= $this->include('App\modules\kasbon_karyawan\Views\form\form_cicilan') ?>
     </div>
 
+    <!-- Tab Potongan Rutin -->
+    <div id="tab-potongan" class="tab-content hidden animate-in fade-in duration-300">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Daftar Potongan Aktif -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="border-b border-slate-100 bg-slate-50/50 px-5 py-3 flex items-center justify-between">
+                    <h3 class="text-sm font-bold text-slate-700">Potongan Rutin Aktif</h3>
+                    <span class="text-xs text-slate-400">Dipotong otomatis saat proses gaji</span>
+                </div>
+                <div class="divide-y divide-slate-50">
+                    <?php if (empty($potongan_rutin)): ?>
+                        <div class="p-6 text-center text-slate-400 text-sm italic">Belum ada potongan rutin</div>
+                    <?php else: ?>
+                        <?php foreach ($potongan_rutin as $p): ?>
+                            <div class="flex items-center justify-between px-5 py-3 hover:bg-slate-50 transition">
+                                <div>
+                                    <p class="text-sm font-bold text-slate-800"><?= esc($p['nama_potongan']) ?></p>
+                                    <p class="text-xs text-rose-600 font-semibold">- Rp <?= number_format($p['nominal'], 0, ',', '.') ?>/bulan</p>
+                                </div>
+                                <button onclick="hapusPotongan(<?= $p['id'] ?>)"
+                                    class="text-slate-300 hover:text-red-500 transition p-1.5 rounded-lg hover:bg-red-50">
+                                    <i class="fas fa-trash text-xs"></i>
+                                </button>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- Form Tambah Potongan -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="border-b border-slate-100 bg-slate-50/50 px-5 py-3">
+                    <h3 class="text-sm font-bold text-slate-700">Tambah Potongan Rutin</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Contoh: BPJS Kesehatan 1%, iuran koperasi</p>
+                </div>
+                <form id="formPotonganRutin" class="p-5 space-y-4">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="terapis_id" value="<?= $karyawan['id'] ?>">
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Nama Potongan <span class="text-red-500">*</span></label>
+                        <input type="text" name="nama_potongan" required placeholder="Contoh: BPJS Kesehatan 1%"
+                            class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm focus:border-rose-400 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Nominal (Rp) <span class="text-red-500">*</span></label>
+                        <input type="text" name="nominal" id="inputNominalPotongan" required placeholder="Contoh: 27.732"
+                            class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-bold text-rose-600 focus:border-rose-400 focus:outline-none">
+                    </div>
+                    <button type="submit" id="btnSimpanPotongan"
+                        class="w-full rounded-xl bg-rose-600 py-3 text-sm font-black uppercase tracking-widest text-white transition hover:bg-rose-700">
+                        <i class="fas fa-plus mr-2"></i> Tambah Potongan
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
 </div>
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
 <script>
     window.kasbonDetailConfig = {
-        csrfName:   "<?= csrf_token() ?>",
-        csrfHash:   "<?= csrf_hash() ?>",
-        storeUrl:   "<?= base_url('kasbon/store') ?>",
-        cicilanUrl: "<?= base_url('kasbon/bayar') ?>",
+        csrfName:    "<?= csrf_token() ?>",
+        csrfHash:    "<?= csrf_hash() ?>",
+        storeUrl:    "<?= base_url('kasbon/store') ?>",
+        cicilanUrl:  "<?= base_url('kasbon/bayar') ?>",
+        potonganUrl: "<?= base_url('kasbon/potongan/store') ?>",
+        deletePotonganUrl: "<?= base_url('kasbon/potongan/delete') ?>",
         totalHutang: <?= (int)($karyawan['total_kasbon_aktif'] ?? 0) ?>
+    };
+
+    // Format rupiah potongan
+    document.getElementById('inputNominalPotongan')?.addEventListener('input', function () {
+        let v = this.value.replace(/[^0-9]/g, '');
+        this.value = v ? parseInt(v).toLocaleString('id-ID') : '';
+    });
+
+    // Submit potongan rutin
+    document.getElementById('formPotonganRutin')?.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const btn = document.getElementById('btnSimpanPotongan');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Menyimpan...';
+
+        const cfg = window.kasbonDetailConfig;
+        $.ajax({
+            url: cfg.potonganUrl,
+            type: 'POST',
+            data: $(this).serialize() + '&' + cfg.csrfName + '=' + cfg.csrfHash,
+            dataType: 'json',
+            success: function (res) {
+                if (res.csrfHash) cfg.csrfHash = res.csrfHash;
+                if (res.status === 'success') {
+                    Swal.fire({ icon: 'success', title: 'Berhasil', text: res.message, timer: 1200, showConfirmButton: false });
+                    setTimeout(() => location.reload(), 1200);
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Gagal', text: res.message });
+                }
+            },
+            complete: () => { btn.disabled = false; btn.innerHTML = '<i class="fas fa-plus mr-2"></i> Tambah Potongan'; }
+        });
+    });
+
+    window.hapusPotongan = function (id) {
+        const cfg = window.kasbonDetailConfig;
+        Swal.fire({
+            title: 'Hapus potongan ini?', icon: 'warning',
+            showCancelButton: true, confirmButtonColor: '#ef4444',
+            confirmButtonText: 'Ya, Hapus', cancelButtonText: 'Batal'
+        }).then(result => {
+            if (!result.isConfirmed) return;
+            $.ajax({
+                url: cfg.deletePotonganUrl + '/' + id,
+                type: 'POST',
+                data: { [cfg.csrfName]: cfg.csrfHash },
+                dataType: 'json',
+                success: function (res) {
+                    if (res.csrfHash) cfg.csrfHash = res.csrfHash;
+                    Swal.fire({ icon: 'success', title: 'Dihapus', timer: 1000, showConfirmButton: false });
+                    setTimeout(() => location.reload(), 1000);
+                }
+            });
+        });
     };
 </script>
 <?= $this->endSection() ?>
