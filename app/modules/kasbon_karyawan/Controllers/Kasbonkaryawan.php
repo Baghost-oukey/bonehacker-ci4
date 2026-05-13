@@ -20,6 +20,12 @@ class Kasbonkaryawan extends BaseController
     }
     public function index()
     {
+        // Hanya owner yang bisa akses
+        $role = session()->get('role');
+        if (!in_array($role, ['owner', 'admin', 'superadmin'])) {
+            return redirect()->back()->with('message', ['error', 'Akses Ditolak', 'Halaman ini hanya untuk owner.']);
+        }
+
         $data = ['title' => 'Kelola Kasbon Karyawan'];
         return view('App\modules\kasbon_karyawan\Views\index', $data);
     }
@@ -31,7 +37,10 @@ class Kasbonkaryawan extends BaseController
         $length = $this->request->getPost('length');
         $search = $this->request->getPost('search')['value'];
 
-        $dataRaw = $this->Mkasbon->get_datatables($search, $start, $length);
+        $region_patient = session()->get('region_patient');
+        $regionFilter   = ($region_patient !== 'all' && !empty($region_patient)) ? $region_patient : null;
+
+        $dataRaw = $this->Mkasbon->get_datatables($search, $start, $length, $regionFilter);
         $data = [];
 
         foreach ($dataRaw as $row) {
@@ -56,8 +65,8 @@ class Kasbonkaryawan extends BaseController
 
         return $this->response->setJSON([
             "draw"            => intval($draw),
-            "recordsTotal"    => $this->Mkasbon->count_all_active(),
-            "recordsFiltered" => $this->Mkasbon->count_filtered($search),
+            "recordsTotal"    => $this->Mkasbon->count_all_active($regionFilter),
+            "recordsFiltered" => $this->Mkasbon->count_filtered($search, $regionFilter),
             "data"            => $data,
             "csrfHash"        => csrf_hash()
         ]);
@@ -131,7 +140,6 @@ class Kasbonkaryawan extends BaseController
         $gajiPokok        = $karyawan['gaji_pokok'] ?? 0;
 
         $karyawan['total_kasbon_aktif'] = $totalHutangAktif;
-        $karyawan['sisa_limit']         = $gajiPokok - $totalHutangAktif;
 
         $data = [
             'title'    => 'Detail Kasbon - ' . $karyawan['nama'],

@@ -26,13 +26,13 @@ function initHeaderPage() {
 		// 5. Modal dengan pola opacity transition (users, whatsapp)
 		$('.fixed.inset-0').not('#appHeader, #appSidebar, #sidebarBackdrop').each(function () {
 			$(this).addClass('hidden').removeClass('flex');
-			$(this).addClass('opacity-0').removeClass('opacity-100');
+			// Jangan tambah opacity-0 ke modal-wrapper — nanti tidak bisa dibuka
+			if (!$(this).hasClass('modal-wrapper')) {
+				$(this).addClass('opacity-0').removeClass('opacity-100');
+			}
 		});
 
-		// 6. Modal kalender (tidak pakai modal-wrapper)
-		$('#modalTambahLibur, #modalTambahRutin').addClass('hidden').removeClass('flex');
-
-		// 7. body/html overflow yang mungkin terkunci (journal, dll)
+		// 6. Reset body/html overflow yang mungkin terkunci (journal, dll)
 		document.body.style.overflow = '';
 		document.body.style.paddingRight = '';
 		document.documentElement.style.overflow = '';

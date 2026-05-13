@@ -22,7 +22,8 @@ class Mgajikaryawan extends Model
         'total_potongan',
         'gaji_bersih',
         'tanggal_bayar',
-        'status'
+        'status',
+        'potong_absen'
     ];
 
     protected bool $allowEmptyInserts = false;
@@ -63,7 +64,7 @@ class Mgajikaryawan extends Model
         // SUB QUERY UNTUK JUMLAH TINDAKAN
         $subQueryTindakan = "(SELECT COUNT(h.id) FROM histories h WHERE FIND_IN_SET(t.id, h.terapis_id))";
         $subQueryKasbon = "(SELECT COALESCE(SUM(nominal), 0) FROM kasbon_karyawan WHERE terapis_id = t.id AND status_potongan IN ('belum_lunas', 'belum_dipotong'))";
-        $subQueryTunjangan = "(SELECT COALESCE(SUM(nominal), 0) FROM transaksi_tunjangan WHERE terapis_id = t.id AND status_pembayaran = 'Belum Dibayar')";
+        $subQueryTunjangan = "(SELECT COALESCE(SUM(tt.nominal), 0) FROM tunjangan_terapis tt WHERE tt.terapis_id = t.id AND tt.is_active = 1 AND tt.tipe = 'bulanan')";
 
         $builder->select(
             't.id as terapis_id, 
@@ -124,7 +125,17 @@ class Mgajikaryawan extends Model
 
         $subQueryTindakan = "(SELECT COUNT(h.id) FROM histories h WHERE FIND_IN_SET(t.id, h.terapis_id))";
         $subQueryKasbon = "(SELECT COALESCE(SUM(nominal), 0) FROM kasbon_karyawan WHERE terapis_id = t.id AND status_potongan IN ('belum_lunas', 'belum_dipotong'))";
-        $subQueryTunjangan = "(SELECT COALESCE(SUM(nominal), 0) FROM transaksi_tunjangan WHERE terapis_id = t.id AND status_pembayaran = 'Belum Dibayar')";
+        $subQueryTunjangan = "(SELECT COALESCE(SUM(
+            CASE 
+                WHEN tt.tipe = 'bulanan' THEN tt.nominal
+                WHEN tt.tipe = 'harian' THEN tt.nominal * (
+                    SELECT COUNT(*) FROM absensi_karyawan 
+                    WHERE terapis_id = t.id AND status IN ('Hadir','Cuti')
+                    AND tanggal >= '$tanggalAwal' AND tanggal <= '$tanggalAkhir'
+                )
+                ELSE 0
+            END
+        ), 0) FROM tunjangan_terapis tt WHERE tt.terapis_id = t.id AND tt.is_active = 1)";
         $subQueryKehadiran = "(SELECT COUNT(*) FROM absensi_karyawan WHERE terapis_id = t.id AND status IN ('Hadir', 'Cuti') AND tanggal >= '$tanggalAwal' AND tanggal <= '$tanggalAkhir')";
 
         $builder = $this->db->table('terapis t');

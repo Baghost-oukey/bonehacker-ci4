@@ -102,11 +102,10 @@
 <?= $this->section('scripts') ?>
 <script>
     window.kasbonDetailConfig = {
-        csrfName: "<?= csrf_token() ?>",
-        csrfHash: "<?= csrf_hash() ?>",
-        storeUrl: "<?= base_url('kasbon/store') ?>",
+        csrfName:   "<?= csrf_token() ?>",
+        csrfHash:   "<?= csrf_hash() ?>",
+        storeUrl:   "<?= base_url('kasbon/store') ?>",
         cicilanUrl: "<?= base_url('kasbon/bayar') ?>",
-        sisaLimit: <?= (int)($karyawan['sisa_limit'] ?? 0) ?>,
         totalHutang: <?= (int)($karyawan['total_kasbon_aktif'] ?? 0) ?>
     };
 </script>

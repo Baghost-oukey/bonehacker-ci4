@@ -9,7 +9,7 @@
         </div>
         <button id="btnInputMassal" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-xl shadow-lg shadow-indigo-200 transition-all flex items-center gap-2 font-black uppercase tracking-widest">
             <i class="fas fa-users text-lg"></i>
-            Input Tunjangan Semua
+            Input Tunjangan Massal
         </button>
     </div>
 
@@ -30,24 +30,22 @@
     </div>
 </div>
 
-<div id="modalMassal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in duration-300">
+<div id="modalMassal" class="modal-wrapper fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden">
         <div class="p-6 border-b border-slate-100 flex justify-between items-center">
-            <h3 class="font-black text-slate-800 uppercase tracking-tighter text-lg">Distribusi Tunjangan Massal</h3>
-            <button class="close-modal text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
-        </div>
-        <form id="formMassal" class="p-8 space-y-5">
-            <?= csrf_field(); ?>
-            <input type="hidden" name="tipe_input" value="massal">
-
-            <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 mb-4">
-                <p class="text-[11px] text-indigo-700 font-bold uppercase tracking-tight">Info:</p>
-                <p class="text-[10px] text-indigo-600 leading-tight">Tunjangan ini akan dibagikan ke seluruh terapis dengan status <span class="font-black">AKTIF</span> secara otomatis.</p>
+            <div>
+                <h3 class="font-black text-slate-800 text-lg">Setting Tunjangan Massal</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Set tunjangan ke semua terapis aktif di cabang ini sekaligus</p>
             </div>
+            <button class="close-modal text-slate-400 hover:text-slate-600 p-2"><i class="fas fa-times"></i></button>
+        </div>
+        <form id="formMassal" class="p-6 space-y-5">
+            <?= csrf_field(); ?>
 
             <div>
-                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Pilih Jenis Tunjangan</label>
-                <select name="tunjangan_karyawan_id" required class="w-full bg-slate-50 border-none rounded-xl p-4 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Jenis Tunjangan <span class="text-red-500">*</span></label>
+                <select name="tunjangan_karyawan_id" required
+                    class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
                     <option value="">-- Pilih Jenis --</option>
                     <?php foreach ($master_tunjangan as $mt): ?>
                         <option value="<?= $mt['id'] ?>"><?= esc($mt['nama_tunjangan']) ?></option>
@@ -55,19 +53,43 @@
                 </select>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Nominal (Rp)</label>
-                    <input type="text" name="nominal" id="inputNominalMassal" required placeholder="Rp 0" class="w-full bg-slate-50 border-none rounded-xl p-4 text-sm font-bold text-indigo-600 focus:ring-2 focus:ring-indigo-500">
-                </div>
-                <div>
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Tanggal</label>
-                    <input type="date" name="tanggal" value="<?= date('Y-m-d') ?>" class="w-full bg-slate-50 border-none rounded-xl p-4 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500">
+            <div>
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Tipe Pemberian <span class="text-red-500">*</span></label>
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="cursor-pointer">
+                        <input type="radio" name="tipe" value="bulanan" class="peer sr-only" checked>
+                        <div class="flex flex-col items-center gap-1 rounded-xl border-2 border-slate-200 bg-white p-3 text-center transition peer-checked:border-blue-500 peer-checked:bg-blue-50">
+                            <i class="fas fa-calendar-check text-slate-400 text-base"></i>
+                            <span class="text-xs font-bold text-slate-600">Bulanan</span>
+                            <span class="text-[10px] text-slate-400">Nominal tetap/bulan</span>
+                        </div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="tipe" value="harian" class="peer sr-only">
+                        <div class="flex flex-col items-center gap-1 rounded-xl border-2 border-slate-200 bg-white p-3 text-center transition peer-checked:border-amber-500 peer-checked:bg-amber-50">
+                            <i class="fas fa-sun text-slate-400 text-base"></i>
+                            <span class="text-xs font-bold text-slate-600">Harian</span>
+                            <span class="text-[10px] text-slate-400">Nominal × hari hadir</span>
+                        </div>
+                    </label>
                 </div>
             </div>
 
-            <button type="submit" id="btnSimpanMassal" class="w-full bg-indigo-600 py-4 rounded-2xl text-white font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">
-                Proses Distribusi
+            <div>
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Nominal (Rp) <span class="text-red-500">*</span></label>
+                <input type="text" name="nominal" id="inputNominalMassal" required placeholder="Contoh: 100.000"
+                    class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-bold text-indigo-600 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                <p id="keteranganNominalMassal" class="text-xs text-slate-400 mt-1">Nominal per bulan untuk semua terapis aktif</p>
+            </div>
+
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-700">
+                <i class="fas fa-info-circle mr-1"></i>
+                Jika terapis sudah punya setting tunjangan jenis ini, nominalnya akan <strong>diperbarui</strong>.
+            </div>
+
+            <button type="submit" id="btnSimpanMassal"
+                class="w-full rounded-xl bg-indigo-600 py-3 text-sm font-black uppercase tracking-widest text-white shadow-md transition hover:bg-indigo-700">
+                <i class="fas fa-users mr-2"></i> Terapkan ke Semua Terapis
             </button>
         </form>
     </div>
@@ -78,11 +100,12 @@
 <?= $this->section('scripts') ?>
 <script>
     window.transaksiTunjanganConfig = {
-        csrfName: "<?= csrf_token() ?>",
-        csrfHash: "<?= csrf_hash() ?>",
-        urlFetch: "<?= base_url('transaksi-tunjangan/fetch') ?>",
-        urlStore: "<?= base_url('transaksi-tunjangan/store') ?>",
-        urlDetail: "<?= base_url('transaksi-tunjangan/detail') ?>"
+        csrfName:       "<?= csrf_token() ?>",
+        csrfHash:       "<?= csrf_hash() ?>",
+        urlFetch:       "<?= base_url('transaksi-tunjangan/fetch') ?>",
+        urlStore:       "<?= base_url('transaksi-tunjangan/store') ?>",
+        urlDetail:      "<?= base_url('transaksi-tunjangan/detail') ?>",
+        urlSaveMassal:  "<?= base_url('transaksi-tunjangan/save-setting-massal') ?>"
     };
 </script>
 <?= $this->endSection() ?>

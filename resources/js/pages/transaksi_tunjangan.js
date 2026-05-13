@@ -8,7 +8,7 @@ const MODAL_HIDDEN_CLASS = "hidden";
 
 const openModal = (modal) => {
     if (!modal) return;
-    modal.classList.remove(MODAL_HIDDEN_CLASS);
+    modal.classList.remove(MODAL_HIDDEN_CLASS, 'opacity-0');
     modal.classList.add(MODAL_VISIBLE_CLASS);
 };
 
@@ -86,10 +86,13 @@ const setupTransaksiTunjanganPage = () => {
                     data: 'gaji_pokok',
                     className: 'py-4 px-4 border-b border-slate-100 text-center align-middle',
                     render: function (data, type, row) {
+                        const tunjanganLabel = row.tunjangan_raw > 0
+                            ? `<span class="text-indigo-600 font-black">${row.tunjangan_info}</span>`
+                            : `<span class="text-slate-400 italic text-[10px]">Belum ada setting</span>`;
                         return `
                             <div class="flex flex-col gap-1 text-[11px] justify-center items-center leading-tight">
                                 <div><span class="text-slate-400 font-bold uppercase tracking-tighter">Gaji Pokok:</span> <span class="text-slate-700 font-bold">${data}</span></div>
-                                <div><span class="text-slate-400 font-bold uppercase tracking-tighter">Tunjangan Aktif:</span> <span class="text-indigo-600 font-black">${row.tunjangan_aktif}</span></div>
+                                <div><span class="text-slate-400 font-bold uppercase tracking-tighter">Tunjangan:</span> ${tunjanganLabel}</div>
                             </div>
                         `;
                     }
@@ -125,36 +128,46 @@ const setupTransaksiTunjanganPage = () => {
         $('#btnInputMassal').on('click', () => openModal(modalMassal));
         $('.close-modal').on('click', () => closeModal(modalMassal));
 
-        // Submit Massal
+        // Update keterangan nominal massal saat tipe berubah
+        $(document).on('change', 'input[name="tipe"]', function () {
+            const ket = this.value === 'harian'
+                ? 'Nominal per hari hadir × jumlah hari hadir saat proses gaji'
+                : 'Nominal tetap per bulan untuk semua terapis aktif';
+            $('#keteranganNominalMassal').text(ket);
+        });
+
+        // Format rupiah massal
+        $('#inputNominalMassal').on('input', function () {
+            let v = this.value.replace(/[^0-9]/g, '');
+            this.value = v ? 'Rp ' + parseInt(v).toLocaleString('id-ID') : '';
+        });
+
+        // Submit Massal — setting ke semua terapis
         $('#formMassal').on('submit', function(e) {
             e.preventDefault();
             const btn = document.getElementById('btnSimpanMassal');
             const originalText = btn.innerHTML;
-
             btn.disabled = true;
-            btn.innerHTML = `<i class="fas fa-circle-notch fa-spin mr-2"></i> Memproses...`;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Memproses...`;
 
             $.ajax({
-                url: config.urlStore,
+                url: config.urlSaveMassal,
                 type: "POST",
-                data: $(this).serialize(),
-                dataType: "JSON",
+                data: $(this).serialize() + '&' + config.csrfName + '=' + config.csrfHash,
+                dataType: "json",
                 success: function(res) {
+                    if (res.csrfHash) config.csrfHash = res.csrfHash;
                     if (res.status === 'success') {
                         closeModal(modalMassal);
-                        Swal.fire({ icon: 'success', title: 'Berhasil!', text: res.message, timer: 1500, showConfirmButton: false });
+                        Swal.fire({ icon: 'success', title: 'Berhasil!', text: res.message, timer: 2000, showConfirmButton: false });
                         table.ajax.reload(null, false);
                         document.getElementById('formMassal').reset();
                     } else {
                         Swal.fire('Gagal!', res.message, 'error');
                     }
-                    if(res.csrfHash) config.csrfHash = res.csrfHash;
                 },
                 error: () => Swal.fire('Error!', 'Koneksi bermasalah.', 'error'),
-                complete: () => {
-                    btn.disabled = false;
-                    btn.innerHTML = originalText;
-                }
+                complete: () => { btn.disabled = false; btn.innerHTML = originalText; }
             });
         });
     }

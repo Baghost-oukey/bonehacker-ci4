@@ -14,7 +14,6 @@
             <div class="space-y-4">
                 <div class="flex justify-between items-end">
                     <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Nominal Pencairan</label>
-                    <span class="text-[10px] font-bold text-slate-400 uppercase">Batas Plafon: Rp <?= number_format($karyawan['sisa_limit'], 0, ',', '.') ?></span>
                 </div>
                 <div class="relative group">
                     <div class="absolute inset-y-0 left-0 flex items-center pointer-events-none">
@@ -26,9 +25,9 @@
                 </div>
 
                 <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-lg border border-slate-200">
-                    <div class="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse"></div>
+                    <div class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></div>
                     <p class="text-[11px] font-bold text-slate-600 uppercase tracking-tight">
-                        Estimasi Gaji Bersih: <span id="estimasiSisaGaji" class="text-teal-600 font-black ml-1">Rp <?= number_format($karyawan['sisa_limit'], 0, ',', '.') ?></span>
+                        Total Hutang Aktif: <span class="text-amber-600 font-black ml-1">Rp <?= number_format($karyawan['total_kasbon_aktif'], 0, ',', '.') ?></span>
                     </p>
                 </div>
             </div>

@@ -91,7 +91,7 @@
         <!-- Panel Kanan: Daftar Libur -->
         <div class="space-y-4">
 
-            <?php if ($role === 'superadmin' && $can_edit): ?>
+            <?php if ($can_edit): ?>
             <!-- Libur Rutin -->
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                 <div class="border-b border-slate-100 bg-slate-50/50 px-5 py-3 flex items-center justify-between">
@@ -179,7 +179,7 @@
 </section>
 
 <!-- Modal Tambah Libur Khusus -->
-<div id="modalTambahLibur" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4">
+<div id="modalTambahLibur" class="modal-wrapper fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4">
     <div class="w-full max-w-md rounded-2xl bg-white shadow-xl overflow-hidden">
         <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
             <h5 class="text-base font-bold text-slate-800">Tambah Hari Libur</h5>
@@ -206,7 +206,7 @@
 </div>
 
 <!-- Modal Tambah Libur Rutin -->
-<div id="modalTambahRutin" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4">
+<div id="modalTambahRutin" class="modal-wrapper fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4">
     <div class="w-full max-w-md rounded-2xl bg-white shadow-xl overflow-hidden">
         <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
             <h5 class="text-base font-bold text-slate-800">Tambah Libur Rutin Mingguan</h5>
@@ -336,8 +336,12 @@ $(document).ready(function () {
     });
 
     // ---- MODAL ----
-    function openModal(id) { $(id).removeClass('hidden').addClass('flex'); }
-    function closeAllModals() { $('.fixed.z-50').removeClass('flex').addClass('hidden'); }
+    function openModal(id) { 
+        $(id).removeClass('hidden opacity-0').addClass('flex'); 
+    }
+    function closeAllModals() { 
+        $('.modal-wrapper').removeClass('flex').addClass('hidden');
+    }
 
     $('#btnTambahLibur').on('click', () => openModal('#modalTambahLibur'));
     $('#btnTambahRutin').on('click', () => openModal('#modalTambahRutin'));
@@ -459,6 +463,11 @@ $(document).ready(function () {
     $('#btnTambahLibur').on('click', function () {
         const mm = String(currentBulan).padStart(2, '0');
         $('#inputTanggal').val(`${currentTahun}-${mm}-01`);
+        openModal('#modalTambahLibur');
+    });
+
+    $('#btnTambahRutin').on('click', function () {
+        openModal('#modalTambahRutin');
     });
 });
 </script>

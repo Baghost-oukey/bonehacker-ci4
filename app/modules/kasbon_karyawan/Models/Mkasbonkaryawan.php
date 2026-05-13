@@ -67,13 +67,21 @@ class Mkasbonkaryawan extends Model
         return $result['total_sisa'] ?? 0;  
     }
 
-    public function get_datatables($search = null, $start = 0, $length = 10)
+    public function get_datatables($search = null, $start = 0, $length = 10, $regionFilter = null)
     {
         $builder = $this->db->table('terapis t');
         $builder->select('t.id, t.nama, j.nama_jabatan, gk.nominal_gaji');
         $builder->join('jabatan j', 'j.id = t.jabatan_id', 'left');
         $builder->join('gaji_karyawan gk', 'gk.terapis_id = t.id', 'left');
         $builder->where('t.is_active', 1);
+
+        if (!empty($regionFilter) && $regionFilter !== 'all') {
+            if (is_array($regionFilter)) {
+                $builder->whereIn('t.region_id', $regionFilter);
+            } else {
+                $builder->where('t.region_id', $regionFilter);
+            }
+        }
 
         if ($search) {
             $builder->groupStart()
@@ -85,20 +93,41 @@ class Mkasbonkaryawan extends Model
         return $builder->limit($length, $start)->get()->getResultArray();
     }
 
-    public function count_all_active()
+    public function count_all_active($regionFilter = null)
     {
-        return $this->db->table('terapis')->where('is_active', 1)->countAllResults();
+        $builder = $this->db->table('terapis t');
+        $builder->where('t.is_active', 1);
+
+        if (!empty($regionFilter) && $regionFilter !== 'all') {
+            if (is_array($regionFilter)) {
+                $builder->whereIn('t.region_id', $regionFilter);
+            } else {
+                $builder->where('t.region_id', $regionFilter);
+            }
+        }
+
+        return $builder->countAllResults();
     }
 
-    public function count_filtered($search = null)
+    public function count_filtered($search = null, $regionFilter = null)
     {
         $builder = $this->db->table('terapis t');
         $builder->join('jabatan j', 'j.id = t.jabatan_id', 'left');
         $builder->where('t.is_active', 1);
 
+        if (!empty($regionFilter) && $regionFilter !== 'all') {
+            if (is_array($regionFilter)) {
+                $builder->whereIn('t.region_id', $regionFilter);
+            } else {
+                $builder->where('t.region_id', $regionFilter);
+            }
+        }
+
         if ($search) {
-            $builder->like('t.nama', $search)
-                ->orLike('j.nama_jabatan', $search);
+            $builder->groupStart()
+                ->like('t.nama', $search)
+                ->orLike('j.nama_jabatan', $search)
+                ->groupEnd();
         }
 
         return $builder->countAllResults();

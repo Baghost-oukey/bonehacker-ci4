@@ -359,6 +359,9 @@ $routes->group('transaksi-tunjangan', ['namespace' => 'App\modules\transaksi_tun
   $routes->post('fetch', 'Transaksitunjangan::fetch');
   $routes->get('detail/(:num)', 'Transaksitunjangan::detail/$1');
   $routes->post('store', 'Transaksitunjangan::store');
+  $routes->post('save-setting', 'Transaksitunjangan::saveSetting');
+  $routes->post('save-setting-massal', 'Transaksitunjangan::saveSettingMassal');
+  $routes->post('delete-setting/(:num)', 'Transaksitunjangan::deleteSetting/$1');
 });
 
 // ROUTES MODUL PENGGAJIAN (PAYROLL)

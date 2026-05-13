@@ -156,10 +156,20 @@ class Gajikaryawan extends BaseController
             ->get()
             ->getRowArray()['total'] ?? 0);
 
-        $totalTunjangan = (int)($this->db->table('transaksi_tunjangan')
-            ->selectSum('nominal', 'total')
-            ->where('terapis_id', $terapisId)
-            ->where('status_pembayaran', 'Belum Dibayar')
+        $totalTunjangan = (int)($this->db->table('tunjangan_terapis tt')
+            ->select('COALESCE(SUM(
+                CASE 
+                    WHEN tt.tipe = \'bulanan\' THEN tt.nominal
+                    WHEN tt.tipe = \'harian\' THEN tt.nominal * (
+                        SELECT COUNT(*) FROM absensi_karyawan 
+                        WHERE terapis_id = tt.terapis_id AND status IN (\'Hadir\',\'Cuti\')
+                        AND MONTH(tanggal) = MONTH(NOW()) AND YEAR(tanggal) = YEAR(NOW())
+                    )
+                    ELSE 0
+                END
+            ), 0) as total', false)
+            ->where('tt.terapis_id', $terapisId)
+            ->where('tt.is_active', 1)
             ->get()
             ->getRowArray()['total'] ?? 0);
 
@@ -190,11 +200,6 @@ class Gajikaryawan extends BaseController
             ->where('terapis_id', $terapisId)
             ->whereIn('status_potongan', ['belum_lunas', 'belum_dipotong'])
             ->update(['status_potongan' => 'lunas']);
-
-        $this->db->table('transaksi_tunjangan')
-            ->where('terapis_id', $terapisId)
-            ->where('status_pembayaran', 'Belum Dibayar')
-            ->update(['status_pembayaran' => 'Sudah Cair']);
 
         $this->db->transComplete();
 
