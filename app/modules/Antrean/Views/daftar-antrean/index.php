@@ -27,176 +27,175 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
     <?php endif; ?>
 
     <style>
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
+        :root {
+            --bg-gradient: linear-gradient(135deg, #fce7d2 0%, #e1e9f0 50%, #c5e1f5 100%);
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --white-card-bg: rgba(255, 255, 255, 0.9);
+            --column-orange: #faede1;
+            --column-blue: #e3f2f5;
+            --column-green: #e3f5ef;
+            --list-card-bg: #ffffff;
+            --list-card-text: #1e293b;
+            --header-text: #0f172a;
+            --queue-num-bg: #f8fafc;
+            --queue-num-text: #1e293b;
+            --border-color: rgba(0, 0, 0, 0.05);
         }
 
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
+        body.dark-mode {
+            --bg-gradient: radial-gradient(circle at top right, #064e3b 0%, #020617 60%, #451a03 100%);
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --white-card-bg: rgba(15, 23, 42, 0.8);
+            --column-orange: rgba(251, 146, 60, 0.1);
+            --column-blue: rgba(56, 189, 248, 0.1);
+            --column-green: rgba(52, 211, 153, 0.1);
+            --list-card-bg: rgba(30, 41, 59, 0.7);
+            --list-card-text: #f1f5f9;
+            --header-text: #ffffff;
+            --queue-num-bg: #1e293b;
+            --queue-num-text: #f1f5f9;
+            --border-color: rgba(255, 255, 255, 0.1);
         }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
         body {
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            background: radial-gradient(circle at top, #1e293b 0%, #0f172a 50%, #020617 100%);
+            margin: 0; padding: 0; min-height: 100vh;
+            background: var(--bg-gradient);
             background-attachment: fixed;
             font-family: 'Outfit', sans-serif;
-            color: #f1f5f9;
+            color: var(--text-main);
+            transition: background 0.5s ease;
         }
 
-        .glow-orange {
-            box-shadow: 0 0 15px rgba(249, 115, 22, 0.4), inset 0 0 10px rgba(249, 115, 22, 0.2);
-            border: 1px solid rgba(249, 115, 22, 0.6);
+        .white-card {
+            background: var(--white-card-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
 
-        .glow-blue {
-            box-shadow: 0 0 15px rgba(6, 182, 212, 0.4), inset 0 0 10px rgba(6, 182, 212, 0.2);
-            border: 1px solid rgba(6, 182, 212, 0.6);
+        .column-orange { background: var(--column-orange); border: 1px solid var(--border-color); }
+        .column-blue { background: var(--column-blue); border: 1px solid var(--border-color); }
+        .column-green { background: var(--column-green); border: 1px solid var(--border-color); }
+
+        .header-orange { color: #f97316; }
+        .header-blue { color: #38bdf8; }
+        .header-green { color: #34d399; }
+
+        .list-card-white {
+            background: var(--list-card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--list-card-text);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
 
-        .glow-green {
-            box-shadow: 0 0 15px rgba(16, 185, 129, 0.4), inset 0 0 10px rgba(16, 185, 129, 0.2);
-            border: 1px solid rgba(16, 185, 129, 0.6);
+        .active-waiting {
+            background: #e11d48 !important;
+            color: #ffffff !important;
+            border: none !important;
+            box-shadow: 0 8px 20px rgba(225, 29, 72, 0.4);
+        }
+        
+        .active-waiting p, .active-waiting span { color: #ffffff !important; }
+        .active-waiting .queue-num-box { background: #ffffff !important; color: #e11d48 !important; }
+
+        .queue-num-box {
+            background: var(--queue-num-bg);
+            color: var(--queue-num-text);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
         }
 
-        .glow-text-orange {
-            text-shadow: 0 0 10px rgba(249, 115, 22, 0.8);
+        @keyframes translateX {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(300%); }
         }
 
-        .glow-text-blue {
-            text-shadow: 0 0 10px rgba(6, 182, 212, 0.8);
+        .theme-toggle-btn {
+            width: 56px; height: 56px;
+            background: var(--white-card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
-        .glow-text-green {
-            text-shadow: 0 0 10px rgba(16, 185, 129, 0.8);
-        }
-
-        .dark-card {
-            background: linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
-            backdrop-filter: blur(10px);
-        }
-
-        .dark-column {
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(51, 65, 85, 0.5);
-        }
-
-        .list-card-orange {
-            background: linear-gradient(90deg, rgba(249, 115, 22, 0.1) 0%, rgba(15, 23, 42, 0.8) 100%);
-            border: 1px solid rgba(249, 115, 22, 0.4);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-        }
-
-        .list-card-blue {
-            background: linear-gradient(90deg, rgba(6, 182, 212, 0.1) 0%, rgba(15, 23, 42, 0.8) 100%);
-            border: 1px solid rgba(6, 182, 212, 0.4);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-        }
-
-        .list-card-green {
-            background: linear-gradient(90deg, rgba(16, 185, 129, 0.1) 0%, rgba(15, 23, 42, 0.8) 100%);
-            border: 1px solid rgba(16, 185, 129, 0.4);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-        }
+        .theme-toggle-btn:hover { transform: scale(1.1); }
+        .theme-toggle-btn i { font-size: 24px; color: var(--text-main); transition: transform 0.5s; display: block; line-height: 1; }
+        .dark-mode .theme-toggle-btn i { transform: rotate(360deg); }
     </style>
 </head>
 
-<body class="flex flex-col h-screen overflow-hidden p-4 md:p-6 gap-6 text-slate-100">
-
-    <?php if (isset($isPublic) && $isPublic): ?>
-        <!-- JS logic is handled by antrean_monitor.js -->
-    <?php endif; ?>
+<body class="flex flex-col h-screen overflow-hidden p-4 md:p-6 gap-6">
 
     <!-- HEADER -->
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center px-2">
-        <div class="flex items-center gap-4">
-            <div>
-                <h1 class="text-4xl md:text-5xl font-black tracking-widest text-slate-100 drop-shadow-lg">
-                    MONITOR ANTRIAN
-                </h1>
-                <p class="text-base md:text-lg font-semibold text-slate-300 mt-1 tracking-wider">
-                    Bone Hacker - <?= esc($regionName ?? 'Semua Wilayah') ?>
-                </p>
-            </div>
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center px-4">
+        <div>
+            <h1 class="text-3xl md:text-4xl font-black tracking-tight text-current" style="color: var(--header-text)">
+                MONITOR ANTRIAN
+            </h1>
+            <p class="text-sm md:text-base font-semibold mt-1" style="color: var(--text-muted)">
+                Bone Hacker - <?= esc($regionName ?? 'Semua Wilayah') ?>
+            </p>
         </div>
 
-        <div class="text-right flex flex-col items-end mt-4 md:mt-0">
-            <div class="glow-orange rounded-xl px-6 py-2 flex flex-col items-end justify-center dark-card">
-                <div class="flex items-center gap-4">
-                    <div id="liveTime" class="text-4xl md:text-5xl font-black text-orange-400 tracking-widest glow-text-orange font-mono"></div>
-                    <i class="fas fa-cog text-slate-400 text-xl animate-[spin_4s_linear_infinite]"></i>
-                </div>
-                <p id="liveDate" class="text-xs md:text-sm font-bold text-slate-300 uppercase tracking-[0.2em] mt-1"></p>
+        <div class="text-right flex items-center gap-8 mt-4 md:mt-0">
+            <div class="text-right">
+                <div id="liveTime" class="text-5xl md:text-6xl font-black text-blue-500 tracking-tighter font-mono"></div>
+                <p id="liveDate" class="text-xs md:text-sm font-bold uppercase tracking-widest mt-1" style="color: var(--text-muted)"></p>
             </div>
+            
+            <button id="themeToggle" class="theme-toggle-btn">
+                <i class="fas fa-sun" id="themeIcon"></i>
+            </button>
         </div>
     </div>
 
-    <!-- STATS ROW (3 Separate Glowing Boxes) -->
-    <div id="stats-container" class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+    <!-- STATS PANEL -->
+    <div class="white-card rounded-3xl p-6 flex flex-row items-center justify-around divide-x divide-slate-500/20">
         <!-- Menunggu -->
-        <div class="dark-card glow-orange rounded-xl p-6 flex flex-col items-center justify-center relative overflow-hidden">
-            <span class="text-6xl md:text-7xl font-black text-white drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)] z-10"><?= count($waitingList) ?></span>
-            <span class="text-xs md:text-sm font-bold text-slate-300 uppercase tracking-[0.2em] mt-2 z-10">Menunggu Pasien</span>
-            <div class="text-orange-500/20 text-7xl absolute right-6 top-1/2 -translate-y-1/2">
-                <i class="fas fa-hourglass-half"></i>
-            </div>
+        <div class="flex flex-col items-center justify-center flex-1">
+            <span class="text-6xl md:text-7xl font-black text-orange-500"><?= count($waitingList) ?></span>
+            <span class="text-xs md:text-sm font-bold uppercase tracking-[0.2em] mt-2" style="color: var(--text-muted)">Menunggu</span>
         </div>
 
         <!-- Terapi -->
-        <div class="dark-card glow-blue rounded-xl p-6 flex flex-col items-center justify-center relative overflow-hidden">
-            <span class="text-6xl md:text-7xl font-black text-white drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)] z-10"><?= count($processingList) ?></span>
-            <span class="text-xs md:text-sm font-bold text-slate-300 uppercase tracking-[0.2em] mt-2 z-10">Pasien Terapi</span>
-            <div class="text-cyan-500/20 text-7xl absolute right-6 top-1/2 -translate-y-1/2">
-                <i class="fas fa-stethoscope"></i>
-            </div>
+        <div class="flex flex-col items-center justify-center flex-1">
+            <span class="text-6xl md:text-7xl font-black text-blue-500"><?= count($processingList) ?></span>
+            <span class="text-xs md:text-sm font-bold uppercase tracking-[0.2em] mt-2" style="color: var(--text-muted)">Terapi</span>
         </div>
 
         <!-- Selesai -->
-        <div class="dark-card glow-green rounded-xl p-6 flex flex-col items-center justify-center relative overflow-hidden">
-            <span class="text-6xl md:text-7xl font-black text-white drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)] z-10"><?= count($finishedList) ?></span>
-            <span class="text-xs md:text-sm font-bold text-slate-300 uppercase tracking-[0.2em] mt-2 z-10">Pasien Selesai</span>
-            <div class="text-emerald-500/20 text-7xl absolute right-6 top-1/2 -translate-y-1/2">
-                <i class="fas fa-check-circle"></i>
-            </div>
+        <div class="flex flex-col items-center justify-center flex-1">
+            <span class="text-6xl md:text-7xl font-black text-emerald-500"><?= count($finishedList) ?></span>
+            <span class="text-xs md:text-sm font-bold uppercase tracking-[0.2em] mt-2" style="color: var(--text-muted)">Selesai</span>
         </div>
     </div>
 
-    <!-- BREAK TIME OVERLAY (Full Screen) -->
+    <!-- BREAK TIME OVERLAY -->
     <?php if (isset($breakData) && !empty($breakData)): ?>
-        <div id="breakOverlay" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-900/75 transition-all duration-500 px-8">
-            <!-- White Container -->
-            <div class="relative w-full max-w-2xl bg-white p-10 rounded-2xl shadow-[0_20px_70px_rgba(0,0,0,0.5)] flex flex-col items-center text-center">
-
-                <!-- Icon -->
-                <div class="mb-6">
-                    <div class="relative h-20 w-20 flex items-center justify-center bg-orange-50 rounded-full border-2 border-orange-100 shadow-inner">
-                        <i class="fas fa-coffee text-slate-800 text-4xl relative animate-bounce"></i>
+        <div id="breakOverlay" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-900/70 transition-all duration-500 px-8">
+            <div class="relative w-full max-w-2xl bg-white p-12 rounded-[3rem] shadow-2xl flex flex-col items-center text-center">
+                <div class="mb-8">
+                    <div class="h-24 w-24 flex items-center justify-center bg-orange-50 rounded-full border-2 border-orange-100 shadow-inner">
+                        <i class="fas fa-coffee text-orange-500 text-5xl animate-bounce"></i>
                     </div>
                 </div>
-
-                <!-- Text -->
-                <div class="space-y-3 mb-8">
-                    <h2 class="text-4xl md:text-5xl font-black text-slate-900 uppercase tracking-tight leading-none">
-                        SEDANG<br>ISTIRAHAT
-                    </h2>
-                    <div class="h-1 w-20 bg-orange-500 mx-auto rounded-full"></div>
-                    <p class="text-slate-500 font-bold tracking-[0.2em] uppercase text-xs mt-3">Mohon menunggu sebentar</p>
+                <div class="space-y-4 mb-10">
+                    <h2 class="text-5xl font-black text-slate-900 uppercase tracking-tighter">SEDANG ISTIRAHAT</h2>
+                    <p class="text-slate-400 font-bold tracking-[0.3em] uppercase text-xs">Mohon menunggu sebentar</p>
                 </div>
-
-                <!-- Timer Box -->
-                <div class="relative px-20 py-8 bg-slate-50 rounded-3xl border border-slate-200 shadow-sm">
-
-                    <span class="text-xs font-black text-slate-400 uppercase tracking-[0.5em] block mb-3">Sisa Waktu</span>
-                    <span id="breakTimer" class="text-5xl font-black text-slate-800 font-mono tracking-tighter drop-shadow-sm">
-                        --:--:--
-                    </span>
+                <div class="px-16 py-10 bg-slate-50 rounded-[2rem] border border-slate-100">
+                    <span id="breakTimer" class="text-6xl font-black text-slate-800 font-mono tracking-tighter">--:--:--</span>
                     <script>
                         (function() {
                             const endTimeStr = "<?= $breakData['end_time'] ?>";
-                            // Parse standard SQL datetime to JS Date safely
                             const endTime = new Date(endTimeStr.replace(/-/g, '/')).getTime();
                             const timerEl = document.getElementById('breakTimer');
 
@@ -224,108 +223,89 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
                         })();
                     </script>
                 </div>
-
-                <!-- Progress Bar -->
-                <div class="w-full max-w-xs bg-slate-200 h-2 rounded-full mt-12 overflow-hidden border border-slate-300">
-                    <div class="h-full bg-orange-500 animate-[loading_60s_linear_infinite] shadow-[0_0_15px_rgba(249,115,22,0.6)]"></div>
-                </div>
             </div>
         </div>
-        <style>
-            @keyframes loading {
-                from {
-                    width: 0%;
-                }
-
-                to {
-                    width: 100%;
-                }
-            }
-        </style>
     <?php endif; ?>
 
     <!-- 3 COLUMNS -->
-    <div id="queue-columns" class="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-[40vh]">
+    <div id="queue-columns" class="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
 
         <!-- KOLOM MENUNGGU -->
-        <div class="dark-column rounded-xl overflow-hidden flex flex-col">
-            <div class="py-4 text-center border-b border-orange-500/30">
-                <h2 class="text-lg font-black text-orange-400 uppercase tracking-[0.2em] glow-text-orange">Menunggu</h2>
+        <div class="column-orange rounded-3xl overflow-hidden flex flex-col shadow-sm">
+            <div class="py-5 text-center border-b border-white/10">
+                <h2 class="text-lg font-black header-orange uppercase tracking-[0.2em]">Menunggu</h2>
             </div>
-            <div class="flex-1 overflow-y-hidden p-4 space-y-3 auto-scroll-list no-scrollbar" style="min-height: 0;" data-count="<?= count($waitingList) ?>">
+            <div class="flex-1 overflow-y-hidden p-5 space-y-4 auto-scroll-list no-scrollbar" data-count="<?= count($waitingList) ?>">
                 <?php if (!empty($waitingList)): ?>
                     <?php foreach ($waitingList as $i => $q): ?>
-                        <div class="list-card-orange rounded-xl p-3 flex items-center gap-4">
-                            <div class="h-12 w-12 shrink-0 flex items-center justify-center rounded-full border-2 border-orange-400/80 bg-orange-900/20">
-                                <span class="text-2xl font-black text-orange-400"><?= esc($q->queue_number ?? '-') ?></span>
+                        <div class="list-card-white rounded-2xl p-4 flex items-center gap-5 <?= ($i === 0) ? 'active-waiting' : '' ?>">
+                            <div class="h-14 w-14 shrink-0 flex items-center justify-center rounded-xl font-black text-2xl queue-num-box">
+                                <?= esc($q->queue_number ?? '-') ?>
                             </div>
-                            <div class="flex-1 min-w-0 flex items-center gap-2">
-                                <p class="text-lg font-bold text-slate-100 uppercase tracking-wider truncate"><?= esc($q->patient_name ?? '-') ?></p>
-                                <i class="fas fa-user text-orange-400/50 text-xs"></i>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xl font-black uppercase tracking-tight truncate"><?= esc($q->patient_name ?? '-') ?></p>
                             </div>
-                            <div class="text-right pl-2">
-                                <span class="text-sm font-bold text-slate-300">#<?= $i + 1 ?></span>
+                            <div class="text-right">
+                                <span class="text-sm font-black opacity-60">#<?= $i + 1 ?></span>
                             </div>
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <div class="h-full flex flex-col items-center justify-center">
-                        <p class="text-orange-400/50 font-black text-3xl tracking-[0.3em] uppercase glow-text-orange" style="font-family: serif;">KOSONG</p>
+                    <div class="h-full flex items-center justify-center">
+                        <p class="text-orange-500/20 font-black text-4xl tracking-widest uppercase">KOSONG</p>
                     </div>
                 <?php endif; ?>
             </div>
         </div>
 
         <!-- KOLOM SEDANG TERAPI -->
-        <div class="dark-column rounded-xl overflow-hidden flex flex-col">
-            <div class="py-4 text-center border-b border-cyan-500/30">
-                <h2 class="text-lg font-black text-cyan-400 uppercase tracking-[0.2em] glow-text-blue">Sedang Terapi</h2>
+        <div class="column-blue rounded-3xl overflow-hidden flex flex-col shadow-sm">
+            <div class="py-5 text-center border-b border-white/10">
+                <h2 class="text-lg font-black header-blue uppercase tracking-[0.2em]">Sedang Terapi</h2>
             </div>
-            <div class="flex-1 overflow-y-hidden p-4 space-y-3 auto-scroll-list no-scrollbar" style="min-height: 0;" data-count="<?= count($processingList) ?>">
+            <div class="flex-1 overflow-y-hidden p-5 space-y-4 auto-scroll-list no-scrollbar" data-count="<?= count($processingList) ?>">
                 <?php if (!empty($processingList)): ?>
                     <?php foreach ($processingList as $i => $q): ?>
-                        <div class="list-card-blue rounded-xl p-3 flex items-center gap-4 relative overflow-hidden">
-                            <!-- Animated Loading Bar -->
-                            <div class="absolute bottom-2 left-4 right-4 h-1 bg-slate-800 rounded-full overflow-hidden">
-                                <div class="h-full bg-cyan-400 w-1/3 animate-[translateX_2s_infinite] glow-blue"></div>
+                        <div class="list-card-white rounded-2xl p-4 flex items-center gap-5 relative overflow-hidden">
+                            <div class="absolute top-0 left-0 right-0 h-1 bg-blue-500/20">
+                                <div class="h-full bg-blue-500 w-1/4 animate-[translateX_3s_infinite]"></div>
                             </div>
-                            <div class="h-12 w-12 shrink-0 flex items-center justify-center rounded-full border-2 border-cyan-400/80 bg-cyan-900/20 mb-2">
-                                <span class="text-2xl font-black text-cyan-400"><?= esc($q->queue_number ?? '-') ?></span>
+                            <div class="h-14 w-14 shrink-0 flex items-center justify-center rounded-xl font-black text-2xl queue-num-box">
+                                <?= esc($q->queue_number ?? '-') ?>
                             </div>
-                            <div class="flex-1 min-w-0 flex items-center gap-2 mb-2">
-                                <p class="text-lg font-bold text-slate-100 uppercase tracking-wider truncate"><?= esc($q->patient_name ?? '-') ?></p>
-                                <i class="fas fa-user-md text-cyan-400/50 text-xs"></i>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xl font-black uppercase tracking-tight truncate"><?= esc($q->patient_name ?? '-') ?></p>
                             </div>
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <div class="h-full flex flex-col items-center justify-center">
-                        <p class="text-cyan-400/50 font-black text-3xl tracking-[0.3em] uppercase glow-text-blue" style="font-family: serif;">KOSONG</p>
+                    <div class="h-full flex items-center justify-center">
+                        <p class="text-blue-500/20 font-black text-4xl tracking-widest uppercase">KOSONG</p>
                     </div>
                 <?php endif; ?>
             </div>
         </div>
 
         <!-- KOLOM SELESAI -->
-        <div class="dark-column rounded-xl overflow-hidden flex flex-col">
-            <div class="py-4 text-center border-b border-emerald-500/30">
-                <h2 class="text-lg font-black text-emerald-400 uppercase tracking-[0.2em] glow-text-green">Selesai</h2>
+        <div class="column-green rounded-3xl overflow-hidden flex flex-col shadow-sm">
+            <div class="py-5 text-center border-b border-white/10">
+                <h2 class="text-lg font-black header-green uppercase tracking-[0.2em]">Selesai</h2>
             </div>
-            <div class="flex-1 overflow-y-hidden p-4 space-y-3 auto-scroll-list no-scrollbar" style="min-height: 0;" data-count="<?= count($finishedList) ?>">
+            <div class="flex-1 overflow-y-hidden p-5 space-y-4 auto-scroll-list no-scrollbar" data-count="<?= count($finishedList) ?>">
                 <?php if (!empty($finishedList)): ?>
                     <?php foreach ($finishedList as $i => $q): ?>
-                        <div class="list-card-green rounded-xl p-3 flex items-center gap-4 opacity-60">
-                            <div class="h-12 w-12 shrink-0 flex items-center justify-center rounded-full border-2 border-emerald-400/80 bg-emerald-900/20">
-                                <span class="text-2xl font-black text-emerald-400"><?= esc($q->queue_number ?? '-') ?></span>
+                        <div class="list-card-white rounded-2xl p-4 flex items-center gap-5 opacity-80">
+                            <div class="h-14 w-14 shrink-0 flex items-center justify-center rounded-xl font-black text-2xl queue-num-box">
+                                <?= esc($q->queue_number ?? '-') ?>
                             </div>
-                            <div class="flex-1 min-w-0 flex items-center gap-2">
-                                <p class="text-lg font-bold text-slate-300 uppercase tracking-wider truncate line-through decoration-emerald-500/50"><?= esc($q->patient_name ?? '-') ?></p>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xl font-black uppercase tracking-tight truncate"><?= esc($q->patient_name ?? '-') ?></p>
                             </div>
                         </div>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <div class="h-full flex flex-col items-center justify-center">
-                        <p class="text-emerald-400/50 font-black text-3xl tracking-[0.3em] uppercase glow-text-green" style="font-family: serif;">KOSONG</p>
+                    <div class="h-full flex items-center justify-center">
+                        <p class="text-emerald-500/20 font-black text-4xl tracking-widest uppercase">KOSONG</p>
                     </div>
                 <?php endif; ?>
             </div>
@@ -334,18 +314,44 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
     </div>
 
     <!-- MARQUEE BOTTOM BAR -->
-    <?php if (isset($isPublic) && $isPublic): ?>
-        <div class="dark-card border border-slate-700/50 py-3 px-6 rounded-xl mt-auto flex items-center overflow-hidden">
-            <marquee behavior="scroll" direction="left" scrollamount="6" class="text-sm md:text-base font-semibold text-slate-300 w-full whitespace-nowrap">
-                <span class="text-cyan-400 font-black tracking-widest">PURBALINGGA:</span> RT 3/RW 2, Dusun Parung Bongas, Desa Kradenan &nbsp;&nbsp;&nbsp;&nbsp; <span class="text-slate-600">|</span> &nbsp;&nbsp;&nbsp;&nbsp;
-                <span class="text-cyan-400 font-black tracking-widest">PEMALANG:</span> Jl. Banjarsari, Bojongnangka &nbsp;&nbsp;&nbsp;&nbsp; <span class="text-slate-600">|</span> &nbsp;&nbsp;&nbsp;&nbsp;
-                <span class="text-cyan-400 font-black tracking-widest">PURWOKERTO:</span> Jl. Dr. Gumbreg, Kel. Mersi, Kec. Purwokerto Timur
-            </marquee>
-        </div>
-    <?php endif; ?>
+    <div class="white-card py-4 px-8 rounded-2xl mt-auto flex items-center overflow-hidden">
+        <marquee behavior="scroll" direction="left" scrollamount="5" class="text-base font-bold w-full whitespace-nowrap">
+            <span class="text-blue-500 font-black">PURWOKERTO:</span> <span style="color: var(--text-muted)">Jl. Dr. Gumbreg, Kel. Mersi, Kec. Purwokerto Timur</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <span class="text-blue-500 font-black">PURBALINGGA:</span> <span style="color: var(--text-muted)">RT 3/RW 2, Dusun Parung Bongas, Desa Kradenan</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <span class="text-blue-500 font-black">PEMALANG:</span> <span style="color: var(--text-muted)">Jl. Banjarsari, Bojongnangka</span>
+        </marquee>
+    </div>
 
     <script>
-        // --- LIVE TIME & DATE ---
+        // --- THEME TOGGLE LOGIC ---
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const body = document.body;
+
+        function setTheme(isDark) {
+            if (isDark) {
+                body.classList.add('dark-mode');
+                themeIcon.classList.replace('fa-sun', 'fa-moon');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                body.classList.remove('dark-mode');
+                themeIcon.classList.replace('fa-moon', 'fa-sun');
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        // Init theme from localStorage
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            setTheme(true);
+        }
+
+        themeToggle.addEventListener('click', () => {
+            const isDark = body.classList.contains('dark-mode');
+            setTheme(!isDark);
+        });
+
+        // --- LIVE CLOCK ---
         function updateLiveClock() {
             const now = new Date();
             const timeEl = document.getElementById('liveTime');
@@ -357,86 +363,47 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
                     minute: '2-digit',
                     second: '2-digit',
                     hour12: false
-                });
+                }).replace(/\./g, ' : ');
             }
             if (dateEl) {
-                const options = {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                };
-                dateEl.textContent = now.toLocaleDateString('id-ID', options);
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                dateEl.textContent = now.toLocaleDateString('id-ID', options).toUpperCase();
             }
         }
         setInterval(updateLiveClock, 1000);
         updateLiveClock();
 
-        // --- AUTO RELOAD (60 SECONDS) ---
-        setTimeout(() => {
-            window.location.reload();
-        }, 60000);
+        setTimeout(() => { window.location.reload(); }, 60000);
 
-        // --- AUTO SCROLL ANIMATION ---
         function initAutoScroll() {
             const containers = document.querySelectorAll('.auto-scroll-list');
             containers.forEach(container => {
                 if (container.getAttribute('data-initialized')) return;
-                
                 const count = parseInt(container.getAttribute('data-count') || '0');
                 if (count > 5) {
                     container.setAttribute('data-initialized', 'true');
-                    
-                    // Buat wrapper untuk animasi transform (lebih pakem daripada scrollTop)
                     const wrapper = document.createElement('div');
-                    wrapper.className = 'scroll-wrapper space-y-3'; // Pindahkan space-y-3 ke sini
-                    
-                    // Pindahkan semua isi asli ke dalam wrapper
-                    while (container.firstChild) {
-                        wrapper.appendChild(container.firstChild);
-                    }
-                    
-                    // Clone isi asli untuk efek infinite
+                    wrapper.className = 'scroll-wrapper space-y-4';
+                    while (container.firstChild) { wrapper.appendChild(container.firstChild); }
                     const originalChildren = Array.from(wrapper.children);
-                    originalChildren.forEach(child => {
-                        wrapper.appendChild(child.cloneNode(true));
-                    });
-                    
+                    originalChildren.forEach(child => { wrapper.appendChild(child.cloneNode(true)); });
                     container.appendChild(wrapper);
-                    container.style.overflow = 'hidden'; // Pastikan terkunci
-
+                    container.style.overflow = 'hidden';
                     let pos = 0;
-                    const speed = 1.0; // Kecepatan ideal (1 pixel per frame)
-
+                    const speed = 0.8;
                     function scroll() {
                         pos -= speed;
-                        
-                        // Jika sudah bergeser sejauh tinggi konten asli, reset ke 0
-                        // Gunakan offsetHeight untuk akurasi layout
                         const halfHeight = wrapper.offsetHeight / 2;
-                        if (Math.abs(pos) >= halfHeight) {
-                            pos = 0;
-                        }
-                        
+                        if (Math.abs(pos) >= halfHeight) { pos = 0; }
                         wrapper.style.transform = `translateY(${pos}px)`;
                         requestAnimationFrame(scroll);
                     }
-
-                    // Jeda sebentar agar browser selesai kalkulasi layout
-                    setTimeout(() => {
-                        requestAnimationFrame(scroll);
-                    }, 1000);
+                    setTimeout(() => { requestAnimationFrame(scroll); }, 1000);
                 }
             });
         }
-
-        // Jalankan saat DOM siap
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initAutoScroll);
-        } else {
-            initAutoScroll();
-        }
+        if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', initAutoScroll); } 
+        else { initAutoScroll(); }
     </script>
 </body>
-
 </html>

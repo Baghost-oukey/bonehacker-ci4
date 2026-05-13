@@ -33,8 +33,9 @@ class Kalender extends BaseController
             $canEdit     = true;
             $canCopy     = false;
         } else {
+            $region_patient = session()->get('region_patient');
             $regionId    = is_array($region_patient) ? $region_patient[0] : $region_patient;
-            $liburKhusus = $this->model->getByRegion($tahun, $regionId);
+            $liburKhusus = $this->model->getByTahun($tahun, $regionId);
             $canEdit     = in_array($role, ['owner', 'admin']);
             $canCopy     = in_array($role, ['owner', 'admin']);
         }

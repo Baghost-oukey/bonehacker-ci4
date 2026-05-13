@@ -415,7 +415,7 @@ class Jasapelayanan extends BaseController
         $region_patient = session()->get('region_patient');
         
         // Hanya superadmin dan owner yang bisa akses
-        if (!in_array($role, ['superadmin', 'owner'])) {
+        if (!in_array($role, ['superadmin', 'owner', 'admin'])) {
             return redirect()->back()->with('message', ['error', 'Akses Ditolak', 'Anda tidak memiliki akses ke halaman ini.']);
         }
 

@@ -61,10 +61,10 @@ function initProfileComponent() {
 		}
 	}
 
-		if (avatarFallbackEl) {
-			const initial = (avatarFallbackEl.textContent || "U").trim().charAt(0).toUpperCase() || "U";
-			applyAvatarPalette(initial);
-		}
+	if (avatarFallbackEl) {
+		const initial = (avatarFallbackEl.textContent || "U").trim().charAt(0).toUpperCase() || "U";
+		applyAvatarPalette(initial);
+	}
 
 	function openAccountModal() {
 		if (!accountModal || !accountAlert) return;

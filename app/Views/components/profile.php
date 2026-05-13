@@ -1,4 +1,5 @@
 <?php
+
 /** @var string $role */
 $role = $role ?? session()->get('role') ?? '';
 $realname = $realname ?? session()->get('realname') ?? 'User';
@@ -32,7 +33,7 @@ $avatarPalette = $avatarPalettes[$paletteIndex];
         data-menu-toggle="userMenu"
         class="group relative inline-flex h-10 items-center gap-2.5 rounded-full border border-slate-200 bg-white pl-1.5 pr-3 shadow-sm ring-1 ring-slate-100 transition hover:border-slate-300 hover:bg-slate-50 hover:shadow focus:outline-none focus:ring-2 focus:ring-slate-300"
         aria-label="Buka menu profil">
-        
+
         <div class="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full ring-1 ring-slate-200">
             <?php if (!empty($avatarUrl)): ?>
                 <img
@@ -95,52 +96,116 @@ $avatarPalette = $avatarPalettes[$paletteIndex];
     </div>
 </div>
 
-<div id="accountModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-    <div class="w-full max-w-md rounded-2xl border border-slate-200 bg-white shadow-lg ring-1 ring-black/5">
+<script>
+function toggleEditAccountModal(show = true) {
+    const modal = document.getElementById('accountManagementModal');
+    const alert = document.getElementById('accountAlert');
+    const root  = document.getElementById('profileComponent');
+    
+    if (!modal) {
+        console.error('Modal accountManagementModal not found!');
+        return;
+    }
+    
+    if (show) {
+        const userMenu = document.getElementById('userMenu');
+        if (userMenu) userMenu.style.display = 'none';
+        
+        if (alert) {
+            alert.style.setProperty('display', 'none', 'important');
+            alert.textContent = '';
+        }
+        
+        modal.style.setProperty('display', 'flex', 'important');
+        
+        const editUrl = root ? root.getAttribute('data-edit-account-url') : null;
+        if (editUrl) {
+            fetch(editUrl)
+                .then(response => response.json())
+                .then(res => {
+                    document.getElementById('realname').value = res.realname || '';
+                    document.getElementById('username').value = res.username || '';
+                    document.getElementById('user_id').value = res.id || res.userId || '';
+                })
+                .catch(err => console.error('Error fetching account data:', err));
+        }
+    } else {
+        modal.style.setProperty('display', 'none', 'important');
+        const form = document.getElementById('editAccountForm');
+        if (form) form.reset();
+    }
+}
 
-        <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-            <h5 class="text-sm font-semibold text-slate-900">Edit akun</h5>
-            <button id="closeAccountModal"
-                class="flex h-8 w-8 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-slate-900">
-                &times;
-            </button>
-        </div>
+// Handler untuk form submit (Vanilla JS)
+(function() {
+    function initAccountForm() {
+        const form = document.getElementById('editAccountForm');
+        if (!form) return;
 
-        <form id="editAccountForm" class="px-4 py-4 space-y-4">
-            <?= csrf_field() ?>
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const root = document.getElementById('profileComponent');
+            const updateUrl = root ? root.getAttribute('data-update-account-url') : null;
+            const alert = document.getElementById('accountAlert');
+            
+            if (!updateUrl) return;
+            
+            const formData = new FormData(form);
+            const btn = form.querySelector('button[type="submit"]');
+            const originalText = btn.textContent;
+            
+            btn.disabled = true;
+            btn.textContent = 'Menyimpan...';
+            
+            fetch(updateUrl, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(res => {
+                if (res.status === 'success') {
+                    if (alert) {
+                        alert.className = "mb-4 rounded-xl bg-green-50 px-4 py-3 text-sm font-medium text-green-700";
+                        alert.textContent = res.message;
+                        alert.style.setProperty('display', 'block', 'important');
+                    }
+                    const label = document.getElementById('currentUserName');
+                    if (label) label.textContent = res.realname;
+                    
+                    setTimeout(() => {
+                        toggleEditAccountModal(false);
+                        location.reload();
+                    }, 800);
+                } else {
+                    if (alert) {
+                        alert.className = "mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700";
+                        alert.textContent = res.message || 'Gagal memperbarui';
+                        alert.style.setProperty('display', 'block', 'important');
+                    }
+                }
+            })
+            .catch(err => {
+                if (alert) {
+                    alert.className = "mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700";
+                    alert.textContent = "Terjadi kesalahan sistem.";
+                    alert.style.setProperty('display', 'block', 'important');
+                }
+                console.error('Update error:', err);
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            });
+        });
+    }
 
-            <div id="accountAlert" class="hidden rounded-md px-3 py-2 text-sm font-medium"></div>
-
-            <div class="space-y-1">
-                <label class="text-sm font-medium text-slate-700">Nama lengkap</label>
-                <input id="realname" type="text" name="realname" required class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm 
-                    focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200">
-            </div>
-
-            <div class="space-y-1">
-                <label class="text-sm font-medium text-slate-700">Username</label>
-                <input id="username" type="text" name="username" required class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm 
-                    focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200">
-            </div>
-
-            <div class="space-y-1">
-                <label class="text-sm font-medium text-slate-700">Password baru</label>
-                <input id="password" type="password" name="password" class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm 
-                    focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200">
-            </div>
-
-            <input id="user_id" type="hidden" name="user_id">
-
-            <div class="flex justify-end gap-2 pt-2">
-                <button type="button" id="cancelAccountModal"
-                    class="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
-                    Batal
-                </button>
-
-                <button type="submit" class="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800">
-                    Simpan
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initAccountForm);
+    } else {
+        initAccountForm();
+    }
+})();
+</script>

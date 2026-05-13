@@ -401,7 +401,7 @@ $routes->group('kalender', ['namespace' => 'App\modules\kalender\Controllers', '
   $routes->get('/', 'Kalender::index');
   $routes->post('store', 'Kalender::store');
   $routes->post('store-rutin', 'Kalender::storeRutin');
-  $routes->post('destroy/(:num)', 'Kalender::destroy/$1');
+  $routes->match(['post', 'delete'], 'destroy/(:num)', 'Kalender::destroy/$1');
   $routes->post('copy-global', 'Kalender::copyGlobal');
   $routes->get('get-data', 'Kalender::getData');
 });

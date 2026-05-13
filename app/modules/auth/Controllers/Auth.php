@@ -34,14 +34,14 @@ class Auth extends BaseController
         if ($rememberCookie) {
             $decoded = base64_decode($rememberCookie);
             $parts = explode(':', $decoded);
-            
+
             if (count($parts) === 2) {
                 $userId = $parts[0];
                 $token = $parts[1];
-                
+
                 // Ambil user dari database
                 $user = $this->authModel->find($userId);
-                
+
                 if ($user && $user->is_active == 1 && !empty($user->remember_token)) {
                     // Verifikasi token
                     if (password_verify($token, $user->remember_token)) {
@@ -54,7 +54,7 @@ class Auth extends BaseController
                         return redirect()->to(base_url('beranda'));
                     }
                 }
-                
+
                 // Token tidak valid, hapus cookie
                 delete_cookie('remember_me');
             }
@@ -97,7 +97,7 @@ class Auth extends BaseController
 
             if ($isPasswordCorrect) {
                 $this->setSession($user);
-                
+
                 // Selalu simpan username untuk auto-fill form (60 hari)
                 $cookie = [
                     'name'   => 'saved_username',
@@ -109,12 +109,12 @@ class Auth extends BaseController
                     'samesite' => 'Lax'
                 ];
                 $this->response->setCookie($cookie);
-                
+
                 // Remember Me Logic (Auto-login)
                 if ($this->request->getPost('ingat_saya')) {
                     $token = bin2hex(random_bytes(32));
                     $rememberToken = password_hash($token, PASSWORD_DEFAULT);
-                    
+
                     $this->authModel->update($user->id, [
                         'remember_token' => $rememberToken
                     ]);
@@ -186,7 +186,7 @@ class Auth extends BaseController
                     session()->set('region_patient', $original_allowed);
                 }
             } else {
-                session()->set('region_patient', [(int)$targetId]); 
+                session()->set('region_patient', [(int)$targetId]);
             }
 
             return $this->response->setJSON([
@@ -207,7 +207,7 @@ class Auth extends BaseController
         if ($userId) {
             $this->authModel->update($userId, ['remember_token' => null]);
         }
-        
+
         // Hapus cookie auto-login, tapi JANGAN hapus saved_username (untuk auto-fill)
         delete_cookie('remember_me');
         session()->destroy();

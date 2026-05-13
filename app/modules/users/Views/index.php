@@ -123,7 +123,7 @@
                     <option value="owner">Owner</option>
                     <option value="admin">Admin</option>
                     <option value="superadmin">Super Admin</option>
-                    <option value="user">User Umum</option>
+                    <option value="user">User (Terapis)</option>
                 </select>
             </div>
             <div class="space-y-1.5 hidden" id="regionFieldAdd">
@@ -175,7 +175,7 @@
                     <option value="superadmin">Super Admin</option>
                     <option value="owner">Owner</option>
                     <option value="admin">Admin</option>
-                    <option value="user">User</option>
+                    <option value="user">User (Terapis)</option>
                 </select>
             </div>
             <div class="space-y-1.5 hidden" id="regionFieldEdit">

@@ -41,7 +41,8 @@ if ($isDevEnvironment) {
     <?php endif; ?>
 
     <style>
-        html, body {
+        html,
+        body {
             max-width: 100vw;
             overflow-x: hidden;
             position: relative;
@@ -72,13 +73,13 @@ if ($isDevEnvironment) {
 
         <!-- ================= SIDEBAR ================= -->
         <?php if (!isset($isPublic) || !$isPublic): ?>
-        <aside id="sidebar" class="
+            <aside id="sidebar" class="
             w-64 bg-white border-r border-slate-200 transition-transform duration-300 ease-in-out flex flex-col
             fixed inset-y-0 left-0 z-40 -translate-x-full
             lg:translate-x-0 lg:z-30 lg:shrink-0
         ">
-            <?= $this->include('App\Views\layout\sidebar') ?>
-        </aside>
+                <?= $this->include('App\Views\layout\sidebar') ?>
+            </aside>
         <?php endif; ?>
 
         <!-- ================= BACKDROP ================= -->
@@ -132,22 +133,22 @@ if ($isDevEnvironment) {
                 // Hapus semua SweetAlert backdrop
                 document.querySelectorAll('.swal2-container').forEach(el => el.remove());
                 document.querySelectorAll('.swal2-backdrop-show').forEach(el => el.remove());
-                
+
                 // Hapus Select2 backdrop
                 document.querySelectorAll('.select2-dropdown').forEach(el => el.remove());
                 document.querySelectorAll('.select2-container--open').forEach(el => {
                     el.classList.remove('select2-container--open');
                 });
-                
+
                 // Reset body
                 document.body.style.overflow = '';
                 document.body.style.paddingRight = '';
                 document.body.classList.remove('swal2-shown', 'swal2-height-auto');
             };
-            
+
             // Jalankan cleanup
             cleanupBackdrops();
-            
+
             const sidebar = document.getElementById("sidebar");
             const backdrop = document.getElementById("sidebarBackdrop");
             const toggle = document.getElementById("sidebarToggle");

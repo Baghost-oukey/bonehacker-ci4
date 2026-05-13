@@ -36,7 +36,7 @@
 
             <?php if ($can_edit): ?>
                 <button id="btnTambahLibur"
-                    class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700">
+                    class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700">
                     <i class="fas fa-plus"></i>
                     Tambah Libur
                 </button>
@@ -116,10 +116,15 @@
                                     </p>
                                     <p class="text-xs text-slate-500"><?= esc($lr['keterangan']) ?></p>
                                 </div>
+                                 <?php 
+                                $isGlobalRutin = $lr['region_id'] === null;
+                                if ($can_edit && (!$isGlobalRutin || $role === 'superadmin')): 
+                                ?>
                                 <button onclick="hapusLibur(<?= $lr['id'] ?>)"
                                     class="text-slate-300 hover:text-red-500 transition p-1">
                                     <i class="fas fa-trash text-xs"></i>
                                 </button>
+                                <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
                     <?php endif; ?>
@@ -362,7 +367,10 @@ $(document).ready(function () {
             data: $(this).serialize() + `&${cfg.csrfName}=${cfg.csrfHash}`,
             dataType: 'json',
             success: function (res) {
-                if (res.csrfHash) cfg.csrfHash = res.csrfHash;
+                if (res.csrfHash) {
+                    cfg.csrfHash = res.csrfHash;
+                    $('input[name="' + cfg.csrfName + '"]').val(res.csrfHash);
+                }
                 if (res.status === 'success') {
                     Swal.fire({ icon: 'success', title: 'Berhasil', text: res.message, timer: 1500, showConfirmButton: false });
                     setTimeout(() => location.reload(), 1500);
@@ -386,7 +394,10 @@ $(document).ready(function () {
             data: $(this).serialize() + `&${cfg.csrfName}=${cfg.csrfHash}`,
             dataType: 'json',
             success: function (res) {
-                if (res.csrfHash) cfg.csrfHash = res.csrfHash;
+                if (res.csrfHash) {
+                    cfg.csrfHash = res.csrfHash;
+                    $('input[name="' + cfg.csrfName + '"]').val(res.csrfHash);
+                }
                 if (res.status === 'success') {
                     Swal.fire({ icon: 'success', title: 'Berhasil', text: res.message, timer: 1500, showConfirmButton: false });
                     setTimeout(() => location.reload(), 1500);
@@ -416,13 +427,25 @@ $(document).ready(function () {
                 data: { [cfg.csrfName]: cfg.csrfHash, _method: 'DELETE' },
                 dataType: 'json',
                 success: function (res) {
-                    if (res.csrfHash) cfg.csrfHash = res.csrfHash;
+                    if (res.csrfHash) {
+                        cfg.csrfHash = res.csrfHash;
+                        // Update all CSRF fields in forms
+                        $('input[name="' + cfg.csrfName + '"]').val(res.csrfHash);
+                    }
                     if (res.status === 'success') {
                         Swal.fire({ icon: 'success', title: 'Dihapus', timer: 1200, showConfirmButton: false });
                         setTimeout(() => location.reload(), 1200);
                     } else {
                         Swal.fire({ icon: 'error', title: 'Gagal', text: res.message });
                     }
+                },
+                error: function(xhr) {
+                    const res = xhr.responseJSON;
+                    if (res && res.csrfHash) {
+                        cfg.csrfHash = res.csrfHash;
+                        $('input[name="' + cfg.csrfName + '"]').val(res.csrfHash);
+                    }
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'Terjadi kesalahan sistem' });
                 }
             });
         });
