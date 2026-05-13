@@ -399,7 +399,7 @@ class Patients extends BaseController
         $mAddress = new \App\modules\address\Models\MAddress();
         $mCountries = new \App\modules\countries\Models\MCountries();
         $mRegion = new \App\modules\region\Models\MRegion();
-        $mTerapis = new \App\modules\terapis\Models\MTerapis();
+        $MKaryawan = new \App\Modules\Karyawan\Models\MKaryawan();
 
         $region_patient = session()->get('region_patient');
         $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
@@ -411,7 +411,7 @@ class Patients extends BaseController
             'alamat_patient' => $mAddress->asObject()->findAll(),
             'wilayah' => $mRegion->getData(null, $allowed_regions) ?? [],
             'negara' => $mCountries->asObject()->findAll(),
-            'terapis' => $mTerapis->asObject()->findAll(),
+            'terapis' => $MKaryawan->asObject()->findAll(),
             'resources' => $this->patientModel->get_resources(),
 
 
@@ -449,7 +449,7 @@ class Patients extends BaseController
 
         $mRegion = new \App\modules\region\Models\MRegion();
         $mCountries = new \App\modules\countries\Models\MCountries();
-        $mTerapis = new \App\modules\terapis\Models\MTerapis();
+        $MKaryawan = new \App\Modules\Karyawan\Models\MKaryawan();
 
         $region_patient = session()->get('region_patient');
         $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
@@ -460,7 +460,7 @@ class Patients extends BaseController
             'address' => (object) $addressData,
             'wilayah' => $mRegion->getData(null, $allowed_regions) ?? [],
             'negara' => $mCountries->asObject()->findAll(),
-            'terapis' => $mTerapis->asObject()->findAll(),
+            'terapis' => $MKaryawan->asObject()->findAll(),
             'resources' => $this->patientModel->get_resources(),
             'patient_id' => $id,
             'queue_id' => '',

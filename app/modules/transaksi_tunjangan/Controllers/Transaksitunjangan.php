@@ -3,14 +3,14 @@
 namespace App\modules\transaksi_tunjangan\Controllers;
 
 use App\Controllers\BaseController;
-use App\modules\terapis\Models\MTerapis;
+use App\Modules\Karyawan\Models\MKaryawan;
 use App\modules\transaksi_tunjangan\Models\Mtransaksitunjangan;
 use App\modules\tunjangan_karyawan\Models\Mtunjangankaryawan;
 use App\modules\tunjangan_karyawan\Models\MtunjanganTerapis;
 
 class Transaksitunjangan extends BaseController
 {
-    protected $model_terapis;
+    protected $model_karyawan;
     protected $model_transaksi_karyawan;
     protected $model_tunjangan_karyawan;
     protected $model_tunjangan_terapis;
@@ -18,7 +18,7 @@ class Transaksitunjangan extends BaseController
 
     public function __construct()
     {
-        $this->model_terapis              = new MTerapis();
+        $this->model_karyawan              = new MKaryawan();
         $this->model_tunjangan_karyawan   = new Mtunjangankaryawan();
         $this->model_transaksi_karyawan   = new Mtransaksitunjangan();
         $this->model_tunjangan_terapis    = new MtunjanganTerapis();
@@ -111,7 +111,7 @@ class Transaksitunjangan extends BaseController
         }
 
         $region_patient = session()->get('region_patient');
-        $terapisQuery   = $this->model_terapis->where('is_active', 1);
+        $terapisQuery   = $this->model_karyawan->where('is_active', 1);
 
         if (!empty($region_patient) && $region_patient !== 'all') {
             if (is_array($region_patient)) {
@@ -190,7 +190,7 @@ class Transaksitunjangan extends BaseController
 
         if ($tipeInput === 'massal') {
             $region_patient = session()->get('region_patient');
-            $terapisQuery   = $this->model_terapis->where('is_active', 1);
+            $terapisQuery   = $this->model_karyawan->where('is_active', 1);
 
             if (!empty($region_patient) && $region_patient !== 'all') {
                 if (is_array($region_patient)) {

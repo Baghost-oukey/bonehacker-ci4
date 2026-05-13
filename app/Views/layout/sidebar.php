@@ -299,7 +299,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
     </div>
 
     <!-- TAGIFY & MANAGE USER | SUPERADMIN - OWNER -->
-    <?php if ($role === 'superadmin' || $role === 'owner'): ?>
+    <?php if ($role === 'superadmin' || $role === 'owner' || $role === 'admin'): ?>
         <div class="relative flex w-full min-w-0 flex-col p-2">
             <div class="sticky top-0 z-10 flex h-8 shrink-0 items-center bg-white px-2 text-xs font-semibold uppercase tracking-wider text-slate-500/80">
                 Manajemen
@@ -346,18 +346,10 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                 <?php endif; ?>
 
 
-                <?php if ($role === 'superadmin'): ?>
-                    <li>
-                        <a href="<?= base_url('users') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'users' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
-                            <i class="fas fa-users w-4 text-center shrink-0"></i>
-                            <span class="truncate">Users</span>
-                        </a>
-                    </li>
-                <?php endif; ?>
                 <li>
-                    <a href="<?= base_url('terapis') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'terapis' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
-                        <i class="fas fa-user-md w-4 text-center shrink-0"></i>
-                        <span class="truncate">Karyawan</span>
+                    <a href="<?= base_url('karyawan') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'karyawan' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
+                        <i class="fas fa-user-friends w-4 text-center shrink-0"></i>
+                        <span class="truncate font-medium">Manajemen Karyawan</span>
                     </a>
                 </li>
 

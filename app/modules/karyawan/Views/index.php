@@ -5,12 +5,12 @@
     <!-- HEADER -->
     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between px-1">
         <div>
-            <h1 class="text-2xl md:text-3xl font-black tracking-tight text-slate-800 uppercase">Manajemen User</h1>
-            <p class="text-xs md:text-sm font-medium text-slate-500 mt-1">Kelola data pengguna dan wewenang sistem secara terpusat.</p>
+            <h1 class="text-2xl md:text-3xl font-black tracking-tight text-teal-600 uppercase">Manajemen Karyawan</h1>
+            <p class="text-xs md:text-sm font-medium text-slate-500 mt-1">Kelola data akun dan profil karyawan secara terpusat.</p>
         </div>
         <button type="button" data-modal-open="modalAdd" class="w-full md:w-auto flex items-center justify-center gap-3 px-6 py-3.5 rounded-2xl bg-teal-600 text-white text-sm font-black hover:bg-teal-700 transition-all shadow-lg shadow-teal-500/25 active:scale-[0.98] outline-none">
             <i class="fas fa-plus text-xs"></i> 
-            <span class="uppercase tracking-widest">Tambah User Baru</span>
+            <span class="uppercase tracking-widest">Tambah Karyawan Baru</span>
         </button>
     </div>
 
@@ -41,9 +41,10 @@
                     <tr class="bg-white border-b border-slate-50 text-[10px] font-black text-slate-500 uppercase tracking-widest">
                         <th class="px-6 py-5 whitespace-nowrap">No</th>
                         <th class="px-6 py-5 whitespace-nowrap">Nama Lengkap</th>
+                        <th class="px-6 py-5 whitespace-nowrap">Tipe</th>
                         <th class="px-6 py-5 whitespace-nowrap">Username</th>
                         <th class="px-6 py-5 whitespace-nowrap">Role</th>
-                        <th class="px-6 py-5 whitespace-nowrap">Cakupan Wilayah</th>
+                        <th class="px-6 py-5 whitespace-nowrap">Wilayah</th>
                         <th class="px-6 py-5 text-center whitespace-nowrap">Aksi</th>
                     </tr>
                 </thead>
@@ -99,7 +100,7 @@
             </button>
         </div>
 
-        <form id="formAddUser" action="<?= base_url('users/store') ?>" method="post" class="space-y-5 p-6 max-h-[75vh] overflow-y-auto needs-validation" novalidate>
+        <form id="formAddUser" action="<?= base_url('karyawan/store') ?>" method="post" class="space-y-5 p-6 max-h-[75vh] overflow-y-auto needs-validation" novalidate>
             <?= csrf_field() ?>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="space-y-1.5">
@@ -118,7 +119,7 @@
             </div>
             <div class="space-y-1.5">
                 <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Level Akses (Role)</label>
-                <select name="role" id="role_add" data-target="#regionFieldAdd" class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 outline-none bg-slate-50 focus:bg-white transition-all shadow-inner" required>
+                <select name="role" id="role_add" data-target="#extraTerapisFields" class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 outline-none bg-slate-50 focus:bg-white transition-all shadow-inner" required>
                     <option value="">-- Pilih Akses --</option>
                     <option value="owner">Owner</option>
                     <option value="admin">Admin</option>
@@ -126,8 +127,79 @@
                     <option value="user">User (Terapis)</option>
                 </select>
             </div>
+
+            <!-- EXTRA FIELDS FOR THERAPIST -->
+            <div id="extraTerapisFields" class="hidden space-y-4 border-t border-slate-100 pt-4 mt-4">
+                <p class="text-[10px] font-black text-teal-600 uppercase tracking-widest mb-4">Data Profil Karyawan</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">ID Karyawan (NIK/ID)</label>
+                        <input type="text" name="terapis_id" class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 outline-none bg-slate-50 shadow-inner" placeholder="Contoh: TSI-001">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Jabatan</label>
+                        <select name="jabatan_id" class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 outline-none bg-slate-50">
+                            <option value="">-- Pilih Jabatan --</option>
+                            <?php foreach ($jabatan as $j): ?>
+                                <option value="<?= $j->id ?>"><?= $j->nama_jabatan ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Tempat Lahir</label>
+                        <input type="text" name="tempat_lahir" class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 outline-none bg-slate-50" placeholder="Kota Kelahiran">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Tanggal Lahir</label>
+                        <input type="date" name="tanggal_lahir" class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 outline-none bg-slate-50">
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Alamat Domisili</label>
+                    <textarea name="alamat" rows="2" class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 outline-none bg-slate-50" placeholder="Alamat lengkap..."></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Wilayah Penempatan</label>
+                        <select name="region_id" class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 outline-none bg-slate-50">
+                            <option value="">-- Pilih Wilayah --</option>
+                            <?php foreach ($regions as $region): ?>
+                                <option value="<?= $region->id ?>"><?= $region->name ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Rank / Level</label>
+                        <select name="rank" class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 outline-none bg-slate-50">
+                            <option value="">-- Pilih Rank --</option>
+                            <option value="Junior">Junior</option>
+                            <option value="Senior">Senior</option>
+                            <option value="Master">Master</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Tgl Mulai Kerja</label>
+                        <input type="date" name="tgl_mulai_kerja" class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 outline-none bg-slate-50">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Foto Profil</label>
+                        <input type="file" name="foto" accept="image/*" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-black file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 cursor-pointer">
+                    </div>
+                </div>
+            </div>
+
+            <!-- REGION PATIENT (FOR MANAGEMENT) -->
             <div class="space-y-1.5 hidden" id="regionFieldAdd">
-                <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Otoritas Wilayah</label>
+                <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Otoritas Wilayah Pasien</label>
                 <select name="regions_patient[]" id="regions_add" multiple class="w-full select2-teal">
                     <?php foreach ($regions as $region): ?>
                         <option value="<?= $region->id ?>"><?= $region->name ?></option>
@@ -221,14 +293,14 @@
 
 <?= $this->section('scripts') ?>
 <script>
-    window.usersConfig = {
+    window.karyawanConfig = {
         csrfName: "<?= csrf_token() ?>",
         csrfHash: "<?= csrf_hash() ?>",
-        fetchUrl: "<?= base_url('users/fetch') ?>",
-        storeUrl: "<?= base_url('users/store') ?>",
-        checkUsernameUrl: "<?= base_url('users/check_username_exists') ?>",
-        viewPatientUrl: "<?= base_url('users/view_patient') ?>",
-        baseUrl: "<?= base_url('users') ?>"
+        fetchUrl: "<?= base_url('karyawan/fetch') ?>",
+        storeUrl: "<?= base_url('karyawan/store') ?>",
+        checkUsernameUrl: "<?= base_url('karyawan/check_username_exists') ?>",
+        viewPatientUrl: "<?= base_url('karyawan/view_patient') ?>",
+        baseUrl: "<?= base_url('karyawan') ?>"
     };
 </script>
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />

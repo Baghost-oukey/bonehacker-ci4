@@ -326,7 +326,7 @@ class Jasapelayanan extends BaseController
 
         $mRegion  = new \App\modules\region\Models\MRegion();
         $mCountries = new \App\modules\countries\Models\MCountries();
-        $mTerapis = new \App\modules\terapis\Models\MTerapis();
+        $MKaryawan = new \App\Modules\Karyawan\Models\MKaryawan();
 
         $region_patient = session()->get('region_patient');
         $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
@@ -338,7 +338,7 @@ class Jasapelayanan extends BaseController
             'address'         => (object) $addressData,
             'wilayah'         => $mRegion->getData(null, $allowed_regions) ?? [],
             'negara'          => $mCountries->asObject()->findAll(),
-            'terapis'         => $mTerapis->asObject()->findAll(),
+            'terapis'         => $MKaryawan->asObject()->findAll(),
             'resources'       => $patientModel->get_resources(),
             'patient_id'      => $id,
             'queue_id'        => $this->request->getGet('queue_id') ?? '',
@@ -420,7 +420,7 @@ class Jasapelayanan extends BaseController
         }
 
         $mRegion = model('App\modules\region\Models\MRegion');
-        $mTerapis = new \App\modules\terapis\Models\MTerapis();
+        $MKaryawan = new \App\Modules\Karyawan\Models\MKaryawan();
         
         $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
         $regions = $mRegion->getData(null, $allowed_regions);
@@ -431,7 +431,7 @@ class Jasapelayanan extends BaseController
         $settingsKejantanan = $this->modelJaspelSettings->getAllWithRegion('kejantanan');
         
         // Get all terapis grouped by region
-        $allTerapis = $mTerapis->select('terapis.*, regions.name as region_name')
+        $allTerapis = $MKaryawan->select('terapis.*, regions.name as region_name')
                                ->join('regions', 'regions.id = terapis.region_id', 'left')
                                ->where('terapis.is_active', 1)
                                ->findAll();
