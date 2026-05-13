@@ -258,13 +258,9 @@ class Mgajikaryawan extends Model
 
             $item = ['nama' => $t['nama_tunjangan'], 'nominal' => (int)$nominal];
 
-            if ($t['kategori'] === 'benefit') {
-                $benefitList[]  = $item;
-                $totalBenefit  += $nominal;
-            } else {
-                $penerimaanList[] = $item;
-                $totalPenerimaan += $nominal;
-            }
+            // Semua tunjangan masuk benefit
+            $benefitList[]  = $item;
+            $totalBenefit  += $nominal;
         }
 
         // ── POTONGAN RUTIN ───────────────────────────────────────────
@@ -276,27 +272,25 @@ class Mgajikaryawan extends Model
         $totalKasbon = (int)$terapis['total_kasbon'];
 
         // ── KALKULASI AKHIR ──────────────────────────────────────────
-        $totalA      = $gajiPokok + $jaspelReguler + $jaspelKejantanan + $totalPenerimaan;
+        $totalA      = $gajiPokok + $jaspelReguler + $jaspelKejantanan;
         $totalB      = $totalBenefit;
         $totalC      = $totalPotonganRutin + $totalKasbon;
         $gajiBersih  = ($totalA + $totalB) - $totalC;
 
-        $terapis['total_tunjangan'] = (int)($totalA - $gajiPokok + $totalB); // untuk backward compat
+        $terapis['total_tunjangan'] = (int)$totalBenefit;
 
         return [
             'terapis'    => $terapis,
             'komponen'   => [
-                // A. Penerimaan
+                // Take Home
                 'gaji_pokok'        => (int)$gajiPokok,
                 'jaspel_reguler'    => (int)$jaspelReguler,
                 'jaspel_kejantanan' => (int)$jaspelKejantanan,
-                'penerimaan_list'   => $penerimaanList,
-                'total_penerimaan'  => (int)$totalPenerimaan,
                 'total_A'           => (int)$totalA,
-                // B. Benefit
+                // Benefit
                 'benefit_list'      => $benefitList,
                 'total_B'           => (int)$totalBenefit,
-                // C. Potongan
+                // Potongan
                 'potongan_list'     => $potonganList,
                 'total_potongan_rutin' => (int)$totalPotonganRutin,
                 'total_kasbon'      => $totalKasbon,

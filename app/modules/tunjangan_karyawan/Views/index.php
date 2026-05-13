@@ -4,14 +4,14 @@
 <div id="masterTunjanganPage" class="p-6">
     <div class="flex justify-between items-center mb-6">
         <div>
-            <h2 class="text-2xl font-bold text-slate-800">Master Tunjangan</h2>
-            <p class="text-sm text-slate-500">Kelola jenis pemasukan dan potongan karyawan.</p>
+            <h2 class="text-2xl font-bold text-slate-800">Master Gaji</h2>
+            <p class="text-sm text-slate-500">Kelola jenis tunjangan dan potongan karyawan.</p>
         </div>
         <button id="btnTambahTunjangan" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-sm transition duration-150 flex items-center gap-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
             </svg>
-            Tambah Tunjangan
+            Tambah Item
         </button>
     </div>
 
@@ -21,7 +21,7 @@
                 <thead>
                     <tr class="bg-slate-50 text-slate-600 text-sm uppercase tracking-wider border-b border-slate-200">
                         <th class="p-4 font-semibold w-16 text-center">No</th>
-                        <th class="p-4 font-semibold">Nama Tunjangan</th>
+                        <th class="p-4 font-semibold">Nama Item</th>
                         <th class="p-4 font-semibold w-40">Kategori</th>
                         <th class="p-4 font-semibold w-28 text-center">Aksi</th>
                     </tr>
@@ -37,7 +37,7 @@
     <div class="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl transform transition-all animate-in zoom-in-95 duration-200">
         
         <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4 bg-white">
-            <h5 id="modalTitle" class="text-lg font-bold text-slate-800 tracking-tight">Tambah Tunjangan</h5>
+            <h5 id="modalTitle" class="text-lg font-bold text-slate-800 tracking-tight">Tambah Item Gaji</h5>
             <button type="button" class="btn-close-modal rounded-md p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-800 transition-colors">&times;</button>
         </div>
 
@@ -46,10 +46,10 @@
             <input type="hidden" id="id_tunjangan" name="id">
 
             <div class="space-y-1.5">
-                <label class="text-sm font-semibold text-slate-700">Nama Tunjangan</label>
+                <label class="text-sm font-semibold text-slate-700">Nama Item</label>
                 <input type="text" id="nama_tunjangan" name="nama_tunjangan" 
                     class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all bg-slate-50/50" 
-                    placeholder="Contoh: Uang Lembur" required>
+                    placeholder="Contoh: BPJS Kesehatan, Tunjangan Makan" required>
             </div>
 
             <div class="space-y-1.5">
@@ -57,9 +57,10 @@
                 <select id="kategori" name="kategori" 
                     class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all bg-white" required>
                     <option value="">-- Pilih Kategori --</option>
-                    <option value="pemasukan">Pemasukan</option>
+                    <option value="tunjangan">Tunjangan (Benefit)</option>
                     <option value="potongan">Potongan</option>
                 </select>
+                <p class="text-xs text-slate-400">Tunjangan = ditanggung perusahaan. Potongan = dipotong dari gaji karyawan.</p>
             </div>
 
             <div class="flex items-center justify-end gap-3 border-t border-slate-100 pt-5 mt-2">

@@ -149,7 +149,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                                 <li>
                                     <a href="<?= base_url('tunjangan-karyawan') ?>"
                                         class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'tunjangan-karyawan' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
-                                        <span class="truncate">Master Tunjangan</span>
+                                        <span class="truncate">Master Gaji</span>
                                     </a>
                                 </li>
 

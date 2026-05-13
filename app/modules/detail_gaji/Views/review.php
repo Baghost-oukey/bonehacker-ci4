@@ -26,16 +26,16 @@
 
             <div class="p-8 space-y-6">
 
-                <!-- A. PENERIMAAN -->
+                <!-- TAKE HOME -->
                 <div>
                     <h3 class="text-xs font-black text-emerald-600 uppercase tracking-widest mb-3 flex items-center gap-2">
-                        <i class="fas fa-plus-circle"></i> A. Penerimaan
+                        <i class="fas fa-wallet"></i> Take Home
                     </h3>
                     <div class="bg-emerald-50/50 rounded-2xl border border-emerald-100 divide-y divide-emerald-100">
                         <div class="flex justify-between px-5 py-3 text-sm">
                             <span class="text-slate-600">Gaji Pokok
                                 <?php if ($terapis['tipe_gaji'] === 'harian'): ?>
-                                    <span class="text-xs text-slate-400">(<?= $terapis['nominal_gaji'] ?>/hari × <?= $komponen['kehadiran'] ?> hari)</span>
+                                    <span class="text-xs text-slate-400">(Rp <?= number_format($terapis['nominal_gaji'], 0, ',', '.') ?>/hari × <?= $komponen['kehadiran'] ?> hari)</span>
                                 <?php endif; ?>
                             </span>
                             <span class="font-bold text-slate-800">Rp <?= number_format($komponen['gaji_pokok'], 0, ',', '.') ?></span>
@@ -52,14 +52,8 @@
                             <span class="font-bold text-slate-800">Rp <?= number_format($komponen['jaspel_kejantanan'], 0, ',', '.') ?></span>
                         </div>
                         <?php endif; ?>
-                        <?php foreach ($komponen['penerimaan_list'] as $p): ?>
-                        <div class="flex justify-between px-5 py-3 text-sm">
-                            <span class="text-slate-600"><?= esc($p['nama']) ?></span>
-                            <span class="font-bold text-slate-800">Rp <?= number_format($p['nominal'], 0, ',', '.') ?></span>
-                        </div>
-                        <?php endforeach; ?>
                         <div class="flex justify-between px-5 py-3 text-sm bg-emerald-50 rounded-b-2xl">
-                            <span class="font-black text-emerald-700">Total A</span>
+                            <span class="font-black text-emerald-700">Total Take Home</span>
                             <span class="font-black text-emerald-700">Rp <?= number_format($komponen['total_A'], 0, ',', '.') ?></span>
                         </div>
                     </div>
@@ -69,7 +63,7 @@
                 <?php if (!empty($komponen['benefit_list'])): ?>
                 <div>
                     <h3 class="text-xs font-black text-blue-600 uppercase tracking-widest mb-3 flex items-center gap-2">
-                        <i class="fas fa-shield-alt"></i> B. Benefit (Ditanggung Perusahaan)
+                        <i class="fas fa-shield-alt"></i> Benefit (Ditanggung Perusahaan)
                     </h3>
                     <div class="bg-blue-50/50 rounded-2xl border border-blue-100 divide-y divide-blue-100">
                         <?php foreach ($komponen['benefit_list'] as $b): ?>
@@ -79,18 +73,18 @@
                         </div>
                         <?php endforeach; ?>
                         <div class="flex justify-between px-5 py-3 text-sm bg-blue-50 rounded-b-2xl">
-                            <span class="font-black text-blue-700">Total B</span>
+                            <span class="font-black text-blue-700">Total Benefit</span>
                             <span class="font-black text-blue-700">Rp <?= number_format($komponen['total_B'], 0, ',', '.') ?></span>
                         </div>
                     </div>
                 </div>
                 <?php endif; ?>
 
-                <!-- C. POTONGAN -->
+                <!-- POTONGAN -->
                 <?php if ($komponen['total_C'] > 0): ?>
                 <div>
                     <h3 class="text-xs font-black text-rose-600 uppercase tracking-widest mb-3 flex items-center gap-2">
-                        <i class="fas fa-minus-circle"></i> C. Potongan
+                        <i class="fas fa-minus-circle"></i> Potongan
                     </h3>
                     <div class="bg-rose-50/50 rounded-2xl border border-rose-100 divide-y divide-rose-100">
                         <?php foreach ($komponen['potongan_list'] as $p): ?>
@@ -106,7 +100,7 @@
                         </div>
                         <?php endif; ?>
                         <div class="flex justify-between px-5 py-3 text-sm bg-rose-50 rounded-b-2xl">
-                            <span class="font-black text-rose-700">Total C</span>
+                            <span class="font-black text-rose-700">Total Potongan</span>
                             <span class="font-black text-rose-700">- Rp <?= number_format($komponen['total_C'], 0, ',', '.') ?></span>
                         </div>
                     </div>
@@ -116,12 +110,12 @@
                 <!-- TOTAL PENDAPATAN & BERSIH -->
                 <div class="bg-slate-900 rounded-2xl p-6 text-white">
                     <div class="flex justify-between text-sm mb-2">
-                        <span class="text-slate-400">Total Pendapatan (A + B)</span>
+                        <span class="text-slate-400">Total Take Home + Benefit</span>
                         <span class="font-bold">Rp <?= number_format($komponen['total_A'] + $komponen['total_B'], 0, ',', '.') ?></span>
                     </div>
                     <?php if ($komponen['total_C'] > 0): ?>
                     <div class="flex justify-between text-sm mb-4 pb-4 border-b border-slate-700">
-                        <span class="text-slate-400">Total Potongan (C)</span>
+                        <span class="text-slate-400">Total Potongan</span>
                         <span class="font-bold text-rose-400">- Rp <?= number_format($komponen['total_C'], 0, ',', '.') ?></span>
                     </div>
                     <?php endif; ?>
