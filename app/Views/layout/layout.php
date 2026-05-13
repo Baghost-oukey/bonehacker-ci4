@@ -75,7 +75,7 @@ if ($isDevEnvironment) {
         <aside id="sidebar" class="
             w-64 bg-white border-r border-slate-200 transition-transform duration-300 ease-in-out flex flex-col
             fixed inset-y-0 left-0 z-40 -translate-x-full
-            lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 lg:z-10 lg:shrink-0
+            lg:translate-x-0 lg:z-30 lg:shrink-0
         ">
             <?= $this->include('App\Views\layout\sidebar') ?>
         </aside>
@@ -85,7 +85,7 @@ if ($isDevEnvironment) {
         <div id="sidebarBackdrop" class="fixed inset-0 z-20 hidden bg-black/40 lg:hidden"></div>
 
         <!-- ================= MAIN ================= -->
-        <div class="flex flex-col flex-1 min-h-screen">
+        <div class="flex flex-col flex-1 min-h-screen lg:pl-64 transition-all duration-300">
 
             <!-- HEADER -->
             <?php if (!isset($isPublic) || !$isPublic): ?>
