@@ -79,19 +79,17 @@
     .modal-readonly input, 
     .modal-readonly textarea, 
     .modal-readonly select,
-    .modal-readonly .select2-container--default .select2-selection--single,
-    .modal-readonly .tagify {
-        border: none !important;
-        background-color: transparent !important;
-        padding-left: 0 !important;
-        padding-right: 0 !important;
+    .modal-readonly .select2-container--default .select2-selection--single {
+        background-color: #f8fafc !important;
         pointer-events: none !important;
         box-shadow: none !important;
         color: #1e293b !important;
         font-weight: 600 !important;
-        -webkit-appearance: none;
-        -moz-appearance: none;
-        appearance: none;
+        cursor: default !important;
+    }
+    .modal-readonly .tagify {
+        pointer-events: none !important;
+        box-shadow: none !important;
     }
     .modal-readonly .select2-selection__arrow {
         display: none !important;

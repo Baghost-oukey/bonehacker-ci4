@@ -79,12 +79,25 @@ class History extends BaseController
             $value->complaint = !empty($value->complaint_names) ? $value->complaint_names : '-';
             $value->medhis    = !empty($value->medhis_names) ? $value->medhis_names : '-';
             $value->duration = isset($value->time_consume) ? $value->time_consume . ' mnt' : '-';
-            $value->action = '
-                <div class="btn-group">
-                    <button type="button" class="btn btn-primary btn-sm" onclick="show(\'' . $value->id . '\')"><i class="fas fa-eye"></i></button>
-                    <button type="button" class="btn btn-success btn-sm" onclick="duplicate(\'' . $value->id . '\')"><i class="fas fa-copy"></i></button>
-                    <button type="button" class="btn btn-danger btn-sm" onclick="destroy(\'' . $value->id . '\')"><i class="fas fa-trash"></i></button>
-                </div>';
+
+            // Tandai baris yang sudah dihapus
+            $value->is_deleted = (int)$value->is_delete === 1;
+
+            if ($value->is_deleted) {
+                // Rekam medis yang dihapus: hanya tombol lihat, teks dicoret
+                $value->action = '
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="show(\'' . $value->id . '\')"><i class="fas fa-eye"></i></button>
+                        <span class="badge bg-danger text-xs ml-1">Dihapus</span>
+                    </div>';
+            } else {
+                $value->action = '
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="show(\'' . $value->id . '\')"><i class="fas fa-eye"></i></button>
+                        <button type="button" class="btn btn-success btn-sm" onclick="duplicate(\'' . $value->id . '\')"><i class="fas fa-copy"></i></button>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="destroy(\'' . $value->id . '\')"><i class="fas fa-trash"></i></button>
+                    </div>';
+            }
         }
         return $this->response->setJSON([
             "draw"            => intval($this->request->getPost('draw')),
@@ -316,6 +329,7 @@ class History extends BaseController
         $data->results   = $this->_getTagNameFromIds($data->results, 'result_tags');
         $data->history_created_by = !empty($data->created_by) ? $this->getRealname($data->created_by) : '-';
         $data->history_updated_by = !empty($data->updated_by) ? $this->getRealname($data->updated_by) : '-';
+        $data->history_deleted_by = !empty($data->deleted_by) ? $this->getRealname($data->deleted_by) : '';
         
         // Ensure camelCase for JS population
         $data->processAt = $data->process_at;
@@ -561,20 +575,42 @@ class History extends BaseController
 
     public function destroy($id)
     {
-        $destroy = $this->model_history->delete($id);
-        if ($destroy) {
+        // Cek apakah rekam medis sudah diterbitkan (posted)
+        $history = $this->model_history->find($id);
+
+        if (!$history) {
+            return $this->response->setJSON(["status" => false, "message" => "Data tidak ditemukan"]);
+        }
+
+        if ($history->type === 'posted') {
+            // Rekam medis yang sudah terbit: soft delete saja (tandai is_delete = 1)
+            $this->db->table('histories')->where('id', $id)->update([
+                'is_delete'  => 1,
+                'deleted_by' => session()->get('userId'),
+            ]);
+
             // Soft delete jasa_pelayanan yang terkait
             $this->db->table('jasa_pelayanan')
                 ->where('history_id', $id)
                 ->update(['is_delete' => 1]);
 
-            session()->setFlashdata('message', ['success', 'Data riwayat berhasil dihapus']);
-            $response = ["status" => true];
-        } else {
-            session()->setFlashdata('message', ['danger', 'Data riwayat gagal dihapus']);
-            $response = ["status" => false];
+            return $this->response->setJSON([
+                "status"  => true,
+                "message" => "Rekam medis ditandai sebagai dihapus (riwayat tetap tersimpan)"
+            ]);
         }
-        return $this->response->setJSON($response);
+
+        // Rekam medis draft: boleh hard delete
+        $this->model_history->delete($id);
+
+        $this->db->table('jasa_pelayanan')
+            ->where('history_id', $id)
+            ->update(['is_delete' => 1]);
+
+        return $this->response->setJSON([
+            "status"  => true,
+            "message" => "Draft rekam medis berhasil dihapus"
+        ]);
     }
 
 

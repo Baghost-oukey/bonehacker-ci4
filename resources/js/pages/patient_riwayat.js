@@ -258,24 +258,35 @@ const PatientHistoryPage = {
         } else {
           response.data.forEach(function (row) {
             // Desktop Table
-            const isDeleted = row.is_delete === "1" ? "text-red-500 line-through" : "text-slate-700";
-            const tr = $(`<tr class="hover:bg-slate-50 transition border-b border-slate-100 ${isDeleted}"></tr>`);
-            tr.append(`<td class="px-6 py-3.5 text-center text-xs">${row.no || "-"}</td>`);
-            tr.append(`<td class="px-6 py-3.5 text-xs">${row.complaint || "-"}</td>`);
-            tr.append(`<td class="px-6 py-3.5 text-xs">${row.medhis || "-"}</td>`);
-            tr.append(`<td class="px-6 py-3.5 text-xs text-slate-600">${row.date || "-"}</td>`);
-            tr.append(`<td class="px-6 py-3.5 text-center text-xs font-medium text-slate-600">${row.duration || "-"}</td>`);
+            const isDeleted = row.is_deleted === true || row.is_delete == 1;
+            const rowClass = isDeleted ? "hover:bg-red-50 transition border-b border-red-100 bg-red-50/50" : "hover:bg-slate-50 transition border-b border-slate-100";
+            const textClass = isDeleted ? "text-red-400 line-through" : "";
+            const tr = $(`<tr class="${rowClass}"></tr>`);
+            tr.append(`<td class="px-6 py-3.5 text-center text-xs ${textClass}">${row.no || "-"}</td>`);
+            tr.append(`<td class="px-6 py-3.5 text-xs ${textClass}">${row.complaint || "-"}</td>`);
+            tr.append(`<td class="px-6 py-3.5 text-xs ${textClass}">${row.medhis || "-"}</td>`);
+            tr.append(`<td class="px-6 py-3.5 text-xs ${textClass}">${row.date || "-"}</td>`);
+            tr.append(`<td class="px-6 py-3.5 text-center text-xs font-medium ${textClass}">${row.duration || "-"}</td>`);
             tr.append(`<td class="px-6 py-3.5 text-center text-xs">
-                            <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${row.type === 'draft' ? 'bg-amber-50 text-amber-700' : 'bg-teal-50 text-teal-700'}">${row.type || "-"}</span>
+                            ${isDeleted 
+                              ? '<span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-red-50 text-red-600">Dihapus</span>'
+                              : '<span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ' + (row.type === 'draft' ? 'bg-amber-50 text-amber-700' : 'bg-teal-50 text-teal-700') + '">' + (row.type || "-") + '</span>'
+                            }
                         </td>`);
-            tr.append(`<td class="px-6 py-3.5 text-center">
+            if (isDeleted) {
+              tr.append(`<td class="px-6 py-3.5 text-center">
+                            <button type="button" class="btn-view-history text-slate-400 hover:bg-slate-100 p-1.5 rounded" data-id="${row.id}" title="Lihat"><i class="fas fa-eye"></i></button>
+                          </td>`);
+            } else {
+              tr.append(`<td class="px-6 py-3.5 text-center">
                             <div class="flex items-center justify-center gap-2">
                                 <button type="button" class="btn-view-history text-slate-500 hover:bg-slate-100 p-1.5 rounded" data-id="${row.id}" title="Lihat"><i class="fas fa-eye"></i></button>
                                 <button type="button" class="btn-edit-history text-teal-600 hover:bg-teal-50 p-1.5 rounded" data-id="${row.id}" title="Edit"><i class="fas fa-edit"></i></button>
                                 <button type="button" class="btn-copy-history text-blue-600 hover:bg-blue-50 p-1.5 rounded" data-id="${row.id}" title="Duplikat"><i class="fas fa-copy"></i></button>
                                 <button type="button" class="btn-delete-history text-red-600 hover:bg-red-50 p-1.5 rounded" data-id="${row.id}" title="Hapus"><i class="fas fa-trash"></i></button>
                             </div>
-                        </td>`);
+                          </td>`);
+            }
             tbody.append(tr);
 
             // Mobile Card
@@ -539,12 +550,19 @@ const PatientHistoryPage = {
         $('#modalRiwayatPasien form :checkbox, #modalRiwayatPasien form :radio, #region_history, .terapis').prop('disabled', true);
         [complaintTagify, medhisTagify, resultTagify].forEach(t => { if (t) t.setReadonly(true); });
         $('#save-button').hide();
+        $('#save-draft-button').hide();
       } else {
         $('#modalRiwayatPasien form :input').prop('readonly', false);
         $('#processAt, #finishAt, #timeConsume').prop('readonly', true);
         $('#modalRiwayatPasien form :checkbox, #modalRiwayatPasien form :radio, #region_history, .terapis').prop('disabled', false);
         [complaintTagify, medhisTagify, resultTagify].forEach(t => { if (t) t.setReadonly(false); });
         $('#save-button').prop('disabled', false).show();
+        // Tombol draft hanya tampil untuk rekam medis draft
+        if (data.type === 'draft') {
+          $('#save-draft-button').text('Perbarui Draft').show();
+        } else {
+          $('#save-draft-button').hide();
+        }
       }
     }
     if (!isDuplicate) {
@@ -685,7 +703,10 @@ const PatientHistoryPage = {
 
     if (isReadOnly) {
       modal.addClass("modal-readonly");
-      form.find(":input").prop("disabled", true);
+      // Gunakan readonly + pointer-events-none agar styling tetap terlihat
+      form.find("input, textarea").prop("readonly", true);
+      form.find("select, input[type='checkbox'], input[type='radio']").prop("disabled", true);
+      form.addClass("pointer-events-none opacity-90");
       saveBtn.hide();
       draftBtn.hide();
       cancelBtn.text("Tutup").addClass("bg-teal-600 text-white hover:bg-teal-700").removeClass("bg-white text-slate-700 border-slate-300");
@@ -696,9 +717,11 @@ const PatientHistoryPage = {
       });
     } else {
       modal.removeClass("modal-readonly");
-      form.find(":input").prop("disabled", false);
+      form.find("input, textarea").prop("readonly", false);
+      form.find("select, input[type='checkbox'], input[type='radio']").prop("disabled", false);
+      form.removeClass("pointer-events-none opacity-90");
       saveBtn.show();
-      draftBtn.show();
+      // Jangan show draft button di sini — biarkan populateForm yang kontrol
       cancelBtn.text("Batal").removeClass("bg-teal-600 text-white hover:bg-teal-700").addClass("bg-white text-slate-700 border-slate-300");
 
       // Enable tagify

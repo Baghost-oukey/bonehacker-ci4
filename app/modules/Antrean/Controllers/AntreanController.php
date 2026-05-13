@@ -284,7 +284,8 @@ class AntreanController extends BaseController
                 'patient_id' => $patientId,
                 'history_region' => $target_region,
                 'type' => 'draft',
-                'is_delete' => 0
+                'is_delete' => 0,
+                'created_by' => session()->get('userId'),
             ]);
 
             return $this->response->setJSON([

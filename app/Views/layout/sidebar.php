@@ -78,7 +78,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                     </a>
                 </li>
 
-                <?php if (in_array($role, ['owner', 'admin', 'superadmin'])): ?>
+                <?php if (in_array($role, ['owner', 'admin'])): ?>
                     <li>
                         <a href="<?= base_url('transaksi') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'transaksi' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                             <i class="fas fa-money-bill-wave w-4 text-center shrink-0"></i>
@@ -113,14 +113,12 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                             </ul>
                         </details>
                     </li>
-                    <?php if ($role !== 'superadmin'): ?>
-                        <li>
-                            <a href="<?= base_url('kalender') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'kalender' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
-                                <i class="fa-solid fa-calendar-days w-4 text-center shrink-0"></i>
-                                <span class="truncate">Kalender Kerja</span>
-                            </a>
-                        </li>
-                    <?php endif; ?>
+                    <li>
+                        <a href="<?= base_url('kalender') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'kalender' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
+                            <i class="fa-solid fa-calendar-days w-4 text-center shrink-0"></i>
+                            <span class="truncate">Kalender Kerja</span>
+                        </a>
+                    </li>
                 <?php endif; ?>
 
                 <?php if (in_array($role, ['owner'])): ?>
