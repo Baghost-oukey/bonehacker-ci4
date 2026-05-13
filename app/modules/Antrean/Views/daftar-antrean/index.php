@@ -104,7 +104,7 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
     </style>
 </head>
 
-<body class="flex flex-col p-4 md:p-6 gap-6 text-slate-100">
+<body class="flex flex-col h-screen overflow-hidden p-4 md:p-6 gap-6 text-slate-100">
 
     <?php if (isset($isPublic) && $isPublic): ?>
         <!-- JS logic is handled by antrean_monitor.js -->
@@ -252,7 +252,7 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
             <div class="py-4 text-center border-b border-orange-500/30">
                 <h2 class="text-lg font-black text-orange-400 uppercase tracking-[0.2em] glow-text-orange">Menunggu</h2>
             </div>
-            <div class="flex-1 overflow-y-auto p-4 space-y-3 auto-scroll-list no-scrollbar">
+            <div class="flex-1 overflow-y-hidden p-4 space-y-3 auto-scroll-list no-scrollbar" style="min-height: 0;" data-count="<?= count($waitingList) ?>">
                 <?php if (!empty($waitingList)): ?>
                     <?php foreach ($waitingList as $i => $q): ?>
                         <div class="list-card-orange rounded-xl p-3 flex items-center gap-4">
@@ -281,7 +281,7 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
             <div class="py-4 text-center border-b border-cyan-500/30">
                 <h2 class="text-lg font-black text-cyan-400 uppercase tracking-[0.2em] glow-text-blue">Sedang Terapi</h2>
             </div>
-            <div class="flex-1 overflow-y-auto p-4 space-y-3 auto-scroll-list no-scrollbar">
+            <div class="flex-1 overflow-y-hidden p-4 space-y-3 auto-scroll-list no-scrollbar" style="min-height: 0;" data-count="<?= count($processingList) ?>">
                 <?php if (!empty($processingList)): ?>
                     <?php foreach ($processingList as $i => $q): ?>
                         <div class="list-card-blue rounded-xl p-3 flex items-center gap-4 relative overflow-hidden">
@@ -311,7 +311,7 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
             <div class="py-4 text-center border-b border-emerald-500/30">
                 <h2 class="text-lg font-black text-emerald-400 uppercase tracking-[0.2em] glow-text-green">Selesai</h2>
             </div>
-            <div class="flex-1 overflow-y-auto p-4 space-y-3 auto-scroll-list no-scrollbar">
+            <div class="flex-1 overflow-y-hidden p-4 space-y-3 auto-scroll-list no-scrollbar" style="min-height: 0;" data-count="<?= count($finishedList) ?>">
                 <?php if (!empty($finishedList)): ?>
                     <?php foreach ($finishedList as $i => $q): ?>
                         <div class="list-card-green rounded-xl p-3 flex items-center gap-4 opacity-60">
@@ -372,45 +372,70 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
         setInterval(updateLiveClock, 1000);
         updateLiveClock();
 
-        // --- AUTO RELOAD (20 SECONDS) ---
+        // --- AUTO RELOAD (60 SECONDS) ---
         setTimeout(() => {
             window.location.reload();
-        }, 20000);
+        }, 60000);
 
         // --- AUTO SCROLL ANIMATION ---
         function initAutoScroll() {
             const containers = document.querySelectorAll('.auto-scroll-list');
             containers.forEach(container => {
-                const scrollHeight = container.scrollHeight;
-                const clientHeight = container.clientHeight;
+                if (container.getAttribute('data-initialized')) return;
+                
+                const count = parseInt(container.getAttribute('data-count') || '0');
+                if (count > 5) {
+                    container.setAttribute('data-initialized', 'true');
+                    
+                    // Buat wrapper untuk animasi transform (lebih pakem daripada scrollTop)
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'scroll-wrapper space-y-3'; // Pindahkan space-y-3 ke sini
+                    
+                    // Pindahkan semua isi asli ke dalam wrapper
+                    while (container.firstChild) {
+                        wrapper.appendChild(container.firstChild);
+                    }
+                    
+                    // Clone isi asli untuk efek infinite
+                    const originalChildren = Array.from(wrapper.children);
+                    originalChildren.forEach(child => {
+                        wrapper.appendChild(child.cloneNode(true));
+                    });
+                    
+                    container.appendChild(wrapper);
+                    container.style.overflow = 'hidden'; // Pastikan terkunci
 
-                if (scrollHeight > clientHeight) {
-                    let scrollPos = 0;
-                    let isPaused = false;
+                    let pos = 0;
+                    const speed = 1.0; // Kecepatan ideal (1 pixel per frame)
 
                     function scroll() {
-                        if (!isPaused) {
-                            scrollPos += 0.5; // Speed
-                            container.scrollTop = scrollPos;
-
-                            if (scrollPos >= scrollHeight - clientHeight) {
-                                isPaused = true;
-                                setTimeout(() => {
-                                    scrollPos = 0;
-                                    container.scrollTop = 0;
-                                    isPaused = false;
-                                }, 3000); // Wait 3s at bottom before jumping to top
-                            }
+                        pos -= speed;
+                        
+                        // Jika sudah bergeser sejauh tinggi konten asli, reset ke 0
+                        // Gunakan offsetHeight untuk akurasi layout
+                        const halfHeight = wrapper.offsetHeight / 2;
+                        if (Math.abs(pos) >= halfHeight) {
+                            pos = 0;
                         }
-
+                        
+                        wrapper.style.transform = `translateY(${pos}px)`;
                         requestAnimationFrame(scroll);
                     }
-                    // Start after delay
-                    setTimeout(() => requestAnimationFrame(scroll), 3000);
+
+                    // Jeda sebentar agar browser selesai kalkulasi layout
+                    setTimeout(() => {
+                        requestAnimationFrame(scroll);
+                    }, 1000);
                 }
             });
         }
-        window.addEventListener('load', initAutoScroll);
+
+        // Jalankan saat DOM siap
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initAutoScroll);
+        } else {
+            initAutoScroll();
+        }
     </script>
 </body>
 

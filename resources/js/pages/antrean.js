@@ -92,7 +92,7 @@ const setupAntreanPage = () => {
       }
     },
     columns: [
-      { data: 'queue_number', class: 'px-6 py-3.5 text-center font-bold text-lg text-teal-600', sortable: true, searchable: true },
+      { data: 'queue_number', class: 'px-6 py-3.5 text-center font-bold text-lg text-slate-800', sortable: true, searchable: true },
       { data: 'date', class: 'px-6 py-3.5 text-left text-xs text-slate-600', sortable: false, searchable: false },
       { data: 'name', class: 'px-6 py-3.5 text-left font-bold text-slate-800', sortable: true, searchable: true },
       { data: 'age', class: 'px-6 py-3.5 text-left text-slate-600', sortable: true, searchable: false },
@@ -128,7 +128,7 @@ const setupAntreanPage = () => {
               <div class="p-4 space-y-4 bg-white">
                   <div class="flex items-center justify-between">
                       <div class="flex items-center gap-3">
-                          <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-teal-50 text-teal-600 font-black text-xl border border-teal-100 shadow-sm">
+                          <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-800 font-black text-xl border border-slate-200 shadow-sm">
                                ${row.queue_number}
                           </div>
                           <div class="flex flex-col min-w-0">

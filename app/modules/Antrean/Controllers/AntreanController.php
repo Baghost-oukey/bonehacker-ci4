@@ -123,7 +123,7 @@ class AntreanController extends BaseController
                     : '<span class="ml-2 inline-flex items-center rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">Baru</span>';
 
                 $urlProfile = site_url('patient/show/' . $row->patient_id);
-                return '<div class="flex items-center"><a href="' . $urlProfile . '" target="_blank" rel="noopener noreferrer" class="text-teal-600 hover:text-teal-700 hover:underline transition-colors">' . esc($row->patient_name) . '</a>' . $statusPasien . '</div>';
+                return '<div class="flex items-center"><a href="' . $urlProfile . '" target="_blank" rel="noopener noreferrer" class="text-slate-800 hover:text-teal-600 hover:underline transition-colors">' . esc($row->patient_name) . '</a>' . $statusPasien . '</div>';
             })
             ->add('address', function ($row) {
                 return implode(', ', array_filter([$row->address, $row->desa_nama, $row->kecamatan_nama, $row->kabupaten_nama]));

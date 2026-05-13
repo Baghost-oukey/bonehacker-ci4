@@ -399,6 +399,17 @@
     #antreanPage #patientHistoryContainer {
         display: none !important;
     }
+    
+    /* Paksa warna antrean menjadi slate-800 agar tidak hijau */
+    #table-1 thead th:first-child,
+    #table-1 tbody td:first-child {
+        color: #1e293b !important; /* slate-800 */
+    }
+    
+    /* Header table default agar tidak hijau */
+    #table-1 thead th {
+        color: #475569 !important; /* slate-600 */
+    }
 </style>
 <?= $this->include('App\modules\patients\Views\component\card_riwayat') ?>
 
