@@ -8,7 +8,7 @@
     $sess_active_name = session()->get('active_region_name');
     $sess_region_name = session()->get('region_name');
 
-    $region_label = $sess_role === 'user'
+    $region_label = $sess_role === 'terapis'
         ? $sess_region_name
         : (($sess_active_id === 'all' || !$sess_active_id) ? 'Semua Wilayah' : $sess_active_name);
     ?>

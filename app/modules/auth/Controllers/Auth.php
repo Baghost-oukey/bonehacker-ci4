@@ -217,7 +217,7 @@ class Auth extends BaseController
     public function get_csrf()
     {
         return $this->response->setJSON([
-            'hash' => csrf_hash(),
+            'token' => csrf_hash(),
         ]);
     }
 }

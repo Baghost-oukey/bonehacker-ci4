@@ -277,6 +277,10 @@ const PatientHistoryPage = {
               tr.append(`<td class="px-6 py-3.5 text-center">
                             <button type="button" class="btn-view-history text-slate-400 hover:bg-slate-100 p-1.5 rounded" data-id="${row.id}" title="Lihat"><i class="fas fa-eye"></i></button>
                           </td>`);
+            } else if (row.is_editable === false) {
+              tr.append(`<td class="px-6 py-3.5 text-center">
+                            <button type="button" class="btn-view-history text-slate-500 hover:bg-slate-100 p-1.5 rounded" data-id="${row.id}" title="Lihat"><i class="fas fa-eye"></i></button>
+                          </td>`);
             } else {
               tr.append(`<td class="px-6 py-3.5 text-center">
                             <div class="flex items-center justify-center gap-2">
@@ -754,6 +758,7 @@ const PatientHistoryPage = {
 
     // Show loading state
     $('.terapis').empty().append('<option value="">Memuat terapis...</option>').trigger('change');
+    $('#terapis-info-message').remove();
 
     $.ajax({
       url: self.config.urls.terapisByRegion,
@@ -771,7 +776,19 @@ const PatientHistoryPage = {
             $('.terapis').append(new Option(terapis.nama, terapis.id, false, isSelected));
           });
         } else {
-          $('.terapis').append('<option value="">Tidak ada terapis di wilayah ini</option>');
+          $('.terapis').append('<option value="">Tidak ada terapis hadir hari ini</option>');
+        }
+
+        // Tampilkan keterangan info presensi
+        $('#terapis-info-message').remove();
+        if (response.message) {
+          const infoClass = response.data && response.data.length > 0
+            ? 'bg-blue-50 text-blue-700 border-blue-200'
+            : 'bg-amber-50 text-amber-700 border-amber-200';
+          const infoHtml = `<div id="terapis-info-message" class="mt-2 px-3 py-2 rounded-lg border text-xs font-medium ${infoClass}">
+            <i class="fas fa-info-circle mr-1"></i> ${response.message}
+          </div>`;
+          $('.terapis').closest('.space-y-1, .col-span-1, div').append(infoHtml);
         }
 
         $('.terapis').trigger('change');

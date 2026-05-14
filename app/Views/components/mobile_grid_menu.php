@@ -10,11 +10,12 @@ $menus[] = ['label' => 'Dashboard', 'url' => site_url('beranda'), 'icon' => 'fa-
 // Menu Khusus KARYAWAN (User role)
 if ($role === 'user') {
     $menus[] = ['label' => 'Profil Saya', 'url' => site_url('karyawan/profil_saya'), 'icon' => 'fa-user-circle', 'color' => 'bg-indigo-500'];
+
     $menus[] = ['label' => 'Gaji Saya', 'url' => site_url('gaji/monitor'), 'icon' => 'fa-wallet', 'color' => 'bg-emerald-500'];
 }
 
 // Menu untuk ADMIN, OWNER, SUPERADMIN
-if ($role !== 'user') {
+if ($role !== 'terapis') {
     $menus[] = ['label' => 'Antrean', 'url' => site_url('antrean'), 'icon' => 'fa-pencil-ruler', 'color' => 'bg-orange-500'];
     $menus[] = ['label' => 'Rekam Medis', 'url' => site_url('rekam-medis'), 'icon' => 'fa-file-medical', 'color' => 'bg-rose-500'];
 

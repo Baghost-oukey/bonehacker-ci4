@@ -93,7 +93,8 @@
 
                         <!-- ID Karyawan -->
                         <div class="space-y-1">
-                            <label class="text-sm font-medium text-slate-700">ID Karyawan <span class="text-red-500">*</span></label>
+
+                            <label class="text-sm font-medium text-slate-700">ID Terapis <span class="text-red-500">*</span></label>
                             <input type="text" name="terapis_id" id="terapis_id"
                                 value="<?= esc($karyawan->terapis_id) ?>"
                                 class="form-input w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-slate-50 cursor-not-allowed"
@@ -318,7 +319,7 @@
         <form action="<?= site_url('karyawan/deletefoto') ?>" method="POST" class="flex justify-end gap-2">
             <?= csrf_field() ?>
             <input type="hidden" name="id" value="<?= $karyawan->id ?>">
-            <input type="hidden" name="karyawan_id" value="<?= $karyawan->karyawan_id ?>">
+            <input type="hidden" name="terapis_id" value="<?= $karyawan->terapis_id ?>">
 
             <button type="button" data-modal-close
                 class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
@@ -345,7 +346,7 @@
             
             <div class="space-y-1">
                 <label class="text-xs font-medium text-slate-700">Username <span class="text-red-500">*</span></label>
-                <input type="text" id="new-username" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500" value="<?= esc($karyawan->karyawan_id) ?>" placeholder="Masukkan username">
+                <input type="text" id="new-username" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500" value="<?= esc($karyawan->terapis_id) ?>" placeholder="Masukkan username">
             </div>
 
             <div class="space-y-1">
@@ -439,8 +440,8 @@
         checkIdUrl: "<?= base_url('karyawan/checkId') ?>",
         generateUserUrl: "<?= base_url('karyawan/generate_user') ?>",
         linkUserUrl: "<?= base_url('karyawan/link_user') ?>",
-        currentId: "<?= $karyawan->karyawan_id ?>",
-        karyawanId: "<?= $karyawan->id ?>"
+        currentId: "<?= $karyawan->terapis_id ?>",
+        terapisId: "<?= $karyawan->id ?>"
     };
 
     $(document).ready(function() {

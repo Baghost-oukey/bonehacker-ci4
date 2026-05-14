@@ -21,6 +21,8 @@ if ($isDevEnvironment) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no">
+    <meta name="csrf-token-name" content="<?= csrf_token() ?>">
+    <meta name="csrf-token-hash" content="<?= csrf_hash() ?>">
     <meta name="csrf-header" content="<?= csrf_token() ?>" id="csrf-header">
     <meta name="csrf-token" content="<?= csrf_hash() ?>" id="csrf-token">
 
