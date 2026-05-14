@@ -92,6 +92,12 @@ class BerandaController extends BaseController
     $active_region = $session->get('active_region');
     $region_patients = $session->get('region_patient');
 
+    // If terapis, show terapis dashboard
+    if ($role === 'terapis') {
+      return $this->terapisDashboard();
+    }
+
+    // Regular dashboard for superadmin, owner, admin
     if ($role === 'superadmin') {
       $filter_region = $active_region ?: 'all';
     } else if ($role === 'owner') {
@@ -151,11 +157,278 @@ class BerandaController extends BaseController
     return view('App\Modules\Beranda\Views\index', $data);
   }
 
+  /**
+   * Dashboard khusus untuk terapis
+   */
+  private function terapisDashboard()
+  {
+    $session = session();
+    $terapisId = $session->get('terapis_id_int');
+    $regionId = $session->get('region_patient');
+
+    $db = \Config\Database::connect();
+
+    // Get terapis data
+    $terapis = $db->table('terapis')
+      ->where('id', $terapisId)
+      ->get()
+      ->getRow();
+
+    if (!$terapis) {
+      return redirect()->to('/menu')->with('error', 'Data terapis tidak ditemukan');
+    }
+
+    $bulanIni = date('Y-m');
+
+    $data = [
+      'title' => 'Dashboard Terapis',
+      'base_url' => base_url(),
+      'current_segment' => $this->request->getUri()->getSegment(1),
+      'terapis' => $terapis,
+      'realname' => $session->get('realname'),
+      'role' => 'terapis',
+      'bulan_display' => date('F Y'),
+      'greeting' => $this->getRandomGreeting(),
+    ];
+
+    // Get statistics
+    $data['statistik_pasien'] = $this->getStatistikPasienPerHari($terapisId, $bulanIni);
+
+    // Get attendance data if presensi is enabled
+    if ($terapis->is_presensi == 1) {
+      $data['rekap_kehadiran'] = $this->getRekapKehadiran($terapisId, $bulanIni);
+    } else {
+      $data['rekap_kehadiran'] = null;
+    }
+
+    // Get jaspel data
+    $data['jaspel_harian'] = $this->getJaspelHarian($terapisId, $regionId, $bulanIni);
+
+    return view('App\Modules\Beranda\Views\index', $data);
+  }
+
+  /**
+   * Get daily patient statistics for the therapist
+   */
+  private function getStatistikPasienPerHari($terapisId, $bulan)
+  {
+    $startDate = date('Y-m-01', strtotime($bulan));
+    $endDate = date('Y-m-t', strtotime($bulan));
+
+    $db = \Config\Database::connect();
+
+    // Get patient count per day from history table
+    $query = $db->table('history h')
+      ->select("DATE(h.created_at) as tanggal, COUNT(DISTINCT h.patient_id) as jumlah_pasien")
+      ->where('h.terapis_id', $terapisId)
+      ->where('DATE(h.created_at) >=', $startDate)
+      ->where('DATE(h.created_at) <=', $endDate)
+      ->groupBy('DATE(h.created_at)')
+      ->orderBy('tanggal', 'ASC')
+      ->get()
+      ->getResultArray();
+
+    $stats = [];
+    foreach ($query as $row) {
+      $stats[$row['tanggal']] = (int) $row['jumlah_pasien'];
+    }
+
+    // Calculate totals
+    $totalPasien = array_sum($stats);
+    $hariKerja = count($stats);
+    $rataRata = $hariKerja > 0 ? round($totalPasien / $hariKerja, 1) : 0;
+
+    return [
+      'per_hari' => $stats,
+      'total_pasien' => $totalPasien,
+      'hari_kerja' => $hariKerja,
+      'rata_rata' => $rataRata,
+    ];
+  }
+
+  /**
+   * Get attendance recap for the therapist
+   */
+  private function getRekapKehadiran($terapisId, $bulan)
+  {
+    $startDate = date('Y-m-01', strtotime($bulan));
+    $endDate = date('Y-m-t', strtotime($bulan));
+
+    $db = \Config\Database::connect();
+
+    // Get attendance records
+    $query = $db->table('kehadiran')
+      ->select('tanggal, status, keterangan')
+      ->where('terapis_id', $terapisId)
+      ->where('tanggal >=', $startDate)
+      ->where('tanggal <=', $endDate)
+      ->orderBy('tanggal', 'ASC')
+      ->get()
+      ->getResultArray();
+
+    // Count by status
+    $hadir = 0;
+    $izin = 0;
+    $sakit = 0;
+    $alpha = 0;
+    $cuti = 0;
+
+    foreach ($query as $row) {
+      switch ($row['status']) {
+        case 'hadir':
+          $hadir++;
+          break;
+        case 'izin':
+          $izin++;
+          break;
+        case 'sakit':
+          $sakit++;
+          break;
+        case 'alpha':
+          $alpha++;
+          break;
+        case 'cuti':
+          $cuti++;
+          break;
+      }
+    }
+
+    return [
+      'records' => $query,
+      'hadir' => $hadir,
+      'izin' => $izin,
+      'sakit' => $sakit,
+      'alpha' => $alpha,
+      'cuti' => $cuti,
+      'total_hari' => count($query),
+    ];
+  }
+
+  /**
+   * Get daily jaspel (service fee) for the therapist
+   */
+  private function getJaspelHarian($terapisId, $regionId, $bulan)
+  {
+    $startDate = date('Y-m-01', strtotime($bulan));
+    $endDate = date('Y-m-t', strtotime($bulan));
+
+    $db = \Config\Database::connect();
+
+    // Get jaspel settings for this region
+    $settingsReguler = $db->table('jaspel_settings')
+      ->where('region_id', $regionId)
+      ->where('tipe', 'reguler')
+      ->get()
+      ->getRow();
+
+    $settingsKejantanan = $db->table('jaspel_settings')
+      ->where('region_id', $regionId)
+      ->where('tipe', 'kejantanan')
+      ->get()
+      ->getRow();
+
+    if (!$settingsReguler && !$settingsKejantanan) {
+      return [
+        'per_hari' => [],
+        'total_jaspel' => 0,
+        'total_reguler' => 0,
+        'total_kejantanan' => 0,
+        'settings_exist' => false,
+      ];
+    }
+
+    $nominalReguler = $settingsReguler ? (int) $settingsReguler->nominal_per_pasien : 0;
+    $nominalKejantanan = $settingsKejantanan ? (int) $settingsKejantanan->nominal_per_pasien : 0;
+
+    // Get daily jaspel data
+    $jaspelPerHari = [];
+
+    // Get all dates where terapis was present
+    $kehadiranQuery = $db->table('kehadiran')
+      ->select('tanggal')
+      ->where('terapis_id', $terapisId)
+      ->where('status', 'hadir')
+      ->where('tanggal >=', $startDate)
+      ->where('tanggal <=', $endDate)
+      ->get()
+      ->getResultArray();
+
+    $tanggalHadir = array_column($kehadiranQuery, 'tanggal');
+
+    foreach ($tanggalHadir as $tanggal) {
+      // Count patients for this day (reguler)
+      $totalPasienReguler = $db->table('patient_queues pq')
+        ->join('history h', 'h.patient_id = pq.patient_id AND DATE(h.created_at) = DATE(pq.queue_date)', 'left')
+        ->where('DATE(pq.queue_date)', $tanggal)
+        ->where('pq.region_id', $regionId)
+        ->where('pq.status', 'selesai')
+        ->groupStart()
+          ->where('h.kejantanan IS NULL')
+          ->orWhere('h.kejantanan !=', 'ya')
+        ->groupEnd()
+        ->countAllResults();
+
+      // Count patients for this day (kejantanan)
+      $totalPasienKejantanan = $db->table('patient_queues pq')
+        ->join('history h', 'h.patient_id = pq.patient_id AND DATE(h.created_at) = DATE(pq.queue_date)', 'inner')
+        ->where('DATE(pq.queue_date)', $tanggal)
+        ->where('pq.region_id', $regionId)
+        ->where('pq.status', 'selesai')
+        ->where('h.kejantanan', 'ya')
+        ->countAllResults();
+
+      // Count terapis who were present that day
+      $jumlahTerapisHadir = $db->table('kehadiran k')
+        ->join('terapis t', 't.id = k.terapis_id', 'inner')
+        ->where('k.tanggal', $tanggal)
+        ->where('k.status', 'hadir')
+        ->where('t.region_id', $regionId)
+        ->where('t.is_active', 1)
+        ->where('t.is_presensi', 1)
+        ->countAllResults();
+
+      if ($jumlahTerapisHadir > 0) {
+        $jaspelReguler = ($totalPasienReguler * $nominalReguler) / $jumlahTerapisHadir;
+        $jaspelKejantanan = ($totalPasienKejantanan * $nominalKejantanan) / $jumlahTerapisHadir;
+        $totalJaspel = $jaspelReguler + $jaspelKejantanan;
+
+        $jaspelPerHari[$tanggal] = [
+          'reguler' => (int) $jaspelReguler,
+          'kejantanan' => (int) $jaspelKejantanan,
+          'total' => (int) $totalJaspel,
+          'pasien_reguler' => $totalPasienReguler,
+          'pasien_kejantanan' => $totalPasienKejantanan,
+          'terapis_hadir' => $jumlahTerapisHadir,
+        ];
+      }
+    }
+
+    // Calculate totals
+    $totalJaspelReguler = array_sum(array_column($jaspelPerHari, 'reguler'));
+    $totalJaspelKejantanan = array_sum(array_column($jaspelPerHari, 'kejantanan'));
+    $totalJaspel = $totalJaspelReguler + $totalJaspelKejantanan;
+
+    return [
+      'per_hari' => $jaspelPerHari,
+      'total_jaspel' => $totalJaspel,
+      'total_reguler' => $totalJaspelReguler,
+      'total_kejantanan' => $totalJaspelKejantanan,
+      'settings_exist' => true,
+    ];
+  }
+
   public function menu()
   {
     $session = session();
+    $role = $session->get('role');
+    
+    // Redirect terapis to dashboard instead of menu
+    if ($role === 'terapis') {
+      return redirect()->to('/beranda');
+    }
+    
     $data = [
-      'role' => $session->get('role'),
+      'role' => $role,
       'title' => 'Menu Utama',
       'base_url' => base_url(),
       'current_segment' => 'menu',
