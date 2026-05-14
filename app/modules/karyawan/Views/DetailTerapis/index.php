@@ -53,8 +53,11 @@ $canEditSensitiveFields = !$isOwnProfile; // Only non-terapis can edit rank, jab
             <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                     <h3 class="text-lg font-semibold text-slate-800">Biodata Terapis</h3>
-                    <p class="text-sm text-slate-500">Lengkapi data diri karyawan dengan benar</p>
+                    <p class="text-sm text-slate-500"><?= $isOwnProfile ? 'Anda hanya dapat mengubah foto profil' : 'Lengkapi data diri karyawan dengan benar' ?></p>
                 </div>
+                
+                <?php if (!$isOwnProfile): ?>
+                <!-- Tombol untuk Admin/Owner/Superadmin -->
                 <div class="flex items-center gap-2">
                     <button type="button" id="btnEdit" onclick="toggleEditMode(true)" class="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-amber-600">
                         <i class="fas fa-edit"></i>
@@ -69,6 +72,19 @@ $canEditSensitiveFields = !$isOwnProfile; // Only non-terapis can edit rank, jab
                         Simpan Perubahan
                     </button>
                 </div>
+                <?php else: ?>
+                <!-- Tombol untuk Terapis (hanya ganti foto) -->
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="triggerEdit()" class="inline-flex items-center justify-center gap-2 rounded-lg bg-teal-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-600">
+                        <i class="fas fa-camera"></i>
+                        Ganti Foto
+                    </button>
+                    <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700">
+                        <i class="fas fa-save"></i>
+                        Simpan Foto
+                    </button>
+                </div>
+                <?php endif; ?>
             </div>
 
             <!-- Card Body -->
