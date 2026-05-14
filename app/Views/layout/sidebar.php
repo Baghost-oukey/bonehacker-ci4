@@ -241,61 +241,6 @@ $userInitial = strtoupper(substr($realname, 0, 1));
         </div>
     <?php endif; ?>
 
-    <!-- STATISTIK | ADMIN - SUPERADMIN - OWNER -->
-    <div class="relative flex w-full min-w-0 flex-col p-2">
-        <div class="sticky top-0 z-10 flex h-8 shrink-0 items-center bg-white px-2 text-xs font-semibold uppercase tracking-wider text-slate-500/80">
-            Analitik
-        </div>
-        <ul class="flex w-full min-w-0 flex-col gap-1">
-            <?php if ($role !== 'terapis'): ?>
-                <li>
-                    <details class="group" <?= in_array($current_segment, ['statistiktag', 'statistik', 'statistikresource', 'statistikresult', 'statistikgender', 'statistikdaerah']) ? 'open' : '' ?>>
-                        <summary class="flex w-full cursor-pointer list-none items-center justify-between rounded-md p-2 text-left text-sm transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 [&::-webkit-details-marker]:hidden">
-                            <span class="flex items-center gap-2">
-                                <i class="fas fa-chart-line w-4 text-center shrink-0"></i>
-                                <span class="truncate font-medium">Statistik</span>
-                            </span>
-                            <i class="fas fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200 group-open:rotate-180 shrink-0"></i>
-                        </summary>
-
-                        <ul class="mx-3.5 mt-1 flex min-w-0 translate-x-px flex-col gap-1 border-l border-slate-200 px-2.5 py-0.5">
-                            <li>
-                                <a href="<?= base_url('statistiktag') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'statistiktag' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
-                                    <span class="truncate">Keluhan & Medis</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="<?= base_url('statistik') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'statistik' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
-                                    <span class="truncate">Riwayat Pasien</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="<?= base_url('statistikresource') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'statistikresource' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
-                                    <span class="truncate">Sosial Media</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="<?= base_url('statistikresult') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'statistikresult' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
-                                    <span class="truncate">Hasil Pemeriksaan</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="<?= base_url('statistikgender') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'statistikgender' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
-                                    <span class="truncate">Jenis Kelamin</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="<?= base_url('statistikdaerah') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'statistikdaerah' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
-                                    <span class="truncate">Daerah</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </details>
-                </li>
-            <?php endif; ?>
-        </ul>
-    </div>
-
     <!-- TAGIFY & MANAGE USER | SUPERADMIN - OWNER -->
     <?php if ($role === 'superadmin' || $role === 'owner' || $role === 'admin'): ?>
         <div class="relative flex w-full min-w-0 flex-col p-2">

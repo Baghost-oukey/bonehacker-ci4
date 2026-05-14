@@ -18,9 +18,25 @@ class Gajikaryawan extends BaseController
         $this->db = \Config\Database::connect();
     }
 
+    /**
+     * Check if current user is authorized to access admin gaji features
+     */
+    private function checkAdminAccess()
+    {
+        $role = session()->get('role');
+        if ($role === 'terapis') {
+            // Redirect terapis to beranda
+            return redirect()->to(base_url('beranda'))->with('error', 'Anda tidak memiliki akses ke halaman ini');
+        }
+        return null;
+    }
 
     public function index()
     {
+        // Check authorization
+        $redirect = $this->checkAdminAccess();
+        if ($redirect) return $redirect;
+        
         $region_patient = session()->get('region_patient');
         $sessionRegionId = ($region_patient !== 'all' && !empty($region_patient))
             ? (is_array($region_patient) ? $region_patient[0] : $region_patient)
@@ -44,6 +60,10 @@ class Gajikaryawan extends BaseController
 
     public function saveSetting()
     {
+        // Check authorization
+        $redirect = $this->checkAdminAccess();
+        if ($redirect) return $redirect;
+        
         $terapisId   = $this->request->getPost('terapis_id');
         $tipeGaji    = $this->request->getPost('tipe_gaji');
         $nominalGaji = preg_replace('/[^0-9]/', '', $this->request->getPost('nominal_gaji'));
@@ -74,6 +94,10 @@ class Gajikaryawan extends BaseController
 
     public function detailEstimasi($terapisId)
     {
+        // Check authorization
+        $redirect = $this->checkAdminAccess();
+        if ($redirect) return $redirect;
+        
         $detail = $this->Mriwayatgaji->getDetailPerhitungan($terapisId);
         if (!empty($detail['terapis'])) {
             return $this->response->setJSON([
@@ -88,6 +112,10 @@ class Gajikaryawan extends BaseController
 
     public function prosesBayar()
     {
+        // Check authorization
+        $redirect = $this->checkAdminAccess();
+        if ($redirect) return $redirect;
+        
         $terapisId = (int)$this->request->getPost('terapis_id');
 
         if (empty($terapisId) || $terapisId <= 0) {
@@ -150,6 +178,10 @@ class Gajikaryawan extends BaseController
     }
     public function fetchEstimasi()
     {
+        // Check authorization
+        $redirect = $this->checkAdminAccess();
+        if ($redirect) return $redirect;
+        
         $region_patient = session()->get('region_patient');
         $sessionRegionId = ($region_patient !== 'all' && !empty($region_patient))
             ? (is_array($region_patient) ? $region_patient[0] : $region_patient)
@@ -165,6 +197,10 @@ class Gajikaryawan extends BaseController
     }
     public function export()
     {
+        // Check authorization
+        $redirect = $this->checkAdminAccess();
+        if ($redirect) return $redirect;
+        
         $role = session()->get('role');
         if (!in_array($role, ['superadmin', 'owner', 'admin'])) {
             return redirect()->to('/gaji')->with('error', 'Unauthorized access');

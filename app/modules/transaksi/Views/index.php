@@ -30,10 +30,10 @@
 
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <!-- Saldo Hari Ini -->
+        <!-- Sisa Saldo -->
         <div class="flex flex-col justify-between rounded-2xl bg-white p-5 shadow-sm border border-slate-200/50 ">
             <div class="flex items-center justify-between">
-                <p class="text-sm font-medium text-slate-500">SALDO HARI INI</p>
+                <p class="text-sm font-medium text-slate-500">SISA SALDO</p>
                 <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-50">
                     <i class="fas fa-wallet text-teal-600 text-sm"></i>
                 </div>
@@ -43,7 +43,7 @@
                     Rp <?= number_format($today_balance, 0, ',', '.') ?>
                 </h3>
             </div>
-            <p class="mt-4 text-xs text-slate-500">*Akan di-reset otomatis setiap hari</p>
+            <p class="mt-4 text-xs text-slate-500">Saldo yang dipegang admin hari ini</p>
         </div>
 
         <?php if (in_array($role, ['superadmin', 'owner'])): ?>
@@ -100,9 +100,13 @@
                     </div>
                     <div class="flex items-center gap-2">
                         <i class="fas fa-calendar-alt text-slate-400 text-base"></i>
-                        <input type="date" id="filter_date"
+                        <input type="date" id="filter_date_start"
                             class="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15"
-                            value="<?= date('Y-m-d') ?>">
+                            placeholder="Dari Tanggal">
+                        <span class="text-slate-400">-</span>
+                        <input type="date" id="filter_date_end"
+                            class="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15"
+                            placeholder="Sampai Tanggal">
                     </div>
                 </div>
             </div>
@@ -168,6 +172,12 @@
             <?php else: ?>
                 <input type="hidden" name="region_id" value="<?= session()->get('region_id') ?>">
             <?php endif; ?>
+
+            <!-- Tanggal Transaksi -->
+            <div class="space-y-1">
+                <label class="text-sm font-medium text-slate-700">Tanggal Transaksi</label>
+                <input type="date" name="tanggal" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500" value="<?= date('Y-m-d') ?>" required>
+            </div>
 
             <!-- Nominal -->
             <div class="space-y-1">

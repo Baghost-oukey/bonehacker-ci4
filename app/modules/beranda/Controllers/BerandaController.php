@@ -90,26 +90,84 @@ class BerandaController extends BaseController
 
     $role = $session->get('role');
 
-    // All roles show menu grid at beranda
+    // Desktop: Show statistics dashboard
+    // Mobile/Tablet: Show menu grid (handled by view with responsive classes)
+    
+    // If terapis, show terapis statistics
+    if ($role === 'terapis') {
+      return $this->terapisStatistik();
+    }
+
+    // For other roles, show regular statistics dashboard
+    $active_region = $session->get('active_region');
+    $region_patients = $session->get('region_patient');
+
+    if ($role === 'superadmin') {
+      $filter_region = $active_region ?: 'all';
+    } else if ($role === 'owner') {
+      $filter_region = ($active_region && $active_region !== 'all') ? $active_region : $region_patients;
+    } else {
+      $filter_region = $region_patients;
+    }
+
+    $allowed_regions = ($role === 'superadmin') ? null : $region_patients;
+
     $data = [
-      'role' => $role,
-      'title' => 'Beranda',
-      'base_url' => base_url(),
-      'current_segment' => 'beranda',
       'realname' => $session->get('realname'),
+      'role' => $role,
+      'region_patient' => $filter_region,
+      'base_url' => base_url(),
+      'current_segment' => $this->request->getUri()->getSegment(1),
+      'title' => 'Beranda',
+      'msg' => $session->getFlashdata('message'),
+      'wilayah' => $this->model_region->getData(null, $allowed_regions),
+      'negara' => $this->model_country->getData(),
+      'greeting' => $this->getRandomGreeting(),
     ];
 
-    return view('App\Modules\Beranda\Views\menu', $data);
+    $stats = ['today', 'yesterday', 'thismonth', 'lastmonth', 'thisyear', 'lastyear', 'all'];
+
+    foreach ($stats as $type) {
+      $data["pasien_$type"] = $this->model_beranda->getPatientCount($type, $role, $filter_region);
+      $data["kunjungan_$type"] = $this->model_beranda->getVisitCount($type, $role, $filter_region);
+    }
+
+    $data = array_merge($data, $this->getCalendarData($role, $filter_region));
+
+    $db = \Config\Database::connect();
+    $todayDate = date('Y-m-d');
+
+    // Queue Today
+    $queueBuilder = $db->table('patient_queues')->where('DATE(queue_date)', $todayDate);
+
+    if (!empty($filter_region) && $filter_region !== 'all') {
+      is_array($filter_region) ? $queueBuilder->whereIn('region_id', $filter_region) : $queueBuilder->where('region_id', $filter_region);
+    }
+
+    $data['queue_today'] = (int) $queueBuilder->countAllResults();
+
+    // Transaction Today
+    $transactionBuilder = $db->table('transaksi')->selectSum('nominal')->where('DATE(created_at)', $todayDate);
+
+    if (!empty($filter_region) && $filter_region !== 'all') {
+      is_array($filter_region) ? $transactionBuilder->whereIn('region_id', $filter_region) : $transactionBuilder->where('region_id', $filter_region);
+    }
+
+    $row = $transactionBuilder->get()->getRow();
+
+    $data['transaction_today_total'] = (int) ($row->nominal ?? 0);
+    $data['active_region_name'] = $session->get('active_region_name') ?? 'Cabang Tidak Terdeteksi';
+
+    return view('App\Modules\Beranda\Views\index', $data);
   }
 
   /**
-   * Dashboard khusus untuk terapis
+   * Statistik khusus untuk terapis (dipanggil dari beranda)
    */
-  private function terapisDashboard()
+  private function terapisStatistik()
   {
     $session = session();
     $terapisId = $session->get('terapis_id_int');
-
     $db = \Config\Database::connect();
 
     // Get terapis data
@@ -122,19 +180,17 @@ class BerandaController extends BaseController
       return redirect()->to('/menu')->with('error', 'Data terapis tidak ditemukan');
     }
 
-    // Use region_id from terapis data (single value, not array)
     $regionId = $terapis->region_id;
     $bulanIni = date('Y-m');
 
     $data = [
-      'title' => 'Dashboard Terapis',
+      'title' => 'Beranda',
       'base_url' => base_url(),
-      'current_segment' => $this->request->getUri()->getSegment(1),
+      'current_segment' => 'beranda',
       'terapis' => $terapis,
       'realname' => $session->get('realname'),
       'role' => 'terapis',
       'bulan_display' => date('F Y'),
-      'greeting' => $this->getRandomGreeting(),
     ];
 
     // Get statistics
@@ -163,7 +219,6 @@ class BerandaController extends BaseController
 
     $db = \Config\Database::connect();
 
-    // Get patient count per day from histories table
     $query = $db->table('histories h')
       ->select("DATE(h.date) as tanggal, COUNT(DISTINCT h.patient_id) as jumlah_pasien")
       ->where('h.terapis_id', $terapisId)
@@ -181,7 +236,6 @@ class BerandaController extends BaseController
       $stats[$row['tanggal']] = (int) $row['jumlah_pasien'];
     }
 
-    // Calculate totals
     $totalPasien = array_sum($stats);
     $hariKerja = count($stats);
     $rataRata = $hariKerja > 0 ? round($totalPasien / $hariKerja, 1) : 0;
@@ -204,7 +258,6 @@ class BerandaController extends BaseController
 
     $db = \Config\Database::connect();
 
-    // Get attendance records
     $query = $db->table('absensi_karyawan')
       ->select('tanggal, status, keterangan')
       ->where('terapis_id', $terapisId)
@@ -214,7 +267,6 @@ class BerandaController extends BaseController
       ->get()
       ->getResultArray();
 
-    // Count by status
     $hadir = 0;
     $izin = 0;
     $sakit = 0;
@@ -254,7 +306,7 @@ class BerandaController extends BaseController
   }
 
   /**
-   * Get daily jaspel (service fee) for the therapist
+   * Get daily jaspel for the therapist
    */
   private function getJaspelHarian($terapisId, $regionId, $bulan)
   {
@@ -263,7 +315,6 @@ class BerandaController extends BaseController
 
     $db = \Config\Database::connect();
 
-    // Get jaspel settings for this region
     $settingsReguler = $db->table('jaspel_settings')
       ->where('region_id', $regionId)
       ->where('tipe', 'reguler')
@@ -289,10 +340,8 @@ class BerandaController extends BaseController
     $nominalReguler = $settingsReguler ? (int) $settingsReguler->nominal_per_pasien : 0;
     $nominalKejantanan = $settingsKejantanan ? (int) $settingsKejantanan->nominal_per_pasien : 0;
 
-    // Get daily jaspel data
     $jaspelPerHari = [];
 
-    // Get all dates where terapis was present
     $kehadiranQuery = $db->table('absensi_karyawan')
       ->select('tanggal')
       ->where('terapis_id', $terapisId)
@@ -305,19 +354,17 @@ class BerandaController extends BaseController
     $tanggalHadir = array_column($kehadiranQuery, 'tanggal');
 
     foreach ($tanggalHadir as $tanggal) {
-      // Count patients for this day (reguler) - from histories table
       $totalPasienReguler = $db->table('histories h')
         ->where('DATE(h.date)', $tanggal)
         ->where('h.history_region', $regionId)
         ->where('h.is_delete', 0)
         ->where('h.type', 'posted')
         ->groupStart()
-          ->where('h.kejantanan IS NULL')
-          ->orWhere('h.kejantanan !=', 'ya')
+        ->where('h.kejantanan IS NULL')
+        ->orWhere('h.kejantanan !=', 'ya')
         ->groupEnd()
         ->countAllResults();
 
-      // Count patients for this day (kejantanan)
       $totalPasienKejantanan = $db->table('histories h')
         ->where('DATE(h.date)', $tanggal)
         ->where('h.history_region', $regionId)
@@ -326,7 +373,6 @@ class BerandaController extends BaseController
         ->where('h.kejantanan', 'ya')
         ->countAllResults();
 
-      // Count terapis who were present that day
       $jumlahTerapisHadir = $db->table('absensi_karyawan ak')
         ->join('terapis t', 't.id = ak.terapis_id', 'inner')
         ->where('ak.tanggal', $tanggal)
@@ -352,7 +398,6 @@ class BerandaController extends BaseController
       }
     }
 
-    // Calculate totals
     $totalJaspelReguler = array_sum(array_column($jaspelPerHari, 'reguler'));
     $totalJaspelKejantanan = array_sum(array_column($jaspelPerHari, 'kejantanan'));
     $totalJaspel = $totalJaspelReguler + $totalJaspelKejantanan;

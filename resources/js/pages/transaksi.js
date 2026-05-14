@@ -111,7 +111,8 @@ const setupTransaksiPage = () => {
   };
 
   const loadTableData = (pageNumber = 1) => {
-    const filterDate = $("#filter_date").val();
+    const filterDateStart = $("#filter_date_start").val();
+    const filterDateEnd = $("#filter_date_end").val();
 
     $.ajax({
       url: config.fetchUrl,
@@ -123,7 +124,8 @@ const setupTransaksiPage = () => {
         start: (pageNumber - 1) * pageLength,
         length: pageLength,
         search: { value: searchValue },
-        date: filterDate,
+        date_start: filterDateStart,
+        date_end: filterDateEnd,
       },
       success: (response) => {
         updateCsrf(response.new_token);
@@ -323,10 +325,9 @@ const setupTransaksiPage = () => {
     searchHandler($(this).val());
   });
 
-  $("#filter_date").on("change", function () {
+  $("#filter_date_start, #filter_date_end").on("change", function () {
     currentPage = 1;
     loadTableData(1);
-    initChart();
   });
 
   $("#paginationLength").on("change", function () {
@@ -419,14 +420,22 @@ const setupTransaksiPage = () => {
   });
 
   $("#btnRekapPdf").on("click", function () {
-    const tgl = $("#filter_date").val();
-    window.open(`${config.exportPdfUrl}?date=${tgl}`, "_blank");
+    const tglStart = $("#filter_date_start").val();
+    const tglEnd = $("#filter_date_end").val();
+    let url = config.exportPdfUrl;
+    if (tglStart) url += `?date_start=${tglStart}`;
+    if (tglEnd) url += tglStart ? `&date_end=${tglEnd}` : `?date_end=${tglEnd}`;
+    window.open(url, "_blank");
     closeModal(document.getElementById("modalRekap"));
   });
 
   $("#btnRekapExcel").on("click", function () {
-    const tgl = $("#filter_date").val();
-    window.location.href = `${config.exportExcelUrl}?date=${tgl}`;
+    const tglStart = $("#filter_date_start").val();
+    const tglEnd = $("#filter_date_end").val();
+    let url = config.exportExcelUrl;
+    if (tglStart) url += `?date_start=${tglStart}`;
+    if (tglEnd) url += tglStart ? `&date_end=${tglEnd}` : `?date_end=${tglEnd}`;
+    window.location.href = url;
     closeModal(document.getElementById("modalRekap"));
   });
 

@@ -92,7 +92,8 @@ class TransaksiController extends BaseController
         $length = $this->request->getPost('length');
         $order = $this->request->getPost('order');
         $columns = $this->request->getPost('columns');
-        $date = $this->request->getPost('date');
+        $date_start = $this->request->getPost('date_start');
+        $date_end = $this->request->getPost('date_end');
         $metode = $this->request->getPost('metode');
 
         $options = [
@@ -103,8 +104,12 @@ class TransaksiController extends BaseController
             'where'  => []
         ];
 
-        if (!empty($date)) {
-            $options['where']['DATE(t.created_at)'] = $date;
+        // Filter by date range
+        if (!empty($date_start) && !empty($date_end)) {
+            $options['where']['DATE(t.created_at) >='] = $date_start;
+            $options['where']['DATE(t.created_at) <='] = $date_end;
+        } elseif (!empty($date_start)) {
+            $options['where']['DATE(t.created_at)'] = $date_start;
         }
 
         if (!empty($metode) && $metode !== 'all') {
@@ -173,6 +178,15 @@ class TransaksiController extends BaseController
 
         $typeInput = $this->request->getPost('type') ?? 'income';
         $kategoriAuto = ($typeInput === 'income') ? 'pemasukan' : 'pengeluaran';
+        
+        // Get tanggal from input, default to now if not provided
+        $tanggal = $this->request->getPost('tanggal');
+        if (empty($tanggal)) {
+            $tanggal = date('Y-m-d H:i:s');
+        } else {
+            // Combine date with current time
+            $tanggal = date('Y-m-d H:i:s', strtotime($tanggal . ' ' . date('H:i:s')));
+        }
 
         $data = [
             'region_id'         => $region_id,
@@ -180,7 +194,7 @@ class TransaksiController extends BaseController
             'type'              => $typeInput,
             'kategori'          => $kategoriAuto,
             'keterangan'        => $this->request->getPost('keterangan'),
-            'created_at'        => date('Y-m-d H:i:s'),
+            'created_at'        => $tanggal,
             'created_by'        => session()->get('userId')
         ];
 
@@ -223,7 +237,8 @@ class TransaksiController extends BaseController
 
     public function export_data()
     {
-        $date = $this->request->getGet('date');
+        $date_start = $this->request->getGet('date_start');
+        $date_end = $this->request->getGet('date_end');
         $metode = $this->request->getGet('metode');
         $role = session()->get('role');
 
@@ -232,8 +247,11 @@ class TransaksiController extends BaseController
         $builder = $this->model_transaksi->where('status', 'active');
 
         // 2. Filter Tanggal (Jika ada)
-        if (!empty($date)) {
-            $builder->where('DATE(created_at)', $date);
+        if (!empty($date_start) && !empty($date_end)) {
+            $builder->where('DATE(created_at) >=', $date_start);
+            $builder->where('DATE(created_at) <=', $date_end);
+        } elseif (!empty($date_start)) {
+            $builder->where('DATE(created_at)', $date_start);
         }
 
         // 3. Filter Metode (Jika ada dan bukan 'all')
