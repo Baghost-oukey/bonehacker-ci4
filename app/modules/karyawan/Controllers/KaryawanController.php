@@ -5,7 +5,9 @@ namespace App\Modules\Karyawan\Controllers;
 use App\Controllers\BaseController;
 use App\Modules\Karyawan\Models\MKaryawan;
 use App\modules\jabatan\Models\Mjabatan;
+use App\modules\rank_terapis\Models\MRankTerapis;
 use App\modules\Region\Models\MRegion;
+use CodeIgniter\Database\Exceptions\DatabaseException;
 use CodeIgniter\HTTP\ResponseInterface;
 use Endroid\QrCode\Color\Color;
 use Endroid\QrCode\Encoding\Encoding;
@@ -17,6 +19,7 @@ class KaryawanController extends BaseController
   protected $session;
   protected $model_karyawan;
   protected $model_jabatan;
+  protected $model_rank;
   protected $model_region;
 
   public function __construct()
@@ -24,7 +27,22 @@ class KaryawanController extends BaseController
     $this->session = \Config\Services::session();
     $this->model_karyawan = new MKaryawan();
     $this->model_jabatan = new Mjabatan();
+    $this->model_rank = new MRankTerapis();
     $this->model_region = new MRegion();
+  }
+
+  private function getRankOptions(): array
+  {
+    try {
+      $ranks = $this->model_rank->getData(true);
+      if (!empty($ranks)) {
+        return $ranks;
+      }
+    } catch (DatabaseException $e) {
+      // Keep personnel forms usable before the rank master migration is run.
+    }
+
+    return array_map(static fn ($rank) => (object) ['name' => $rank], ['SS', 'S', 'A', 'B', 'C']);
   }
 
   public function index()
@@ -41,6 +59,7 @@ class KaryawanController extends BaseController
       'title' => 'Manajemen Karyawan',
       'regions' => $this->model_karyawan->get_regions($allowed_regions),
       'jabatan' => $this->model_jabatan->getData(),
+      'rank_options' => $this->getRankOptions(),
       'msg' => $this->session->getFlashdata('message'),
       'error_message' => $this->session->getFlashdata('error_message'),
     ];
@@ -241,6 +260,7 @@ class KaryawanController extends BaseController
       'karyawan' => $karyawan,
       'wilayah' => $this->model_region->getData(),
       'jabatan' => $this->model_karyawan->get_jabatan(),
+      'rank_options' => $this->getRankOptions(),
       'connected_user' => $this->model_karyawan->db->table('users')->where('terapis_id', $karyawan->terapis_id)->get()->getRow(),
       'all_users' => $this->model_karyawan->db->table('users')->select('id, realname, username, terapis_id')->where('role !=', 'superadmin')->get()->getResult(),
     ];

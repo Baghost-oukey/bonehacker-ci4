@@ -131,6 +131,14 @@ $routes->group('jabatan', ['namespace' => 'App\Modules\jabatan\Controllers', 'fi
   $routes->post('check_name_exists', 'Jabatan::check_name_exists');
 });
 
+// Rank Terapis
+$routes->group('rank-terapis', ['namespace' => 'App\modules\rank_terapis\Controllers', 'filter' => 'auth'], function ($routes) {
+  $routes->get('', 'RankTerapis::index');
+  $routes->post('store', 'RankTerapis::store');
+  $routes->post('update/(:num)', 'RankTerapis::update/$1');
+  $routes->post('destroy/(:num)', 'RankTerapis::destroy/$1');
+});
+
 
 // Tag - Complaint(Keluhan)
 $routes->group('tag-keluhan', ['namespace' => 'App\Modules\TagComplaint\Controllers', 'filter' => 'auth'], function ($routes) {

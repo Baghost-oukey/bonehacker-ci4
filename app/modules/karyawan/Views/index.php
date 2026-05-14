@@ -178,11 +178,9 @@
                         <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Rank / Level</label>
                         <select name="rank" class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 outline-none bg-slate-50">
                             <option value="">-- Pilih Rank --</option>
-                            <option value="SS">SS</option>
-                            <option value="S">S</option>
-                            <option value="A">A</option>
-                            <option value="B">B</option>
-                            <option value="C">C</option>
+                            <?php foreach (($rank_options ?? []) as $rank): ?>
+                                <option value="<?= esc($rank->name) ?>"><?= esc($rank->name) ?></option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                 </div>
