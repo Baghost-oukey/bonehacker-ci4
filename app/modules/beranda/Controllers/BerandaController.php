@@ -89,72 +89,17 @@ class BerandaController extends BaseController
     $session = session();
 
     $role = $session->get('role');
-    $active_region = $session->get('active_region');
-    $region_patients = $session->get('region_patient');
 
-    // If terapis, show terapis dashboard
-    if ($role === 'terapis') {
-      return $this->terapisDashboard();
-    }
-
-    // Regular dashboard for superadmin, owner, admin
-    if ($role === 'superadmin') {
-      $filter_region = $active_region ?: 'all';
-    } else if ($role === 'owner') {
-      $filter_region = ($active_region && $active_region !== 'all') ? $active_region : $region_patients;
-    } else {
-      $filter_region = $region_patients;
-    }
-
-    $allowed_regions = ($role === 'superadmin') ? null : $region_patients;
-
+    // All roles show menu grid at beranda
     $data = [
-      'realname' => $session->get('realname'),
       'role' => $role,
-      'region_patient' => $filter_region,
-      'base_url' => base_url(),
-      'current_segment' => $this->request->getUri()->getSegment(1),
       'title' => 'Beranda',
-      'msg' => $session->getFlashdata('message'),
-      'wilayah' => $this->model_region->getData(null, $allowed_regions),
-      'negara' => $this->model_country->getData(),
-      'greeting' => $this->getRandomGreeting(),
+      'base_url' => base_url(),
+      'current_segment' => 'beranda',
+      'realname' => $session->get('realname'),
     ];
 
-    $stats = ['today', 'yesterday', 'thismonth', 'lastmonth', 'thisyear', 'lastyear', 'all'];
-
-    foreach ($stats as $type) {
-      $data["pasien_$type"] = $this->model_beranda->getPatientCount($type, $role, $filter_region);
-      $data["kunjungan_$type"] = $this->model_beranda->getVisitCount($type, $role, $filter_region);
-    }
-
-    $data = array_merge($data, $this->getCalendarData($role, $filter_region));
-
-    $db = \Config\Database::connect();
-    $todayDate = date('Y-m-d');
-
-    // Queue Today
-    $queueBuilder = $db->table('patient_queues')->where('DATE(queue_date)', $todayDate);
-
-    if (!empty($filter_region) && $filter_region !== 'all') {
-      is_array($filter_region) ? $queueBuilder->whereIn('region_id', $filter_region) : $queueBuilder->where('region_id', $filter_region);
-    }
-
-    $data['queue_today'] = (int) $queueBuilder->countAllResults();
-
-    // Transaction Today
-    $transactionBuilder = $db->table('transaksi')->selectSum('nominal')->where('DATE(created_at)', $todayDate);
-
-    if (!empty($filter_region) && $filter_region !== 'all') {
-      is_array($filter_region) ? $transactionBuilder->whereIn('region_id', $filter_region) : $transactionBuilder->where('region_id', $filter_region);
-    }
-
-    $row = $transactionBuilder->get()->getRow();
-
-    $data['transaction_today_total'] = (int) ($row->nominal ?? 0);
-    $data['active_region_name'] = $session->get('active_region_name') ?? 'Cabang Tidak Terdeteksi';
-
-    return view('App\Modules\Beranda\Views\index', $data);
+    return view('App\Modules\Beranda\Views\menu', $data);
   }
 
   /**
@@ -164,7 +109,6 @@ class BerandaController extends BaseController
   {
     $session = session();
     $terapisId = $session->get('terapis_id_int');
-    $regionId = $session->get('region_patient');
 
     $db = \Config\Database::connect();
 
@@ -178,6 +122,8 @@ class BerandaController extends BaseController
       return redirect()->to('/menu')->with('error', 'Data terapis tidak ditemukan');
     }
 
+    // Use region_id from terapis data (single value, not array)
+    $regionId = $terapis->region_id;
     $bulanIni = date('Y-m');
 
     $data = [
@@ -259,7 +205,7 @@ class BerandaController extends BaseController
     $db = \Config\Database::connect();
 
     // Get attendance records
-    $query = $db->table('kehadiran')
+    $query = $db->table('absensi_karyawan')
       ->select('tanggal, status, keterangan')
       ->where('terapis_id', $terapisId)
       ->where('tanggal >=', $startDate)
@@ -276,7 +222,8 @@ class BerandaController extends BaseController
     $cuti = 0;
 
     foreach ($query as $row) {
-      switch ($row['status']) {
+      $status = strtolower($row['status']);
+      switch ($status) {
         case 'hadir':
           $hadir++;
           break;
@@ -346,10 +293,10 @@ class BerandaController extends BaseController
     $jaspelPerHari = [];
 
     // Get all dates where terapis was present
-    $kehadiranQuery = $db->table('kehadiran')
+    $kehadiranQuery = $db->table('absensi_karyawan')
       ->select('tanggal')
       ->where('terapis_id', $terapisId)
-      ->where('status', 'hadir')
+      ->where('status', 'Hadir')
       ->where('tanggal >=', $startDate)
       ->where('tanggal <=', $endDate)
       ->get()
@@ -358,12 +305,12 @@ class BerandaController extends BaseController
     $tanggalHadir = array_column($kehadiranQuery, 'tanggal');
 
     foreach ($tanggalHadir as $tanggal) {
-      // Count patients for this day (reguler)
-      $totalPasienReguler = $db->table('patient_queues pq')
-        ->join('histories h', 'h.patient_id = pq.patient_id AND DATE(h.date) = DATE(pq.queue_date)', 'left')
-        ->where('DATE(pq.queue_date)', $tanggal)
-        ->where('pq.region_id', $regionId)
-        ->where('pq.status', 'selesai')
+      // Count patients for this day (reguler) - from histories table
+      $totalPasienReguler = $db->table('histories h')
+        ->where('DATE(h.date)', $tanggal)
+        ->where('h.history_region', $regionId)
+        ->where('h.is_delete', 0)
+        ->where('h.type', 'posted')
         ->groupStart()
           ->where('h.kejantanan IS NULL')
           ->orWhere('h.kejantanan !=', 'ya')
@@ -371,19 +318,19 @@ class BerandaController extends BaseController
         ->countAllResults();
 
       // Count patients for this day (kejantanan)
-      $totalPasienKejantanan = $db->table('patient_queues pq')
-        ->join('histories h', 'h.patient_id = pq.patient_id AND DATE(h.date) = DATE(pq.queue_date)', 'inner')
-        ->where('DATE(pq.queue_date)', $tanggal)
-        ->where('pq.region_id', $regionId)
-        ->where('pq.status', 'selesai')
+      $totalPasienKejantanan = $db->table('histories h')
+        ->where('DATE(h.date)', $tanggal)
+        ->where('h.history_region', $regionId)
+        ->where('h.is_delete', 0)
+        ->where('h.type', 'posted')
         ->where('h.kejantanan', 'ya')
         ->countAllResults();
 
       // Count terapis who were present that day
-      $jumlahTerapisHadir = $db->table('kehadiran k')
-        ->join('terapis t', 't.id = k.terapis_id', 'inner')
-        ->where('k.tanggal', $tanggal)
-        ->where('k.status', 'hadir')
+      $jumlahTerapisHadir = $db->table('absensi_karyawan ak')
+        ->join('terapis t', 't.id = ak.terapis_id', 'inner')
+        ->where('ak.tanggal', $tanggal)
+        ->where('ak.status', 'Hadir')
         ->where('t.region_id', $regionId)
         ->where('t.is_active', 1)
         ->where('t.is_presensi', 1)
@@ -423,11 +370,6 @@ class BerandaController extends BaseController
   {
     $session = session();
     $role = $session->get('role');
-    
-    // Redirect terapis to dashboard instead of menu
-    if ($role === 'terapis') {
-      return redirect()->to('/beranda');
-    }
     
     $data = [
       'role' => $role,
