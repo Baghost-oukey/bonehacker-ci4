@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Karyawan\Models;
+namespace App\modules\karyawan\Models;
 
 use CodeIgniter\Model;
 
@@ -15,18 +15,17 @@ class MKaryawan extends Model
     protected $allowedFields    = [
         'terapis_id',
         'nama',
+        'tempat_lahir',
+        'tanggal_lahir',
         'alamat',
-        'tempat_lahir',  
-        'tanggal_lahir', 
-        'rank',
-        'is_active',
-        'is_presensi',
         'region_id',
         'jabatan_id',
-        'foto',
+        'rank',
         'tgl_mulai_kerja',
-        'jatah_cuti',
-        'keterangan'
+        'foto',
+        'keterangan',
+        'is_active',
+        'is_presensi'
     ];
 
     protected bool $allowEmptyInserts = false;
@@ -57,17 +56,33 @@ class MKaryawan extends Model
     protected $beforeFind     = [];
     protected $afterFind      = [];
     protected $beforeDelete   = [];
-    protected $afterDelete    = [];
+
+    public function getById($id)
+    {
+        return $this->where('id', $id)->first();
+    }
+
+    public function detail($terapis_id)
+    {
+        return $this->where('terapis_id', $terapis_id)->first();
+    }
+
+    public function edit($data, $where)
+    {
+        return $this->update($where, $data);
+    }
+
+    public function destroy($id)
+    {
+        return $this->delete($id);
+    }
 
     public function getListData($options = [])
     {
-        $search = $options['search'] ?? '';
         $limit = $options['limit'] ?? 25;
         $offset = $options['offset'] ?? 0;
+        $search = $options['search'] ?? '';
 
-        // Personnel query: 
-        // 1. Users who are NOT therapists (Management)
-        // 2. All Therapists (whether they have a user account or not)
         $sql = "
         SELECT * FROM (
             SELECT 
@@ -77,14 +92,12 @@ class MKaryawan extends Model
                 u.role, 
                 u.regions_patient, 
                 u.terapis_id, 
-                t.id as id_terapis_table, 
+                NULL as id_terapis_table, 
                 'Management' as personnel_type 
             FROM users u 
             LEFT JOIN terapis t ON u.terapis_id = t.terapis_id 
-            WHERE u.terapis_id IS NULL OR u.terapis_id = ''
-            
+            WHERE t.id IS NULL
             UNION ALL
-            
             SELECT 
                 u.id as user_id, 
                 t.nama as name, 
@@ -101,7 +114,8 @@ class MKaryawan extends Model
         ";
 
         if (!empty($search)) {
-            $sql .= " AND (name LIKE '%" . $this->db->escapeLikeString($search) . "%' OR username LIKE '%" . $this->db->escapeLikeString($search) . "%' OR terapis_id LIKE '%" . $this->db->escapeLikeString($search) . "%')";
+            $search_esc = $this->db->escapeLikeString($search);
+            $sql .= " AND (name LIKE '%$search_esc%' OR username LIKE '%$search_esc%' OR terapis_id LIKE '%$search_esc%')";
         }
 
         $sql .= " ORDER BY name ASC LIMIT $limit OFFSET $offset";
@@ -109,149 +123,123 @@ class MKaryawan extends Model
         return $this->db->query($sql)->getResult();
     }
 
-    public function getTotalData($options)
+    public function getTotalData()
     {
-        $search = $options['search'] ?? '';
-        
-        $sql = "
-        SELECT COUNT(*) as total FROM (
-            SELECT u.id FROM users u WHERE u.terapis_id IS NULL OR u.terapis_id = ''
-            UNION ALL
-            SELECT t.id FROM terapis t
-        ) AS personnel
-        ";
-
-        if (!empty($search)) {
-            return $this->getTotalFiltered($search);
-        }
-
-        return $this->db->query($sql)->getRow()->total;
+        $sql = "SELECT (SELECT COUNT(*) FROM users u LEFT JOIN terapis t ON u.terapis_id = t.terapis_id WHERE t.id IS NULL) + (SELECT COUNT(*) FROM terapis) as total";
+        $row = $this->db->query($sql)->getRow();
+        return $row ? (int)$row->total : 0;
     }
 
-    private function getTotalFiltered($search)
+    public function getTotalFiltered($search = '')
     {
+        if (empty($search)) return $this->getTotalData();
+
+        $search_esc = $this->db->escapeLikeString($search);
         $sql = "
         SELECT COUNT(*) as total FROM (
-            SELECT u.realname as name, u.username, u.terapis_id FROM users u WHERE u.terapis_id IS NULL OR u.terapis_id = ''
+            SELECT u.realname as name, u.username, u.terapis_id FROM users u LEFT JOIN terapis t ON u.terapis_id = t.terapis_id WHERE t.id IS NULL
             UNION ALL
             SELECT t.nama as name, u.username, t.terapis_id FROM terapis t LEFT JOIN users u ON t.terapis_id = u.terapis_id
         ) AS personnel
-        WHERE (name LIKE '%" . $this->db->escapeLikeString($search) . "%' OR username LIKE '%" . $this->db->escapeLikeString($search) . "%' OR terapis_id LIKE '%" . $this->db->escapeLikeString($search) . "%')
+        WHERE (name LIKE '%$search_esc%' OR username LIKE '%$search_esc%' OR terapis_id LIKE '%$search_esc%')
         ";
-        return $this->db->query($sql)->getRow()->total;
+
+        $row = $this->db->query($sql)->getRow();
+        return $row ? (int)$row->total : 0;
     }
 
-    public function getById($id)
+    public function get_regions($allowed_regions = null)
     {
-        return $this->where('id', $id)->first();
-    }
-
-    public function detail($user_id)
-    {
-        return $this->where('terapis_id', $user_id)->first();
-    }
-
-    public function store($data)
-    {
-        $this->insert($data);
-        return $this->db->insertID();
-    }
-
-    public function edit($data, $where)
-    {
-        return $this->update($where, $data);
-    }
-
-    public function destroy($id)
-    {
-        return $this->delete($id);
-    }
-
-    public function get_region_names($region_ids)
-    {
-        if (empty($region_ids) || !is_array($region_ids)) {
-            return [];
-        }
-
-        $builder = $this->db->table('regions');
-        $builder->select('name');
-        $builder->whereIn('id', $region_ids);
-        $query = $builder->get()->getResultArray();
-        return array_column($query, 'name');
-    }
-
-    public function get_patients_by_user_region($user_id, $export = false)
-    {
-        $user = $this->db->table('users')->where('id', $user_id)->get()->getRow();
-        if (!$user) {
-            return $export ? [] : $this->db->table('patients');
-        }
-
-        $region_ids = json_decode($user->regions_patient, true) ?: [];
-
-        $builder = $this->db->table('patients p');
-        $builder->select('p.id, p.name as nama, p.gender, p.age, p.address, r.name as wilayah');
-        $builder->join('regions r', 'p.region_id = r.id', 'left');
-        $builder->where('p.is_delete', 0);
-
-        if ($user->role !== 'superadmin') {
-            if (empty($region_ids)) {
-                $builder->where('1=0');
-            } else {
-                $builder->whereIn('p.region_id', $region_ids);
+        $builder = $this->db->table('regions')->select('id, name')->where('is_active', 1);
+        if (!empty($allowed_regions)) {
+            if (is_string($allowed_regions)) {
+                $decoded = json_decode($allowed_regions, true);
+                if (is_array($decoded)) {
+                    $allowed_regions = $decoded;
+                } else if (strpos($allowed_regions, ',') !== false) {
+                    $allowed_regions = explode(',', $allowed_regions);
+                } else {
+                    $allowed_regions = [$allowed_regions];
+                }
+            }
+            if (is_array($allowed_regions) && !empty($allowed_regions)) {
+                $builder->whereIn('id', $allowed_regions);
             }
         }
-
-        return $export ? $builder->get()->getResult() : $builder;
+        return $builder->get()->getResult();
     }
 
-    public function get_other_patients($user_id, $export = false)
+    public function get_jabatan()
     {
-        $user = $this->db->table('users')->where('id', $user_id)->get()->getRow();
-        if (!$user) {
-            return $export ? [] : $this->db->table('patients');
-        }
-
-        $other_patients_ids = json_decode($user->other_patient, true) ?: [];
-
-        $builder = $this->db->table('patients p');
-        $builder->select('p.id, p.name as nama, p.gender, p.age, p.address, r.name as wilayah');
-        $builder->join('regions r', 'p.region_id = r.id', 'left');
-        $builder->where('p.is_delete', 0);
-
-        if (empty($other_patients_ids)) {
-            $builder->where('1=0');
-        } else {
-            $builder->whereIn('p.id', $other_patients_ids);
-        }
-
-        return $export ? $builder->get()->getResult() : $builder;
+        return $this->db->table('jabatan')->get()->getResult();
     }
 
-    public function search_outside_patients($user_id, $search_term, $limit = 20)
+    public function get_patients_by_user_region($user_id)
     {
         $user = $this->db->table('users')->where('id', $user_id)->get()->getRow();
+        if (!$user) return $this->db->table('patients p')->where('1=0');
+
         $region_ids = json_decode($user->regions_patient, true) ?: [];
-        $other_patient_ids = json_decode($user->other_patient, true) ?: [];
+        $builder = $this->db->table('patients p')
+            ->select('p.id, p.name as nama, p.gender, p.age, p.address, r.name as wilayah')
+            ->join('regions r', 'p.region_id = r.id', 'left');
 
-        $builder = $this->db->table('patients p');
-        $builder->select('p.id, p.name as nama, p.gender, p.age, p.address, r.name as wilayah');
-        $builder->join('regions r', 'p.region_id = r.id', 'left');
-        $builder->where('p.is_delete', 0);
+        if (!empty($region_ids)) {
+            $builder->whereIn('p.region_id', $region_ids);
+        } else {
+            $builder->where('1=0');
+        }
+
+        return $builder;
+    }
+
+    public function get_other_patients($user_id)
+    {
+        $user = $this->db->table('users')->where('id', $user_id)->get()->getRow();
+        if (!$user) return $this->db->table('patients p')->where('1=0');
+
+        $other_ids = json_decode($user->other_patient, true) ?: [];
+        $builder = $this->db->table('patients p')
+            ->select('p.id, p.name as nama, p.gender, p.age, p.address, r.name as wilayah')
+            ->join('regions r', 'p.region_id = r.id', 'left');
+
+        if (!empty($other_ids)) {
+            $builder->whereIn('p.id', $other_ids);
+        } else {
+            $builder->where('1=0');
+        }
+
+        return $builder;
+    }
+
+    public function search_outside_patients($user_id, $term)
+    {
+        $user = $this->db->table('users')->where('id', $user_id)->get()->getRow();
+        if (!$user) return [];
+
+        $region_ids = json_decode($user->regions_patient, true) ?: [];
+        $other_ids = json_decode($user->other_patient, true) ?: [];
+
+        $builder = $this->db->table('patients p')
+            ->select('p.id, p.name as text, r.name as wilayah')
+            ->join('regions r', 'p.region_id = r.id', 'left');
 
         if (!empty($region_ids)) {
             $builder->whereNotIn('p.region_id', $region_ids);
         }
-
-        if (!empty($other_patient_ids)) {
-            $builder->whereNotIn('p.id', $other_patient_ids);
+        if (!empty($other_ids)) {
+            $builder->whereNotIn('p.id', $other_ids);
         }
 
-        if ($search_term) {
-            $builder->groupStart()->like('p.name', $search_term)->orLike('p.address', $search_term)->orLike('r.name', $search_term)->groupEnd();
+        if ($term) {
+            $builder->like('p.name', $term);
         }
 
-        return $builder->limit($limit)->get()->getResult();
+        $results = $builder->limit(20)->get()->getResult();
+        foreach ($results as $res) {
+            $res->text = $res->text . ' (' . $res->wilayah . ')';
+        }
+        return $results;
     }
 
     public function append_patient_to_user($user_id, $patient_id)
@@ -263,20 +251,6 @@ class MKaryawan extends Model
     public function username_exists_edit($username, $user_id)
     {
         return $this->db->table('users')->where('username', $username)->where('id !=', $user_id)->countAllResults() > 0;
-    }
-
-    public function get_regions($allowed_regions = null)
-    {
-        $builder = $this->db->table('regions')->select('id, name')->where('is_active', 1);
-        if (!empty($allowed_regions)) {
-            $builder->whereIn('id', $allowed_regions);
-        }
-        return $builder->get()->getResult();
-    }
-
-    public function get_jabatan()
-    {
-        return $this->db->table('jabatan')->get()->getResult();
     }
 
     public function getJabatanById($id)

@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Modules\Karyawan\Controllers;
+namespace App\modules\karyawan\Controllers;
 
 use App\Controllers\BaseController;
-use App\Modules\Karyawan\Models\MKaryawan;
+use App\modules\karyawan\Models\MKaryawan;
 use App\modules\jabatan\Models\Mjabatan;
-use App\modules\Region\Models\MRegion;
+use App\modules\region\Models\MRegion;
 use CodeIgniter\HTTP\ResponseInterface;
 use Endroid\QrCode\Color\Color;
 use Endroid\QrCode\Encoding\Encoding;
@@ -45,7 +45,7 @@ class KaryawanController extends BaseController
       'error_message' => $this->session->getFlashdata('error_message'),
     ];
 
-    return view('App\Modules\Karyawan\Views\index', $data);
+    return view('App\modules\karyawan\Views\index', $data);
   }
 
   public function fetch()
@@ -60,8 +60,8 @@ class KaryawanController extends BaseController
     ];
 
     $dataOutput = $this->model_karyawan->getListData($options);
-    $totalFiltered = $this->model_karyawan->getTotalData($options);
-    $totalData = $totalFiltered; 
+    $totalRecords = $this->model_karyawan->getTotalData();
+    $totalFiltered = !empty($search_value) ? $this->model_karyawan->getTotalFiltered($search_value) : $totalRecords;
     $no = $options['offset'] + 1;
 
     // Region map for display
@@ -87,7 +87,9 @@ class KaryawanController extends BaseController
       $value->role = esc($value->role ?? '-');
 
       $is_terapis = $value->personnel_type === 'Therapist';
-      $type_label = $is_terapis ? '<span class="px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 text-[9px] font-bold border border-blue-100">Karyawan</span>' : '<span class="px-2 py-0.5 rounded-full bg-slate-50 text-slate-500 text-[9px] font-bold border border-slate-100">Manajemen</span>';
+      $type_label = $is_terapis 
+        ? '<span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest bg-teal-100 text-teal-600 border border-teal-200">Terapis</span>' 
+        : '<span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest bg-blue-100 text-blue-600 border border-blue-200">Admin</span>';
       $value->type_label = $type_label;
 
       if ($value->role === 'superadmin') {
@@ -115,7 +117,7 @@ class KaryawanController extends BaseController
                         title="Edit Akun">
                         <i class="fas fa-user-cog text-[10px]"></i>
                     </button>';
-      } else {
+      } else if ($is_terapis) {
         $action .= '<button class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 text-slate-400 hover:bg-teal-600 hover:text-white transition-all btn_create_account" 
                         data-terapis_id="' . $value->terapis_id . '" 
                         data-realname="' . $value->realname . '" 
@@ -125,19 +127,23 @@ class KaryawanController extends BaseController
       }
 
       if ($is_terapis) {
-        $action .= '<a href="' . base_url('karyawan/show/' . $value->id_terapis_table) . '" class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all" title="Profil Karyawan">
+        $action .= '<a href="' . base_url('karyawan/show/' . $value->id_terapis_table) . '" class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all" title="Profil Terapis">
                       <i class="fas fa-id-card text-[10px]"></i>
                     </a>';
       }
 
-      if (!empty($value->user_id)) {
-        $action .= '<button class="w-8 h-8 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white transition-all btn_add_patient" data-userid="' . $value->user_id . '" title="Akses Pasien">
+      if (!empty($value->user_id) && $value->role !== 'user') {
+        $action .= '<button class="w-8 h-8 flex items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 flex items-center justify-center transition-all btn_add_patient" data-userid="' . $value->user_id . '" title="Akses Pasien">
                         <i class="fas fa-hospital-user text-[10px]"></i>
                     </button>';
       }
 
       if (!empty($value->user_id) && $value->role !== 'superadmin') {
         $action .= '<button class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all btn_delete" data-href="' . base_url('karyawan/delete_account/' . $value->user_id) . '" title="Hapus">
+                      <i class="fas fa-trash-alt text-[10px]"></i>
+                    </button>';
+      } else if ($is_terapis && empty($value->user_id)) {
+        $action .= '<button class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all btn_delete" data-href="' . base_url('karyawan/destroy/' . $value->id_terapis_table) . '" title="Hapus Profil">
                       <i class="fas fa-trash-alt text-[10px]"></i>
                     </button>';
       }
@@ -147,7 +153,7 @@ class KaryawanController extends BaseController
 
     return $this->response->setJSON([
       "draw" => intval($draw),
-      "recordsTotal" => intval($totalFiltered),
+      "recordsTotal" => intval($totalRecords),
       "recordsFiltered" => intval($totalFiltered),
       "data" => $dataOutput,
       "csrfHash" => csrf_hash()
@@ -158,9 +164,18 @@ class KaryawanController extends BaseController
   {
     $post = $this->request->getPost();
     
-    // Check username
-    if ($this->model_karyawan->db->table('users')->where('username', $post['username'])->get()->getRow()) {
-        return $this->response->setJSON(['status' => 'error', 'message' => 'Username sudah digunakan', 'csrfHash' => csrf_hash()]);
+    // Check username uniqueness
+    if (!empty($post['username'])) {
+      if ($this->model_karyawan->db->table('users')->where('username', $post['username'])->get()->getRow()) {
+          return $this->response->setJSON(['status' => 'error', 'message' => 'Username sudah digunakan', 'csrfHash' => csrf_hash()]);
+      }
+    }
+
+    // Check terapis_id uniqueness if adding a therapist
+    if ($post['role'] === 'user' && !empty($post['terapis_id'])) {
+        if ($this->model_karyawan->db->table('terapis')->where('terapis_id', $post['terapis_id'])->get()->getRow()) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'ID Terapis sudah digunakan', 'csrfHash' => csrf_hash()]);
+        }
     }
 
     $terapis_id = null;
@@ -193,16 +208,18 @@ class KaryawanController extends BaseController
     $user_data = [
       'realname' => $post['realname'],
       'username' => $post['username'],
-      'password' => password_hash($post['password'], PASSWORD_BCRYPT),
+      'password' => password_hash($post['password'] ?? 'password123', PASSWORD_BCRYPT),
       'role' => $post['role'],
       'terapis_id' => $terapis_id,
+      'is_active' => 1,
       'other_patient' => json_encode([]),
+      'regions_patient' => json_encode([]),
     ];
 
     if ($post['role'] === 'superadmin') {
       $user_data['regions_patient'] = json_encode([]);
     } else {
-      $regions = $post['regions_patient'] ?? [];
+      $regions = $post['regions_patient'] ?? $post['regions'] ?? [];
       if ($post['role'] === 'user' && !empty($post['region_id'])) $regions = [$post['region_id']];
       $user_data['regions_patient'] = json_encode(array_map('intval', (array)$regions));
     }
@@ -222,7 +239,7 @@ class KaryawanController extends BaseController
       'realname' => $this->session->get('realname'),
       'base_url' => base_url(),
       'current_segment' => $this->request->getUri()->getSegment(1),
-      'title' => 'Detail Karyawan',
+      'title' => 'Detail Terapis',
       'msg' => $this->session->getFlashdata('message'),
       'role' => $this->session->get('role'),
       'karyawan' => $karyawan,
@@ -238,13 +255,13 @@ class KaryawanController extends BaseController
     $qrCode = QrCode::create($qrContent)->setSize(300)->setMargin(10)->setForegroundColor(new Color(0, 0, 0))->setBackgroundColor(new Color(255, 255, 255));
     $data['qr_code_base64'] = $writer->write($qrCode)->getDataUri();
 
-    return view('App\Modules\Karyawan\Views\DetailTerapis\index', $data);
+    return view('App\modules\karyawan\Views\DetailTerapis\index', $data);
   }
 
   public function update_profile()
   {
     $id = $this->request->getPost('id');
-    $karyawan_id = $this->request->getPost('terapis_id'); // Still using terapis_id from DB for now
+    $karyawan_id = $this->request->getPost('terapis_id');
     $data = [
       'terapis_id' => $karyawan_id,
       'nama' => $this->request->getPost('nama'),
@@ -267,6 +284,13 @@ class KaryawanController extends BaseController
         $data['foto'] = $newName;
     }
 
+    // Sync realname to users table if linked
+    if ($karyawan_id) {
+        $this->model_karyawan->db->table('users')
+            ->where('terapis_id', $karyawan_id)
+            ->update(['realname' => $data['nama']]);
+    }
+
     if ($this->model_karyawan->update($id, $data)) {
         $this->session->setFlashdata('message', ['success', 'Profil berhasil diperbarui']);
     }
@@ -276,6 +300,18 @@ class KaryawanController extends BaseController
   public function update_account($id)
   {
     $post = $this->request->getPost();
+    
+    // Check if username is already taken by ANOTHER user
+    if (!empty($post['username'])) {
+        $existing = $this->model_karyawan->db->table('users')
+            ->where('username', $post['username'])
+            ->where('id !=', $id)
+            ->get()->getRow();
+        if ($existing) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Username sudah digunakan oleh akun lain', 'csrfHash' => csrf_hash()]);
+        }
+    }
+
     $data = [
       'realname' => $post['realname'],
       'username' => $post['username'],
@@ -309,13 +345,17 @@ class KaryawanController extends BaseController
 
   public function profil_saya()
   {
-    $terapis_id = $this->session->get('terapis_id');
-    if (!$terapis_id) return redirect()->to(base_url('beranda'));
+    $userId = $this->session->get('userId');
+    $terapisId = $this->session->get('terapis_id');
+    
+    if ($terapisId) {
+      $terapis = $this->model_karyawan->detail($terapisId);
+      if ($terapis) {
+        return $this->show($terapis->id);
+      }
+    }
 
-    $terapis = $this->model_karyawan->detail($terapis_id);
-    if (!$terapis) return redirect()->to(base_url('beranda'));
-
-    return $this->show($terapis->id);
+    return redirect()->to(base_url('beranda'))->with('message', ['info', 'Profil Akun Manajemen sedang dalam pengembangan.']);
   }
 
   public function active($id)
@@ -345,7 +385,6 @@ class KaryawanController extends BaseController
     $user = $this->model_karyawan->db->table('users')->where('id', $user_id)->get()->getRow();
     if (!$user) return redirect()->to('karyawan');
 
-    // Get region name for title
     $region_name = '-';
     $region_ids = json_decode($user->regions_patient, true) ?: [];
     if (!empty($region_ids)) {
@@ -362,7 +401,7 @@ class KaryawanController extends BaseController
       'current_segment' => 'karyawan',
     ];
 
-    return view('App\Modules\Karyawan\Views\view_patient', $data);
+    return view('App\modules\karyawan\Views\view_patient', $data);
   }
 
   public function fetch_patients()
@@ -374,10 +413,7 @@ class KaryawanController extends BaseController
     $search = $this->request->getPost('search')['value'] ?? '';
 
     $builder = $this->model_karyawan->get_patients_by_user_region($user_id);
-    
-    if ($search) {
-      $builder->groupStart()->like('p.name', $search)->orLike('p.address', $search)->groupEnd();
-    }
+    if ($search) $builder->groupStart()->like('p.name', $search)->orLike('p.address', $search)->groupEnd();
 
     $total = $builder->countAllResults(false);
     $data = $builder->limit($length, $start)->get()->getResult();
@@ -413,10 +449,7 @@ class KaryawanController extends BaseController
     $search = $this->request->getPost('search')['value'] ?? '';
 
     $builder = $this->model_karyawan->get_other_patients($user_id);
-    
-    if ($search) {
-      $builder->groupStart()->like('p.name', $search)->orLike('p.address', $search)->groupEnd();
-    }
+    if ($search) $builder->groupStart()->like('p.name', $search)->orLike('p.address', $search)->groupEnd();
 
     $total = $builder->countAllResults(false);
     $data = $builder->limit($length, $start)->get()->getResult();
@@ -459,7 +492,6 @@ class KaryawanController extends BaseController
   {
     $user_id = $this->request->getPost('user_id');
     $patient_id = $this->request->getPost('patient_id');
-    
     if ($this->model_karyawan->append_patient_to_user($user_id, $patient_id)) {
       return $this->response->setJSON(['status' => 'success', 'message' => 'Pasien berhasil ditambahkan', 'csrfHash' => csrf_hash()]);
     }
@@ -470,13 +502,10 @@ class KaryawanController extends BaseController
   {
     $user_id = $this->request->getPost('user_id');
     $patient_id = $this->request->getPost('patient_id');
-
     $user = $this->model_karyawan->db->table('users')->where('id', $user_id)->get()->getRow();
     if (!$user) return $this->response->setJSON(['success' => false]);
-
     $other_patients = json_decode($user->other_patient, true) ?: [];
     $other_patients = array_values(array_diff($other_patients, [(int)$patient_id]));
-
     if ($this->model_karyawan->db->table('users')->where('id', $user_id)->update(['other_patient' => json_encode($other_patients)])) {
       return $this->response->setJSON(['success' => true, 'csrfHash' => csrf_hash()]);
     }
@@ -488,11 +517,11 @@ class KaryawanController extends BaseController
     $karyawan = $this->model_karyawan->detail($id);
     $data = [
       'base_url' => base_url(),
-      'title' => 'Info Publik Karyawan',
+      'title' => 'Info Publik Terapis',
       'karyawan' => $karyawan,
       'jabatan' => $this->model_karyawan->getJabatanById($id),
       'wilayah' => $this->model_karyawan->getRegionById($id),
     ];
-    return view('App\Modules\Karyawan\Views\views_info_publik', $data);
+    return view('App\modules\karyawan\Views\views_info_publik', $data);
   }
 }

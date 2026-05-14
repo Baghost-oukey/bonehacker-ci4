@@ -204,7 +204,7 @@ $routes->group('greeting', ['namespace' => 'App\Modules\greeting\Controllers', '
 });
 
 // Karyawan (Unified Personnel Management)
-$routes->group('karyawan', ['namespace' => 'App\Modules\Karyawan\Controllers', 'filter' => 'auth'], function ($routes) {
+$routes->group('karyawan', ['namespace' => 'App\modules\karyawan\Controllers', 'filter' => 'auth'], function ($routes) {
   $routes->get('', 'KaryawanController::index');
   $routes->post('fetch', 'KaryawanController::fetch');
   $routes->post('store', 'KaryawanController::store');

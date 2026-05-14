@@ -7,9 +7,9 @@ $menus = [];
 // DASHBOARD - Semua Role
 $menus[] = ['label' => 'Dashboard', 'url' => site_url('beranda'), 'icon' => 'fa-chart-line', 'color' => 'bg-blue-600'];
 
-// Menu Khusus TERAPIS (User)
+// Menu Khusus KARYAWAN (User role)
 if ($role === 'user') {
-    $menus[] = ['label' => 'Profil Saya', 'url' => site_url('terapis/profil_saya'), 'icon' => 'fa-user-circle', 'color' => 'bg-indigo-500'];
+    $menus[] = ['label' => 'Profil Saya', 'url' => site_url('karyawan/profil_saya'), 'icon' => 'fa-user-circle', 'color' => 'bg-indigo-500'];
     $menus[] = ['label' => 'Gaji Saya', 'url' => site_url('gaji/monitor'), 'icon' => 'fa-wallet', 'color' => 'bg-emerald-500'];
 }
 
@@ -54,11 +54,10 @@ if ($role !== 'user') {
 if ($role === 'superadmin') {
     $menus[] = ['label' => 'Tags', 'url' => site_url('tag-keluhan'), 'icon' => 'fa-tags', 'color' => 'bg-teal-500'];
     $menus[] = ['label' => 'Pengaturan', 'url' => site_url('logs'), 'icon' => 'fa-cog', 'color' => 'bg-slate-700'];
-    $menus[] = ['label' => 'Users', 'url' => site_url('users'), 'icon' => 'fa-users', 'color' => 'bg-blue-600'];
-    $menus[] = ['label' => 'Karyawan', 'url' => site_url('terapis'), 'icon' => 'fa-user-md', 'color' => 'bg-blue-500'];
-} else if ($role === 'owner') {
+    $menus[] = ['label' => 'Karyawan', 'url' => site_url('karyawan'), 'icon' => 'fa-user-friends', 'color' => 'bg-blue-600'];
+} else if ($role === 'owner' || $role === 'admin') {
     $menus[] = ['label' => 'Tags', 'url' => site_url('tag-keluhan'), 'icon' => 'fa-tags', 'color' => 'bg-teal-500'];
-    $menus[] = ['label' => 'Karyawan', 'url' => site_url('terapis'), 'icon' => 'fa-user-md', 'color' => 'bg-blue-500'];
+    $menus[] = ['label' => 'Karyawan', 'url' => site_url('karyawan'), 'icon' => 'fa-user-friends', 'color' => 'bg-blue-600'];
 }
 ?>
 

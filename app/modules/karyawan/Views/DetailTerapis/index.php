@@ -23,7 +23,7 @@
     </div>
 
     <!-- Main Form -->
-    <form action="<?= site_url('karyawan/update') ?>" id="detailkaryawan" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+    <form action="<?= site_url('karyawan/update_profile') ?>" id="detailkaryawan" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
         <?= csrf_field() ?>
         <input type="hidden" name="id" value="<?= $karyawan->id ?>">
 
@@ -31,7 +31,7 @@
             <!-- Card Header -->
             <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
-                    <h3 class="text-lg font-semibold text-slate-800">Biodata Terapis</h3>
+                    <h3 class="text-lg font-semibold text-slate-800">Biodata Karyawan</h3>
                     <p class="text-sm text-slate-500">Lengkapi data diri karyawan dengan benar</p>
                 </div>
                 <div class="flex items-center gap-2">
@@ -91,11 +91,11 @@
                             <input type="file" class="hidden" id="foto" name="foto" accept="image/*" onchange="previewImage(event)">
                         </div>
 
-                        <!-- ID Terapis -->
+                        <!-- ID Karyawan -->
                         <div class="space-y-1">
-                            <label class="text-sm font-medium text-slate-700">ID Terapis <span class="text-red-500">*</span></label>
-                            <input type="text" name="karyawan_id" id="karyawan_id"
-                                value="<?= esc($karyawan->karyawan_id) ?>"
+                            <label class="text-sm font-medium text-slate-700">ID Karyawan <span class="text-red-500">*</span></label>
+                            <input type="text" name="terapis_id" id="terapis_id"
+                                value="<?= esc($karyawan->terapis_id) ?>"
                                 class="form-input w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-slate-50 cursor-not-allowed"
                                 required readonly>
                             <div class="id-feedback text-xs mt-1 hidden"></div>
@@ -412,7 +412,7 @@
 <div id="modalQrPreview" class="modal-wrapper hidden fixed inset-0 z-50 items-center justify-center bg-black/40 p-4">
     <div class="bg-white rounded-xl shadow-lg w-full max-w-md p-6 space-y-4">
         <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-slate-800">QR Code Info Publik Terapis</h3>
+            <h3 class="text-lg font-semibold text-slate-800">QR Code Info Publik Karyawan</h3>
             <button type="button" data-modal-close class="text-slate-500 hover:text-slate-800">&times;</button>
         </div>
         <div class="flex justify-center">
