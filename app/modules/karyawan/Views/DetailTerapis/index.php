@@ -1,6 +1,12 @@
 <?= $this->extend('layout/layout') ?>
 <?= $this->section('content') ?>
 
+<?php
+// Check if user is viewing their own profile (terapis role)
+$isOwnProfile = isset($is_own_profile) && $is_own_profile;
+$canEditSensitiveFields = !$isOwnProfile; // Only non-terapis can edit rank, jabatan, etc.
+?>
+
 <section id="detailTerapisPage" class="w-full space-y-6 p-4 md:p-6">
     <!-- Header -->
     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -9,18 +15,33 @@
                 <?= esc($title) ?>
             </h1>
             <p class="text-sm text-slate-500">
-                Detail informasi dan biodata karyawan
+                <?= $isOwnProfile ? 'Profil Saya - Anda hanya dapat mengubah foto profil' : 'Detail informasi dan biodata karyawan' ?>
             </p>
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
-            <a href="<?= site_url('karyawan') ?>"
+            <a href="<?= $isOwnProfile ? site_url('beranda') : site_url('karyawan') ?>"
                 class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
                 <i class="fas fa-arrow-left text-slate-500"></i>
                 Kembali
             </a>
         </div>
     </div>
+
+    <?php if ($isOwnProfile): ?>
+    <!-- Info untuk Terapis -->
+    <div class="rounded-xl bg-blue-50 border border-blue-100 p-4">
+        <div class="flex items-start gap-3">
+            <i class="fas fa-info-circle text-blue-500 text-xl"></i>
+            <div>
+                <h3 class="text-sm font-bold text-blue-900 mb-1">Informasi</h3>
+                <p class="text-xs text-blue-700">
+                    Anda hanya dapat mengubah foto profil. Untuk mengubah data lain, silakan hubungi administrator.
+                </p>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
 
     <!-- Main Form -->
     <form action="<?= site_url('karyawan/update_profile') ?>" id="detailkaryawan" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>

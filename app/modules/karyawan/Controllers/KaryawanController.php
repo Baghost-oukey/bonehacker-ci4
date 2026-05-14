@@ -48,6 +48,12 @@ class KaryawanController extends BaseController
   public function index()
   {
     $role = $this->session->get('role');
+    
+    // Terapis tidak boleh akses halaman list karyawan
+    if ($role === 'terapis') {
+      return redirect()->to('terapis/profil_saya')->with('message', ['error', 'Anda tidak memiliki akses ke halaman ini']);
+    }
+    
     $region_patient = $this->session->get('region_patient');
     $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
 
@@ -247,6 +253,16 @@ class KaryawanController extends BaseController
 
   public function show($id)
   {
+    $role = $this->session->get('role');
+    $terapisIdInt = $this->session->get('terapis_id_int');
+    
+    // Terapis hanya boleh lihat profil sendiri
+    if ($role === 'terapis') {
+      if (!$terapisIdInt || $terapisIdInt != $id) {
+        return redirect()->to('terapis/profil_saya')->with('message', ['error', 'Anda hanya dapat melihat profil sendiri']);
+      }
+    }
+    
     $karyawan = $this->model_karyawan->getById($id);
     if (!$karyawan) return redirect()->to('karyawan');
 
@@ -256,13 +272,14 @@ class KaryawanController extends BaseController
       'current_segment' => $this->request->getUri()->getSegment(1),
       'title' => 'Detail Karyawan',
       'msg' => $this->session->getFlashdata('message'),
-      'role' => $this->session->get('role'),
+      'role' => $role,
       'karyawan' => $karyawan,
       'wilayah' => $this->model_region->getData(),
       'jabatan' => $this->model_karyawan->get_jabatan(),
       'rank_options' => $this->getRankOptions(),
       'connected_user' => $this->model_karyawan->db->table('users')->where('terapis_id', $karyawan->terapis_id)->get()->getRow(),
       'all_users' => $this->model_karyawan->db->table('users')->select('id, realname, username, terapis_id')->where('role !=', 'superadmin')->get()->getResult(),
+      'is_own_profile' => ($role === 'terapis' && $terapisIdInt == $id), // Flag untuk disable field yang tidak boleh diedit
     ];
 
     // QR Code
@@ -336,6 +353,17 @@ class KaryawanController extends BaseController
   public function update_profile()
   {
     $id = $this->request->getPost('id');
+    $role = $this->session->get('role');
+    $terapisIdInt = $this->session->get('terapis_id_int');
+    
+    // Terapis hanya boleh update profil sendiri, dan tidak boleh ubah rank/jabatan
+    if ($role === 'terapis') {
+      if (!$terapisIdInt || $terapisIdInt != $id) {
+        $this->session->setFlashdata('message', ['error', 'Anda hanya dapat mengubah profil sendiri']);
+        return redirect()->back();
+      }
+    }
+    
     $karyawan_id = $this->request->getPost('terapis_id'); // Still using terapis_id from DB for now
     $data = [
       'terapis_id' => $karyawan_id,
@@ -344,13 +372,17 @@ class KaryawanController extends BaseController
       'tanggal_lahir' => $this->request->getPost('tgl_lahir'),
       'alamat' => $this->request->getPost('alamat') ?: null,
       'region_id' => $this->request->getPost('region_id'),
-      'jabatan_id' => !empty($this->request->getPost('jabatan_id')) ? $this->request->getPost('jabatan_id') : null,
-      'rank' => $this->request->getPost('rank'),
       'tgl_mulai_kerja' => $this->request->getPost('tgl_kerja'),
       'keterangan' => $this->request->getPost('keterangan'),
       'is_active' => $this->request->getPost('status') === 'on' ? 1 : 0,
       'is_presensi' => $this->request->getPost('is_presensi') === 'on' ? 1 : 0,
     ];
+    
+    // Hanya admin/owner/superadmin yang boleh ubah jabatan dan rank
+    if ($role !== 'terapis') {
+      $data['jabatan_id'] = !empty($this->request->getPost('jabatan_id')) ? $this->request->getPost('jabatan_id') : null;
+      $data['rank'] = $this->request->getPost('rank');
+    }
 
     $file = $this->request->getFile('foto');
     if ($file && $file->isValid() && !$file->hasMoved()) {
