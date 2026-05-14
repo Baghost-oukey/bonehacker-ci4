@@ -1,6 +1,7 @@
 function initProfileComponent() {
 	const profileRoot = document.getElementById("profileComponent");
 	if (!profileRoot || typeof window.$ === "undefined") {
+		console.log("Profile component not found or jQuery not loaded");
 		return;
 	}
 
@@ -15,6 +16,13 @@ function initProfileComponent() {
 	const currentUserNameEl = document.getElementById("currentUserName");
 	const avatarFallbackEl = document.getElementById("profileAvatarFallback");
 	const profileTriggerEl = profileRoot.querySelector("[data-menu-toggle='userMenu']");
+
+	console.log("Profile component initialized", {
+		editAccountBtn: !!editAccountBtn,
+		accountModal: !!accountModal,
+		editAccountUrl,
+		updateAccountUrl
+	});
 
 	const avatarPaletteClasses = [
 		["bg-rose-100", "text-rose-700", "ring-rose-200"],
@@ -85,18 +93,26 @@ function initProfileComponent() {
 	}
 
 	editAccountBtn?.addEventListener("click", function () {
-		if (!editAccountUrl) return;
+		console.log("Edit account button clicked!");
+		if (!editAccountUrl) {
+			console.error("Edit account URL not found!");
+			return;
+		}
 		openAccountModal();
 		$.ajax({
 			url: editAccountUrl,
 			type: "GET",
 			dataType: "json",
 			success: function (response) {
+				console.log("Account data loaded:", response);
 				updateProfileLabel(response.realname);
 				$("#realname").val(response.realname);
 				$("#username").val(response.username);
 				$("#user_id").val(response.userId);
 			},
+			error: function(xhr, status, error) {
+				console.error("Failed to load account data:", error);
+			}
 		});
 	});
 

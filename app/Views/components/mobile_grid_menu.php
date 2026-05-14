@@ -54,6 +54,7 @@ if ($role !== 'terapis') {
 if ($role === 'superadmin') {
     $menus[] = ['label' => 'Tags', 'url' => site_url('tag-keluhan'), 'icon' => 'fa-tags', 'color' => 'bg-teal-500'];
     $menus[] = ['label' => 'Pengaturan', 'url' => site_url('logs'), 'icon' => 'fa-cog', 'color' => 'bg-slate-700'];
+    $menus[] = ['label' => 'Rank Terapis', 'url' => site_url('rank-terapis'), 'icon' => 'fa-star', 'color' => 'bg-amber-600'];
     $menus[] = ['label' => 'Users', 'url' => site_url('users'), 'icon' => 'fa-users', 'color' => 'bg-blue-600'];
     $menus[] = ['label' => 'Karyawan', 'url' => site_url('terapis'), 'icon' => 'fa-user-md', 'color' => 'bg-blue-500'];
 } else if ($role === 'owner') {

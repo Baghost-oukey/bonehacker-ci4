@@ -178,11 +178,9 @@
                         <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Rank / Level</label>
                         <select name="rank" class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 outline-none bg-slate-50">
                             <option value="">-- Pilih Rank --</option>
-                            <option value="SS">SS</option>
-                            <option value="S">S</option>
-                            <option value="A">A</option>
-                            <option value="B">B</option>
-                            <option value="C">C</option>
+                            <?php foreach (($rank_options ?? []) as $rank): ?>
+                                <option value="<?= esc($rank->name) ?>"><?= esc($rank->name) ?></option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                 </div>
@@ -306,13 +304,13 @@
                 <div class="relative">
                     <input type="password" id="quick-password" name="password" required 
                         class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 outline-none bg-slate-50 focus:bg-white transition-all shadow-inner" 
-                        placeholder="Minimal 6 karakter" value="password123">
+                        placeholder="Minimal 6 karakter" minlength="6">
                     <button type="button" onclick="const p=document.getElementById('quick-password'); p.type=p.type==='password'?'text':'password'; this.querySelector('i').classList.toggle('fa-eye'); this.querySelector('i').classList.toggle('fa-eye-slash');" 
                         class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
                         <i class="fas fa-eye text-xs"></i>
                     </button>
                 </div>
-                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-tight mt-1.5 ml-1">Default: password123</p>
+                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-tight mt-1.5 ml-1">Isi password awal khusus untuk akun ini.</p>
             </div>
 
             <div class="flex flex-col md:flex-row gap-3 pt-2">

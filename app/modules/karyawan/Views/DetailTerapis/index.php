@@ -177,9 +177,8 @@
                                 class="form-input w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-slate-50 cursor-not-allowed"
                                 disabled>
                                 <option value="">-- Pilih Rank --</option>
-                                <?php $ranks = ['SS', 'S', 'A', 'B', 'C']; ?>
-                                <?php foreach ($ranks as $r): ?>
-                                    <option value="<?= $r ?>" <?= $karyawan->rank == $r ? 'selected' : '' ?>><?= $r ?></option>
+                                <?php foreach (($rank_options ?? []) as $rank): ?>
+                                    <option value="<?= esc($rank->name) ?>" <?= $karyawan->rank == $rank->name ? 'selected' : '' ?>><?= esc($rank->name) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>

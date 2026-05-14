@@ -13,6 +13,7 @@
                 <option value="<?= site_url('whatsapp') ?>">WhatsApp</option>
                 <option value="<?= site_url('log_whatsapp') ?>">Log WhatsApp</option>
                 <option value="<?= site_url('jabatan') ?>">Jabatan</option>
+                <option value="<?= site_url('rank-terapis') ?>">Rank Terapis</option>
                 <option value="<?= site_url('greeting') ?>" selected>Greetings</option>
             </select>
         </div>

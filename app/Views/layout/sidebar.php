@@ -324,7 +324,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
 
                 <?php if ($role === 'superadmin'): ?>
                     <li>
-                        <details class="group" <?= in_array($current_segment, ['logs', 'whatsapp', 'log_whatsapp', 'jabatan', 'greeting']) ? 'open' : '' ?>>
+                        <details class="group" <?= in_array($current_segment, ['logs', 'whatsapp', 'log_whatsapp', 'jabatan', 'rank-terapis', 'greeting']) ? 'open' : '' ?>>
                             <summary class="flex w-full cursor-pointer list-none items-center justify-between rounded-md p-2 text-left text-sm transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 [&::-webkit-details-marker]:hidden">
                                 <span class="flex items-center gap-2">
                                     <i class="fas fa-cog w-4 text-center shrink-0"></i>
@@ -337,6 +337,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                                 <li><a href="<?= base_url('whatsapp') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'whatsapp' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">WhatsApp</span></a></li>
                                 <li><a href="<?= base_url('log_whatsapp') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'log_whatsapp' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Log WhatsApp</span></a></li>
                                 <li><a href="<?= base_url('jabatan') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'jabatan' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Jabatan</span></a></li>
+                                <li><a href="<?= base_url('rank-terapis') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'rank-terapis' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Rank Terapis</span></a></li>
                                 <li><a href="<?= base_url('greeting') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'greeting' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Greetings</span></a></li>
                             </ul>
                         </details>

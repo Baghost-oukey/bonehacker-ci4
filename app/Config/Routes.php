@@ -16,7 +16,18 @@ $routes->group('auth', ['namespace' => 'App\Modules\auth\Controllers'], function
   $routes->get('get_csrf', 'Auth::get_csrf');
 });
 
+// Users - Account Management
+$routes->group('users', ['namespace' => 'App\Modules\Users\Controllers', 'filter' => 'auth'], function ($routes) {
+  $routes->get('account', 'Users::account');
+  $routes->get('edit_account', 'Users::edit_account');
+  $routes->post('update_account', 'Users::update_account');
+  $routes->post('update_acount_users', 'Users::update_acount_users');
+});
+
 // API Routes Consolidated at the end of file
+
+// Debug route (remove after debugging)
+$routes->get('debug/profile', 'DebugProfile::index', ['filter' => 'auth']);
 
 // Beranda & Hub
 $routes->get('beranda', 'BerandaController::index', ['namespace' => 'App\Modules\Beranda\Controllers', 'filter' => 'auth']);
@@ -129,6 +140,14 @@ $routes->group('jabatan', ['namespace' => 'App\Modules\jabatan\Controllers', 'fi
   $routes->post('update/(:num)', 'Jabatan::update/$1');
   $routes->post('destroy/(:num)', 'Jabatan::destroy/$1');
   $routes->post('check_name_exists', 'Jabatan::check_name_exists');
+});
+
+// Rank Terapis
+$routes->group('rank-terapis', ['namespace' => 'App\modules\rank_terapis\Controllers', 'filter' => 'auth'], function ($routes) {
+  $routes->get('', 'RankTerapis::index');
+  $routes->post('store', 'RankTerapis::store');
+  $routes->post('update/(:num)', 'RankTerapis::update/$1');
+  $routes->post('destroy/(:num)', 'RankTerapis::destroy/$1');
 });
 
 
