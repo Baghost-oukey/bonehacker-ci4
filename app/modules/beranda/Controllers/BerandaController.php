@@ -217,13 +217,15 @@ class BerandaController extends BaseController
 
     $db = \Config\Database::connect();
 
-    // Get patient count per day from history table
-    $query = $db->table('history h')
-      ->select("DATE(h.created_at) as tanggal, COUNT(DISTINCT h.patient_id) as jumlah_pasien")
+    // Get patient count per day from histories table
+    $query = $db->table('histories h')
+      ->select("DATE(h.date) as tanggal, COUNT(DISTINCT h.patient_id) as jumlah_pasien")
       ->where('h.terapis_id', $terapisId)
-      ->where('DATE(h.created_at) >=', $startDate)
-      ->where('DATE(h.created_at) <=', $endDate)
-      ->groupBy('DATE(h.created_at)')
+      ->where('DATE(h.date) >=', $startDate)
+      ->where('DATE(h.date) <=', $endDate)
+      ->where('h.is_delete', 0)
+      ->where('h.type', 'posted')
+      ->groupBy('DATE(h.date)')
       ->orderBy('tanggal', 'ASC')
       ->get()
       ->getResultArray();
@@ -358,7 +360,7 @@ class BerandaController extends BaseController
     foreach ($tanggalHadir as $tanggal) {
       // Count patients for this day (reguler)
       $totalPasienReguler = $db->table('patient_queues pq')
-        ->join('history h', 'h.patient_id = pq.patient_id AND DATE(h.created_at) = DATE(pq.queue_date)', 'left')
+        ->join('histories h', 'h.patient_id = pq.patient_id AND DATE(h.date) = DATE(pq.queue_date)', 'left')
         ->where('DATE(pq.queue_date)', $tanggal)
         ->where('pq.region_id', $regionId)
         ->where('pq.status', 'selesai')
@@ -370,7 +372,7 @@ class BerandaController extends BaseController
 
       // Count patients for this day (kejantanan)
       $totalPasienKejantanan = $db->table('patient_queues pq')
-        ->join('history h', 'h.patient_id = pq.patient_id AND DATE(h.created_at) = DATE(pq.queue_date)', 'inner')
+        ->join('histories h', 'h.patient_id = pq.patient_id AND DATE(h.date) = DATE(pq.queue_date)', 'inner')
         ->where('DATE(pq.queue_date)', $tanggal)
         ->where('pq.region_id', $regionId)
         ->where('pq.status', 'selesai')
