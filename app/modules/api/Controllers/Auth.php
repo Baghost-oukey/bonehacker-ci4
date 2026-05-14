@@ -36,6 +36,10 @@ class Auth extends BaseController
             return $this->fail('User tidak ditemukan', 404);
         }
 
+        if (isset($user->is_active) && (int) $user->is_active === 0) {
+            return $this->fail('Akun Anda telah dinonaktifkan. Silakan hubungi Administrator.', 403);
+        }
+
         $isPasswordCorrect = false;
         
         // Cek password (BCRYPT atau MD5 legacy)

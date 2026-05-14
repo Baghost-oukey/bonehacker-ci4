@@ -25,8 +25,10 @@ class Cutikaryawan extends BaseController
         $region_patient  = session()->get('region_patient');
         $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
 
-        // Filter karyawan berdasarkan wilayah dan aktif
-        $terapisQuery = $this->model_karyawan->where('is_active', 1);
+        // Filter karyawan berdasarkan wilayah, aktif, dan ikut presensi.
+        $terapisQuery = $this->model_karyawan
+            ->where('is_active', 1)
+            ->where('is_presensi', 1);
 
         if ($allowed_regions) {
             if (is_array($allowed_regions)) {

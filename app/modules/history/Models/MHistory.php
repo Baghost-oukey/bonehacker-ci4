@@ -125,13 +125,13 @@ class MHistory extends Model
         $builder->join('complaint_tags ct', "FIND_IN_SET(ct.id, h.complaint) > 0", 'left');
         $builder->join('medhis_tags mt', "FIND_IN_SET(mt.id, h.medhis) > 0", 'left');
         $builder->where('h.patient_id', $id);
-        $builder->where('h.is_delete', 0);
         if (!empty($option['where_like'])) {
             $builder->groupStart();
             foreach ($option['where_like'] as $like) {
-                $builder->orLike($like);
+                $builder->orWhere($like);
             }
-        };
+            $builder->groupEnd();
+        }
         return $builder->get()->getRow()->total ?? 0;
     }
 
