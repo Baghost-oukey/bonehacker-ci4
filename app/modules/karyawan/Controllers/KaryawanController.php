@@ -356,15 +356,31 @@ class KaryawanController extends BaseController
     $role = $this->session->get('role');
     $terapisIdInt = $this->session->get('terapis_id_int');
     
-    // Terapis hanya boleh update profil sendiri, dan tidak boleh ubah rank/jabatan
+    // Terapis hanya boleh update profil sendiri
     if ($role === 'terapis') {
       if (!$terapisIdInt || $terapisIdInt != $id) {
         $this->session->setFlashdata('message', ['error', 'Anda hanya dapat mengubah profil sendiri']);
         return redirect()->back();
       }
+      
+      // Terapis HANYA boleh update foto, tidak boleh update field lain
+      $file = $this->request->getFile('foto');
+      if ($file && $file->isValid() && !$file->hasMoved()) {
+          $newName = $file->getRandomName();
+          $file->move(FCPATH . 'foto_karyawan', $newName);
+          
+          // Update HANYA foto
+          $this->model_karyawan->update($id, ['foto' => $newName]);
+          $this->session->setFlashdata('message', ['success', 'Foto profil berhasil diperbarui']);
+      } else {
+          $this->session->setFlashdata('message', ['error', 'Tidak ada perubahan yang dilakukan']);
+      }
+      
+      return redirect()->back();
     }
     
-    $karyawan_id = $this->request->getPost('terapis_id'); // Still using terapis_id from DB for now
+    // Untuk admin/owner/superadmin, boleh update semua field
+    $karyawan_id = $this->request->getPost('terapis_id');
     $data = [
       'terapis_id' => $karyawan_id,
       'nama' => $this->request->getPost('nama'),
@@ -372,25 +388,19 @@ class KaryawanController extends BaseController
       'tanggal_lahir' => $this->request->getPost('tgl_lahir'),
       'alamat' => $this->request->getPost('alamat') ?: null,
       'region_id' => $this->request->getPost('region_id'),
+      'jabatan_id' => !empty($this->request->getPost('jabatan_id')) ? $this->request->getPost('jabatan_id') : null,
+      'rank' => $this->request->getPost('rank'),
       'tgl_mulai_kerja' => $this->request->getPost('tgl_kerja'),
       'keterangan' => $this->request->getPost('keterangan'),
       'is_active' => $this->request->getPost('status') === 'on' ? 1 : 0,
       'is_presensi' => $this->request->getPost('is_presensi') === 'on' ? 1 : 0,
     ];
-    
-    // Hanya admin/owner/superadmin yang boleh ubah jabatan dan rank
-    if ($role !== 'terapis') {
-      $data['jabatan_id'] = !empty($this->request->getPost('jabatan_id')) ? $this->request->getPost('jabatan_id') : null;
-      $data['rank'] = $this->request->getPost('rank');
-    }
 
     $file = $this->request->getFile('foto');
     if ($file && $file->isValid() && !$file->hasMoved()) {
         $newName = $file->getRandomName();
         $file->move(FCPATH . 'foto_karyawan', $newName);
         $data['foto'] = $newName;
-        
-        // Note: No need to update session anymore, profile component will fetch from DB
     }
 
     if ($this->model_karyawan->update($id, $data)) {
@@ -447,6 +457,12 @@ class KaryawanController extends BaseController
 
   public function active($id)
   {
+    // Only admin/owner/superadmin can activate/deactivate
+    $role = $this->session->get('role');
+    if ($role === 'terapis') {
+      return $this->response->setJSON(['status' => 'error', 'message' => 'Anda tidak memiliki akses', 'csrfHash' => csrf_hash()]);
+    }
+    
     $type = $this->request->getPost('type') ?? 'terapis';
     if ($type === 'terapis') {
         $terapis = $this->model_karyawan->find($id);
@@ -462,6 +478,12 @@ class KaryawanController extends BaseController
 
   public function nonActive($id)
   {
+    // Only admin/owner/superadmin can activate/deactivate
+    $role = $this->session->get('role');
+    if ($role === 'terapis') {
+      return $this->response->setJSON(['status' => 'error', 'message' => 'Anda tidak memiliki akses', 'csrfHash' => csrf_hash()]);
+    }
+    
     $type = $this->request->getPost('type') ?? 'terapis';
     if ($type === 'terapis') {
         $terapis = $this->model_karyawan->find($id);
@@ -477,6 +499,12 @@ class KaryawanController extends BaseController
 
   public function destroy($id)
   {
+    // Only admin/owner/superadmin can delete
+    $role = $this->session->get('role');
+    if ($role === 'terapis') {
+      return $this->response->setJSON(['status' => 'error', 'message' => 'Anda tidak memiliki akses', 'csrfHash' => csrf_hash()]);
+    }
+    
     // Get terapis data to find linked user_id
     $terapis = $this->model_karyawan->find($id);
     if ($terapis) {
