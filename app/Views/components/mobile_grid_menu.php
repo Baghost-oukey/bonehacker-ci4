@@ -64,9 +64,9 @@ if ($role === 'superadmin') {
 ?>
 
 
-<div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:hidden">
+<div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:hidden">
     <?php foreach ($menus as $menu): ?>
-        <a href="<?= $menu['url'] ?>" class="flex flex-col items-center justify-center gap-3 rounded-2xl bg-white p-6 shadow-sm transition-all active:scale-95 border border-slate-100">
+        <a href="<?= $menu['url'] ?>" class="flex flex-col items-center justify-center gap-3 rounded-2xl bg-white p-6 shadow-sm transition-all active:scale-95 hover:shadow-md border border-slate-100">
             <div class="flex h-12 w-12 items-center justify-center rounded-xl <?= $menu['color'] ?> text-white shadow-lg shadow-<?= str_replace('bg-', '', $menu['color']) ?>/20">
                 <i class="fas <?= $menu['icon'] ?> text-lg"></i>
             </div>
