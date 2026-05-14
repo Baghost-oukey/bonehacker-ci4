@@ -64,10 +64,19 @@ class MKaryawan extends Model
         $search = $options['search'] ?? '';
         $limit = $options['limit'] ?? 25;
         $offset = $options['offset'] ?? 0;
+        $regionFilter = $options['region_filter'] ?? null;
 
-        // Personnel query: 
-        // 1. Users who are NOT therapists (Management)
-        // 2. All Therapists (whether they have a user account or not)
+        // Build region filter condition for terapis
+        $regionCondition = '';
+        if ($regionFilter) {
+            if (is_array($regionFilter)) {
+                $ids = implode(',', array_map('intval', $regionFilter));
+                $regionCondition = " AND t.region_id IN ($ids)";
+            } else {
+                $regionCondition = " AND t.region_id = " . intval($regionFilter);
+            }
+        }
+
         $sql = "
         SELECT * FROM (
             SELECT 
@@ -77,11 +86,14 @@ class MKaryawan extends Model
                 u.role, 
                 u.regions_patient, 
                 u.terapis_id, 
-                t.id as id_terapis_table, 
-                'Management' as personnel_type 
+                t.id as id_terapis_table,
+                t.region_id as terapis_region_id,
+                'Management' as personnel_type,
+                u.is_active
             FROM users u 
             LEFT JOIN terapis t ON u.terapis_id = t.terapis_id 
-            WHERE u.terapis_id IS NULL OR u.terapis_id = ''
+            WHERE (u.terapis_id IS NULL OR u.terapis_id = '')
+            " . ($regionFilter ? " AND u.role != 'superadmin'" : "") . "
             
             UNION ALL
             
@@ -92,10 +104,13 @@ class MKaryawan extends Model
                 u.role, 
                 u.regions_patient, 
                 t.terapis_id, 
-                t.id as id_terapis_table, 
-                'Therapist' as personnel_type 
+                t.id as id_terapis_table,
+                t.region_id as terapis_region_id,
+                'Therapist' as personnel_type,
+                t.is_active
             FROM terapis t 
             LEFT JOIN users u ON t.terapis_id = u.terapis_id
+            WHERE 1=1 $regionCondition
         ) AS personnel
         WHERE 1=1
         ";
@@ -104,7 +119,7 @@ class MKaryawan extends Model
             $sql .= " AND (name LIKE '%" . $this->db->escapeLikeString($search) . "%' OR username LIKE '%" . $this->db->escapeLikeString($search) . "%' OR terapis_id LIKE '%" . $this->db->escapeLikeString($search) . "%')";
         }
 
-        $sql .= " ORDER BY name ASC LIMIT $limit OFFSET $offset";
+        $sql .= " ORDER BY is_active DESC, name ASC LIMIT $limit OFFSET $offset";
 
         return $this->db->query($sql)->getResult();
     }
@@ -112,29 +127,50 @@ class MKaryawan extends Model
     public function getTotalData($options)
     {
         $search = $options['search'] ?? '';
-        
+        $regionFilter = $options['region_filter'] ?? null;
+
+        $regionCondition = '';
+        if ($regionFilter) {
+            if (is_array($regionFilter)) {
+                $ids = implode(',', array_map('intval', $regionFilter));
+                $regionCondition = " AND t.region_id IN ($ids)";
+            } else {
+                $regionCondition = " AND t.region_id = " . intval($regionFilter);
+            }
+        }
+
         $sql = "
         SELECT COUNT(*) as total FROM (
-            SELECT u.id FROM users u WHERE u.terapis_id IS NULL OR u.terapis_id = ''
+            SELECT u.id FROM users u WHERE (u.terapis_id IS NULL OR u.terapis_id = '')" . ($regionFilter ? " AND u.role != 'superadmin'" : "") . "
             UNION ALL
-            SELECT t.id FROM terapis t
+            SELECT t.id FROM terapis t WHERE 1=1 $regionCondition
         ) AS personnel
         ";
 
         if (!empty($search)) {
-            return $this->getTotalFiltered($search);
+            return $this->getTotalFiltered($search, $regionFilter);
         }
 
         return $this->db->query($sql)->getRow()->total;
     }
 
-    private function getTotalFiltered($search)
+    private function getTotalFiltered($search, $regionFilter = null)
     {
+        $regionCondition = '';
+        if ($regionFilter) {
+            if (is_array($regionFilter)) {
+                $ids = implode(',', array_map('intval', $regionFilter));
+                $regionCondition = " AND t.region_id IN ($ids)";
+            } else {
+                $regionCondition = " AND t.region_id = " . intval($regionFilter);
+            }
+        }
+
         $sql = "
         SELECT COUNT(*) as total FROM (
-            SELECT u.realname as name, u.username, u.terapis_id FROM users u WHERE u.terapis_id IS NULL OR u.terapis_id = ''
+            SELECT u.realname as name, u.username, u.terapis_id FROM users u WHERE (u.terapis_id IS NULL OR u.terapis_id = '')" . ($regionFilter ? " AND u.role != 'superadmin'" : "") . "
             UNION ALL
-            SELECT t.nama as name, u.username, t.terapis_id FROM terapis t LEFT JOIN users u ON t.terapis_id = u.terapis_id
+            SELECT t.nama as name, u.username, t.terapis_id FROM terapis t LEFT JOIN users u ON t.terapis_id = u.terapis_id WHERE 1=1 $regionCondition
         ) AS personnel
         WHERE (name LIKE '%" . $this->db->escapeLikeString($search) . "%' OR username LIKE '%" . $this->db->escapeLikeString($search) . "%' OR terapis_id LIKE '%" . $this->db->escapeLikeString($search) . "%')
         ";

@@ -41,10 +41,10 @@
                     <tr class="bg-white border-b border-slate-50 text-[10px] font-black text-slate-500 uppercase tracking-widest">
                         <th class="px-6 py-5 whitespace-nowrap">No</th>
                         <th class="px-6 py-5 whitespace-nowrap">Nama Lengkap</th>
-                        <th class="px-6 py-5 whitespace-nowrap">Tipe</th>
                         <th class="px-6 py-5 whitespace-nowrap">Username</th>
                         <th class="px-6 py-5 whitespace-nowrap">Role</th>
                         <th class="px-6 py-5 whitespace-nowrap">Wilayah</th>
+                        <th class="px-6 py-5 whitespace-nowrap text-center">Status</th>
                         <th class="px-6 py-5 text-center whitespace-nowrap">Aksi</th>
                     </tr>
                 </thead>
@@ -124,7 +124,7 @@
                     <option value="owner">Owner</option>
                     <option value="admin">Admin</option>
                     <option value="superadmin">Super Admin</option>
-                    <option value="user">User (Terapis)</option>
+                    <option value="terapis">Terapis</option>
                 </select>
             </div>
 
@@ -178,9 +178,11 @@
                         <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Rank / Level</label>
                         <select name="rank" class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 outline-none bg-slate-50">
                             <option value="">-- Pilih Rank --</option>
-                            <option value="Junior">Junior</option>
-                            <option value="Senior">Senior</option>
-                            <option value="Master">Master</option>
+                            <option value="SS">SS</option>
+                            <option value="S">S</option>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
                         </select>
                     </div>
                 </div>
@@ -188,7 +190,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Tgl Mulai Kerja</label>
-                        <input type="date" name="tgl_mulai_kerja" class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 outline-none bg-slate-50">
+                        <input type="date" name="tgl_mulai_kerja" max="<?= date('Y-m-d') ?>" class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 outline-none bg-slate-50">
                     </div>
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Foto Profil</label>
@@ -224,7 +226,7 @@
             </button>
         </div>
 
-        <form id="formEditUser" action="" method="post" class="space-y-5 p-6 max-h-[75vh] overflow-y-auto needs-validation" novalidate>
+        <form id="formEditUser" action="#" method="post" class="space-y-5 p-6 max-h-[75vh] overflow-y-auto needs-validation" novalidate>
             <?= csrf_field() ?>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="space-y-1.5">
@@ -247,7 +249,7 @@
                     <option value="superadmin">Super Admin</option>
                     <option value="owner">Owner</option>
                     <option value="admin">Admin</option>
-                    <option value="user">User (Terapis)</option>
+                    <option value="terapis">Terapis</option>
                 </select>
             </div>
             <div class="space-y-1.5 hidden" id="regionFieldEdit">
@@ -261,6 +263,61 @@
             <div class="flex flex-col md:flex-row gap-3 border-t border-slate-100 pt-5 mt-4">
                 <button type="button" data-modal-close class="w-full md:w-auto px-6 py-3.5 rounded-2xl border border-slate-200 text-slate-500 text-sm font-black uppercase tracking-widest hover:bg-slate-50 transition-all">Batal</button>
                 <button type="submit" id="submitBtnEdit" class="w-full md:flex-1 px-6 py-3.5 rounded-2xl bg-teal-600 text-white text-sm font-black uppercase tracking-widest shadow-lg shadow-teal-500/25 hover:bg-teal-700 transition-all">Simpan Perubahan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Quick Create Account (Simplified) -->
+<div id="modalQuickCreateAccount" class="modal-wrapper hidden fixed inset-0 z-[60] items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+        <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div>
+                <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">Buat Akun Login</h3>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Akses Sistem Terapis</p>
+            </div>
+            <button type="button" data-modal-close class="w-8 h-8 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-slate-600 transition-all shadow-sm">
+                <i class="fas fa-times text-xs"></i>
+            </button>
+        </div>
+        
+        <form id="formQuickCreateAccount" action="#" class="p-6 space-y-5">
+            <input type="hidden" id="quick-karyawan-id" name="karyawan_id">
+            
+            <div class="bg-teal-50/50 rounded-2xl p-4 border border-teal-100/50 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-white text-teal-600 flex items-center justify-center shadow-sm border border-teal-100">
+                    <i class="fas fa-user-check text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] font-black text-teal-600 uppercase tracking-widest">Karyawan</p>
+                    <p id="quick-realname" class="text-sm font-black text-slate-800"></p>
+                </div>
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Username</label>
+                <input type="text" id="quick-username" name="username" required 
+                    class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 outline-none bg-slate-50 focus:bg-white transition-all shadow-inner" 
+                    placeholder="Masukkan username">
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Password</label>
+                <div class="relative">
+                    <input type="password" id="quick-password" name="password" required 
+                        class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 outline-none bg-slate-50 focus:bg-white transition-all shadow-inner" 
+                        placeholder="Minimal 6 karakter" value="password123">
+                    <button type="button" onclick="const p=document.getElementById('quick-password'); p.type=p.type==='password'?'text':'password'; this.querySelector('i').classList.toggle('fa-eye'); this.querySelector('i').classList.toggle('fa-eye-slash');" 
+                        class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                        <i class="fas fa-eye text-xs"></i>
+                    </button>
+                </div>
+                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-tight mt-1.5 ml-1">Default: password123</p>
+            </div>
+
+            <div class="flex flex-col md:flex-row gap-3 pt-2">
+                <button type="button" data-modal-close class="w-full md:w-auto px-6 py-3.5 rounded-2xl border border-slate-200 text-slate-500 text-sm font-black uppercase tracking-widest hover:bg-slate-50 transition-all">Batal</button>
+                <button type="submit" id="submitQuickAccount" class="w-full md:flex-1 px-6 py-3.5 rounded-2xl bg-teal-600 text-white text-sm font-black uppercase tracking-widest shadow-lg shadow-teal-500/25 hover:bg-teal-700 transition-all">Simpan & Buat Akun</button>
             </div>
         </form>
     </div>
@@ -299,8 +356,11 @@
         fetchUrl: "<?= base_url('karyawan/fetch') ?>",
         storeUrl: "<?= base_url('karyawan/store') ?>",
         checkUsernameUrl: "<?= base_url('karyawan/check_username_exists') ?>",
+        activeUrl: "<?= base_url('karyawan/active') ?>",
+        nonActiveUrl: "<?= base_url('karyawan/nonActive') ?>",
         viewPatientUrl: "<?= base_url('karyawan/view_patient') ?>",
-        baseUrl: "<?= base_url('karyawan') ?>"
+        baseUrl: "<?= base_url('karyawan') ?>",
+        generateUserUrl: "<?= base_url('karyawan/generate_user') ?>"
     };
 </script>
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />

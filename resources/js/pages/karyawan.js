@@ -66,11 +66,17 @@ const setupUsersPage = () => {
         });
     };
 
+    const getLatestCsrfHash = () => $('meta[name="csrf-token-hash"]').attr('content');
+
+    const getCsrfPayload = (cfg) => ({
+        [cfg.csrfName]: getLatestCsrfHash()
+    });
+
     const updateCsrf = (newToken) => {
         if (!newToken) return;
         config.csrfHash = newToken;
-        $("meta[name='csrf-token']").attr("content", newToken);
-        $(`input[name='${config.csrfName}']`).val(newToken);
+        $('meta[name="csrf-token-hash"]').attr('content', newToken);
+        $('input[name="' + config.csrfName + '"]').val(newToken);
     };
 
     const updatePaginationUI = () => {
@@ -142,14 +148,18 @@ const setupUsersPage = () => {
                 }
 
                 response.data.forEach((row) => {
+                    const isInactive = row.is_active == 0;
+                    const inactiveTrClass = isInactive ? ' opacity-50 bg-slate-50/30' : '';
+                    const inactiveTdClass = isInactive ? ' line-through text-slate-400' : '';
+
                     // Desktop row
-                    const tr = $(`<tr class="hover:bg-slate-50/50 transition-colors border-b border-slate-50 group"></tr>`);
+                    const tr = $(`<tr class="hover:bg-slate-50/50 transition-colors border-b border-slate-50 group${inactiveTrClass}"></tr>`);
                     tr.append(`<td class="px-6 py-4 text-xs font-mono text-slate-400 italic">#${row.no || "-"}</td>`);
-                    tr.append(`<td class="px-6 py-4 font-black text-slate-800 text-sm">${row.realname || "-"}</td>`);
-                    tr.append(`<td class="px-6 py-4">${row.type_label || "-"}</td>`);
-                    tr.append(`<td class="px-6 py-4 text-xs font-bold text-slate-500">${row.username || "-"}</td>`);
+                    tr.append(`<td class="px-6 py-4 font-black text-slate-800 text-sm${inactiveTdClass}">${row.realname || "-"}</td>`);
+                    tr.append(`<td class="px-6 py-4 text-xs font-bold text-slate-500${inactiveTdClass}">${row.username || "-"}</td>`);
                     tr.append(`<td class="px-6 py-4"><span class="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest bg-slate-100 text-slate-500 border border-slate-200">${row.role || "-"}</span></td>`);
-                    tr.append(`<td class="px-6 py-4 text-xs font-bold text-slate-400">${row.region_name || "-"}</td>`);
+                    tr.append(`<td class="px-6 py-4 text-xs font-bold text-slate-400${inactiveTdClass}">${row.region_name || "-"}</td>`);
+                    tr.append(`<td class="px-6 py-4">${row.status || "-"}</td>`);
                     tr.append(`<td class="px-6 py-4 text-center">${row.action || "-"}</td>`);
                     tbody.append(tr);
 
@@ -171,7 +181,6 @@ const setupUsersPage = () => {
                                 </div>
                             </div>
                             <div class="flex flex-wrap gap-2">
-                                ${row.type_label}
                                 <span class="px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest bg-slate-100 text-slate-500 border border-slate-200">
                                     <i class="fas fa-shield-alt mr-1 opacity-50"></i> ${row.role}
                                 </span>
@@ -194,11 +203,11 @@ const setupUsersPage = () => {
         const $regionManagement = $("#regionFieldAdd");
         
         // Therapist fields
-        if (role === 'user') {
+        if (role === 'terapis') {
             $extraTerapis.fadeIn().removeClass('hidden');
             $extraTerapis.find('input, select, textarea').prop('required', true);
-            // Regions patient for therapist is usually just their placement region, so hide management region select
-            $regionManagement.fadeOut().addClass('hidden');
+            // Regions patient for therapist can be multiple, so show management region select
+            $regionManagement.fadeIn().removeClass('hidden');
         } else {
             $extraTerapis.fadeOut().addClass('hidden');
             $extraTerapis.find('input, select, textarea').prop('required', false);
@@ -256,7 +265,7 @@ const setupUsersPage = () => {
     $('#edit_role').on('change', function() { 
         const role = $(this).val();
         const $regionEdit = $("#regionFieldEdit");
-        if (role === 'owner' || role === 'admin') {
+        if (role === 'owner' || role === 'admin' || role === 'terapis') {
             $regionEdit.fadeIn().removeClass('hidden');
         } else {
             $regionEdit.fadeOut().addClass('hidden');
@@ -267,7 +276,7 @@ const setupUsersPage = () => {
     $('#edit_username').on('keyup', debounce(function() { checkUsername($(this).val(), '#formEditUser .edit-username-feedback', '#submitBtnEdit', originalUsername); }, 500));
 
     // CRUD Ajax
-    $('.modal-wrapper form').on('submit', function(e) {
+    $('#formAddUser, #formEditUser').on('submit', function(e) {
         e.preventDefault();
         const form = this;
         const $form = $(form);
@@ -275,6 +284,12 @@ const setupUsersPage = () => {
         const modal = $form.closest('.modal-wrapper')[0];
 
         if (!form.checkValidity()) { $form.addClass('was-validated'); return; }
+
+        const url = $form.attr('action');
+        if (!url || url === '#' || url.startsWith('javascript:')) {
+            swalLib.fire('Error!', 'Tujuan pengiriman data tidak valid. Harap refresh halaman.', 'error');
+            return;
+        }
 
         btn.prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin"></i>');
         const formData = new FormData(form);
@@ -312,10 +327,52 @@ const setupUsersPage = () => {
 
     $(document).on('click', '.btn_create_account', function() {
         const d = $(this).data();
-        $('#role_add').val('user').trigger('change');
-        $('#formAddUser input[name="realname"]').val(d.realname);
-        $('#formAddUser input[name="terapis_id"]').val(d.terapis_id);
-        openModal(document.getElementById("modalAdd"));
+        $('#quick-karyawan-id').val(d.terapis_id);
+        $('#quick-realname').text(d.realname);
+        $('#quick-username').val(d.terapis_id);
+        $('#quick-password').val('password123');
+        openModal(document.getElementById("modalQuickCreateAccount"));
+    });
+
+    $('#formQuickCreateAccount').on('submit', function(e) {
+        e.preventDefault();
+        const $form = $(this);
+        const btn = $('#submitQuickAccount');
+        const modal = document.getElementById("modalQuickCreateAccount");
+
+        btn.prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin"></i>');
+
+        if (!config.generateUserUrl) {
+            swalLib.fire('Error!', 'Konfigurasi URL tidak ditemukan. Harap refresh halaman.', 'error');
+            btn.prop('disabled', false).text('Simpan & Buat Akun');
+            return;
+        }
+
+        $.ajax({
+            url: config.generateUserUrl,
+            type: "POST",
+            data: {
+                ...getCsrfPayload(config),
+                karyawan_id: $('#quick-karyawan-id').val(),
+                username: $('#quick-username').val(),
+                password: $('#quick-password').val()
+            },
+            dataType: "json",
+            success: (res) => {
+                updateCsrf(res.csrfHash);
+                if (res.status === 'success') {
+                    closeModal(modal);
+                    setTimeout(() => {
+                        loadTableData(currentPage);
+                        swalLib.fire({ icon: 'success', title: 'Berhasil!', text: res.message, timer: 1500, showConfirmButton: false });
+                    }, 200);
+                } else {
+                    swalLib.fire('Gagal!', res.message, 'error');
+                }
+            },
+            error: () => swalLib.fire('Error!', 'Terjadi kesalahan sistem.', 'error'),
+            complete: () => btn.prop('disabled', false).text('Simpan & Buat Akun')
+        });
     });
 
     $(document).on('click', '.btn_add_patient', function(e) {
@@ -324,6 +381,45 @@ const setupUsersPage = () => {
         if (userId && config.viewPatientUrl) {
             window.location.href = config.viewPatientUrl + '/' + userId;
         }
+    });
+
+    $(document).on('click', '.btn_toggle_status', function(e) {
+        e.preventDefault();
+        const d = $(this).data();
+        const status = d.status; // 1: aktif, 0: nonaktif
+        const url = status == 1 ? config.activeUrl : config.nonActiveUrl;
+        const msg = status == 1 ? "Aktifkan user ini?" : "Nonaktifkan user ini?";
+
+        swalLib.fire({
+            title: msg,
+            text: status == 1 ? "User akan kembali dapat mengakses sistem." : "User tidak akan bisa login, namun data historis tetap tersimpan.",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: status == 1 ? 'Ya, Aktifkan!' : 'Ya, Nonaktifkan!',
+            cancelButtonText: 'Batal',
+            customClass: {
+                confirmButton: status == 1 ? 'bg-emerald-600 text-white px-6 py-2 rounded-xl font-bold ml-2' : 'bg-red-600 text-white px-6 py-2 rounded-xl font-bold ml-2',
+                cancelButton: 'bg-slate-100 text-slate-500 px-6 py-2 rounded-xl font-bold'
+            },
+            buttonsStyling: false
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.post(url + '/' + d.id, { 
+                    ...getCsrfPayload(config),
+                    type: d.type
+                }, (res) => {
+                    if (res.csrfHash) updateCsrf(res.csrfHash);
+                    swalLib.fire({ 
+                        icon: res.status, 
+                        title: res.status === 'success' ? 'Berhasil!' : 'Gagal!', 
+                        text: res.message, 
+                        timer: 1500, 
+                        showConfirmButton: false 
+                    });
+                    loadTableData(currentPage);
+                }, 'json');
+            }
+        });
     });
 
     $(document).on('click', '.btn_delete', function(e) {

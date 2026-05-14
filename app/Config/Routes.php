@@ -206,11 +206,14 @@ $routes->group('greeting', ['namespace' => 'App\Modules\greeting\Controllers', '
 // Karyawan (Unified Personnel Management)
 $routes->group('karyawan', ['namespace' => 'App\Modules\Karyawan\Controllers', 'filter' => 'auth'], function ($routes) {
   $routes->get('', 'KaryawanController::index');
+  $routes->get('profil_saya', 'KaryawanController::profil_saya');
   $routes->post('fetch', 'KaryawanController::fetch');
   $routes->post('store', 'KaryawanController::store');
   $routes->get('show/(:any)', 'KaryawanController::show/$1');
   
   // Account operations
+  $routes->post('generate_user', 'KaryawanController::generate_user');
+  $routes->post('link_user', 'KaryawanController::link_user');
   $routes->post('update_account/(:num)', 'KaryawanController::update_account/$1');
   $routes->post('delete_account/(:num)', 'KaryawanController::delete_account/$1');
   $routes->post('check_username_exists', 'KaryawanController::checkUsername');
@@ -219,7 +222,7 @@ $routes->group('karyawan', ['namespace' => 'App\Modules\Karyawan\Controllers', '
   $routes->post('update_profile', 'KaryawanController::update_profile');
   $routes->post('active/(:num)', 'KaryawanController::active/$1');
   $routes->post('nonActive/(:num)', 'KaryawanController::nonActive/$1');
-  $routes->get('destroy/(:num)', 'KaryawanController::destroy/$1');
+  $routes->post('destroy/(:num)', 'KaryawanController::destroy/$1');
   
   // Patient Access
   $routes->get('view_patient/(:num)', 'KaryawanController::view_patient/$1');
@@ -231,7 +234,14 @@ $routes->group('karyawan', ['namespace' => 'App\Modules\Karyawan\Controllers', '
   
   // Extra
   $routes->get('public_info/(:any)', 'KaryawanController::public_info/$1');
+});
+
+// Terapis (Alias for Karyawan - Used in Mobile Menu)
+$routes->group('terapis', ['namespace' => 'App\Modules\Karyawan\Controllers', 'filter' => 'auth'], function ($routes) {
+  $routes->get('', 'KaryawanController::index');
   $routes->get('profil_saya', 'KaryawanController::profil_saya');
+  $routes->get('show/(:any)', 'KaryawanController::show/$1');
+  $routes->get('public_info/(:any)', 'KaryawanController::public_info/$1');
 });
 
 // Patients - Routes

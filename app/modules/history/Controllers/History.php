@@ -67,7 +67,10 @@ class History extends BaseController
         foreach ($dataOutput as $value) {
             $value->no = $no++;
             
+            // Cek apakah rekam medis dibuat hari ini
+            $isToday = false;
             if ($value->date) {
+                $isToday = date('Y-m-d', strtotime($value->date)) === date('Y-m-d');
                 $tgl = date('d', strtotime($value->date));
                 $bln = $bulan_indo[(int)date('m', strtotime($value->date))];
                 $thn = date('Y', strtotime($value->date));
@@ -82,13 +85,19 @@ class History extends BaseController
 
             // Tandai baris yang sudah dihapus
             $value->is_deleted = (int)$value->is_delete === 1;
+            $value->is_editable = $isToday && !$value->is_deleted;
 
             if ($value->is_deleted) {
-                // Rekam medis yang dihapus: hanya tombol lihat, teks dicoret
                 $value->action = '
                     <div class="btn-group">
                         <button type="button" class="btn btn-secondary btn-sm" onclick="show(\'' . $value->id . '\')"><i class="fas fa-eye"></i></button>
                         <span class="badge bg-danger text-xs ml-1">Dihapus</span>
+                    </div>';
+            } else if (!$isToday && $value->type === 'posted') {
+                // Rekam medis posted dari hari sebelumnya — hanya bisa lihat
+                $value->action = '
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="show(\'' . $value->id . '\')"><i class="fas fa-eye"></i></button>
                     </div>';
             } else {
                 $value->action = '
@@ -691,17 +700,36 @@ class History extends BaseController
             ]);
         }
 
-        $terapis = $this->db->table('terapis')
-            ->select('id, nama, is_active')
-            ->where('region_id', $regionId)
-            ->where('is_active', 1)
-            ->orderBy('nama', 'ASC')
+        $today = date('Y-m-d');
+
+        // Hanya tampilkan terapis yang sudah presensi hadir hari ini
+        $terapis = $this->db->table('terapis t')
+            ->select('t.id, t.nama, t.is_active')
+            ->join('absensi_karyawan ak', "ak.terapis_id = t.id AND ak.tanggal = '$today' AND ak.status = 'Hadir'", 'inner')
+            ->where('t.region_id', $regionId)
+            ->where('t.is_active', 1)
+            ->orderBy('t.nama', 'ASC')
             ->get()
             ->getResult();
 
+        // Cek apakah ada terapis yang belum presensi
+        $totalTerapisAktif = $this->db->table('terapis')
+            ->where('region_id', $regionId)
+            ->where('is_active', 1)
+            ->where('is_presensi', 1)
+            ->countAllResults();
+
+        $message = '';
+        if (empty($terapis)) {
+            $message = 'Belum ada terapis yang presensi hadir hari ini. Silakan input presensi terlebih dahulu.';
+        } elseif (count($terapis) < $totalTerapisAktif) {
+            $message = count($terapis) . ' dari ' . $totalTerapisAktif . ' terapis sudah presensi hadir hari ini.';
+        }
+
         return $this->response->setJSON([
-            'status' => true,
-            'data' => $terapis
+            'status'  => true,
+            'data'    => $terapis,
+            'message' => $message,
         ]);
     }
 }
