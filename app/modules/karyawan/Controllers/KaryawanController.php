@@ -266,6 +266,10 @@ class KaryawanController extends BaseController
           return $this->response->setJSON(['status' => 'error', 'message' => 'Data tidak lengkap', 'csrfHash' => csrf_hash()]);
       }
 
+      if (strlen($password) < 6) {
+          return $this->response->setJSON(['status' => 'error', 'message' => 'Password minimal 6 karakter', 'csrfHash' => csrf_hash()]);
+      }
+
       $terapis = $this->model_karyawan->where('terapis_id', $karyawan_id)->first();
       if (!$terapis) {
           return $this->response->setJSON(['status' => 'error', 'message' => 'Terapis tidak ditemukan', 'csrfHash' => csrf_hash()]);

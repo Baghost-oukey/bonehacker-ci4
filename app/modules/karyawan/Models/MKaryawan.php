@@ -66,16 +66,9 @@ class MKaryawan extends Model
         $offset = $options['offset'] ?? 0;
         $regionFilter = $options['region_filter'] ?? null;
 
-        // Build region filter condition for terapis
-        $regionCondition = '';
-        if ($regionFilter) {
-            if (is_array($regionFilter)) {
-                $ids = implode(',', array_map('intval', $regionFilter));
-                $regionCondition = " AND t.region_id IN ($ids)";
-            } else {
-                $regionCondition = " AND t.region_id = " . intval($regionFilter);
-            }
-        }
+        $regionIds = $this->normalizeRegionFilter($regionFilter);
+        $terapisRegionCondition = $this->buildTerapisRegionCondition($regionIds);
+        $userRegionCondition = $this->buildUserRegionCondition($regionIds);
 
         $sql = "
         SELECT * FROM (
@@ -93,7 +86,7 @@ class MKaryawan extends Model
             FROM users u 
             LEFT JOIN terapis t ON u.terapis_id = t.terapis_id 
             WHERE (u.terapis_id IS NULL OR u.terapis_id = '')
-            " . ($regionFilter ? " AND u.role != 'superadmin'" : "") . "
+            $userRegionCondition
             
             UNION ALL
             
@@ -110,7 +103,7 @@ class MKaryawan extends Model
                 t.is_active
             FROM terapis t 
             LEFT JOIN users u ON t.terapis_id = u.terapis_id
-            WHERE 1=1 $regionCondition
+            WHERE 1=1 $terapisRegionCondition
         ) AS personnel
         WHERE 1=1
         ";
@@ -129,21 +122,15 @@ class MKaryawan extends Model
         $search = $options['search'] ?? '';
         $regionFilter = $options['region_filter'] ?? null;
 
-        $regionCondition = '';
-        if ($regionFilter) {
-            if (is_array($regionFilter)) {
-                $ids = implode(',', array_map('intval', $regionFilter));
-                $regionCondition = " AND t.region_id IN ($ids)";
-            } else {
-                $regionCondition = " AND t.region_id = " . intval($regionFilter);
-            }
-        }
+        $regionIds = $this->normalizeRegionFilter($regionFilter);
+        $terapisRegionCondition = $this->buildTerapisRegionCondition($regionIds);
+        $userRegionCondition = $this->buildUserRegionCondition($regionIds);
 
         $sql = "
         SELECT COUNT(*) as total FROM (
-            SELECT u.id FROM users u WHERE (u.terapis_id IS NULL OR u.terapis_id = '')" . ($regionFilter ? " AND u.role != 'superadmin'" : "") . "
+            SELECT u.id FROM users u WHERE (u.terapis_id IS NULL OR u.terapis_id = '') $userRegionCondition
             UNION ALL
-            SELECT t.id FROM terapis t WHERE 1=1 $regionCondition
+            SELECT t.id FROM terapis t WHERE 1=1 $terapisRegionCondition
         ) AS personnel
         ";
 
@@ -156,25 +143,55 @@ class MKaryawan extends Model
 
     private function getTotalFiltered($search, $regionFilter = null)
     {
-        $regionCondition = '';
-        if ($regionFilter) {
-            if (is_array($regionFilter)) {
-                $ids = implode(',', array_map('intval', $regionFilter));
-                $regionCondition = " AND t.region_id IN ($ids)";
-            } else {
-                $regionCondition = " AND t.region_id = " . intval($regionFilter);
-            }
-        }
+        $regionIds = $this->normalizeRegionFilter($regionFilter);
+        $terapisRegionCondition = $this->buildTerapisRegionCondition($regionIds);
+        $userRegionCondition = $this->buildUserRegionCondition($regionIds);
 
         $sql = "
         SELECT COUNT(*) as total FROM (
-            SELECT u.realname as name, u.username, u.terapis_id FROM users u WHERE (u.terapis_id IS NULL OR u.terapis_id = '')" . ($regionFilter ? " AND u.role != 'superadmin'" : "") . "
+            SELECT u.realname as name, u.username, u.terapis_id FROM users u WHERE (u.terapis_id IS NULL OR u.terapis_id = '') $userRegionCondition
             UNION ALL
-            SELECT t.nama as name, u.username, t.terapis_id FROM terapis t LEFT JOIN users u ON t.terapis_id = u.terapis_id WHERE 1=1 $regionCondition
+            SELECT t.nama as name, u.username, t.terapis_id FROM terapis t LEFT JOIN users u ON t.terapis_id = u.terapis_id WHERE 1=1 $terapisRegionCondition
         ) AS personnel
         WHERE (name LIKE '%" . $this->db->escapeLikeString($search) . "%' OR username LIKE '%" . $this->db->escapeLikeString($search) . "%' OR terapis_id LIKE '%" . $this->db->escapeLikeString($search) . "%')
         ";
         return $this->db->query($sql)->getRow()->total;
+    }
+
+    private function normalizeRegionFilter($regionFilter): array
+    {
+        if (empty($regionFilter) || $regionFilter === 'all') {
+            return [];
+        }
+
+        if (!is_array($regionFilter)) {
+            $regionFilter = [$regionFilter];
+        }
+
+        return array_values(array_unique(array_filter(array_map('intval', $regionFilter))));
+    }
+
+    private function buildTerapisRegionCondition(array $regionIds): string
+    {
+        if (empty($regionIds)) {
+            return '';
+        }
+
+        return ' AND t.region_id IN (' . implode(',', $regionIds) . ')';
+    }
+
+    private function buildUserRegionCondition(array $regionIds): string
+    {
+        if (empty($regionIds)) {
+            return '';
+        }
+
+        $jsonConditions = array_map(
+            static fn ($id) => "JSON_CONTAINS(COALESCE(NULLIF(u.regions_patient, ''), '[]'), '$id', '$')",
+            $regionIds
+        );
+
+        return " AND u.role != 'superadmin' AND (" . implode(' OR ', $jsonConditions) . ')';
     }
 
     public function getById($id)

@@ -330,7 +330,7 @@ const setupUsersPage = () => {
         $('#quick-karyawan-id').val(d.terapis_id);
         $('#quick-realname').text(d.realname);
         $('#quick-username').val(d.terapis_id);
-        $('#quick-password').val('password123');
+        $('#quick-password').val('');
         openModal(document.getElementById("modalQuickCreateAccount"));
     });
 
@@ -339,6 +339,11 @@ const setupUsersPage = () => {
         const $form = $(this);
         const btn = $('#submitQuickAccount');
         const modal = document.getElementById("modalQuickCreateAccount");
+
+        if (!this.checkValidity()) {
+            $form.addClass('was-validated');
+            return;
+        }
 
         btn.prop('disabled', true).html('<i class="fas fa-circle-notch fa-spin"></i>');
 
