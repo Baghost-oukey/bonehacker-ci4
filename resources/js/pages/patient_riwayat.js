@@ -101,6 +101,15 @@ const PatientHistoryPage = {
       $('#btn-edit-biodata').hide();
       $('#btn-cancel-edit, #btn-save-biodata').show();
       $('#biodata-subtitle').text('Ubah dan perbarui informasi dasar pasien');
+      
+      // Re-init Select2 after enabling form with longer delay
+      setTimeout(() => {
+        if (window.PatientBiodataPage && typeof window.PatientBiodataPage.initSelect2Instances === 'function') {
+          console.log('Re-initializing Select2 instances...');
+          window.PatientBiodataPage.initSelect2Instances();
+          console.log('Select2 re-init complete');
+        }
+      }, 300); // Increased delay from 100ms to 300ms
     });
 
     // Event listener untuk tombol Batal
@@ -150,6 +159,9 @@ const PatientHistoryPage = {
           $el.removeClass('bg-slate-50 cursor-not-allowed');
         }
       });
+
+      // Paksa field kecamatan, kabupaten, provinsi tetap readonly (auto-filled)
+      $('#kecamatan_nama, #kabupaten_nama, #provinsi_nama').prop('readonly', true).addClass('bg-slate-100 cursor-not-allowed');
 
       // Hide tombol edit, show tombol save & cancel
       $('#btn-edit-biodata').hide();
