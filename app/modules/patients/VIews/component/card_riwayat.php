@@ -1,17 +1,28 @@
 <div id="patientHistoryContainer" class="hidden rounded-2xl bg-white shadow-sm border border-slate-200/50 overflow-hidden mt-6">
-    <!-- HEADER TABLE -->
-    <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-            <h3 class="text-lg font-semibold text-slate-800">Riwayat Kunjungan Pasien</h3>
-            <p class="text-sm text-slate-500">Daftar rekam medis dan histori terapi</p>
+    <!-- COLLAPSIBLE HEADER -->
+    <div id="historyHeader" class="cursor-pointer relative z-10 border-b border-slate-100 bg-slate-50/50 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 hover:bg-slate-100/50 transition-colors group">
+        <div class="flex items-center gap-3 flex-1">
+            <div class="flex-1">
+                <h3 class="text-lg font-semibold text-slate-800">Riwayat Kunjungan Pasien</h3>
+                <p class="text-sm text-slate-500">Daftar rekam medis dan histori terapi</p>
+            </div>
+            <div class="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-400 group-hover:text-teal-600 group-hover:border-teal-100 transition-all shadow-sm">
+                <i id="historyChevron" class="fas fa-chevron-down transition-transform duration-300"></i>
+            </div>
         </div>
-        <?php if (!isset($hide_add_button) || !$hide_add_button): ?>
-        <button id="btn-add-history" type="button" data-modal-open="modalRiwayatPasien"
-            class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 transition">
-            <i class="fas fa-plus"></i> Tambah Riwayat
-        </button>
-        <?php endif; ?>
+        
+        <div class="flex items-center gap-3">
+            <?php if (!isset($hide_add_button) || !$hide_add_button): ?>
+            <button id="btn-add-history" type="button" data-modal-open="modalRiwayatPasien"
+                class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 transition shadow-sm shadow-teal-600/20">
+                <i class="fas fa-plus"></i> Tambah Riwayat
+            </button>
+            <?php endif; ?>
+        </div>
     </div>
+
+    <!-- COLLAPSIBLE CONTENT -->
+    <div id="historyContent" class="transition-all duration-300 ease-in-out overflow-hidden" style="max-height: 0px; opacity: 0;" data-state="collapsed">
 
     <!-- DESKTOP TABLE RIWAYAT -->
     <div class="hidden md:block overflow-x-auto no-scrollbar">
@@ -68,8 +79,76 @@
 
         </div>
     </div>
+    </div>
 </div>
 
+<!-- INLINE SCRIPT: Toggle Collapse Riwayat -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var header = document.getElementById('historyHeader');
+    var content = document.getElementById('historyContent');
+    var chevron = document.getElementById('historyChevron');
+    
+    if (!header || !content || !chevron) return;
+
+    function toggleHistoryCollapse(forceExpand) {
+        var state = content.getAttribute('data-state') || 'collapsed';
+        var shouldExpand = (forceExpand !== undefined) ? forceExpand : (state === 'collapsed');
+
+        if (shouldExpand) {
+            content.setAttribute('data-state', 'expanded');
+            content.style.maxHeight = content.scrollHeight + 'px';
+            content.style.opacity = '1';
+            chevron.style.transform = 'rotate(180deg)';
+            setTimeout(function() {
+                if (content.getAttribute('data-state') === 'expanded') {
+                    content.style.maxHeight = 'none';
+                    content.style.overflow = 'visible';
+                }
+            }, 350);
+        } else {
+            content.setAttribute('data-state', 'collapsed');
+            content.style.overflow = 'hidden';
+            content.style.maxHeight = content.scrollHeight + 'px';
+            // Force reflow
+            content.offsetHeight;
+            content.style.maxHeight = '0px';
+            content.style.opacity = '0';
+            chevron.style.transform = 'rotate(0deg)';
+        }
+    }
+
+    // Expose globally so patient_riwayat.js can also call it
+    window._toggleHistoryCollapse = toggleHistoryCollapse;
+
+    header.addEventListener('click', function(e) {
+        // Don't toggle if clicking the "Tambah Riwayat" button
+        var btn = e.target.closest('#btn-add-history');
+        if (btn) return;
+        toggleHistoryCollapse();
+    });
+
+    // Auto-expand when container becomes visible (observer)
+    var observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(m) {
+            if (m.attributeName === 'class') {
+                var container = document.getElementById('patientHistoryContainer');
+                if (container && !container.classList.contains('hidden')) {
+                    setTimeout(function() { toggleHistoryCollapse(true); }, 100);
+                }
+            }
+        });
+    });
+    var container = document.getElementById('patientHistoryContainer');
+    if (container) {
+        observer.observe(container, { attributes: true, attributeFilter: ['class'] });
+        // If already visible on load
+        if (!container.classList.contains('hidden')) {
+            setTimeout(function() { toggleHistoryCollapse(true); }, 100);
+        }
+    }
+});
+</script>
 
 <!-- MODAL TAMBAH/EDIT RIWAYAT -->
 <style>

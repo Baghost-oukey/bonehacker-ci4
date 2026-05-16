@@ -671,6 +671,8 @@ class Patients extends BaseController
             'ket_suspect' => ($this->request->getPost('is_suspective') === 'on') ? $this->request->getPost('ket_rentan') : null
         ];
 
+        $update = $patientModel->update($id, $data);
+
         // 8. Log perubahan data pasien (Patient History)
         $userId = $userData;
         $changes = [];
@@ -694,40 +696,23 @@ class Patients extends BaseController
             $oldValue = $patient->$field ?? null;
             $newValue = $data[$field] ?? null;
             
-            // Normalisasi nilai untuk perbandingan yang akurat
-            $normOld = ($oldValue === null || $oldValue === false) ? '' : trim((string)$oldValue);
-            $normNew = ($newValue === null || $newValue === false) ? '' : trim((string)$newValue);
-            
-            // Khusus untuk field ID atau Boolean (menganggap 0, null, dan empty string itu sama)
-            $isIdOrBool = in_array($field, ['country_id', 'region_id', 'is_suspective', 'domestic', 'age']);
-            if ($isIdOrBool) {
-                if (($normOld === '0' || $normOld === '') && ($normNew === '0' || $normNew === '')) {
-                    continue; // Anggap tidak ada perubahan nyata
-                }
+            // Convert untuk display yang lebih baik
+            if ($field === 'gender') {
+                $oldValue = $oldValue === 'Man' ? 'Laki-laki' : ($oldValue === 'Woman' ? 'Perempuan' : $oldValue);
+                $newValue = $newValue === 'Man' ? 'Laki-laki' : ($newValue === 'Woman' ? 'Perempuan' : $newValue);
+            } elseif ($field === 'is_suspective' || $field === 'domestic') {
+                $oldValue = $oldValue ? 'Ya' : 'Tidak';
+                $newValue = $newValue ? 'Ya' : 'Tidak';
             }
             
-            // Hanya log jika ada perubahan nyata
-            if ($normOld !== $normNew) {
-                // Formatting untuk tampilan history yang lebih manusiawi
-                $displayOld = $oldValue;
-                $displayNew = $newValue;
-
-                if ($field === 'gender') {
-                    $displayOld = ($oldValue === 'Man' || $oldValue === 'Laki-laki') ? 'Laki-laki' : (($oldValue === 'Woman' || $oldValue === 'Perempuan') ? 'Perempuan' : $oldValue);
-                    $displayNew = ($newValue === 'Man' || $newValue === 'Laki-laki') ? 'Laki-laki' : (($newValue === 'Woman' || $newValue === 'Perempuan') ? 'Perempuan' : $newValue);
-                } elseif ($field === 'is_suspective' || $field === 'domestic') {
-                    $displayOld = $oldValue ? 'Ya' : 'Tidak';
-                    $displayNew = $newValue ? 'Ya' : 'Tidak';
-                }
-
+            // Hanya log jika ada perubahan
+            if ($oldValue != $newValue) {
                 $changes[$label] = [
-                    'old' => ($displayOld !== null && $displayOld !== '') ? $displayOld : '-',
-                    'new' => ($displayNew !== null && $displayNew !== '') ? $displayNew : '-',
+                    'old' => $oldValue,
+                    'new' => $newValue,
                 ];
             }
         }
-
-        $update = $patientModel->update($id, $data);
 
         // Simpan history jika ada perubahan
         if (!empty($changes)) {
