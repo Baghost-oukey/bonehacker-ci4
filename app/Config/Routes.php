@@ -60,6 +60,7 @@ $routes->post('patients/fetch2', '\App\Modules\patients\Controllers\Patients::fe
 $routes->post('patient/store', '\App\Modules\patients\Controllers\Patients::store');
 $routes->post('patient/check_phone', '\App\Modules\patients\Controllers\Patients::check_phone');
 $routes->get('patient/export_data', '\App\Modules\patients\Controllers\Patients::export_data');
+$routes->get('patient/get-history/(:num)', '\App\Modules\patients\Controllers\Patients::getHistory/$1');
 
 // Wilayah
 $routes->group('region', ['namespace' => 'App\Modules\Region\Controllers', 'filter' => 'auth'], function ($routes) {

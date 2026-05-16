@@ -26,6 +26,9 @@
         <!-- FILE -->
         <?= $this->include('App\modules\patients\Views\component\card_file') ?>
 
+        <!-- RIWAYAT PERUBAHAN DATA -->
+        <?= $this->include('App\modules\patients\Views\component\card_history_changes') ?>
+
         <!-- RIWAYAT -->
         <?= $this->include('App\modules\patients\Views\component\card_riwayat') ?>
     </div>

@@ -52,9 +52,13 @@ const PatientBiodataPage = {
       width: "100%",
     });
 
+    // Destroy existing Select2 instance
     if ($("#desa_id").hasClass("select2-hidden-accessible")) {
       $("#desa_id").select2("destroy");
     }
+
+    // Clear the value to prevent "same value" bug
+    $("#desa_id").val(null);
 
     $("#desa_id").select2({
       placeholder: "Temukan Desa",
@@ -75,17 +79,7 @@ const PatientBiodataPage = {
               options.push({
                 id: item.desIdDesa,
                 text: `<strong>${item.desNama}</strong><br><small style="color:#64748b">${sub}</small>`,
-                data: {
-                  desa_nama: item.desNama,
-                  kecamatan_id: item.kecamatan?.kecIdKecamatan || "",
-                  kecamatan_nama: item.kecamatan?.kecNama || "",
-                  kabupaten_id: item.kecamatan?.kabupaten?.kabIdKabupaten || "",
-                  kabupaten_nama: item.kecamatan?.kabupaten?.kabNama || "",
-                  provinsi_id:
-                    item.kecamatan?.kabupaten?.provinsi?.provIdProvinsi || "",
-                  provinsi_nama:
-                    item.kecamatan?.kabupaten?.provinsi?.provNama || "",
-                },
+                full_data: item, // Changed from 'data' to 'full_data'
               });
             });
           }
@@ -101,28 +95,6 @@ const PatientBiodataPage = {
       templateResult: (i) => i.text,
       templateSelection: (i) => (i.text ? i.text.split("<br>")[0] : i.text),
     });
-
-    $("#desa_id").on("select2:select", function (e) {
-      const data = e.params.data.data;
-      if (!data) return;
-      $("#desa_nama").val(data.desa_nama || "");
-      $("#kecamatan_id").val(data.kecamatan_id || "");
-      $("#kecamatan_nama").val(data.kecamatan_nama || "");
-      $("#kabupaten_id").val(data.kabupaten_id || "");
-      $("#kabupaten_nama").val(data.kabupaten_nama || "");
-      $("#provinsi_id").val(data.provinsi_id || "");
-      $("#provinsi_nama").val(data.provinsi_nama || "");
-
-      const updates = {
-        kecamatan_nama: data.kecamatan_nama,
-        kabupaten_nama: data.kabupaten_nama,
-        provinsi_nama: data.provinsi_nama,
-      };
-      Object.entries(updates).forEach(([id, val]) => {
-        const el = document.getElementById(id);
-        if (el && val) el.value = val;
-      });
-    });
   },
 
   initEnterKeyPrevention() {
@@ -133,6 +105,43 @@ const PatientBiodataPage = {
   },
 };
 
+// Global event handler for desa select (survives re-init)
+$(document).on("select2:select", "#desa_id", function (e) {
+  console.log("Desa selected (global handler):", e.params.data);
+  
+  const item = e.params.data.full_data;
+  if (!item) {
+    console.warn("No full_data in select event");
+    return;
+  }
+
+  console.log("Full data:", item);
+
+  // Fill hidden inputs
+  $("#desa_nama").val(item.desNama || "");
+  $("#kecamatan_id").val(item.kecamatan?.kecIdKecamatan || "");
+  $("#kecamatan_nama").val(item.kecamatan?.kecNama || "");
+  $("#kabupaten_id").val(item.kecamatan?.kabupaten?.kabIdKabupaten || "");
+  $("#kabupaten_nama").val(item.kecamatan?.kabupaten?.kabNama || "");
+  $("#provinsi_id").val(item.kecamatan?.kabupaten?.provinsi?.provIdProvinsi || "");
+  $("#provinsi_nama").val(item.kecamatan?.kabupaten?.provinsi?.provNama || "");
+
+  // Fill readonly display fields
+  const kecEl = document.getElementById("kecamatan_nama");
+  const kabEl = document.getElementById("kabupaten_nama");
+  const provEl = document.getElementById("provinsi_nama");
+
+  if (kecEl) kecEl.value = item.kecamatan?.kecNama || "";
+  if (kabEl) kabEl.value = item.kecamatan?.kabupaten?.kabNama || "";
+  if (provEl) provEl.value = item.kecamatan?.kabupaten?.provinsi?.provNama || "";
+
+  console.log("Fields updated:", {
+    kecamatan: item.kecamatan?.kecNama,
+    kabupaten: item.kecamatan?.kabupaten?.kabNama,
+    provinsi: item.kecamatan?.kabupaten?.provinsi?.provNama,
+  });
+});
+
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", () =>
     PatientBiodataPage.init(),
@@ -140,3 +149,6 @@ if (document.readyState === "loading") {
 } else {
   PatientBiodataPage.init();
 }
+
+// Expose to window for external access
+window.PatientBiodataPage = PatientBiodataPage;
