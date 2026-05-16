@@ -227,7 +227,7 @@
                 <div id="region-group" class="space-y-1">
                     <label class="text-sm font-medium text-slate-700">Wilayah / Cabang</label>
                     <?php $sess_region_id = session()->get('region_id'); ?>
-                    <?php if ($sess_role === 'terapis'): ?>
+                    <?php if ($sess_role === 'user' && !empty(session()->get('terapis_id'))): ?>
                         <input type="text"
                             class="w-full rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-600"
                             value="<?= esc($sess_region_name) ?>" readonly>
@@ -396,6 +396,7 @@
         destroyBaseUrl: "<?= site_url('patient/destroy') ?>",
         dashboardUrl: "<?= site_url('dashboard') ?>",
         isSuperadmin: <?= isset($role) && $role === 'superadmin' ? 'true' : 'false' ?>,
+        isTerapis: <?= (isset($role) && $role === 'user' && !empty(session()->get('terapis_id'))) ? 'true' : 'false' ?>,
         filterRegion: <?= json_encode($filter_region) ?>
     };
 </script>

@@ -203,7 +203,7 @@ const setupUsersPage = () => {
         const $regionManagement = $("#regionFieldAdd");
         
         // Therapist fields
-        if (role === 'terapis') {
+        if (role === 'user') {
             $extraTerapis.fadeIn().removeClass('hidden');
             $extraTerapis.find('input, select, textarea').prop('required', true);
             // Regions patient for therapist can be multiple, so show management region select
@@ -265,7 +265,7 @@ const setupUsersPage = () => {
     $('#edit_role').on('change', function() { 
         const role = $(this).val();
         const $regionEdit = $("#regionFieldEdit");
-        if (role === 'owner' || role === 'admin' || role === 'terapis') {
+        if (role === 'owner' || role === 'admin' || role === 'user') {
             $regionEdit.fadeIn().removeClass('hidden');
         } else {
             $regionEdit.fadeOut().addClass('hidden');

@@ -24,7 +24,7 @@ class Gajikaryawan extends BaseController
     private function checkAdminAccess()
     {
         $role = session()->get('role');
-        if ($role === 'terapis') {
+        if ($role === 'user' && !empty(session()->get('terapis_id'))) {
             // Redirect terapis to beranda
             return redirect()->to(base_url('beranda'))->with('error', 'Anda tidak memiliki akses ke halaman ini');
         }

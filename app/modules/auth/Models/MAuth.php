@@ -12,7 +12,7 @@ class MAuth extends Model
     protected $returnType       = 'object';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['password', 'is_active', 'remember_token'];
+    protected $allowedFields    = ['password', 'role', 'terapis_id', 'is_active', 'remember_token'];
 
     public function getUserSessionData($user)
     {

@@ -86,7 +86,7 @@ class Auth extends BaseController
                         'id' => (int)$user->id,
                         'username' => $user->username,
                         'realname' => $user->realname,
-                        'role' => $user->role ?? 'terapis',
+                        'role' => $user->role ?? 'user',
                     ],
                     'region' => [
                         'id' => $current_region_Id ? (string)$current_region_Id : '',

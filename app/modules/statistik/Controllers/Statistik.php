@@ -22,12 +22,12 @@ class Statistik extends BaseController
     public function index()
     {
         $role = $this->session->get('role');
-        
-        // If terapis, show terapis statistics
-        if ($role === 'terapis') {
+
+        // If user is a therapist (role user and has terapis_id), show therapist statistics
+        if ($role === 'user' && !empty($this->session->get('terapis_id'))) {
             return $this->terapisStatistik();
         }
-        
+
         // Regular statistics for other roles
         $region_patient = $this->session->get('region_patient');
         $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
@@ -72,7 +72,7 @@ class Statistik extends BaseController
             'current_segment' => 'statistik',
             'terapis' => $terapis,
             'realname' => $this->session->get('realname'),
-            'role' => 'terapis',
+            'role' => 'user',
             'bulan_display' => date('F Y'),
         ];
 

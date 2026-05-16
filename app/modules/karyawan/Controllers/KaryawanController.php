@@ -42,18 +42,18 @@ class KaryawanController extends BaseController
       // Keep personnel forms usable before the rank master migration is run.
     }
 
-    return array_map(static fn ($rank) => (object) ['name' => $rank], ['SS', 'S', 'A', 'B', 'C']);
+    return array_map(static fn($rank) => (object) ['name' => $rank], ['SS', 'S', 'A', 'B', 'C']);
   }
 
   public function index()
   {
     $role = $this->session->get('role');
-    
+
     // Terapis tidak boleh akses halaman list karyawan
-    if ($role === 'terapis') {
-      return redirect()->to('terapis/profil_saya')->with('message', ['error', 'Anda tidak memiliki akses ke halaman ini']);
+    if ($role === 'user' && !empty($this->session->get('terapis_id'))) {
+      return redirect()->to('beranda')->with('message', ['error', 'Anda tidak memiliki akses ke halaman ini']);
     }
-    
+
     $region_patient = $this->session->get('region_patient');
     $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
 
@@ -77,7 +77,7 @@ class KaryawanController extends BaseController
   {
     $draw = $this->request->getPost('draw') ?? 1;
     $search_value = $this->request->getPost('search')['value'] ?? '';
-    
+
     $region_patient = $this->session->get('region_patient');
     $regionFilter = ($region_patient !== 'all' && !empty($region_patient)) ? $region_patient : null;
 
@@ -90,7 +90,7 @@ class KaryawanController extends BaseController
 
     $dataOutput = $this->model_karyawan->getListData($options);
     $totalFiltered = $this->model_karyawan->getTotalData($options);
-    $totalData = $totalFiltered; 
+    $totalData = $totalFiltered;
     $no = $options['offset'] + 1;
 
     // Region map for display
@@ -112,14 +112,26 @@ class KaryawanController extends BaseController
     foreach ($dataOutput as $value) {
       $value->no = $no++;
       $value->realname = esc($value->name);
-      $value->username = esc($value->username ?? '-');
-      $value->role = esc($value->role ?? '-');
+
+      // Determine Display Username (Fallback to terapis_id)
+      $display_username = $value->username;
+      if (empty($display_username) || $display_username === '-') {
+        $display_username = $value->terapis_id;
+      }
+      $value->username = esc($display_username ?: '-');
+
+      // Determine Display Role (Normalized)
+      $role_raw = strtolower($value->role ?? '');
+      $display_role = ($role_raw === 'user') ? 'Terapis' : ucfirst($role_raw ?: '-');
+      $value->role = $display_role;
 
       $is_terapis = $value->personnel_type === 'Therapist';
 
-      if ($value->role === 'superadmin') {
+      // Region Name logic
+      if ($value->role === 'Superadmin') { // Normalized role check
         $value->region_name = 'Semua Wilayah';
-        $regions_patient_ids = [];
+      } else if ($is_terapis && !empty($value->terapis_region_name)) {
+        $value->region_name = $value->terapis_region_name;
       } else {
         $raw = $value->regions_patient;
         $regions_patient_ids = is_string($raw) ? (json_decode($raw, true) ?: []) : (is_array($raw) ? $raw : []);
@@ -130,18 +142,20 @@ class KaryawanController extends BaseController
         $value->region_name = !empty($names) ? implode(', ', $names) : '-';
       }
 
-      $value->status = $value->is_active == 1 
-        ? '<div class="flex justify-center"><span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-600 text-[10px] font-bold border border-emerald-100/50 uppercase tracking-wider">Aktif</span></div>' 
-        : '<div class="flex justify-center"><span class="px-2.5 py-1 rounded-lg bg-red-50 text-red-600 text-[10px] font-bold border border-red-100/50 uppercase tracking-wider">Non-Aktif</span></div>';
+      // Status logic (Empty as requested)
+      $value->status = '-';
 
       $action = '<div class="flex items-center justify-center gap-1.5">';
+      // Use raw data for action buttons to ensure correct IDs are passed to modals
+      $orig_role = strtolower($role_raw);
+
       if (!empty($value->user_id)) {
         $action .= '<button class="w-8 h-8 flex items-center justify-center rounded-lg bg-teal-50 text-teal-600 hover:bg-teal-600 hover:text-white transition-all btn_edit" 
                         data-id="' . $value->user_id . '" 
                         data-realname="' . $value->realname . '" 
                         data-username="' . $value->username . '" 
-                        data-role="' . $value->role . '" 
-                        data-regions_patient="' . (is_array($regions_patient_ids) ? implode(',', $regions_patient_ids) : '') . '" 
+                        data-role="' . $orig_role . '" 
+                        data-regions_patient="' . (isset($regions_patient_ids) ? implode(',', (array)$regions_patient_ids) : '') . '" 
                         data-href="' . base_url('karyawan/update_account/' . $value->user_id) . '" 
                         title="Edit Akun">
                         <i class="fas fa-user-cog text-[10px]"></i>
@@ -168,8 +182,7 @@ class KaryawanController extends BaseController
                     </button>';
       }
 
-      // Action: Aktif/Nonaktif (Toggle)
-      if ($value->role !== 'superadmin') {
+      if ($orig_role !== 'superadmin') {
         if ($value->is_active == 1) {
           $action .= '<button class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all btn_toggle_status" data-status="0" data-id="' . ($is_terapis ? $value->id_terapis_table : $value->user_id) . '" data-type="' . ($is_terapis ? 'terapis' : 'user') . '" title="Nonaktifkan">
                         <i class="fas fa-toggle-on text-[10px]"></i>
@@ -181,29 +194,36 @@ class KaryawanController extends BaseController
         }
       }
       $action .= '</div>';
-      $value->action = $action;
+
+      // Final explicit mapping diperbaiki agar urutan objek JSON DataTables selaras dengan urutan Header HTML
+      $value->no          = $value->no;
+      $value->realname    = esc($value->name);
+      $value->username    = $value->username;
+      $value->role        = $value->role;
+      $value->region_name = $value->region_name;
+      $value->status      = '-';
+      $value->action      = $action;
     }
 
     return $this->response->setJSON([
-      "draw" => intval($draw),
-      "recordsTotal" => intval($totalFiltered),
+      "draw"            => intval($draw),
+      "recordsTotal"    => intval($totalFiltered),
       "recordsFiltered" => intval($totalFiltered),
-      "data" => $dataOutput,
-      "csrfHash" => csrf_hash()
+      "data"            => $dataOutput,
+      "csrfHash"        => csrf_hash()
     ]);
   }
-
   public function store()
   {
     $post = $this->request->getPost();
-    
+
     // Check username
     if ($this->model_karyawan->db->table('users')->where('username', $post['username'])->get()->getRow()) {
-        return $this->response->setJSON(['status' => 'error', 'message' => 'Username sudah digunakan', 'csrfHash' => csrf_hash()]);
+      return $this->response->setJSON(['status' => 'error', 'message' => 'Username sudah digunakan', 'csrfHash' => csrf_hash()]);
     }
 
     $terapis_id = null;
-    if ($post['role'] === 'terapis') {
+    if ($post['role'] === 'user') {
       $file = $this->request->getFile('foto');
       $foto = null;
       if ($file && $file->isValid() && !$file->hasMoved()) {
@@ -255,14 +275,14 @@ class KaryawanController extends BaseController
   {
     $role = $this->session->get('role');
     $terapisIdInt = $this->session->get('terapis_id_int');
-    
+
     // Terapis hanya boleh lihat profil sendiri
-    if ($role === 'terapis') {
+    if ($role === 'user' && !empty($terapisIdInt)) {
       if (!$terapisIdInt || $terapisIdInt != $id) {
         return redirect()->to('terapis/profil_saya')->with('message', ['error', 'Anda hanya dapat melihat profil sendiri']);
       }
     }
-    
+
     $karyawan = $this->model_karyawan->getById($id);
     if (!$karyawan) return redirect()->to('karyawan');
 
@@ -279,7 +299,7 @@ class KaryawanController extends BaseController
       'rank_options' => $this->getRankOptions(),
       'connected_user' => $this->model_karyawan->db->table('users')->where('terapis_id', $karyawan->terapis_id)->get()->getRow(),
       'all_users' => $this->model_karyawan->db->table('users')->select('id, realname, username, terapis_id')->where('role !=', 'superadmin')->get()->getResult(),
-      'is_own_profile' => ($role === 'terapis' && $terapisIdInt == $id), // Flag untuk disable field yang tidak boleh diedit
+      'is_own_profile' => ($role === 'user' && !empty($terapisIdInt) && $terapisIdInt == $id), // Flag untuk disable field yang tidak boleh diedit
     ];
 
     // QR Code
@@ -293,61 +313,61 @@ class KaryawanController extends BaseController
 
   public function generate_user()
   {
-      if (!$this->request->isAJAX()) return redirect()->to(site_url('karyawan'));
-      
-      $karyawan_id = $this->request->getPost('karyawan_id');
-      $username = $this->request->getPost('username');
-      $password = $this->request->getPost('password');
+    if (!$this->request->isAJAX()) return redirect()->to(site_url('karyawan'));
 
-      if (!$karyawan_id || !$username || !$password) {
-          return $this->response->setJSON(['status' => 'error', 'message' => 'Data tidak lengkap', 'csrfHash' => csrf_hash()]);
-      }
+    $karyawan_id = $this->request->getPost('karyawan_id');
+    $username = $this->request->getPost('username');
+    $password = $this->request->getPost('password');
 
-      if (strlen($password) < 6) {
-          return $this->response->setJSON(['status' => 'error', 'message' => 'Password minimal 6 karakter', 'csrfHash' => csrf_hash()]);
-      }
+    if (!$karyawan_id || !$username || !$password) {
+      return $this->response->setJSON(['status' => 'error', 'message' => 'Data tidak lengkap', 'csrfHash' => csrf_hash()]);
+    }
 
-      $terapis = $this->model_karyawan->where('terapis_id', $karyawan_id)->first();
-      if (!$terapis) {
-          return $this->response->setJSON(['status' => 'error', 'message' => 'Terapis tidak ditemukan', 'csrfHash' => csrf_hash()]);
-      }
+    if (strlen($password) < 6) {
+      return $this->response->setJSON(['status' => 'error', 'message' => 'Password minimal 6 karakter', 'csrfHash' => csrf_hash()]);
+    }
 
-      $existingUser = $this->model_karyawan->db->table('users')->where('username', $username)->get()->getRow();
-      if ($existingUser) {
-          return $this->response->setJSON(['status' => 'error', 'message' => 'Username sudah digunakan', 'csrfHash' => csrf_hash()]);
-      }
+    $terapis = $this->model_karyawan->where('terapis_id', $karyawan_id)->first();
+    if (!$terapis) {
+      return $this->response->setJSON(['status' => 'error', 'message' => 'Terapis tidak ditemukan', 'csrfHash' => csrf_hash()]);
+    }
 
-      $user_data = [
-          'realname' => $terapis->nama,
-          'username' => $username,
-          'password' => password_hash($password, PASSWORD_BCRYPT),
-          'role' => 'terapis',
-          'terapis_id' => $karyawan_id,
-          'regions_patient' => json_encode([$terapis->region_id]),
-          'other_patient' => json_encode([])
-      ];
+    $existingUser = $this->model_karyawan->db->table('users')->where('username', $username)->get()->getRow();
+    if ($existingUser) {
+      return $this->response->setJSON(['status' => 'error', 'message' => 'Username sudah digunakan', 'csrfHash' => csrf_hash()]);
+    }
 
-      if ($this->model_karyawan->db->table('users')->insert($user_data)) {
-          return $this->response->setJSON(['status' => 'success', 'message' => 'Akun login berhasil dibuat', 'csrfHash' => csrf_hash()]);
-      }
-      return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal membuat akun login', 'csrfHash' => csrf_hash()]);
+    $user_data = [
+      'realname' => $terapis->nama,
+      'username' => $username,
+      'password' => password_hash($password, PASSWORD_BCRYPT),
+      'role' => 'user',
+      'terapis_id' => $karyawan_id,
+      'regions_patient' => json_encode([$terapis->region_id]),
+      'other_patient' => json_encode([])
+    ];
+
+    if ($this->model_karyawan->db->table('users')->insert($user_data)) {
+      return $this->response->setJSON(['status' => 'success', 'message' => 'Akun login berhasil dibuat', 'csrfHash' => csrf_hash()]);
+    }
+    return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal membuat akun login', 'csrfHash' => csrf_hash()]);
   }
 
   public function link_user()
   {
-      if (!$this->request->isAJAX()) return redirect()->to(site_url('karyawan'));
-      
-      $user_id = $this->request->getPost('user_id');
-      $karyawan_id = $this->request->getPost('karyawan_id');
+    if (!$this->request->isAJAX()) return redirect()->to(site_url('karyawan'));
 
-      if (!$user_id || !$karyawan_id) {
-          return $this->response->setJSON(['status' => 'error', 'message' => 'Data tidak lengkap', 'csrfHash' => csrf_hash()]);
-      }
+    $user_id = $this->request->getPost('user_id');
+    $karyawan_id = $this->request->getPost('karyawan_id');
 
-      if ($this->model_karyawan->db->table('users')->where('id', $user_id)->update(['terapis_id' => $karyawan_id])) {
-          return $this->response->setJSON(['status' => 'success', 'message' => 'Akun berhasil dihubungkan', 'csrfHash' => csrf_hash()]);
-      }
-      return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal menghubungkan akun', 'csrfHash' => csrf_hash()]);
+    if (!$user_id || !$karyawan_id) {
+      return $this->response->setJSON(['status' => 'error', 'message' => 'Data tidak lengkap', 'csrfHash' => csrf_hash()]);
+    }
+
+    if ($this->model_karyawan->db->table('users')->where('id', $user_id)->update(['terapis_id' => $karyawan_id])) {
+      return $this->response->setJSON(['status' => 'success', 'message' => 'Akun berhasil dihubungkan', 'csrfHash' => csrf_hash()]);
+    }
+    return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal menghubungkan akun', 'csrfHash' => csrf_hash()]);
   }
 
   public function update_profile()
@@ -355,30 +375,30 @@ class KaryawanController extends BaseController
     $id = $this->request->getPost('id');
     $role = $this->session->get('role');
     $terapisIdInt = $this->session->get('terapis_id_int');
-    
+
     // Terapis hanya boleh update profil sendiri
-    if ($role === 'terapis') {
+    if ($role === 'user' && !empty($terapisIdInt)) {
       if (!$terapisIdInt || $terapisIdInt != $id) {
         $this->session->setFlashdata('message', ['error', 'Anda hanya dapat mengubah profil sendiri']);
         return redirect()->back();
       }
-      
+
       // Terapis HANYA boleh update foto, tidak boleh update field lain
       $file = $this->request->getFile('foto');
       if ($file && $file->isValid() && !$file->hasMoved()) {
-          $newName = $file->getRandomName();
-          $file->move(FCPATH . 'foto_karyawan', $newName);
-          
-          // Update HANYA foto
-          $this->model_karyawan->update($id, ['foto' => $newName]);
-          $this->session->setFlashdata('message', ['success', 'Foto profil berhasil diperbarui']);
+        $newName = $file->getRandomName();
+        $file->move(FCPATH . 'foto_karyawan', $newName);
+
+        // Update HANYA foto
+        $this->model_karyawan->update($id, ['foto' => $newName]);
+        $this->session->setFlashdata('message', ['success', 'Foto profil berhasil diperbarui']);
       } else {
-          $this->session->setFlashdata('message', ['error', 'Tidak ada perubahan yang dilakukan']);
+        $this->session->setFlashdata('message', ['error', 'Tidak ada perubahan yang dilakukan']);
       }
-      
+
       return redirect()->back();
     }
-    
+
     // Untuk admin/owner/superadmin, boleh update semua field
     $karyawan_id = $this->request->getPost('terapis_id');
     $data = [
@@ -398,13 +418,13 @@ class KaryawanController extends BaseController
 
     $file = $this->request->getFile('foto');
     if ($file && $file->isValid() && !$file->hasMoved()) {
-        $newName = $file->getRandomName();
-        $file->move(FCPATH . 'foto_karyawan', $newName);
-        $data['foto'] = $newName;
+      $newName = $file->getRandomName();
+      $file->move(FCPATH . 'foto_karyawan', $newName);
+      $data['foto'] = $newName;
     }
 
     if ($this->model_karyawan->update($id, $data)) {
-        $this->session->setFlashdata('message', ['success', 'Profil berhasil diperbarui']);
+      $this->session->setFlashdata('message', ['success', 'Profil berhasil diperbarui']);
     }
     return redirect()->back();
   }
@@ -459,19 +479,19 @@ class KaryawanController extends BaseController
   {
     // Only admin/owner/superadmin can activate/deactivate
     $role = $this->session->get('role');
-    if ($role === 'terapis') {
+    if ($role === 'user' && !empty($this->session->get('terapis_id'))) {
       return $this->response->setJSON(['status' => 'error', 'message' => 'Anda tidak memiliki akses', 'csrfHash' => csrf_hash()]);
     }
-    
+
     $type = $this->request->getPost('type') ?? 'terapis';
     if ($type === 'terapis') {
-        $terapis = $this->model_karyawan->find($id);
-        $this->model_karyawan->isActive($id, 1);
-        if ($terapis) {
-            $this->model_karyawan->db->table('users')->where('terapis_id', $terapis->terapis_id)->update(['is_active' => 1]);
-        }
+      $terapis = $this->model_karyawan->find($id);
+      $this->model_karyawan->isActive($id, 1);
+      if ($terapis) {
+        $this->model_karyawan->db->table('users')->where('terapis_id', $terapis->terapis_id)->update(['is_active' => 1]);
+      }
     } else {
-        $this->model_karyawan->db->table('users')->where('id', $id)->update(['is_active' => 1]);
+      $this->model_karyawan->db->table('users')->where('id', $id)->update(['is_active' => 1]);
     }
     return $this->response->setJSON(['status' => 'success', 'message' => 'Status berhasil diaktifkan', 'csrfHash' => csrf_hash()]);
   }
@@ -480,19 +500,19 @@ class KaryawanController extends BaseController
   {
     // Only admin/owner/superadmin can activate/deactivate
     $role = $this->session->get('role');
-    if ($role === 'terapis') {
+    if ($role === 'user' && !empty($this->session->get('terapis_id'))) {
       return $this->response->setJSON(['status' => 'error', 'message' => 'Anda tidak memiliki akses', 'csrfHash' => csrf_hash()]);
     }
-    
+
     $type = $this->request->getPost('type') ?? 'terapis';
     if ($type === 'terapis') {
-        $terapis = $this->model_karyawan->find($id);
-        $this->model_karyawan->isActive($id, 0);
-        if ($terapis) {
-            $this->model_karyawan->db->table('users')->where('terapis_id', $terapis->terapis_id)->update(['is_active' => 0]);
-        }
+      $terapis = $this->model_karyawan->find($id);
+      $this->model_karyawan->isActive($id, 0);
+      if ($terapis) {
+        $this->model_karyawan->db->table('users')->where('terapis_id', $terapis->terapis_id)->update(['is_active' => 0]);
+      }
     } else {
-        $this->model_karyawan->db->table('users')->where('id', $id)->update(['is_active' => 0]);
+      $this->model_karyawan->db->table('users')->where('id', $id)->update(['is_active' => 0]);
     }
     return $this->response->setJSON(['status' => 'success', 'message' => 'Status berhasil dinonaktifkan', 'csrfHash' => csrf_hash()]);
   }
@@ -501,16 +521,16 @@ class KaryawanController extends BaseController
   {
     // Only admin/owner/superadmin can delete
     $role = $this->session->get('role');
-    if ($role === 'terapis') {
+    if ($role === 'user' && !empty($this->session->get('terapis_id'))) {
       return $this->response->setJSON(['status' => 'error', 'message' => 'Anda tidak memiliki akses', 'csrfHash' => csrf_hash()]);
     }
-    
+
     // Get terapis data to find linked user_id
     $terapis = $this->model_karyawan->find($id);
     if ($terapis) {
       // Delete linked user account if exists
       $this->model_karyawan->db->table('users')->where('terapis_id', $terapis->terapis_id)->delete();
-      
+
       if ($this->model_karyawan->delete($id)) {
         if ($this->request->isAJAX()) {
           return $this->response->setJSON(['status' => 'success', 'message' => 'Data karyawan dan akun berhasil dihapus', 'csrfHash' => csrf_hash()]);
@@ -523,9 +543,9 @@ class KaryawanController extends BaseController
         $this->session->setFlashdata('message', ['error', 'Gagal menghapus data karyawan']);
       }
     } else {
-        if ($this->request->isAJAX()) {
-          return $this->response->setJSON(['status' => 'error', 'message' => 'Data tidak ditemukan', 'csrfHash' => csrf_hash()]);
-        }
+      if ($this->request->isAJAX()) {
+        return $this->response->setJSON(['status' => 'error', 'message' => 'Data tidak ditemukan', 'csrfHash' => csrf_hash()]);
+      }
     }
     return redirect()->to('karyawan');
   }
@@ -564,7 +584,7 @@ class KaryawanController extends BaseController
     $search = $this->request->getPost('search')['value'] ?? '';
 
     $builder = $this->model_karyawan->get_patients_by_user_region($user_id);
-    
+
     if ($search) {
       $builder->groupStart()->like('p.name', $search)->orLike('p.address', $search)->groupEnd();
     }
@@ -603,7 +623,7 @@ class KaryawanController extends BaseController
     $search = $this->request->getPost('search')['value'] ?? '';
 
     $builder = $this->model_karyawan->get_other_patients($user_id);
-    
+
     if ($search) {
       $builder->groupStart()->like('p.name', $search)->orLike('p.address', $search)->groupEnd();
     }
@@ -622,8 +642,8 @@ class KaryawanController extends BaseController
         'address' => esc($row->address),
         'wilayah' => esc($row->wilayah),
         'aksi' => '<div class="flex items-center justify-center gap-2">
-                        <button class="btn-send-wa w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all" data-patient-id="'.$row->id.'"><i class="fab fa-whatsapp"></i></button>
-                        <button class="btn-delete-patient w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all" data-patient-id="'.$row->id.'" data-user-id="'.$user_id.'"><i class="fas fa-trash"></i></button>
+                        <button class="btn-send-wa w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all" data-patient-id="' . $row->id . '"><i class="fab fa-whatsapp"></i></button>
+                        <button class="btn-delete-patient w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all" data-patient-id="' . $row->id . '" data-user-id="' . $user_id . '"><i class="fas fa-trash"></i></button>
                     </div>'
       ];
     }
@@ -649,7 +669,7 @@ class KaryawanController extends BaseController
   {
     $user_id = $this->request->getPost('user_id');
     $patient_id = $this->request->getPost('patient_id');
-    
+
     if ($this->model_karyawan->append_patient_to_user($user_id, $patient_id)) {
       return $this->response->setJSON(['status' => 'success', 'message' => 'Pasien berhasil ditambahkan', 'csrfHash' => csrf_hash()]);
     }

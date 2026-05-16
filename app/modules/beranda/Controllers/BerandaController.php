@@ -93,9 +93,9 @@ class BerandaController extends BaseController
     // Desktop: Show statistics dashboard
     // Mobile/Tablet: Show menu grid (handled by view with responsive classes)
     
-    // If terapis, show terapis statistics
-    if ($role === 'terapis') {
-      return $this->terapisStatistik();
+    // If user is a therapist (role user and has terapis_id), show therapist statistics
+    if ($role === 'user' && !empty($session->get('terapis_id'))) {
+      return $this->userStatistik();
     }
 
     // For other roles, show regular statistics dashboard
@@ -162,9 +162,9 @@ class BerandaController extends BaseController
   }
 
   /**
-   * Statistik khusus untuk terapis (dipanggil dari beranda)
+   * Statistik khusus untuk user/terapis (dipanggil dari beranda)
    */
-  private function terapisStatistik()
+  private function userStatistik()
   {
     $session = session();
     $terapisId = $session->get('terapis_id_int');
@@ -189,7 +189,7 @@ class BerandaController extends BaseController
       'current_segment' => 'beranda',
       'terapis' => $terapis,
       'realname' => $session->get('realname'),
-      'role' => 'terapis',
+      'role' => 'user',
       'bulan_display' => date('F Y'),
     ];
 

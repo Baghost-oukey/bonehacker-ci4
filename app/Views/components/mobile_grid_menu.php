@@ -6,7 +6,7 @@ $current_segment = $uri->getSegment(1);
 $menus = [];
 
 // Menu Khusus TERAPIS (User)
-if ($role === 'terapis') {
+if ($role === 'user' && !empty(session()->get('terapis_id'))) {
     $menus[] = ['label' => 'Statistik', 'url' => site_url('statistik'), 'icon' => 'fa-chart-pie', 'color' => 'bg-indigo-600'];
     $menus[] = ['label' => 'Profil Saya', 'url' => site_url('karyawan/profil_saya'), 'icon' => 'fa-user-circle', 'color' => 'bg-indigo-500'];
     $menus[] = ['label' => 'Gaji Saya', 'url' => site_url('gaji/monitor'), 'icon' => 'fa-wallet', 'color' => 'bg-emerald-500'];

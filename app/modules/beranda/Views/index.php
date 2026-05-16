@@ -1,7 +1,7 @@
 <?= $this->extend('layout/layout') ?>
 <?= $this->section('content') ?>
 
-<?php if ($role === 'terapis'): ?>
+<?php if ($role === 'user' && !empty(session()->get('terapis_id'))): ?>
     <!-- TERAPIS VIEW -->
     
     <!-- Mobile/Tablet: Grid Menu -->
