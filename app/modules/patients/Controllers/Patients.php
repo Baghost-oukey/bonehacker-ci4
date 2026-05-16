@@ -704,9 +704,21 @@ class Patients extends BaseController
                 $oldValue = $oldValue ? 'Ya' : 'Tidak';
                 $newValue = $newValue ? 'Ya' : 'Tidak';
             }
+
+            // Normalisasi: null, "", "0", 0 semuanya dianggap "kosong" untuk perbandingan
+            // Ini mencegah false positive akibat type mismatch integer DB vs string POST
+            $normalizeValue = function($val) {
+                if ($val === null || $val === '' || $val === '0' || $val === 0) {
+                    return '';
+                }
+                return (string) $val;
+            };
+
+            $oldNorm = $normalizeValue($oldValue);
+            $newNorm = $normalizeValue($newValue);
             
-            // Hanya log jika ada perubahan
-            if ($oldValue != $newValue) {
+            // Hanya log jika benar-benar berbeda (strict string comparison)
+            if ($oldNorm !== $newNorm) {
                 $changes[$label] = [
                     'old' => $oldValue,
                     'new' => $newValue,
