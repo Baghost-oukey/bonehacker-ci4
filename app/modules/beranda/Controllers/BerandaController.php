@@ -147,7 +147,10 @@ class BerandaController extends BaseController
     $data['queue_today'] = (int) $queueBuilder->countAllResults();
 
     // Transaction Today
-    $transactionBuilder = $db->table('transaksi')->selectSum('nominal')->where('DATE(created_at)', $todayDate);
+    $transactionBuilder = $db->table('transaksi')->selectSum('nominal')
+      ->where('DATE(created_at)', $todayDate)
+      ->where('status', 'active')
+      ->where('type', 'income');
 
     if (!empty($filter_region) && $filter_region !== 'all') {
       is_array($filter_region) ? $transactionBuilder->whereIn('region_id', $filter_region) : $transactionBuilder->where('region_id', $filter_region);

@@ -21,6 +21,9 @@ class TransaksiController extends BaseController
     public function index()
     {
         $db = \Config\Database::connect();
+        $role = session()->get('role');
+        $is_admin = ($role === 'admin');
+
         $region_patient = session()->get('region_patient');
         $filter_region = ($region_patient !== 'all' && !empty($region_patient)) ? $region_patient : null;
         $list_regions = $db->table('regions')->select('id, name')->where('is_active', 1);
@@ -33,54 +36,85 @@ class TransaksiController extends BaseController
         }
         $list_regions = $list_regions->get()->getResultArray();
 
-        // Normalize filter to scalar for single-region queries
-        $scalar_filter = is_array($filter_region) && count($filter_region) === 1 ? $filter_region[0] : $filter_region;
-
-
-        // Hitung Uang Masuk Hari Ini
-        $todayIncomeBuilder = $db->table('transaksi')->selectSum('nominal')
-            ->where('DATE(created_at)', date('Y-m-d'))
+        $monthInput = $this->request->getGet('month') ?: date('Y-m');
+        if ($is_admin) {
+            $startDate = date('Y-m-d');
+            $endDate = date('Y-m-d');
+        } else {
+            $startDate = $monthInput . '-01';
+            $endDate = date('Y-m-t', strtotime($startDate));
+        }
+        
+        // Pemasukan Periode
+        $incomeBuilder = $db->table('transaksi')->selectSum('nominal')
+            ->where('DATE(created_at) >=', $startDate)
+            ->where('DATE(created_at) <=', $endDate)
             ->where('status', 'active')
             ->where('type', 'income');
-        if (is_array($filter_region)) { $todayIncomeBuilder->whereIn('region_id', $filter_region); }
-        elseif ($filter_region) { $todayIncomeBuilder->where('region_id', $filter_region); }
-        $in_today = $todayIncomeBuilder->get()->getRow()->nominal ?? 0;
-
-        // Hitung Uang Keluar Hari Ini
-        $todayExpenseBuilder = $db->table('transaksi')->selectSum('nominal')
-            ->where('DATE(created_at)', date('Y-m-d'))
-            ->where('status', 'active')
-            ->where('type', 'expense');
-        if (is_array($filter_region)) { $todayExpenseBuilder->whereIn('region_id', $filter_region); }
-        elseif ($filter_region) { $todayExpenseBuilder->where('region_id', $filter_region); }
-        $out_today = $todayExpenseBuilder->get()->getRow()->nominal ?? 0;
-
-        $today_balance = $in_today - $out_today;
-
-        // --- 2. Total Income (Akumulasi Selamanya) ---
-        $incomeBuilder = $db->table('transaksi')->selectSum('nominal')->where('type', 'income')->where('status', 'active');
         if (is_array($filter_region)) { $incomeBuilder->whereIn('region_id', $filter_region); }
         elseif ($filter_region) { $incomeBuilder->where('region_id', $filter_region); }
-        $total_in = $incomeBuilder->get()->getRow()->nominal ?? 0;
+        $total_income = $incomeBuilder->get()->getRow()->nominal ?? 0;
 
-        // --- 3. Total Expense (Akumulasi Selamanya) ---
-        $expenseBuilder = $db->table('transaksi')->selectSum('nominal')->where('type', 'expense')->where('status', 'active');
+        // Pengeluaran Periode
+        $expenseBuilder = $db->table('transaksi')->selectSum('nominal')
+            ->where('DATE(created_at) >=', $startDate)
+            ->where('DATE(created_at) <=', $endDate)
+            ->where('status', 'active')
+            ->where('type', 'expense');
         if (is_array($filter_region)) { $expenseBuilder->whereIn('region_id', $filter_region); }
         elseif ($filter_region) { $expenseBuilder->where('region_id', $filter_region); }
-        $total_out = $expenseBuilder->get()->getRow()->nominal ?? 0;
+        $total_expense = $expenseBuilder->get()->getRow()->nominal ?? 0;
 
-        $total_income = $total_in - $total_out;
-        $total_expense = $total_out;
+        // Saldo Kas Kecil dan Kas Besar
+        $saldo_kas_kecil = $this->model_transaksi->get_saldo_kas('kas_kecil', $filter_region);
+        $saldo_kas_besar = $this->model_transaksi->get_saldo_kas('kas_besar', $filter_region);
+
+        $list_terapis = $db->table('terapis')->select('id, nama, region_id')->where('is_active', 1)->get()->getResultArray();
+
+        $recent_keterangan = $db->table('transaksi')
+            ->select('keterangan, MAX(id_transaksi) as max_id')
+            ->where('status', 'active')
+            ->where('keterangan !=', '')
+            ->whereNotIn('type', ['mutasi_in', 'mutasi_out'])
+            ->groupBy('keterangan')
+            ->orderBy('max_id', 'DESC')
+            ->limit(30)
+            ->get()
+            ->getResultArray();
+
+        $list_kategori = $db->table('finance_categories')
+            ->select('id, name, type')
+            ->orderBy('type', 'DESC') // 'income' then 'expense'
+            ->orderBy('name', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $bulan_indo = [
+            '01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April',
+            '05' => 'Mei', '06' => 'Juni', '07' => 'Juli', '08' => 'Agustus',
+            '09' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'
+        ];
+        $monthPart = date('m', strtotime($startDate));
+        $yearPart = date('Y', strtotime($startDate));
+        $monthName = $bulan_indo[$monthPart] ?? date('F', strtotime($startDate));
+        $period_label = $is_admin ? 'Hari Ini' : 'Bulan ' . $monthName . ' ' . $yearPart;
 
         $data = [
-            'title'          => 'Dashboard Keuangan',
-            'realname'       => session()->get('realname'),
-            'role'           => session()->get('role'),
-            'today_balance'  => $today_balance,
-            'total_income'   => $total_income,
-            'total_expense'  => $total_expense,
-            'active_region'  => session()->get('active_region'),
-            'list_regions'   => $list_regions
+            'title'             => 'Dashboard Transaksi Keuangan',
+            'realname'          => session()->get('realname'),
+            'role'              => $role,
+            'today_balance'     => $total_income - $total_expense,
+            'total_income'      => $total_income,
+            'total_expense'     => $total_expense,
+            'saldo_kas_kecil'   => $saldo_kas_kecil,
+            'saldo_kas_besar'   => $saldo_kas_besar,
+            'active_region'     => session()->get('active_region'),
+            'list_regions'      => $list_regions,
+            'list_terapis'      => $list_terapis,
+            'recent_keterangan' => $recent_keterangan,
+            'list_kategori'     => $list_kategori,
+            'period_label'      => $period_label,
+            'current_month'     => $monthInput
         ];
         return view('\App\Modules\Transaksi\Views\index', $data);
     }
@@ -94,6 +128,7 @@ class TransaksiController extends BaseController
         $columns = $this->request->getPost('columns');
         $date_start = $this->request->getPost('date_start');
         $date_end = $this->request->getPost('date_end');
+        $month = $this->request->getPost('month');
         $metode = $this->request->getPost('metode');
 
         $options = [
@@ -110,6 +145,19 @@ class TransaksiController extends BaseController
             $options['where']['DATE(t.created_at) <='] = $date_end;
         } elseif (!empty($date_start)) {
             $options['where']['DATE(t.created_at)'] = $date_start;
+        } else {
+            // No date start/end provided, use month filter if not admin
+            if (session()->get('role') !== 'admin' && !empty($month)) {
+                $options['where']['DATE(t.created_at) >='] = $month . '-01';
+                $options['where']['DATE(t.created_at) <='] = date('Y-m-t', strtotime($month . '-01'));
+            }
+        }
+
+        if (session()->get('role') === 'admin') {
+            $sevenDaysAgo = date('Y-m-d', strtotime('-7 days'));
+            if (empty($options['where']['DATE(t.created_at) >=']) || $options['where']['DATE(t.created_at) >='] < $sevenDaysAgo) {
+                $options['where']['DATE(t.created_at) >='] = $sevenDaysAgo;
+            }
         }
 
         if (!empty($metode) && $metode !== 'all') {
@@ -129,11 +177,19 @@ class TransaksiController extends BaseController
 
             if ($value->status === 'canceled') {
                 $value->nominal_format = '<span class="text-danger" style="text-decoration: line-through;">' . $formatted_nominal . '</span>';
+            } else if ($value->type === 'mutasi_out') {
+                $value->nominal_format = '<span class="text-info font-weight-bold">- ' . $formatted_nominal . ' <br><small>(Mutasi Keluar)</small></span>';
+            } else if ($value->type === 'mutasi_in') {
+                $value->nominal_format = '<span class="text-info font-weight-bold">+ ' . $formatted_nominal . ' <br><small>(Mutasi Masuk)</small></span>';
             } else if ($value->type === 'expense') {
                 $value->nominal_format = '<span class="text-danger font-weight-bold">- ' . $formatted_nominal . '</span>';
             } else {
-                $value->nominal_format = '<span class="text-dark font-weight-bold">' . $formatted_nominal . '</span>';
+                $value->nominal_format = '<span class="text-emerald-600 font-weight-bold">+ ' . $formatted_nominal . '</span>';
             }
+            
+            // Add Badge for Kas
+            $kas_badge = ($value->kas_type ?? 'kas_kecil') === 'kas_besar' ? '<span class="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded ml-2">Besar</span>' : '<span class="bg-gray-100 text-gray-800 text-xs px-2 py-0.5 rounded ml-2">Kecil</span>';
+            $value->keterangan = $value->keterangan . $kas_badge;
 
             if ($value->status === 'canceled') {
                 $value->aksi = '<span class="badge badge-secondary"></span>';
@@ -177,8 +233,11 @@ class TransaksiController extends BaseController
         }
 
         $typeInput = $this->request->getPost('type') ?? 'income';
-        $kategoriAuto = ($typeInput === 'income') ? 'pemasukan' : 'pengeluaran';
+        $kategoriAuto = $this->request->getPost('kategori_pilihan') ?: (($typeInput === 'income') ? 'pemasukan' : 'pengeluaran');
         
+        $kas_type = $this->request->getPost('kas_type') ?? 'kas_kecil';
+        $terapis_id = $this->request->getPost('terapis_id');
+
         // Get tanggal from input, default to now if not provided
         $tanggal = $this->request->getPost('tanggal');
         if (empty($tanggal)) {
@@ -187,10 +246,13 @@ class TransaksiController extends BaseController
             // Combine date with current time
             $tanggal = date('Y-m-d H:i:s', strtotime($tanggal . ' ' . date('H:i:s')));
         }
+        
+        $nominal = preg_replace('/[^0-9]/', '', $this->request->getPost('nominal'));
 
         $data = [
             'region_id'         => $region_id,
-            'nominal'           => $this->request->getPost('nominal'),
+            'kas_type'          => $kas_type,
+            'nominal'           => $nominal,
             'type'              => $typeInput,
             'kategori'          => $kategoriAuto,
             'keterangan'        => $this->request->getPost('keterangan'),
@@ -199,14 +261,121 @@ class TransaksiController extends BaseController
         ];
 
         try {
-            if ($this->model_transaksi->insert($data)) {
-                return $this->response->setJSON(['status' => 'success', 'message' => 'Transaksi berhasil']);
+            $db = \Config\Database::connect();
+            $db->transStart();
+            
+            $this->model_transaksi->insert($data);
+            
+            // Integrasi Kasbon
+            if ($typeInput === 'expense' && strpos($kategoriAuto, 'Kasbon') !== false && !empty($terapis_id)) {
+                $db->table('kasbon_karyawan')->insert([
+                    'terapis_id'      => $terapis_id,
+                    'tanggal'         => date('Y-m-d', strtotime($tanggal)),
+                    'nominal'         => $nominal,
+                    'sisa_hutang'     => $nominal,
+                    'keterangan'      => $this->request->getPost('keterangan'),
+                    'status_potongan' => 'belum_lunas'
+                ]);
             }
+            
+            // Integrasi Gaji
+            if ($typeInput === 'expense' && strpos($kategoriAuto, 'Gaji') !== false && !empty($terapis_id)) {
+                $db->table('riwayat_gaji')->insert([
+                    'terapis_id'       => $terapis_id,
+                    'periode_bulan'    => date('n', strtotime($tanggal)),
+                    'periode_tahun'    => date('Y', strtotime($tanggal)),
+                    'gaji_bersih'      => $nominal,
+                    'gaji_pokok_total' => $nominal, // as a baseline
+                    'tanggal_bayar'    => $tanggal,
+                    'status'           => 'lunas'
+                ]);
+            }
+
+            $db->transComplete();
+
+            if ($db->transStatus() === false) {
+                return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal menyimpan transaksi (Transaction rollback)']);
+            }
+            
+            return $this->response->setJSON(['status' => 'success', 'message' => 'Transaksi berhasil']);
         } catch (\Exception $e) {
             return $this->response->setJSON(['status' => 'error', 'message' => 'Database error: ' . $e->getMessage()]);
         }
 
         return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal menyimpan data']);
+    }
+
+    public function store_mutasi()
+    {
+        $role = session()->get('role');
+        $akitf_region = session()->get("active_region");
+
+        if ($role === 'superadmin' || $role === 'owner') {
+            $region_id = $this->request->getPost('region_id');
+            if (empty($region_id) && $akitf_region !== 'all') {
+                $region_id = $akitf_region;
+            }
+        } else {
+            $region_id = session()->get('region_id');
+        }
+
+        if (empty($region_id) || $region_id === 'all') {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Gagal: Cabang tidak terdeteksi atau belum dipilih!'
+            ]);
+        }
+
+        $nominal = preg_replace('/[^0-9]/', '', $this->request->getPost('nominal'));
+        $dari_kas = $this->request->getPost('dari_kas');
+        $ke_kas = $this->request->getPost('ke_kas');
+        $keterangan = $this->request->getPost('keterangan');
+
+        if ($dari_kas === $ke_kas) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Kas asal dan tujuan tidak boleh sama.']);
+        }
+
+        $tanggal = date('Y-m-d H:i:s');
+        $userId = session()->get('userId');
+
+        try {
+            $db = \Config\Database::connect();
+            $db->transStart();
+
+            // Mutasi Keluar
+            $this->model_transaksi->insert([
+                'region_id'  => $region_id,
+                'kas_type'   => $dari_kas,
+                'type'       => 'mutasi_out',
+                'nominal'    => $nominal,
+                'kategori'   => 'mutasi',
+                'keterangan' => 'Pindah Buku Keluar: ' . $keterangan,
+                'created_at' => $tanggal,
+                'created_by' => $userId
+            ]);
+
+            // Mutasi Masuk
+            $this->model_transaksi->insert([
+                'region_id'  => $region_id,
+                'kas_type'   => $ke_kas,
+                'type'       => 'mutasi_in',
+                'nominal'    => $nominal,
+                'kategori'   => 'mutasi',
+                'keterangan' => 'Pindah Buku Masuk: ' . $keterangan,
+                'created_at' => $tanggal,
+                'created_by' => $userId
+            ]);
+
+            $db->transComplete();
+
+            if ($db->transStatus() === false) {
+                return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal melakukan mutasi.']);
+            }
+
+            return $this->response->setJSON(['status' => 'success', 'message' => 'Pindah Buku berhasil.']);
+        } catch (\Exception $e) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Database error: ' . $e->getMessage()]);
+        }
     }
 
     public function delete()
@@ -239,6 +408,7 @@ class TransaksiController extends BaseController
     {
         $date_start = $this->request->getGet('date_start');
         $date_end = $this->request->getGet('date_end');
+        $month = $this->request->getGet('month');
         $metode = $this->request->getGet('metode');
         $role = session()->get('role');
 
@@ -252,6 +422,17 @@ class TransaksiController extends BaseController
             $builder->where('DATE(created_at) <=', $date_end);
         } elseif (!empty($date_start)) {
             $builder->where('DATE(created_at)', $date_start);
+        } else {
+            // No date filters, check month filter if not admin
+            if ($role !== 'admin' && !empty($month)) {
+                $builder->where('DATE(created_at) >=', $month . '-01');
+                $builder->where('DATE(created_at) <=', date('Y-m-t', strtotime($month . '-01')));
+            }
+        }
+
+        if ($role === 'admin') {
+            $sevenDaysAgo = date('Y-m-d', strtotime('-7 days'));
+            $builder->where('DATE(created_at) >=', $sevenDaysAgo);
         }
 
         // 3. Filter Metode (Jika ada dan bukan 'all')
