@@ -13,9 +13,9 @@ if (window.$) {
 
         var currentFilter = 'daily';
         var currentTag = 'complaint';
-        var previousStartDate = moment().subtract(6, 'days');
+        var previousStartDate = moment().subtract(29, 'days');
         var previousEndDate = moment();
-        var start = moment().subtract(6, 'days');
+        var start = moment().subtract(29, 'days');
         var end = moment();
 
 
@@ -50,7 +50,7 @@ if (window.$) {
                             <div class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-500 shrink-0">
                                 <i class="fas fa-hashtag text-[10px]"></i>
                             </div>
-                            <span class="text-sm font-bold text-slate-700 uppercase tracking-tight">${data}</span>
+                            <span class="text-sm font-normal text-slate-700">${data}</span>
                         </div>`;
                         }
                         return data;
@@ -62,7 +62,7 @@ if (window.$) {
                     "className": "text-center",
                     "render": function (data, type, row) {
                         if (type === 'display') {
-                            return `<span class="inline-flex items-center justify-center min-w-10 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-600 text-[13px] font-black border border-emerald-200/60 shadow-sm">${data}</span>`;
+                            return `<span class="inline-flex items-center justify-center min-w-10 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-600 text-[13px] font-medium border border-emerald-200/60">${data}</span>`;
                         }
                         return data;
                     }
@@ -122,6 +122,7 @@ if (window.$) {
             fetchStatistics(start, end, currentFilter, currentTag);
         });
 
+        // Set initial label & trigger first load
         $('#rangefilter span').html(previousStartDate.format('D MMMM YYYY') + ' - ' + previousEndDate.format('D MMMM YYYY'));
         updateHeading(previousStartDate, previousEndDate, currentFilter);
         fetchStatistics(previousStartDate, previousEndDate, currentFilter, currentTag);

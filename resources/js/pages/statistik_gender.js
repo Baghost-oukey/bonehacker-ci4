@@ -21,7 +21,7 @@ if (window.$) {
 
         if ($('#reportrange').length) {
             $('#reportrange').daterangepicker({
-                startDate: moment().subtract(6, 'days'),
+                startDate: moment().subtract(29, 'days'),
                 endDate: moment(),
                 locale: { format: 'D MMMM YYYY' },
                 opens: 'left',
@@ -37,7 +37,7 @@ if (window.$) {
                 }
             }, cb);
 
-            cb(moment().subtract(6, 'days'), moment());
+            cb(moment().subtract(29, 'days'), moment());
         }
 
         // --- FILTER REGION ---

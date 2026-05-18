@@ -40,14 +40,25 @@ class Statistikdaerah extends BaseController
     }
     public function fetch_statistics()
     {
+        $startDate = $this->request->getGet('start_date');
+        $endDate   = $this->request->getGet('end_date');
+
+        // Validation for secure date formats (Best Practice)
+        if (!$startDate || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $startDate)) {
+            $startDate = date('Y-m-d');
+        }
+        if (!$endDate || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $endDate)) {
+            $endDate = date('Y-m-d');
+        }
+
         $regionId = $this->request->getGet('region_id');
         $kabupatenId = $this->request->getGet('kabupaten_id');
         $kecamatanId = $this->request->getGet('kecamatan_id');
         $desaId      = $this->request->getGet('desa_id');
 
         $data = $this->model_statistic_daerah->get_statistic(
-            $this->request->getGet('start_date'),
-            $this->request->getGet('end_date'),
+            $startDate,
+            $endDate,
             !empty($regionId) ? (int)$regionId : null,
             $this->request->getGet('filter') ?? 'daily',
             !empty($kabupatenId) ? $kabupatenId : null,

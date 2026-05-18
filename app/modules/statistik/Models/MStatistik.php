@@ -83,9 +83,9 @@ class MStatistik extends Model
         $builder->join('patients p', 'p.id = h.patient_id', 'left');
         $builder->join("($subquery) subq", 'subq.patient_id = p.id', 'left');
 
-        // Filter Tanggal & Region
-        $builder->where("DATE(h.date) >= '$startDate'");
-        $builder->where("DATE(h.date) <= '$endDate'");
+        // Filter Tanggal & Region (Safe Query Bindings)
+        $builder->where('DATE(h.date) >=', $startDate);
+        $builder->where('DATE(h.date) <=', $endDate);
         $builder->where('h.is_delete', false);
 
         if ($regionId) {
@@ -100,21 +100,28 @@ class MStatistik extends Model
     public function get_analisis($startDate, $endDate, $regionId = null)
     {
         $db = \Config\Database::connect();
+        
+        // Escape inputs for secure raw string interpolation
+        $escapedStart = $db->escape($startDate . ' 00:00:00');
+        $escapedEnd = $db->escape($endDate . ' 23:59:59');
+
         $firstVisited = $db->table('histories')
             ->select('patient_id, MIN(date) as first_date')
             ->where('is_delete', 0)
             ->groupBy('patient_id')
             ->getCompiledSelect();
+            
         $builder = $db->table('regions r');
         $builder->select('r.id, r.name as cabang');
         $builder->select("COUNT(DISTINCT h.id) as total_pasien");
-        $builder->select("COUNT(DISTINCT CASE WHEN first_v.first_date BETWEEN '{$startDate} 00:00:00' AND '{$endDate} 23:59:59' THEN h.patient_id END) as pasien_baru");
-        $builder->select("COUNT(DISTINCT CASE WHEN first_v.first_date < '{$startDate} 00:00:00' THEN h.patient_id END) as pasien_lama");
+        $builder->select("COUNT(DISTINCT CASE WHEN first_v.first_date BETWEEN {$escapedStart} AND {$escapedEnd} THEN h.patient_id END) as pasien_baru");
+        $builder->select("COUNT(DISTINCT CASE WHEN first_v.first_date < {$escapedStart} THEN h.patient_id END) as pasien_lama");
+        
         $joinCondition = "(h.patient_queue_id = pq.id OR h.history_region = r.id)";
         $builder->join('patient_queues pq', 'pq.region_id = r.id', 'left');
         $builder->join('histories h', $joinCondition .
-            " AND h.date >= '{$startDate} 00:00:00'" .
-            " AND h.date <= '{$endDate} 23:59:59'" .
+            " AND h.date >= " . $escapedStart .
+            " AND h.date <= " . $escapedEnd .
             " AND h.is_delete = 0", 'left');
 
         $builder->join("($firstVisited) first_v", 'first_v.patient_id = h.patient_id', 'left');
