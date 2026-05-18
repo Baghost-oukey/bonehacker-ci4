@@ -56,7 +56,7 @@ const setupUsersPage = () => {
     let originalUsername = "";
 
     const initSelect2 = () => {
-        $('#regions_add, #edit_regions').each(function() {
+        $('#regions_add, #edit_regions').each(function () {
             const $this = $(this);
             $this.select2({
                 width: '100%',
@@ -97,17 +97,17 @@ const setupUsersPage = () => {
 
         $("#paginationPrev").prop("disabled", currentPage <= 1);
         $("#paginationNext").prop("disabled", currentPage >= totalPages);
-        
+
         const start = filteredRecords <= 0 ? 0 : (currentPage - 1) * pageLength + 1;
         const end = Math.min(currentPage * pageLength, filteredRecords);
         $("#paginationInfo").text(`Menampilkan ${start} - ${end} dari ${filteredRecords} User`);
     };
 
     const renderEmptyState = (message) => {
-        const descText = message === "Data user belum tersedia" 
-            ? "Belum ada data pengguna yang terdaftar di dalam sistem." 
+        const descText = message === "Data user belum tersedia"
+            ? "Belum ada data pengguna yang terdaftar di dalam sistem."
             : "Tidak ada data karyawan yang cocok dengan kata kunci pencarian Anda.";
-            
+
         const emptyHtml = `
             <div class="py-16 flex flex-col items-center justify-center text-center max-w-sm mx-auto">
                 <div class="w-14 h-14 rounded-full bg-slate-50 flex items-center justify-center mb-3.5 border border-slate-100">
@@ -274,9 +274,9 @@ const setupUsersPage = () => {
     $("#paginationPrev").on("click", () => { if (currentPage > 1) loadTableData(currentPage - 1); });
     $("#paginationNext").on("click", () => { if (currentPage < Math.ceil(filteredRecords / pageLength)) loadTableData(currentPage + 1); });
 
-    $('#role_add').on('change', function() { toggleExtraFields(this); });
+    $('#role_add').on('change', function () { toggleExtraFields(this); });
     // Keep old logic for edit modal for now or refactor it too
-    $('#edit_role').on('change', function() { 
+    $('#edit_role').on('change', function () {
         const role = $(this).val();
         const $regionEdit = $("#regionFieldEdit");
         if (role === 'owner' || role === 'admin' || role === 'user') {
@@ -286,26 +286,26 @@ const setupUsersPage = () => {
         }
     });
 
-    $('#username_add').on('keyup', debounce(function() { checkUsername($(this).val(), '#formAddUser .username-feedback', '#submitBtnAdd'); }, 500));
-    $('#edit_username').on('keyup', debounce(function() { checkUsername($(this).val(), '#formEditUser .edit-username-feedback', '#submitBtnEdit', originalUsername); }, 500));
+    $('#username_add').on('keyup', debounce(function () { checkUsername($(this).val(), '#formAddUser .username-feedback', '#submitBtnAdd'); }, 500));
+    $('#edit_username').on('keyup', debounce(function () { checkUsername($(this).val(), '#formEditUser .edit-username-feedback', '#submitBtnEdit', originalUsername); }, 500));
 
     // CRUD Ajax
-    $('#formAddUser, #formEditUser').on('submit', function(e) {
+    $('#formAddUser, #formEditUser').on('submit', function (e) {
         e.preventDefault();
         const form = this;
         const $form = $(form);
         const btn = $form.find('button[type="submit"]');
         const modal = $form.closest('.modal-wrapper')[0];
 
-        if (!form.checkValidity()) { 
-            $form.addClass('was-validated'); 
-            
+        if (!form.checkValidity()) {
+            $form.addClass('was-validated');
+
             // Get labels of missing fields
             let missingFields = [];
-            $form.find(':invalid').each(function() {
+            $form.find(':invalid').each(function () {
                 const label = $(this).closest('div').find('label').first().text().trim() || $(this).attr('placeholder') || 'Kolom';
                 // Clean up label text
-                const cleanLabel = label.replace(/\s*\([^)]*\)/g, '').trim(); 
+                const cleanLabel = label.replace(/\s*\([^)]*\)/g, '').trim();
                 if (cleanLabel && !missingFields.includes(cleanLabel)) {
                     missingFields.push(cleanLabel);
                 }
@@ -318,7 +318,7 @@ const setupUsersPage = () => {
                 confirmButtonColor: '#0d9488',
                 confirmButtonText: 'Baik, lengkapi sekarang'
             });
-            return; 
+            return;
         }
 
         const url = $form.attr('action');
@@ -351,7 +351,7 @@ const setupUsersPage = () => {
         });
     });
 
-    $(document).on('click', '.btn_edit', function() {
+    $(document).on('click', '.btn_edit', function () {
         const d = $(this).data();
         originalUsername = d.username;
         $('#formEditUser').attr('action', d.href);
@@ -362,7 +362,7 @@ const setupUsersPage = () => {
         openModal(document.getElementById("modalEdit"));
     });
 
-    $(document).on('click', '.btn_create_account', function() {
+    $(document).on('click', '.btn_create_account', function () {
         const d = $(this).data();
         $('#quick-karyawan-id').val(d.terapis_id);
         $('#quick-realname').text(d.realname);
@@ -371,7 +371,7 @@ const setupUsersPage = () => {
         openModal(document.getElementById("modalQuickCreateAccount"));
     });
 
-    $('#formQuickCreateAccount').on('submit', function(e) {
+    $('#formQuickCreateAccount').on('submit', function (e) {
         e.preventDefault();
         const $form = $(this);
         const btn = $('#submitQuickAccount');
@@ -417,7 +417,7 @@ const setupUsersPage = () => {
         });
     });
 
-    $(document).on('click', '.btn_add_patient', function(e) {
+    $(document).on('click', '.btn_add_patient', function (e) {
         e.preventDefault();
         const userId = $(this).data('userid');
         if (userId && config.viewPatientUrl) {
@@ -425,7 +425,7 @@ const setupUsersPage = () => {
         }
     });
 
-    $(document).on('click', '.btn_toggle_status', function(e) {
+    $(document).on('click', '.btn_toggle_status', function (e) {
         e.preventDefault();
         const d = $(this).data();
         const status = d.status; // 1: aktif, 0: nonaktif
@@ -446,17 +446,17 @@ const setupUsersPage = () => {
             buttonsStyling: false
         }).then((result) => {
             if (result.isConfirmed) {
-                $.post(url + '/' + d.id, { 
+                $.post(url + '/' + d.id, {
                     ...getCsrfPayload(config),
                     type: d.type
                 }, (res) => {
                     if (res.csrfHash) updateCsrf(res.csrfHash);
-                    swalLib.fire({ 
-                        icon: res.status, 
-                        title: res.status === 'success' ? 'Berhasil!' : 'Gagal!', 
-                        text: res.message, 
-                        timer: 1500, 
-                        showConfirmButton: false 
+                    swalLib.fire({
+                        icon: res.status,
+                        title: res.status === 'success' ? 'Berhasil!' : 'Gagal!',
+                        text: res.message,
+                        timer: 1500,
+                        showConfirmButton: false
                     });
                     loadTableData(currentPage);
                 }, 'json');
@@ -464,7 +464,7 @@ const setupUsersPage = () => {
         });
     });
 
-    $(document).on('click', '.btn_delete', function(e) {
+    $(document).on('click', '.btn_delete', function (e) {
         e.preventDefault();
         const href = $(this).data('href');
         swalLib.fire({
@@ -484,8 +484,8 @@ const setupUsersPage = () => {
     });
 
     // Global Modal Handler
-    $(document).on("click", "[data-modal-open]", function() { openModal(document.getElementById($(this).data("modal-open"))); initSelect2(); });
-    $(document).on("click", "[data-modal-close], .modal-wrapper", function(e) { if (e.target === this || $(this).is('[data-modal-close]')) closeModal($(this).closest(".modal-wrapper")[0]); });
+    $(document).on("click", "[data-modal-open]", function () { openModal(document.getElementById($(this).data("modal-open"))); initSelect2(); });
+    $(document).on("click", "[data-modal-close], .modal-wrapper", function (e) { if (e.target === this || $(this).is('[data-modal-close]')) closeModal($(this).closest(".modal-wrapper")[0]); });
 
     initSelect2();
     loadTableData(1);
