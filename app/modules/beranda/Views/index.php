@@ -3,15 +3,6 @@
 
 <?php if ($role === 'user' && !empty(session()->get('terapis_id'))): ?>
     <!-- TERAPIS VIEW -->
-    
-    <!-- Mobile/Tablet: Grid Menu -->
-    <div class="lg:hidden w-full p-4">
-        <div class="mb-6">
-            <h2 class="text-2xl font-bold text-slate-800">Beranda</h2>
-            <p class="text-sm text-slate-500">Akses cepat menu BoneHacker</p>
-        </div>
-        <?= $this->include('App\Views\components\mobile_grid_menu') ?>
-    </div>
 
     <!-- Statistik Terapis -->
     <div class="desktop-stats-terapis w-full space-y-6 p-4 md:p-6">

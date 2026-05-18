@@ -263,6 +263,99 @@ if ($isDevEnvironment) {
         </script>
     <?php endif; ?>
 
+    <!-- Pull to Refresh khusus Flutter App (BoneHacker-App) -->
+    <script>
+        (function() {
+            if (!navigator.userAgent.includes('BoneHacker-App')) return;
+
+            let startY = 0;
+            let currentY = 0;
+            let isPulling = false;
+            const threshold = 100; // Pull threshold in pixels
+            
+            // Create the pull indicator element dynamically
+            const pullIndicator = document.createElement('div');
+            pullIndicator.style.position = 'fixed';
+            pullIndicator.style.top = '-60px';
+            pullIndicator.style.left = '50%';
+            pullIndicator.style.transform = 'translateX(-50%)';
+            pullIndicator.style.width = '42px';
+            pullIndicator.style.height = '42px';
+            pullIndicator.style.borderRadius = '50%';
+            pullIndicator.style.backgroundColor = '#ffffff';
+            pullIndicator.style.boxShadow = '0 4px 12px rgba(30, 58, 138, 0.15), 0 2px 4px rgba(0, 0, 0, 0.05)';
+            pullIndicator.style.display = 'flex';
+            pullIndicator.style.alignItems = 'center';
+            pullIndicator.style.justifyContent = 'center';
+            pullIndicator.style.zIndex = '9999';
+            pullIndicator.style.transition = 'top 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            pullIndicator.innerHTML = '<i class="fas fa-sync-alt text-indigo-600" style="transition: transform 0.1s linear;"></i>';
+            
+            // Add custom animation style for spin
+            const style = document.createElement('style');
+            style.innerHTML = `
+                @keyframes spin-refresh {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+                .animate-spin-refresh {
+                    animation: spin-refresh 0.8s linear infinite !important;
+                }
+            `;
+            document.head.appendChild(style);
+            document.body.appendChild(pullIndicator);
+            
+            document.addEventListener('touchstart', function(e) {
+                // Only trigger if we are at the very top of the page
+                if (window.scrollY === 0) {
+                    startY = e.touches[0].pageY;
+                    isPulling = true;
+                }
+            }, { passive: true });
+            
+            document.addEventListener('touchmove', function(e) {
+                if (!isPulling) return;
+                
+                currentY = e.touches[0].pageY;
+                const diff = currentY - startY;
+                
+                if (diff > 0) {
+                    // Dragging down
+                    const topVal = Math.min(diff / 2, threshold) - 50; 
+                    pullIndicator.style.top = topVal + 'px';
+                    
+                    const rotation = Math.min(diff * 2, 360);
+                    const icon = pullIndicator.querySelector('i');
+                    if (icon && !icon.classList.contains('animate-spin-refresh')) {
+                        icon.style.transform = `rotate(${rotation}deg)`;
+                    }
+                } else {
+                    isPulling = false;
+                }
+            }, { passive: true });
+            
+            document.addEventListener('touchend', function(e) {
+                if (!isPulling) return;
+                isPulling = false;
+                
+                const diff = currentY - startY;
+                if (diff > threshold) {
+                    // Trigger refresh
+                    pullIndicator.style.top = '20px';
+                    const icon = pullIndicator.querySelector('i');
+                    if (icon) icon.classList.add('animate-spin-refresh');
+                    
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 400);
+                } else {
+                    // Cancel pull
+                    pullIndicator.style.top = '-60px';
+                }
+            }, { passive: true });
+        })();
+    </script>
+
     <?= $this->renderSection('scripts') ?>
 </body>
 

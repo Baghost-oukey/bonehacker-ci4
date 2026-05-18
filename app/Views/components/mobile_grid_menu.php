@@ -7,7 +7,7 @@ $menus = [];
 
 // Menu Khusus TERAPIS (User)
 if ($role === 'user' && !empty(session()->get('terapis_id'))) {
-    $menus[] = ['label' => 'Statistik', 'url' => site_url('statistik'), 'icon' => 'fa-chart-pie', 'color' => 'bg-indigo-600'];
+    $menus[] = ['label' => 'Beranda', 'url' => site_url('beranda'), 'icon' => 'fa-home', 'color' => 'bg-slate-800'];
     $menus[] = ['label' => 'Profil Saya', 'url' => site_url('karyawan/profil_saya'), 'icon' => 'fa-user-circle', 'color' => 'bg-indigo-500'];
     $menus[] = ['label' => 'Gaji Saya', 'url' => site_url('gaji/monitor'), 'icon' => 'fa-wallet', 'color' => 'bg-emerald-500'];
 }
@@ -68,20 +68,21 @@ if ($role === 'admin') {
     // Dashboard Section
     $menus[] = ['label' => 'Beranda', 'url' => site_url('beranda'), 'icon' => 'fa-home', 'color' => 'bg-slate-800'];
     $menus[] = ['label' => 'Antrean', 'url' => site_url('antrean'), 'icon' => 'fa-pencil-ruler', 'color' => 'bg-orange-500'];
-    $menus[] = ['label' => 'Statistik', 'url' => site_url('statistik'), 'icon' => 'fa-chart-pie', 'color' => 'bg-indigo-600'];
     $menus[] = ['label' => 'Rekam Medis', 'url' => site_url('rekam-medis'), 'icon' => 'fa-file-medical', 'color' => 'bg-rose-500'];
-    $menus[] = ['label' => 'Kalender Kerja', 'url' => site_url('kalender'), 'icon' => 'fa-calendar-days', 'color' => 'bg-amber-500'];
+
+
     $menus[] = ['label' => 'Jurnal', 'url' => site_url('journal'), 'icon' => 'fa-book', 'color' => 'bg-violet-500'];
     $menus[] = ['label' => 'Transaksi', 'url' => site_url('transaksi'), 'icon' => 'fa-money-bill-wave', 'color' => 'bg-green-500'];
     $menus[] = ['label' => 'Presensi Karyawan', 'url' => site_url('kehadiran/tambah'), 'icon' => 'fa-user-clock', 'color' => 'bg-sky-600'];
     
     // Jasa Pelayanan Section
+        $menus[] = ['label' => 'Kalender Kerja', 'url' => site_url('kalender'), 'icon' => 'fa-calendar-days', 'color' => 'bg-amber-500'];
     $menus[] = ['label' => 'Jasa Pelayanan', 'url' => site_url('jasa-pelayanan/reguler'), 'icon' => 'fa-hospital-user', 'color' => 'bg-pink-600'];
     
     // Manajemen Section
+    $menus[] = ['label' => 'Statistik', 'url' => site_url('statistik'), 'icon' => 'fa-chart-pie', 'color' => 'bg-indigo-600'];
     $menus[] = ['label' => 'Manajemen Tags', 'url' => site_url('tag-keluhan'), 'icon' => 'fa-tags', 'color' => 'bg-teal-500'];
     $menus[] = ['label' => 'Manajemen Karyawan', 'url' => site_url('karyawan'), 'icon' => 'fa-user-friends', 'color' => 'bg-blue-500'];
-    $menus[] = ['label' => 'Statistik Tag', 'url' => site_url('statistiktag'), 'icon' => 'fa-chart-bar', 'color' => 'bg-purple-600'];
 }
 ?>
 

@@ -151,7 +151,6 @@
 </div>
 
 
-<!-- TABLE 2 MODAL (PILIH PASIEN) -->
 <div id="exampleModal" class="modal-wrapper hidden fixed inset-0 z-[60] flex flex-col items-center justify-end md:justify-center bg-black/40 p-0 md:p-4">
     <div class="w-full max-w-5xl overflow-hidden rounded-t-3xl md:rounded-3xl bg-white shadow-2xl flex flex-col max-h-[90vh]">
         <div class="flex items-center justify-between border-b border-slate-100 px-6 py-5 bg-white shrink-0">
@@ -162,7 +161,7 @@
             </button>
         </div>
 
-        <div class="p-6 space-y-6 overflow-hidden flex flex-col">
+        <div class="p-6 space-y-6 overflow-hidden flex flex-col flex-1">
             <div class="flex flex-col gap-1.5 shrink-0">
                 <div class="flex flex-col md:flex-row gap-4">
                     <div class="relative flex-1 w-full">
@@ -180,9 +179,9 @@
                 </p>
             </div>
 
-            <div id="patient-selection-container" class="flex-1 overflow-hidden flex flex-col rounded-2xl border border-slate-100 shadow-inner bg-slate-50/30">
+            <div id="patient-selection-container" class="flex-1 overflow-hidden flex flex-col rounded-none md:rounded-2xl border border-slate-100 shadow-inner bg-slate-50/30">
                 <!-- Mobile Card List (Shown on Mobile) -->
-                <div id="mobile-patient-list" class="md:hidden flex flex-col divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-y-auto max-h-[40vh] bg-white no-scrollbar mb-4">
+                <div id="mobile-patient-list" class="md:hidden flex-1 flex flex-col divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-y-auto bg-white no-scrollbar mb-4">
                     <div class="p-8 text-center text-slate-400 italic text-sm">
                         <i class="fas fa-spinner fa-spin mr-2 text-slate-300"></i>
                         Memuat data pasien...

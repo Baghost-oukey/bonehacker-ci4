@@ -96,7 +96,8 @@
                 </div>
 
                 <div class="flex-1 overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
+                    <!-- View Desktop & Tablet: Horizontal Scrollable Table -->
+                    <table class="hidden md:table w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-slate-50/50">
                                 <th class="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Periode</th>
@@ -150,6 +151,72 @@
                             <?php endif; ?>
                         </tbody>
                     </table>
+
+                    <!-- View Mobile: Premium Modern Card List -->
+                    <div class="block md:hidden p-6 space-y-4 bg-slate-50/50">
+                        <?php if (empty($history)) : ?>
+                            <div class="flex flex-col items-center justify-center py-12 gap-3">
+                                <div class="h-16 w-16 rounded-3xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-200 text-2xl">
+                                    <i class="fas fa-folder-open"></i>
+                                </div>
+                                <p class="text-xs font-black text-slate-300 uppercase tracking-widest">Belum ada riwayat pembayaran</p>
+                            </div>
+                        <?php else : ?>
+                            <?php foreach ($history as $h) : ?>
+                                <div class="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm space-y-4 hover:shadow-md transition-shadow">
+                                    <!-- Header Card: Periode & Total Diterima -->
+                                    <div class="flex justify-between items-start pb-3 border-b border-slate-100">
+                                        <div class="flex flex-col">
+                                            <span class="text-sm font-black text-slate-800 uppercase tracking-tight">
+                                                <?= date('F Y', mktime(0, 0, 0, $h['periode_bulan'], 1, $h['periode_tahun'])) ?>
+                                            </span>
+                                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                                                Dibayar: <?= date('d/m/Y', strtotime($h['tanggal_bayar'])) ?>
+                                            </span>
+                                        </div>
+                                        <div class="flex flex-col items-end">
+                                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">DITERIMA</span>
+                                            <span class="text-sm font-black text-emerald-600">
+                                                Rp <?= number_format($h['gaji_bersih'], 0, ',', '.') ?>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Grid Details -->
+                                    <div class="grid grid-cols-2 gap-x-4 gap-y-3 pt-1">
+                                        <!-- Kehadiran -->
+                                        <div class="flex flex-col">
+                                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Kehadiran</span>
+                                            <span class="text-xs font-bold text-slate-700 mt-0.5">
+                                                <?= $h['total_kehadiran'] ?> Hari
+                                            </span>
+                                        </div>
+                                        <!-- Gaji Pokok -->
+                                        <div class="flex flex-col items-end">
+                                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Gaji Pokok</span>
+                                            <span class="text-xs font-bold text-slate-600 mt-0.5">
+                                                Rp <?= number_format($h['gaji_pokok_total'], 0, ',', '.') ?>
+                                            </span>
+                                        </div>
+                                        <!-- Tunjangan -->
+                                        <div class="flex flex-col">
+                                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Tunjangan</span>
+                                            <span class="text-xs font-bold text-indigo-600 mt-0.5">
+                                                + Rp <?= number_format($h['total_tunjangan'], 0, ',', '.') ?>
+                                            </span>
+                                        </div>
+                                        <!-- Potongan -->
+                                        <div class="flex flex-col items-end">
+                                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Potongan</span>
+                                            <span class="text-xs font-bold text-rose-500 mt-0.5">
+                                                - Rp <?= number_format($h['total_potongan'], 0, ',', '.') ?>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
         </div>
