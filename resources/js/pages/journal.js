@@ -188,36 +188,33 @@ const setupJournalPage = () => {
 
                     // --- RENDER MOBILE CARDS ---
                     const cardHtml = `
-                        <div class="p-4 space-y-4 bg-white">
-                            <div class="flex items-start justify-between gap-3">
-                                <div class="flex items-start gap-3 flex-1 min-w-0">
-                                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-400 font-mono text-sm border border-slate-200 shadow-sm mt-0.5">
+                        <div class="p-5 rounded-2xl border border-slate-200/60 shadow-sm bg-white hover:shadow-md transition-all space-y-4">
+                            <div class="flex items-center justify-between gap-3">
+                                <div class="flex items-center gap-3 flex-1 min-w-0">
+                                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-500 font-mono text-sm border border-slate-200/60 shadow-inner">
                                         #${row.no}
                                     </div>
                                     <div class="flex flex-col min-w-0">
-                                        <span class="text-[14px] font-black text-slate-900 leading-tight uppercase tracking-tight truncate">${row.nama}</span>
+                                        <span class="text-sm font-black text-slate-900 leading-tight uppercase tracking-tight truncate">${row.nama}</span>
                                         <div class="flex items-center gap-2 mt-1">
                                             <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">${row.tanggal}</span>
                                             ${statusBadge}
                                         </div>
                                     </div>
                                 </div>
+                                <div class="shrink-0">
+                                    ${row.action || ""}
+                                </div>
                             </div>
 
-                            <div class="bg-slate-50/50 rounded-xl p-3 border border-slate-100 space-y-3">
+                            <div class="bg-slate-50/50 rounded-xl p-3.5 border border-slate-100 space-y-3">
                                 <div class="flex flex-col gap-1">
                                     <span class="text-[9px] text-slate-400 font-black uppercase tracking-widest">Hasil Pemeriksaan</span>
-                                    <div class="text-[11px] text-slate-700 font-black line-clamp-2">${row.result_names || 'Belum diperiksa'}</div>
+                                    <div class="text-[11px] text-slate-700 font-bold leading-normal line-clamp-2">${row.result_names || 'Belum diperiksa'}</div>
                                 </div>
-                                <div class="flex flex-col gap-1 border-t border-slate-100 pt-2">
+                                <div class="flex flex-col gap-1 border-t border-slate-100 pt-2.5">
                                     <span class="text-[9px] text-slate-400 font-black uppercase tracking-widest">Alamat</span>
-                                    <div class="text-[11px] text-slate-700 font-black truncate">${row.alamat || '-'}</div>
-                                </div>
-                            </div>
-
-                            <div class="pt-1">
-                                <div class="w-full flex items-center justify-center gap-2 [&>a]:flex-1 [&>a]:flex [&>a]:items-center [&>a]:justify-center [&>a]:h-10 [&>a]:rounded-xl [&>a]:text-xs [&>a]:font-bold shadow-sm">
-                                    ${row.action || ""}
+                                    <div class="text-[11px] text-slate-700 font-medium truncate">${row.alamat || '-'}</div>
                                 </div>
                             </div>
                         </div>

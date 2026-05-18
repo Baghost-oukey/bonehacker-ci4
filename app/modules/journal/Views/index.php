@@ -74,9 +74,9 @@
         </div>
 
         <!-- Mobile Card Container (KODE KITA) -->
-        <div id="mobile-journal-container" class="md:hidden divide-y divide-slate-100 bg-white">
-            <div class="p-12 text-center text-slate-400 italic text-sm">
-                <i class="fas fa-spinner fa-spin mr-2 text-slate-300"></i>
+        <div id="mobile-journal-container" class="md:hidden flex flex-col gap-4 p-4 bg-slate-50/50">
+            <div class="p-12 text-center text-slate-400 italic text-sm bg-white rounded-2xl border border-slate-150 shadow-sm">
+                <i class="fas fa-spinner fa-spin mr-2 text-teal-500"></i>
                 Memuat data jurnal...
             </div>
         </div>

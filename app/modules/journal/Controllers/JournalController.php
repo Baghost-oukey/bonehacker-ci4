@@ -140,8 +140,8 @@ class JournalController extends BaseController
             ]), ENT_QUOTES, 'UTF-8');
 
             return '<button type="button" data-medis=\'' . $medisData . '\' onclick="openJournalMedicalRecord(this)" 
-                        class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:bg-slate-100 hover:text-teal-600">
-                        <i class="fas fa-eye"></i>
+                        class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-400 hover:text-teal-600 hover:border-teal-200 hover:bg-teal-50/20 shadow-sm transition-all active:scale-90 outline-none">
+                        <i class="fas fa-eye text-sm"></i>
                     </button>';
         });
 
