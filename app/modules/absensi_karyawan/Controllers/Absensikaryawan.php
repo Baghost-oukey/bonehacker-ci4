@@ -260,7 +260,8 @@ class Absensikaryawan extends BaseController
         $db->transStart();
 
         // Hapus presensi existing untuk terapis yang dipilih di tanggal ini
-        $this->model_absensi->whereIn('terapis_id', $terapisIds)
+        $this->model_absensi->builder()
+            ->whereIn('terapis_id', $terapisIds)
             ->where('tanggal', $tanggal)
             ->delete();
 
@@ -303,11 +304,20 @@ class Absensikaryawan extends BaseController
             ];
         }
 
+        // Ambil ID terapis yang sedang disubmit agar delete tidak menghapus region lain
+        $terapisIds = array_column($dataInsert, 'terapis_id');
+
         // DATABASE TRANSACTION (BEST PRACTICE)
         $db = \Config\Database::connect();
         $db->transStart(); // Mulai proteksi transaksi
-        $this->model_absensi->where('tanggal', $tanggal)->delete();
-        $this->model_absensi->insertBatch($dataInsert);
+        
+        if (!empty($terapisIds)) {
+            $this->model_absensi->builder()
+                                ->where('tanggal', $tanggal)
+                                ->whereIn('terapis_id', $terapisIds)
+                                ->delete();
+            $this->model_absensi->insertBatch($dataInsert);
+        }
 
         $db->transComplete();
         if ($db->transStatus() === true) {

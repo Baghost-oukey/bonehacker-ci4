@@ -69,6 +69,7 @@
 
         </div>
     </div>
+</div>
 
 <!-- MODAL TAMBAH/EDIT RIWAYAT -->
 <style>
@@ -104,7 +105,7 @@
         border-radius: 6px !important;
     }
 </style>
-<div id="modalRiwayatPasien" class="modal-wrapper hidden fixed inset-0 z-60 items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 transition-opacity">
+<div id="modalRiwayatPasien" class="modal-wrapper hidden fixed inset-0 z-[60] items-center justify-center bg-black/40 p-4 transition-opacity">
     <!-- Diperlebar menjadi max-w-6xl karena isi form sangat banyak -->
     <div class="w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
         
@@ -645,7 +646,6 @@
             </button>
         </div>
     </div>
-</div>
 
 <div id="deleteModal" class="modal-wrapper hidden fixed inset-0 z-9999 items-center justify-center bg-gray-900/40 backdrop-blur-sm transition-opacity">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 relative transform transition-all border border-gray-100">

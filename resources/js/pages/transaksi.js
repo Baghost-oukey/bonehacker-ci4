@@ -411,6 +411,26 @@ const setupTransaksiPage = () => {
     }
   });
 
+  // Auto switch for Dari Kas and Ke Kas in Mutasi Form
+  $('#formMutasi select[name="dari_kas"]').on('change', function() {
+    const val = $(this).val();
+    if (val === 'kas_kecil') {
+      $('#formMutasi select[name="ke_kas"]').val('kas_besar');
+    } else {
+      $('#formMutasi select[name="ke_kas"]').val('kas_kecil');
+    }
+  });
+
+  $('#formMutasi select[name="ke_kas"]').on('change', function() {
+    const val = $(this).val();
+    if (val === 'kas_kecil') {
+      $('#formMutasi select[name="dari_kas"]').val('kas_besar');
+    } else {
+      $('#formMutasi select[name="dari_kas"]').val('kas_kecil');
+    }
+  });
+
+
   const filterTerapisByRegion = () => {
     const regionSelect = $('#formTransaksi select[name="region_id"]');
     const regionHidden = $('#formTransaksi input[type="hidden"][name="region_id"]');
