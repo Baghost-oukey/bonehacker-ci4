@@ -15,7 +15,17 @@ const openModal = (modal) => {
   modal.classList.remove(MODAL_HIDDEN_CLASS);
   modal.classList.add(MODAL_VISIBLE_CLASS);
   modal.style.display = 'flex'; // Ensure it overrides any fadeOut inline style
+  
+  // Robust opacity & scale reset to support cross-module styles
+  modal.classList.remove("opacity-0");
+  modal.classList.add("opacity-100");
+  const content = modal.querySelector('.transform');
+  if (content) {
+    content.classList.remove("scale-95");
+    content.classList.add("scale-100");
+  }
 };
+window.openModal = openModal;
 
 const closeModal = (modal) => {
   if (!modal) return;
@@ -23,6 +33,7 @@ const closeModal = (modal) => {
   modal.classList.add(MODAL_HIDDEN_CLASS);
   modal.style.display = 'none'; // Sync with hidden class
 };
+window.closeModal = closeModal;
 
 const setupAntreanPage = () => {
   const config = window.antreanConfig;
@@ -443,7 +454,7 @@ const setupAntreanPage = () => {
   });
 
   $(document).on("click", "[data-modal-open]", function (event) {
-    const targetId = $(this).data("modal-open");
+    const targetId = $(this).attr("data-modal-open");
     const targetModal = document.getElementById(targetId);
     if (!targetModal) return;
 

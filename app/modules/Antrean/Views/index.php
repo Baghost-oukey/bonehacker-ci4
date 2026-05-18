@@ -26,7 +26,7 @@
                 Lihat Antrean
             </a>
 
-            <button type="button" id="btnBreakTime"
+            <button type="button" id="btnBreakTime" data-modal-open="modalBreakTime"
                 class="inline-flex items-center gap-2 rounded-lg border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-medium text-orange-700 transition hover:bg-orange-100">
                 <i class="fas fa-coffee text-orange-500"></i>
                 Istirahat
@@ -398,44 +398,46 @@
     #antreanPage #patientHistoryContainer {
         display: none !important;
     }
-    
+
     /* Paksa warna antrean menjadi slate-800 agar tidak hijau */
     #table-1 thead th:first-child,
     #table-1 tbody td:first-child {
-        color: #1e293b !important; /* slate-800 */
+        color: #1e293b !important;
+        /* slate-800 */
     }
-    
+
     /* Header table default agar tidak hijau */
     #table-1 thead th {
-        color: #475569 !important; /* slate-600 */
+        color: #475569 !important;
+        /* slate-600 */
     }
 </style>
 <?= $this->include('App\modules\patients\Views\component\card_riwayat') ?>
 
 <!-- Modal Istirahat -->
-<div id="modalBreakTime" class="modal-wrapper hidden fixed inset-0 z-[60] items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+<div id="modalBreakTime" class="modal-wrapper hidden fixed inset-0 z-[60] items-center justify-center bg-black/40 p-4">
     <div class="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl">
         <div class="flex items-center justify-between border-b border-slate-100 px-6 py-6 bg-white z-10">
             <h5 class="text-lg font-bold text-slate-800 flex items-center gap-2">
                 <i class="fas fa-coffee text-orange-500"></i>
                 Set Waktu Istirahat
             </h5>
-            <button type="button" onclick="closeModal(document.getElementById('modalBreakTime'))" class="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700">
+            <button type="button" data-modal-close class="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700">
                 <i class="fas fa-times text-lg"></i>
             </button>
         </div>
 
         <div class="p-6 space-y-6">
             <?php if (session()->get('role') === 'superadmin'): ?>
-            <div class="space-y-1.5">
-                <label class="text-sm font-bold text-slate-700 uppercase tracking-wider">Pilih Wilayah</label>
-                <select id="breakRegionId" class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all bg-slate-50 font-bold text-slate-700">
-                    <option value="">-- Pilih Wilayah --</option>
-                    <?php foreach ($wilayah as $w): ?>
-                        <option value="<?= $w->id ?>" <?= session()->get('active_region') == $w->id ? 'selected' : '' ?>><?= esc($w->name) ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
+                <div class="space-y-1.5">
+                    <label class="text-sm font-bold text-slate-700 uppercase tracking-wider">Pilih Wilayah</label>
+                    <select id="breakRegionId" class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all bg-slate-50 font-bold text-slate-700">
+                        <option value="">-- Pilih Wilayah --</option>
+                        <?php foreach ($wilayah as $w): ?>
+                            <option value="<?= $w->id ?>" <?= session()->get('active_region') == $w->id ? 'selected' : '' ?>><?= esc($w->name) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
             <?php else: ?>
                 <input type="hidden" id="breakRegionId" value="<?= is_array(session()->get('region_patient')) ? session()->get('region_patient')[0] : session()->get('region_patient') ?>">
             <?php endif; ?>
@@ -460,12 +462,12 @@
                         <span class="text-[10px] uppercase">Menit</span>
                     </button>
                 </div>
-                
+
                 <div class="relative pt-2">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <i class="fas fa-clock text-slate-400"></i>
                     </div>
-                    <input type="number" id="customDuration" placeholder="Atur menit lainnya..." 
+                    <input type="number" id="customDuration" placeholder="Atur menit lainnya..."
                         class="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all">
                 </div>
             </div>
@@ -493,10 +495,6 @@
         const durationButtons = document.querySelectorAll('.btn-duration');
         const customInput = document.getElementById('customDuration');
         let selectedDuration = null;
-
-        if (btnOpenBreak) {
-            btnOpenBreak.addEventListener('click', () => openModal(modalBreak));
-        }
 
         durationButtons.forEach(btn => {
             btn.addEventListener('click', function() {
@@ -539,7 +537,13 @@
                 success: function(res) {
                     if (res.status === 'success') {
                         Swal.fire('Berhasil', res.message, 'success');
-                        closeModal(modalBreak);
+                        if (typeof window.closeModal === 'function') {
+                            window.closeModal(modalBreak);
+                        } else {
+                            modalBreak.classList.remove('flex');
+                            modalBreak.classList.add('hidden');
+                            modalBreak.style.display = 'none';
+                        }
                     } else {
                         Swal.fire('Gagal', res.message, 'error');
                     }
@@ -562,7 +566,13 @@
                 success: function(res) {
                     if (res.status === 'success') {
                         Swal.fire('Berhasil', res.message, 'success');
-                        closeModal(modalBreak);
+                        if (typeof window.closeModal === 'function') {
+                            window.closeModal(modalBreak);
+                        } else {
+                            modalBreak.classList.remove('flex');
+                            modalBreak.classList.add('hidden');
+                            modalBreak.style.display = 'none';
+                        }
                     }
                 }
             });

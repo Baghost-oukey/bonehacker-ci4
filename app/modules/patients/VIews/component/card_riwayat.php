@@ -646,6 +646,7 @@
             </button>
         </div>
     </div>
+</div>
 
 <div id="deleteModal" class="modal-wrapper hidden fixed inset-0 z-9999 items-center justify-center bg-gray-900/40 backdrop-blur-sm transition-opacity">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 relative transform transition-all border border-gray-100">
