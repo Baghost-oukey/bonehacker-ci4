@@ -101,9 +101,10 @@ class Gajikaryawan extends BaseController
         $detail = $this->Mriwayatgaji->getDetailPerhitungan($terapisId);
         if (!empty($detail['terapis'])) {
             return $this->response->setJSON([
-                'status'   => 'success',
-                'data'     => array_merge($detail['terapis'], ['komponen' => $detail['komponen']]),
-                'csrfHash' => csrf_hash()
+                'status'    => 'success',
+                'data'      => $detail['terapis'],
+                'kalkulasi' => $detail['komponen'],
+                'csrfHash'  => csrf_hash()
             ]);
         }
         return $this->response->setJSON(['status' => 'error', 'message' => 'Data tidak ditemukan']);
@@ -305,6 +306,44 @@ class Gajikaryawan extends BaseController
             if ($terapis) {
                 $terapis_id = $terapis->id;
                 session()->set('terapis_id_int', $terapis_id); // Simpan ke session untuk request berikutnya
+            }
+        }
+
+        // Fallback cerdas untuk Admin: Cocokkan terapis berdasarkan nama (realname) atau username jika belum ada link terapis_id
+        if (!$terapis_id && session()->get('role') === 'admin') {
+            $realname = session()->get('realname');
+            $username = session()->get('username');
+            
+            $terapis = $this->db->table('terapis')->select('id')
+                ->groupStart()
+                    ->where('nama', $realname)
+                    ->orWhere('nama', $username)
+                ->groupEnd()
+                ->get()->getRow();
+                
+            if (!$terapis) {
+                $builder = $this->db->table('terapis')->select('id');
+                $hasCond = false;
+                if (!empty($realname) && strlen($realname) >= 3) {
+                    $builder->like('nama', $realname);
+                    $hasCond = true;
+                }
+                if (!empty($username) && strlen($username) >= 3) {
+                    if ($hasCond) {
+                        $builder->orLike('nama', $username);
+                    } else {
+                        $builder->like('nama', $username);
+                        $hasCond = true;
+                    }
+                }
+                if ($hasCond) {
+                    $terapis = $builder->get()->getRow();
+                }
+            }
+            
+            if ($terapis) {
+                $terapis_id = $terapis->id;
+                session()->set('terapis_id_int', $terapis_id);
             }
         }
 

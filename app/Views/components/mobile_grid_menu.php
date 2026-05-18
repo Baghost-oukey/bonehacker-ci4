@@ -21,10 +21,10 @@ if ($role === 'superadmin') {
     $menus[] = ['label' => 'Cabang', 'url' => site_url('region'), 'icon' => 'fa-map', 'color' => 'bg-cyan-500'];
     $menus[] = ['label' => 'Kalender Kerja', 'url' => site_url('kalender'), 'icon' => 'fa-calendar-days', 'color' => 'bg-amber-500'];
     $menus[] = ['label' => 'Jurnal', 'url' => site_url('journal'), 'icon' => 'fa-book', 'color' => 'bg-violet-500'];
-    
+
     // Kas Section
     $menus[] = ['label' => 'Master Kategori Kas', 'url' => site_url('kas/categories'), 'icon' => 'fa-credit-card', 'color' => 'bg-slate-600'];
-    
+
     // Manajemen Section
     $menus[] = ['label' => 'Manajemen Tags', 'url' => site_url('tag-keluhan'), 'icon' => 'fa-tags', 'color' => 'bg-teal-600'];
     $menus[] = ['label' => 'Logs', 'url' => site_url('logs'), 'icon' => 'fa-cog', 'color' => 'bg-slate-700'];
@@ -49,22 +49,22 @@ if ($role === 'owner') {
     $menus[] = ['label' => 'Input Presensi', 'url' => site_url('kehadiran/tambah'), 'icon' => 'fa-user-clock', 'color' => 'bg-sky-500'];
     $menus[] = ['label' => 'Rekap Presensi', 'url' => site_url('kehadiran'), 'icon' => 'fa-user-clock', 'color' => 'bg-sky-600'];
     $menus[] = ['label' => 'Cuti Karyawan', 'url' => site_url('kehadiran/cuti'), 'icon' => 'fa-user-clock', 'color' => 'bg-sky-700'];
-    
+
     // Kelola Gaji Section
     $menus[] = ['label' => 'Gaji Karyawan', 'url' => site_url('gaji'), 'icon' => 'fa-dollar-sign', 'color' => 'bg-emerald-600'];
     $menus[] = ['label' => 'Tunjangan Terapis', 'url' => site_url('transaksi-tunjangan'), 'icon' => 'fa-dollar-sign', 'color' => 'bg-emerald-700'];
     $menus[] = ['label' => 'Master Gaji', 'url' => site_url('master-gaji'), 'icon' => 'fa-dollar-sign', 'color' => 'bg-emerald-800'];
     $menus[] = ['label' => 'Kasbon Karyawan', 'url' => site_url('kasbon'), 'icon' => 'fa-hand-holding-dollar', 'color' => 'bg-yellow-600'];
-    
+
     // Jasa Pelayanan Section
     $menus[] = ['label' => 'Jaspel Reguler', 'url' => site_url('jasa-pelayanan/reguler'), 'icon' => 'fa-hospital-user', 'color' => 'bg-pink-500'];
     $menus[] = ['label' => 'Jaspel Kejantanan', 'url' => site_url('jasa-pelayanan/kejantanan'), 'icon' => 'fa-hospital-user', 'color' => 'bg-pink-600'];
-    
+
     // Kas Section
     $menus[] = ['label' => 'Arus Kas', 'url' => site_url('kas'), 'icon' => 'fa-credit-card', 'color' => 'bg-slate-600'];
     $menus[] = ['label' => 'Statistik Keuangan', 'url' => site_url('statistikkeuangan'), 'icon' => 'fa-credit-card', 'color' => 'bg-slate-700'];
     $menus[] = ['label' => 'Master Kategori Kas', 'url' => site_url('kas/categories'), 'icon' => 'fa-credit-card', 'color' => 'bg-slate-800'];
-    
+
     // Manajemen Section
     $menus[] = ['label' => 'Tag Keluhan', 'url' => site_url('tag-keluhan'), 'icon' => 'fa-tags', 'color' => 'bg-teal-500'];
     $menus[] = ['label' => 'Tag Rekam Medis', 'url' => site_url('tag-rekam-medis'), 'icon' => 'fa-tags', 'color' => 'bg-teal-600'];
@@ -85,11 +85,11 @@ if ($role === 'admin') {
     $menus[] = ['label' => 'Input Presensi', 'url' => site_url('kehadiran/tambah'), 'icon' => 'fa-user-clock', 'color' => 'bg-sky-500'];
     $menus[] = ['label' => 'Rekap Presensi', 'url' => site_url('kehadiran'), 'icon' => 'fa-user-clock', 'color' => 'bg-sky-600'];
     $menus[] = ['label' => 'Cuti Karyawan', 'url' => site_url('kehadiran/cuti'), 'icon' => 'fa-user-clock', 'color' => 'bg-sky-700'];
-    
+
     // Jasa Pelayanan Section
     $menus[] = ['label' => 'Jaspel Reguler', 'url' => site_url('jasa-pelayanan/reguler'), 'icon' => 'fa-hospital-user', 'color' => 'bg-pink-500'];
     $menus[] = ['label' => 'Jaspel Kejantanan', 'url' => site_url('jasa-pelayanan/kejantanan'), 'icon' => 'fa-hospital-user', 'color' => 'bg-pink-600'];
-    
+
     // Manajemen Section
     $menus[] = ['label' => 'Tag Keluhan', 'url' => site_url('tag-keluhan'), 'icon' => 'fa-tags', 'color' => 'bg-teal-500'];
     $menus[] = ['label' => 'Tag Rekam Medis', 'url' => site_url('tag-rekam-medis'), 'icon' => 'fa-tags', 'color' => 'bg-teal-600'];
