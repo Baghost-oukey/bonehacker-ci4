@@ -13,7 +13,7 @@ class MTransaksi extends Model
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
     protected $allowedFields    = [
-        'region_id', 'category_id', 'nominal', 'type', 'kas_type', 'kategori', 'keterangan', 
+        'region_id', 'category_id', 'nominal', 'type', 'kategori', 'keterangan', 
         'status', 'cancel_reason', 'created_at', 'created_by', 'cancelled_by'
     ];
 
@@ -50,7 +50,7 @@ class MTransaksi extends Model
     public function get_list_data($options, $kategori = null, $region_id = null)
     {
         $builder = $this->db->table('transaksi t')
-            ->select('t.id_transaksi, t.created_at, t.nominal, t.type, t.kas_type, t.kategori, t.keterangan, r.name as region_name, t.status, t.cancel_reason, u_created.username as nama_pembuat, u_cancelled.realname as cancelled_by_name, c.name as category_name')
+            ->select("t.id_transaksi, t.created_at, t.nominal, t.type, (CASE WHEN t.keterangan LIKE '[KAS_BESAR]%' THEN 'kas_besar' ELSE 'kas_kecil' END) as kas_type, t.kategori, t.keterangan, r.name as region_name, t.status, t.cancel_reason, u_created.username as nama_pembuat, u_cancelled.realname as cancelled_by_name, c.name as category_name")
             ->join('regions r', 'r.id = t.region_id', 'left')
             ->join('users u_created', 'u_created.id = t.created_by', 'left')
             ->join('users u_cancelled', 'u_cancelled.id = t.cancelled_by', 'left')
@@ -116,9 +116,18 @@ class MTransaksi extends Model
     {
         $db = \Config\Database::connect();
         
+        
         $builder = $db->table($this->table)->select('type, SUM(nominal) as total');
         $builder->where('status', 'active');
-        $builder->where('kas_type', $kas_type);
+        
+        if ($kas_type === 'kas_besar') {
+            $builder->like('keterangan', '[KAS_BESAR]', 'after');
+        } else {
+            $builder->groupStart()
+                    ->like('keterangan', '[KAS_KECIL]', 'after')
+                    ->orWhere("keterangan NOT LIKE '[KAS_BESAR]%'")
+                    ->groupEnd();
+        }
         
         if ($filter_region && $filter_region !== 'all') {
             if (is_array($filter_region)) {

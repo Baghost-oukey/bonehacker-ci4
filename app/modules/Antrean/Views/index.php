@@ -143,7 +143,7 @@
         <p class="text-sm text-slate-500">Yakin ingin menghapus data ini?</p>
         <div class="flex justify-end gap-2">
             <button type="button" data-modal-close
-                class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Batal</button>
+                class="w-full md:w-auto px-6 py-3.5 rounded-2xl border border-slate-200 text-slate-500 text-sm font-black uppercase tracking-widest hover:bg-slate-100 transition-all">Batal</button>
             <button id="confirmDelete"
                 class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">Hapus</button>
         </div>
@@ -152,7 +152,7 @@
 
 
 <!-- TABLE 2 MODAL (PILIH PASIEN) -->
-<div id="exampleModal" class="modal-wrapper hidden fixed inset-0 z-[60] flex flex-col items-center justify-end md:justify-center bg-black/40 backdrop-blur-sm p-0 md:p-4">
+<div id="exampleModal" class="modal-wrapper hidden fixed inset-0 z-[60] flex flex-col items-center justify-end md:justify-center bg-black/40 p-0 md:p-4">
     <div class="w-full max-w-5xl overflow-hidden rounded-t-3xl md:rounded-3xl bg-white shadow-2xl flex flex-col max-h-[90vh]">
         <div class="flex items-center justify-between border-b border-slate-100 px-6 py-5 bg-white shrink-0">
             <h5 class="text-lg font-black text-slate-800 uppercase tracking-tight">Tambah Pasien Ke Antrian</h5>
@@ -217,16 +217,15 @@
 
 
 <!-- ADD PASIEN MODAL (PASIEN BARU) -->
-<div id="modalnewpatient" class="modal-wrapper hidden fixed inset-0 z-[70] items-center justify-center bg-black/40 backdrop-blur-sm p-4 text-left">
-    <div class="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-xl">
-        <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-            <h5 class="text-lg font-semibold text-slate-800">Registrasi Pasien Baru</h5>
-            <button type="button" data-modal-close
-                class="rounded-md p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800">&times;</button>
+<div id="modalnewpatient" class="modal-wrapper hidden fixed inset-0 z-[70] items-center justify-center bg-black/40 p-4 text-left">
+    <div class="w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-2xl">
+        <div class="flex items-center justify-between border-b border-slate-100 px-6 py-6 bg-white z-10">
+            <h5 class="text-lg font-black text-slate-800 uppercase tracking-tight">Registrasi Pasien Baru</h5>
+            <button type="button" data-modal-close class="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"><i class="fas fa-times text-xl"></i></button>
         </div>
 
         <form action="<?= site_url('patient/store') ?>" method="post" enctype="multipart/form-data"
-            class="space-y-4 p-5 needs-validation" novalidate id="formTambahPasien">
+            class="space-y-5 p-6 needs-validation" novalidate id="formTambahPasien">
             <?= csrf_field() ?>
             <input type="hidden" name="desa_nama" id="desa_nama">
             <input type="hidden" name="kecamatan_id" id="kecamatan_id">
@@ -236,21 +235,21 @@
             <input type="hidden" name="provinsi_id" id="provinsi_id">
             <input type="hidden" name="provinsi_nama" id="provinsi_nama">
 
-            <div class="max-h-[60vh] space-y-4 overflow-y-auto pr-1">
+            <div class="max-h-[60vh] space-y-5 overflow-y-auto pr-1">
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div class="space-y-1">
-                        <label class="text-sm font-medium text-slate-700">Nama Lengkap <span
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Nama Lengkap <span
                                 class="text-red-500">*</span></label>
                         <input type="text" name="name" required autofocus
-                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                            class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 outline-none bg-slate-50 focus:bg-white transition-all shadow-inner">
                         <div class="invalid-feedback text-xs text-red-500 mt-1 hidden">Nama tidak boleh kosong</div>
                     </div>
 
-                    <div class="space-y-1">
-                        <label class="text-sm font-medium text-slate-700">Jenis Kelamin <span
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Jenis Kelamin <span
                                 class="text-red-500">*</span></label>
                         <select name="gender" required
-                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                            class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 outline-none bg-slate-50 focus:bg-white transition-all shadow-inner">
                             <option value="">-- Pilih --</option>
                             <option value="Man">Laki-laki</option>
                             <option value="Woman">Perempuan</option>
@@ -259,8 +258,8 @@
                     </div>
                 </div>
 
-                <div class="space-y-1">
-                    <label class="text-sm font-medium text-slate-700">Pasien Rentan?</label>
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Pasien Rentan?</label>
                     <label class="inline-flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" name="is_suspective" id="isSuspectiveCheckbox" class="sr-only peer">
                         <div
@@ -271,14 +270,14 @@
                 </div>
 
                 <div id="keterangan_rentan" class="hidden space-y-1">
-                    <label class="text-sm font-medium text-slate-700">Keterangan Rentan</label>
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Keterangan Rentan</label>
                     <textarea id="ket_rentan" name="ket_rentan" rows="2"
                         placeholder="Sebutkan alasan atau kondisi rentan..."
-                        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"></textarea>
+                        class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 outline-none bg-slate-50 focus:bg-white transition-all shadow-inner"></textarea>
                 </div>
 
-                <div class="space-y-1">
-                    <label class="text-sm font-medium text-slate-700">Domestik</label>
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Domestik</label>
                     <div class="flex gap-4">
                         <label class="inline-flex items-center gap-2 cursor-pointer">
                             <input type="radio" name="domestic" value="dalam_negeri"
@@ -294,10 +293,10 @@
                 </div>
 
                 <div id="country-fields" class="hidden space-y-4">
-                    <div class="space-y-1">
-                        <label class="text-sm font-medium text-slate-700">Pilih Negara</label>
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Pilih Negara</label>
                         <select name="country_id" id="country_id"
-                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                            class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 outline-none bg-slate-50 focus:bg-white transition-all shadow-inner">
                             <option value="">PILIH NEGARA</option>
                             <?php foreach ($negara as $value): ?>
                                 <option value="<?= $value->id ?>"><?= esc($value->country) ?></option>
@@ -307,25 +306,25 @@
                 </div>
 
                 <div id="local-fields" class="space-y-4">
-                    <div class="space-y-1">
-                        <label class="text-sm font-medium text-slate-700">Desa Asal Pasien</label>
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Desa Asal Pasien</label>
                         <select name="desa_id" id="desa_id"
-                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                            class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 outline-none bg-slate-50 focus:bg-white transition-all shadow-inner">
                             <option value="">Temukan Desa</option>
                         </select>
                     </div>
 
-                    <div class="space-y-1">
-                        <label class="text-sm font-medium text-slate-700">Pasien Cabang</label>
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Pasien Cabang</label>
                         <?php if (session()->get('role') === 'user' && !empty(session()->get('terapis_id'))): ?>
                             <input type="text"
-                                class="w-full rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-600"
+                                class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 bg-slate-100 cursor-not-allowed opacity-80"
                                 value="<?= esc(session()->get('region_name')) ?>" readonly>
                             <input type="hidden" name="region_id"
                                 value="<?= is_array(session()->get('region_patient')) ? session()->get('region_patient')[0] : session()->get('region_patient') ?>">
                         <?php else: ?>
                             <select name="region_id" id="region_id_new" required
-                                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                                class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 outline-none bg-slate-50 focus:bg-white transition-all shadow-inner">
                                 <option value="">-- PILIH --</option>
                                 <?php foreach ($wilayah as $v): ?>
                                     <option value="<?= $v->id ?>"><?= esc($v->name) ?></option>
@@ -336,22 +335,22 @@
                 </div>
 
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div class="space-y-1">
-                        <label class="text-sm font-medium text-slate-700">Umur</label>
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Umur</label>
                         <input type="number" name="age"
-                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                            class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 outline-none bg-slate-50 focus:bg-white transition-all shadow-inner">
                     </div>
-                    <div class="space-y-1">
-                        <label class="text-sm font-medium text-slate-700">No. WhatsApp</label>
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">No. WhatsApp</label>
                         <input type="number" id="phone_new" name="phone" placeholder="0812xxxxx"
-                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                            class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 outline-none bg-slate-50 focus:bg-white transition-all shadow-inner">
                     </div>
                 </div>
 
-                <div class="space-y-1">
-                    <label class="text-sm font-medium text-slate-700">Sumber Informasi</label>
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Sumber Informasi</label>
                     <select name="patient_information"
-                        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                        class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 outline-none bg-slate-50 focus:bg-white transition-all shadow-inner">
                         <option value="">Pilih Sumber</option>
                         <?php foreach ($resources as $value): ?>
                             <option value="<?= $value->id ?>"><?= esc($value->nama) ?></option>
@@ -359,34 +358,34 @@
                     </select>
                 </div>
 
-                <div class="space-y-1">
-                    <label class="text-sm font-medium text-slate-700">Alamat Jalan</label>
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Alamat Jalan</label>
                     <textarea name="address" rows="2" placeholder="Nama jalan, No. Rumah, RT/RW..."
-                        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"></textarea>
+                        class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 outline-none bg-slate-50 focus:bg-white transition-all shadow-inner"></textarea>
                 </div>
 
-                <div class="space-y-1">
-                    <label class="text-sm font-medium text-slate-700">Upload Files & Pictures</label>
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Upload Files & Pictures</label>
                     <input type="file" name="userfiles[]" id="userfiles" multiple onchange="previewFiles()"
                         class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-teal-50 file:text-teal-600 hover:file:bg-teal-100 cursor-pointer">
                     <div id="file-previews" class="mt-2 flex flex-wrap gap-2"></div>
                 </div>
 
-                <div class="space-y-1">
-                    <label class="text-sm font-medium text-slate-700">Tanggal Kedatangan <span
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Tanggal Kedatangan <span
                             class="text-red-500">*</span></label>
                     <input type="datetime-local" name="visit_date" required
-                        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                        class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 outline-none bg-slate-50 focus:bg-white transition-all shadow-inner"
                         value="<?= date('Y-m-d\TH:i') ?>">
                     <div class="invalid-feedback text-xs text-red-500 mt-1 hidden">Tanggal kedatangan wajib diisi</div>
                 </div>
             </div>
 
-            <div class="flex items-center justify-end gap-2 border-t border-slate-200 pt-4">
+            <div class="bg-slate-50 border-t border-slate-100 p-6 flex flex-col md:flex-row gap-3 justify-end">
                 <button type="button" data-modal-close
-                    class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Batal</button>
+                    class="w-full md:w-auto px-6 py-3.5 rounded-2xl border border-slate-200 text-slate-500 text-sm font-black uppercase tracking-widest hover:bg-slate-100 transition-all">Batal</button>
                 <button type="submit" id="submitBtnNew"
-                    class="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700">Simpan
+                    class="w-full md:flex-1 px-6 py-3.5 rounded-2xl bg-teal-600 text-white text-sm font-black uppercase tracking-widest shadow-lg shadow-teal-500/25 hover:bg-teal-700 transition-all">Simpan
                     Pasien</button>
             </div>
         </form>
@@ -416,7 +415,7 @@
 <!-- Modal Istirahat -->
 <div id="modalBreakTime" class="modal-wrapper hidden fixed inset-0 z-[60] items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
     <div class="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl">
-        <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+        <div class="flex items-center justify-between border-b border-slate-100 px-6 py-6 bg-white z-10">
             <h5 class="text-lg font-bold text-slate-800 flex items-center gap-2">
                 <i class="fas fa-coffee text-orange-500"></i>
                 Set Waktu Istirahat
@@ -428,7 +427,7 @@
 
         <div class="p-6 space-y-6">
             <?php if (session()->get('role') === 'superadmin'): ?>
-            <div class="space-y-1">
+            <div class="space-y-1.5">
                 <label class="text-sm font-bold text-slate-700 uppercase tracking-wider">Pilih Wilayah</label>
                 <select id="breakRegionId" class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all bg-slate-50 font-bold text-slate-700">
                     <option value="">-- Pilih Wilayah --</option>

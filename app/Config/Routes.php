@@ -87,6 +87,7 @@ $routes->group('transaksi', ['namespace' => 'App\Modules\Transaksi\Controllers',
   $routes->get('', 'TransaksiController::index');
   $routes->post('fetch', 'TransaksiController::fetch');
   $routes->post('store', 'TransaksiController::store');
+  $routes->post('store_mutasi', 'TransaksiController::store_mutasi');
   $routes->post('delete', 'TransaksiController::delete');
   $routes->get('export_excell', 'TransaksiController::export_excell');
   $routes->get('export_pdf', 'TransaksiController::export_pdf');
