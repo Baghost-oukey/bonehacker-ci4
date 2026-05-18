@@ -104,13 +104,20 @@ const setupUsersPage = () => {
     };
 
     const renderEmptyState = (message) => {
+        const descText = message === "Data user belum tersedia" 
+            ? "Belum ada data pengguna yang terdaftar di dalam sistem." 
+            : "Tidak ada data karyawan yang cocok dengan kata kunci pencarian Anda.";
+            
         const emptyHtml = `
-            <div class="py-20 text-center opacity-30">
-                <i class="fas fa-users-slash text-5xl text-slate-300 mb-4"></i>
-                <p class="text-xs font-black text-slate-400 uppercase tracking-widest">${message}</p>
+            <div class="py-16 flex flex-col items-center justify-center text-center max-w-sm mx-auto">
+                <div class="w-14 h-14 rounded-full bg-slate-50 flex items-center justify-center mb-3.5 border border-slate-100">
+                    <i class="fas fa-user-slash text-lg text-slate-400"></i>
+                </div>
+                <h4 class="text-sm font-semibold text-slate-700 mb-1">Data Tidak Ditemukan</h4>
+                <p class="text-xs text-slate-400 font-normal leading-relaxed px-4">${descText}</p>
             </div>
         `;
-        $("#table-user tbody").html(`<tr><td colspan="6">${emptyHtml}</td></tr>`);
+        $("#table-user tbody").html(`<tr><td colspan="7" class="py-4">${emptyHtml}</td></tr>`);
         $("#mobile-users-container").html(emptyHtml);
     };
 
@@ -161,11 +168,14 @@ const setupUsersPage = () => {
                     // Desktop row
                     const tr = $(`<tr class="hover:bg-slate-50/50 transition-colors border-b border-slate-50 group${inactiveTrClass}"></tr>`);
                     tr.append(`<td class="px-6 py-4 text-xs font-mono text-slate-400 italic">#${row.no || "-"}</td>`);
-                    tr.append(`<td class="px-6 py-4 font-black text-slate-800 text-sm${inactiveTdClass}">${row.realname || "-"}</td>`);
-                    tr.append(`<td class="px-6 py-4 text-xs font-bold text-slate-500${inactiveTdClass}">${row.username || "-"}</td>`);
-                    tr.append(`<td class="px-6 py-4"><span class="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest bg-slate-100 text-slate-500 border border-slate-200">${row.role || "-"}</span></td>`);
-                    tr.append(`<td class="px-6 py-4 text-xs font-bold text-slate-400${inactiveTdClass}">${row.region_name || "-"}</td>`);
-                    tr.append(`<td class="px-6 py-4">${row.status || "-"}</td>`);
+                    tr.append(`<td class="px-6 py-4 font-medium text-slate-700 text-sm${inactiveTdClass}">${row.realname || "-"}</td>`);
+                    tr.append(`<td class="px-6 py-4 text-xs text-slate-500${inactiveTdClass}">${row.username || "-"}</td>`);
+                    tr.append(`<td class="px-6 py-4"><span class="px-2.5 py-1 rounded-lg text-[9px] font-medium uppercase tracking-wider bg-slate-100 text-slate-500 border border-slate-200/60">${row.role || "-"}</span></td>`);
+                    tr.append(`<td class="px-6 py-4 text-xs text-slate-500${inactiveTdClass}">${row.region_name || "-"}</td>`);
+                    const statusHtml = row.status && row.status !== '-'
+                        ? `<span class="px-2.5 py-1 rounded-lg text-[9px] font-medium uppercase tracking-wider bg-teal-50 text-teal-600 border border-teal-100/70">${row.status}</span>`
+                        : `<span class="text-xs text-slate-300">-</span>`;
+                    tr.append(`<td class="px-6 py-4 text-center">${statusHtml}</td>`);
                     tr.append(`<td class="px-6 py-4 text-center">${row.action || "-"}</td>`);
                     tbody.append(tr);
 
@@ -174,12 +184,12 @@ const setupUsersPage = () => {
                         <div class="p-5 space-y-4 hover:bg-slate-50/50 transition-all">
                             <div class="flex justify-between items-start">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center font-black text-sm shadow-sm border border-teal-100/50">
+                                    <div class="w-10 h-10 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center font-semibold text-sm shadow-sm border border-teal-100/50">
                                         ${(row.realname || "U")[0].toUpperCase()}
                                     </div>
                                     <div class="flex flex-col gap-0.5">
-                                        <h3 class="text-sm font-black text-slate-800 leading-tight uppercase tracking-tight">${row.realname}</h3>
-                                        <p class="text-[10px] font-bold text-slate-400">@${row.username}</p>
+                                        <h3 class="text-sm font-medium text-slate-700 leading-tight">${row.realname}</h3>
+                                        <p class="text-xs text-slate-400">@${row.username}</p>
                                     </div>
                                 </div>
                                 <div class="flex gap-1.5">
@@ -187,10 +197,10 @@ const setupUsersPage = () => {
                                 </div>
                             </div>
                             <div class="flex flex-wrap gap-2">
-                                <span class="px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest bg-slate-100 text-slate-500 border border-slate-200">
+                                <span class="px-2.5 py-1 rounded-lg text-[8px] font-medium uppercase tracking-wider bg-slate-100 text-slate-500 border border-slate-200/60">
                                     <i class="fas fa-shield-alt mr-1 opacity-50"></i> ${row.role}
                                 </span>
-                                <span class="px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest bg-teal-50 text-teal-600 border border-teal-100/50 max-w-[150px] truncate">
+                                <span class="px-2.5 py-1 rounded-lg text-[8px] font-medium uppercase tracking-wider bg-teal-50 text-teal-600 border border-teal-100/50 max-w-[150px] truncate">
                                     <i class="fas fa-map-marker-alt mr-1 opacity-50"></i> ${row.region_name || 'Semua Wilayah'}
                                 </span>
                             </div>

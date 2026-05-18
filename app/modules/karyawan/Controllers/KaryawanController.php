@@ -75,6 +75,10 @@ class KaryawanController extends BaseController
 
   public function fetch()
   {
+    if (!$this->request->isAJAX()) {
+      return $this->response->setStatusCode(403)->setJSON(['error' => 'Forbidden']);
+    }
+
     $draw = $this->request->getPost('draw') ?? 1;
     $search_value = $this->request->getPost('search')['value'] ?? '';
 
@@ -90,76 +94,78 @@ class KaryawanController extends BaseController
 
     $dataOutput = $this->model_karyawan->getListData($options);
     $totalFiltered = $this->model_karyawan->getTotalData($options);
-    $totalData = $totalFiltered;
     $no = $options['offset'] + 1;
 
-    // Region map for display
+    // Region map — only needed for admin/owner users with regions_patient JSON
+    // Terapis & superadmin already have region names from SQL JOINs
+    $region_map = [];
     $all_region_ids = [];
     foreach ($dataOutput as $value) {
-      if ($value->role !== 'superadmin') {
+      $role = strtolower($value->role ?? '');
+      if ($role !== 'superadmin' && $value->personnel_type !== 'Therapist') {
         $raw = $value->regions_patient;
         $ids = is_string($raw) ? (json_decode($raw, true) ?: []) : (is_array($raw) ? $raw : []);
         if (is_array($ids)) $all_region_ids = array_merge($all_region_ids, $ids);
       }
     }
     $all_region_ids = array_unique(array_filter($all_region_ids, 'is_numeric'));
-    $region_map = [];
     if (!empty($all_region_ids)) {
-      $region_names_query = $this->model_karyawan->db->table('regions')->select('id, name')->whereIn('id', $all_region_ids)->get()->getResult();
-      foreach ($region_names_query as $r) $region_map[$r->id] = $r->name;
+      $rows = $this->model_karyawan->db->table('regions')->select('id, name')->whereIn('id', $all_region_ids)->get()->getResult();
+      foreach ($rows as $r) $region_map[$r->id] = $r->name;
     }
 
-    foreach ($dataOutput as $value) {
-      $value->no = $no++;
-      $value->realname = esc($value->name);
+    $cleanData = [];
 
-      // Determine Display Username (Fallback to terapis_id)
+    foreach ($dataOutput as $value) {
+      $currentNo = $no++;
+
+      // === 1. Preserve raw role for logic ===
+      $role_raw = strtolower($value->role ?? '');
+      $is_terapis = $value->personnel_type === 'Therapist';
+
+      // === 2. Display Username (fallback to terapis_id) ===
       $display_username = $value->username;
       if (empty($display_username) || $display_username === '-') {
         $display_username = $value->terapis_id;
       }
-      $value->username = esc($display_username ?: '-');
 
-      // Determine Display Role: terapis tampilkan jabatannya, management tampilkan role
-      $role_raw = strtolower($value->role ?? '');
+      // === 3. Display Role ===
       if ($role_raw === 'user') {
         $display_role = !empty($value->terapis_jabatan_name) ? $value->terapis_jabatan_name : 'Terapis';
       } else {
         $display_role = ucfirst($role_raw ?: '-');
       }
-      $value->role = $display_role;
 
-      $is_terapis = $value->personnel_type === 'Therapist';
-
-      // Region Name logic
-      if ($value->role === 'Superadmin') { // Normalized role check
-        $value->region_name = 'Semua Wilayah';
+      // === 4. Region Name ===
+      $regions_patient_ids = [];
+      if ($role_raw === 'superadmin') {
+        $display_region = 'Semua Wilayah';
       } else if ($is_terapis && !empty($value->terapis_region_name)) {
-        $value->region_name = $value->terapis_region_name;
+        $display_region = $value->terapis_region_name;
       } else {
         $raw = $value->regions_patient;
         $regions_patient_ids = is_string($raw) ? (json_decode($raw, true) ?: []) : (is_array($raw) ? $raw : []);
         $names = [];
         if (is_array($regions_patient_ids)) {
-          foreach ($regions_patient_ids as $rid) if (isset($region_map[$rid])) $names[] = $region_map[$rid];
+          foreach ($regions_patient_ids as $rid) {
+            if (isset($region_map[$rid])) $names[] = $region_map[$rid];
+          }
         }
-        $value->region_name = !empty($names) ? implode(', ', $names) : '-';
+        $display_region = !empty($names) ? implode(', ', $names) : '-';
       }
 
-      // Status logic (Empty as requested)
-      $value->status = '-';
+      // === 5. Build action buttons ===
+      $display_realname = esc($value->name);
 
       $action = '<div class="flex items-center justify-center gap-1.5">';
-      // Use raw data for action buttons to ensure correct IDs are passed to modals
-      $orig_role = strtolower($role_raw);
 
       if (!empty($value->user_id)) {
         $action .= '<button class="w-8 h-8 flex items-center justify-center rounded-lg bg-teal-50 text-teal-600 hover:bg-teal-600 hover:text-white transition-all btn_edit" 
                         data-id="' . $value->user_id . '" 
-                        data-realname="' . $value->realname . '" 
-                        data-username="' . $value->username . '" 
-                        data-role="' . $orig_role . '" 
-                        data-regions_patient="' . (isset($regions_patient_ids) ? implode(',', (array)$regions_patient_ids) : '') . '" 
+                        data-realname="' . $display_realname . '" 
+                        data-username="' . esc($display_username ?: '-') . '" 
+                        data-role="' . $role_raw . '" 
+                        data-regions_patient="' . implode(',', (array)$regions_patient_ids) . '" 
                         data-href="' . base_url('karyawan/update_account/' . $value->user_id) . '" 
                         title="Edit Akun">
                         <i class="fas fa-user-cog text-[10px]"></i>
@@ -167,7 +173,7 @@ class KaryawanController extends BaseController
       } else {
         $action .= '<button class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 text-slate-400 hover:bg-teal-600 hover:text-white transition-all btn_create_account" 
                         data-terapis_id="' . $value->terapis_id . '" 
-                        data-realname="' . $value->realname . '" 
+                        data-realname="' . $display_realname . '" 
                         data-region_id="' . ($value->terapis_region_id ?? '') . '" 
                         title="Buat Akun">
                         <i class="fas fa-user-plus text-[10px]"></i>
@@ -186,7 +192,7 @@ class KaryawanController extends BaseController
                     </button>';
       }
 
-      if ($orig_role !== 'superadmin') {
+      if ($role_raw !== 'superadmin') {
         if ($value->is_active == 1) {
           $action .= '<button class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all btn_toggle_status" data-status="0" data-id="' . ($is_terapis ? $value->id_terapis_table : $value->user_id) . '" data-type="' . ($is_terapis ? 'terapis' : 'user') . '" title="Nonaktifkan">
                         <i class="fas fa-toggle-on text-[10px]"></i>
@@ -205,21 +211,32 @@ class KaryawanController extends BaseController
       }
       $action .= '</div>';
 
-      // Final explicit mapping diperbaiki agar urutan objek JSON DataTables selaras dengan urutan Header HTML
-      $value->no          = $value->no;
-      $value->realname    = esc($value->name);
-      $value->username    = $value->username;
-      $value->role        = $value->role;
-      $value->region_name = $value->region_name;
-      $value->status      = '-';
-      $value->action      = $action;
+      // === 6. Display Status (tindakan count for terapis) ===
+      $jml_tindakan = (int)($value->jml_tindakan ?? 0);
+      if ($is_terapis) {
+        $display_status = $jml_tindakan . ' Tindakan';
+      } else {
+        $display_status = '-';
+      }
+
+      // === 7. Build clean array — exact keys that JS expects ===
+      $cleanData[] = [
+        'no'          => $currentNo,
+        'realname'    => $display_realname,
+        'username'    => esc($display_username ?: '-'),
+        'role'        => $display_role,
+        'region_name' => $display_region,
+        'status'      => $display_status,
+        'action'      => $action,
+        'is_active'   => $value->is_active,
+      ];
     }
 
     return $this->response->setJSON([
       "draw"            => intval($draw),
       "recordsTotal"    => intval($totalFiltered),
       "recordsFiltered" => intval($totalFiltered),
-      "data"            => $dataOutput,
+      "data"            => $cleanData,
       "csrfHash"        => csrf_hash()
     ]);
   }

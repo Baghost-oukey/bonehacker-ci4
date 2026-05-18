@@ -70,9 +70,20 @@ class MKaryawan extends Model
         $jsonRegionCond = $this->buildJsonRegionCondition($regionIds);
         $terapisRegionIn = empty($regionIds) ? '' : ' AND t.region_id IN (' . implode(',', $regionIds) . ')';
 
+        // Pre-aggregate tindakan counts per terapis — avoids expensive per-row correlated subquery
+        $tindakanJoin = "LEFT JOIN (
+            SELECT SUBSTRING_INDEX(SUBSTRING_INDEX(h.terapis_id, ',', numbers.n), ',', -1) AS tid,
+                   COUNT(*) AS cnt
+            FROM histories h
+            INNER JOIN (
+                SELECT 1 n UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5
+            ) numbers ON CHAR_LENGTH(h.terapis_id) - CHAR_LENGTH(REPLACE(h.terapis_id, ',', '')) >= numbers.n - 1
+            GROUP BY tid
+        ) ht ON ht.tid = t.id";
+
         $sql = "
         SELECT * FROM (
-            -- 1. Semua User (Management, Admin, atau Terapis yang sudah punya akun)
+            -- 1. Users (Management, Admin, atau Terapis yang sudah punya akun)
             SELECT 
                 u.id as user_id, 
                 COALESCE(t.nama, u.realname) as name, 
@@ -88,11 +99,13 @@ class MKaryawan extends Model
                     WHEN (u.role = 'user' OR (u.terapis_id IS NOT NULL AND u.terapis_id != '')) THEN 'Therapist' 
                     ELSE 'Management' 
                 END as personnel_type,
-                u.is_active
+                u.is_active,
+                COALESCE(ht.cnt, 0) as jml_tindakan
             FROM users u 
             LEFT JOIN terapis t ON u.terapis_id = t.terapis_id 
             LEFT JOIN regions rt ON t.region_id = rt.id
             LEFT JOIN jabatan j ON t.jabatan_id = j.id
+            $tindakanJoin
             WHERE 1=1 
             AND (
                 u.role = 'superadmin'
@@ -102,7 +115,7 @@ class MKaryawan extends Model
             
             UNION ALL
             
-            -- 2. Semua Terapis yang BELUM punya akun user
+            -- 2. Terapis yang BELUM punya akun user
             SELECT 
                 NULL as user_id, 
                 t.nama as name, 
@@ -115,10 +128,12 @@ class MKaryawan extends Model
                 rt.name as terapis_region_name,
                 j.nama_jabatan as terapis_jabatan_name,
                 'Therapist' as personnel_type,
-                t.is_active
+                t.is_active,
+                COALESCE(ht.cnt, 0) as jml_tindakan
             FROM terapis t 
             LEFT JOIN regions rt ON t.region_id = rt.id
             LEFT JOIN jabatan j ON t.jabatan_id = j.id
+            $tindakanJoin
             WHERE NOT EXISTS (SELECT 1 FROM users u WHERE u.terapis_id = t.terapis_id)
             " . (empty($regionIds) ? "" : " AND t.region_id IN (" . implode(',', $regionIds) . ")") . "
         ) AS personnel
