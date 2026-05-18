@@ -91,7 +91,7 @@
 </div>
 
 <!-- MODAL ADD USER -->
-<div id="modalAdd" class="modal-wrapper hidden fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center p-4">
+<div id="modalAdd" class="modal-wrapper hidden fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
         <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4 bg-white">
             <h5 class="text-lg font-semibold text-slate-800">Tambah User Baru</h5>
@@ -221,7 +221,7 @@
 </div>
 
 <!-- MODAL EDIT USER -->
-<div id="modalEdit" class="modal-wrapper hidden fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center p-4">
+<div id="modalEdit" class="modal-wrapper hidden fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
         <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4 bg-white">
             <h5 class="text-lg font-semibold text-slate-800">Edit Data User</h5>

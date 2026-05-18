@@ -287,6 +287,8 @@ class KaryawanController extends BaseController
 
     if ($post['role'] === 'superadmin') {
       $user_data['regions_patient'] = json_encode([]);
+    } elseif ($post['role'] === 'user' && !empty($post['region_id'])) {
+      $user_data['regions_patient'] = json_encode([intval($post['region_id'])]);
     } else {
       $regions = $post['regions_patient'] ?? [];
       $user_data['regions_patient'] = json_encode(array_map('intval', (array)$regions));
@@ -459,11 +461,27 @@ class KaryawanController extends BaseController
   public function update_account($id)
   {
     $post = $this->request->getPost();
+    $regions_patient = [];
+    if ($post['role'] === 'superadmin') {
+        $regions_patient = [];
+    } elseif ($post['role'] === 'user') {
+        // Terapis (user) maintains their single region from terapis_id
+        $user = $this->model_karyawan->db->table('users')->where('id', $id)->get()->getRow();
+        if ($user && $user->terapis_id) {
+            $terapis = $this->model_karyawan->db->table('terapis')->where('terapis_id', $user->terapis_id)->get()->getRow();
+            if ($terapis && $terapis->region_id) {
+                $regions_patient = [intval($terapis->region_id)];
+            }
+        }
+    } else {
+        $regions_patient = array_map('intval', (array)($post['regions_patient'] ?? []));
+    }
+
     $data = [
       'realname' => $post['realname'],
       'username' => $post['username'],
       'role' => $post['role'],
-      'regions_patient' => ($post['role'] === 'superadmin') ? json_encode([]) : json_encode(array_map('intval', (array)($post['regions_patient'] ?? []))),
+      'regions_patient' => json_encode($regions_patient),
     ];
 
     if (!empty($post['password'])) {
