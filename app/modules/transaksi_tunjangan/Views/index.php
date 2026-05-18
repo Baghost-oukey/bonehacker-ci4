@@ -9,12 +9,12 @@
         </div>
 
         <!-- DROPDOWN NAVIGASI MOBILE -->
-        <div class="w-full md:hidden">
-            <select onchange="window.location.href=this.value" class="w-full bg-blue-50 border border-blue-100 text-blue-700 text-sm font-bold rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm">
-                <option value="<?= site_url('gaji') ?>">Gaji Karyawan</option>
-                <option value="<?= site_url('transaksi-tunjangan') ?>" selected>Tunjangan Terapis</option>
-                <option value="<?= site_url('master-gaji') ?>">Master Gaji</option>
-                <option value="<?= site_url('kasbon') ?>">Kasbon Karyawan</option>
+        <div class="w-full lg:hidden">
+            <select onchange="window.location.href=this.value" class="w-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-sm font-bold rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500/20">
+                <option value="<?= site_url('gaji') ?>">💵 Gaji Karyawan</option>
+                <option value="<?= site_url('transaksi-tunjangan') ?>" selected>💰 Tunjangan Terapis</option>
+                <option value="<?= site_url('master-gaji') ?>">⚙️ Master Gaji</option>
+                <option value="<?= site_url('kasbon') ?>">💸 Kasbon Karyawan</option>
             </select>
         </div>
 

@@ -23,6 +23,14 @@
         </div>
     </div>
 
+    <!-- DROPDOWN NAVIGASI MOBILE -->
+    <div class="w-full lg:hidden">
+        <select onchange="window.location.href=this.value" class="w-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-sm font-bold rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500/20">
+            <option value="<?= base_url('jasa-pelayanan/reguler') ?>">🌸 Pasien Reguler</option>
+            <option value="<?= base_url('jasa-pelayanan/kejantanan') ?>" selected>🔥 Pasien Kejantanan</option>
+        </select>
+    </div>
+
     <div class="rounded-2xl bg-white shadow-sm border border-slate-200/50 overflow-hidden">
         <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4">
             <div class="mb-4">

@@ -13,15 +13,7 @@
         <?= $this->include('App\Views\components\mobile_grid_menu') ?>
     </div>
 
-    <!-- Desktop: Statistik Terapis -->
-    <style>
-        @media (max-width: 1023px) {
-            .desktop-stats-terapis { display: none !important; }
-        }
-        @media (min-width: 1024px) {
-            .desktop-stats-terapis { display: block !important; }
-        }
-    </style>
+    <!-- Statistik Terapis -->
     <div class="desktop-stats-terapis w-full space-y-6 p-4 md:p-6">
         
         <!-- Header -->
@@ -256,25 +248,8 @@
 
 <?php else: ?>
     <!-- NON-TERAPIS VIEW (SUPERADMIN/OWNER/ADMIN) -->
-    
-    <!-- Mobile/Tablet: Grid Menu -->
-    <div class="lg:hidden w-full p-4">
-        <div class="mb-6">
-            <h2 class="text-2xl font-bold text-slate-800">Beranda</h2>
-            <p class="text-sm text-slate-500">Akses cepat menu BoneHacker</p>
-        </div>
-        <?= $this->include('App\Views\components\mobile_grid_menu') ?>
-    </div>
 
-    <!-- Desktop: Dashboard dengan Statistik -->
-    <style>
-        @media (max-width: 1023px) {
-            .desktop-stats-admin { display: none !important; }
-        }
-        @media (min-width: 1024px) {
-            .desktop-stats-admin { display: block !important; }
-        }
-    </style>
+    <!-- Dashboard dengan Statistik -->
     <div class="desktop-stats-admin w-full space-y-6 p-4 md:p-6">
         <?php $summary_cards = [
             [
