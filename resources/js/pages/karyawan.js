@@ -227,6 +227,7 @@ const setupUsersPage = () => {
         if (role === 'user') {
             // Terapis: tampilkan data profil karyawan (sudah ada region_id tunggal di dalamnya)
             $extraTerapis.fadeIn().removeClass('hidden');
+            $extraTerapis.find('input[name="terapis_id"], select[name="jabatan_id"], select[name="region_id"], input[name="tgl_mulai_kerja"]').prop('required', true);
         } else if (role === 'owner' || role === 'admin') {
             // Owner/Admin: tampilkan pilihan wilayah pasien (multi-select)
             $regionManagement.fadeIn().removeClass('hidden');
@@ -296,7 +297,29 @@ const setupUsersPage = () => {
         const btn = $form.find('button[type="submit"]');
         const modal = $form.closest('.modal-wrapper')[0];
 
-        if (!form.checkValidity()) { $form.addClass('was-validated'); return; }
+        if (!form.checkValidity()) { 
+            $form.addClass('was-validated'); 
+            
+            // Get labels of missing fields
+            let missingFields = [];
+            $form.find(':invalid').each(function() {
+                const label = $(this).closest('div').find('label').first().text().trim() || $(this).attr('placeholder') || 'Kolom';
+                // Clean up label text
+                const cleanLabel = label.replace(/\s*\([^)]*\)/g, '').trim(); 
+                if (cleanLabel && !missingFields.includes(cleanLabel)) {
+                    missingFields.push(cleanLabel);
+                }
+            });
+
+            swalLib.fire({
+                title: 'Data Belum Lengkap',
+                html: '<p class="text-sm text-slate-500 mb-3">Silakan isi kolom berikut yang masih kosong:</p><ul class="text-left bg-rose-50 text-rose-600 rounded-lg p-3 text-sm list-disc list-inside border border-rose-100">' + missingFields.map(f => `<li>${f}</li>`).join('') + '</ul>',
+                icon: 'warning',
+                confirmButtonColor: '#0d9488',
+                confirmButtonText: 'Baik, lengkapi sekarang'
+            });
+            return; 
+        }
 
         const url = $form.attr('action');
         if (!url || url === '#' || url.startsWith('javascript:')) {
