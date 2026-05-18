@@ -84,6 +84,12 @@ class MTransaksi extends Model
     {
         $builder = $this->db->table('transaksi t');
 
+        if (!empty($options['where'])) {
+            foreach ($options['where'] as $key => $value) {
+                $builder->where($key, $value);
+            }
+        }
+
         if ($kategori) {
             $builder->where('t.kategori', $kategori);
         }
