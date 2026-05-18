@@ -141,7 +141,13 @@ const setupUsersPage = () => {
                 tbody.empty().css('opacity', '1');
                 mobileContainer.empty().css('opacity', '1');
 
-                if (!response.data || response.data.length === 0) {
+                if (!response || !response.data) {
+                    renderEmptyState("Gagal memuat data, coba refresh");
+                    updatePaginationUI();
+                    return;
+                }
+
+                if (response.data.length === 0) {
                     renderEmptyState("Data user belum tersedia");
                     updatePaginationUI();
                     return;
@@ -201,26 +207,23 @@ const setupUsersPage = () => {
         const role = $(roleSelect).val();
         const $extraTerapis = $("#extraTerapisFields");
         const $regionManagement = $("#regionFieldAdd");
-        
-        // Therapist fields
+
+        // Reset semua dulu
+        $extraTerapis.hide().addClass('hidden');
+        $extraTerapis.find('input, select, textarea').prop('required', false);
+        $regionManagement.hide().addClass('hidden');
+        $("#regions_add").prop('required', false);
+
         if (role === 'user') {
+            // Terapis: tampilkan data profil karyawan (sudah ada region_id tunggal di dalamnya)
             $extraTerapis.fadeIn().removeClass('hidden');
-            $extraTerapis.find('input, select, textarea').prop('required', true);
-            // Regions patient for therapist can be multiple, so show management region select
+        } else if (role === 'owner' || role === 'admin') {
+            // Owner/Admin: tampilkan pilihan wilayah pasien (multi-select)
             $regionManagement.fadeIn().removeClass('hidden');
-        } else {
-            $extraTerapis.fadeOut().addClass('hidden');
-            $extraTerapis.find('input, select, textarea').prop('required', false);
-            
-            // Management regions
-            if (role === 'owner' || role === 'admin') {
-                $regionManagement.fadeIn().removeClass('hidden');
-                $("#regions_add").prop('required', true);
-            } else {
-                $regionManagement.fadeOut().addClass('hidden');
-                $("#regions_add").prop('required', false);
-            }
+            $("#regions_add").prop('required', true);
         }
+        // superadmin: tidak perlu wilayah apapun
+
         initSelect2();
     };
 

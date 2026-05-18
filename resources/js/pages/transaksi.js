@@ -40,6 +40,10 @@ const formatRupiah = (angka) => {
   }).format(angka);
 };
 
+const formatInputNumber = (value) => {
+  return value.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+};
+
 const setupTransaksiPage = () => {
   const config = window.transaksiConfig;
   const page = document.getElementById("transaksiPage");
@@ -113,6 +117,7 @@ const setupTransaksiPage = () => {
   const loadTableData = (pageNumber = 1) => {
     const filterDateStart = $("#filter_date_start").val();
     const filterDateEnd = $("#filter_date_end").val();
+    const filterMonth = $("#filter_month").val();
 
     $.ajax({
       url: config.fetchUrl,
@@ -126,6 +131,7 @@ const setupTransaksiPage = () => {
         search: { value: searchValue },
         date_start: filterDateStart,
         date_end: filterDateEnd,
+        month: filterMonth,
       },
       success: (response) => {
         updateCsrf(response.new_token);
@@ -303,13 +309,46 @@ const setupTransaksiPage = () => {
     const incomeRadio = $('input[name="type"][value="income"]');
     const labelIncome = $("#labelIncome");
     const labelExpense = $("#labelExpense");
+    
+    const selectedType = incomeRadio.is(":checked") ? 'income' : 'expense';
 
-    if (incomeRadio.is(":checked")) {
+    if (selectedType === 'income') {
       labelIncome.addClass("bg-emerald-50 border border-emerald-200");
       labelExpense.removeClass("bg-rose-50 border border-rose-200");
     } else {
       labelExpense.addClass("bg-rose-50 border border-rose-200");
       labelIncome.removeClass("bg-emerald-50 border border-emerald-200");
+    }
+    
+    // Always show kategoriContainer for both income and expense
+    $("#kategoriContainer").show();
+    $("#kategori_pilihan").prop('required', true);
+    
+    // Filter options based on type
+    let hasVisibleSelection = false;
+    $("#kategori_pilihan option").each(function() {
+        const type = $(this).data('type');
+        if (type === 'all' || type === selectedType) {
+            $(this).prop('disabled', false).show();
+            if ($(this).is(':selected')) hasVisibleSelection = true;
+        } else {
+            $(this).prop('disabled', true).hide();
+        }
+    });
+    
+    // Reset selection if the currently selected option is hidden
+    if (!hasVisibleSelection) {
+        $("#kategori_pilihan").val('');
+    }
+
+    // Check terapis container logic
+    const val = $("#kategori_pilihan").val() || '';
+    if (val.includes('Kasbon') || val.includes('Gaji')) {
+      $("#terapisContainer").show();
+      $("#terapis_id").prop('required', true);
+    } else {
+      $("#terapisContainer").hide();
+      $("#terapis_id").prop('required', false);
     }
   };
 
@@ -326,8 +365,16 @@ const setupTransaksiPage = () => {
   });
 
   $("#filter_date_start, #filter_date_end").on("change", function () {
+    $("#filter_month").val('');
     currentPage = 1;
     loadTableData(1);
+  });
+
+  $("#filter_month").on("change", function () {
+    const val = $(this).val();
+    if (val) {
+      window.location.href = `?month=${val}`;
+    }
   });
 
   $("#paginationLength").on("change", function () {
@@ -351,6 +398,58 @@ const setupTransaksiPage = () => {
   });
 
   $('input[name="type"]').on("change", updateTypeToggle);
+  
+  $("#kategori_pilihan").on("change", function() {
+    const val = $(this).val() || '';
+    if (val.includes('Kasbon') || val.includes('Gaji')) {
+      $("#terapisContainer").show();
+      $("#terapis_id").prop('required', true);
+    } else {
+      $("#terapisContainer").hide();
+      $("#terapis_id").prop('required', false);
+      $("#terapis_id").val('');
+    }
+  });
+
+  const filterTerapisByRegion = () => {
+    const regionSelect = $('#formTransaksi select[name="region_id"]');
+    const regionHidden = $('#formTransaksi input[type="hidden"][name="region_id"]');
+    
+    let selectedRegion = '';
+    if (regionSelect.length) {
+        selectedRegion = regionSelect.val();
+    } else if (regionHidden.length) {
+        selectedRegion = regionHidden.val();
+    }
+
+    let hasVisibleTerapis = false;
+    $("#terapis_id option").each(function() {
+        const regionId = $(this).data('region-id');
+        if (!$(this).val()) {
+            $(this).prop('disabled', false).show();
+            return;
+        }
+        
+        if (!selectedRegion || selectedRegion === 'all' || regionId == selectedRegion) {
+            $(this).prop('disabled', false).show();
+            if ($(this).is(':selected')) hasVisibleTerapis = true;
+        } else {
+            $(this).prop('disabled', true).hide();
+            if ($(this).is(':selected')) $(this).prop('selected', false);
+        }
+    });
+    
+    if ($("#terapis_id option:selected").css('display') === 'none' && $("#terapis_id").val() !== '') {
+        $("#terapis_id").val('');
+    }
+  };
+
+  $('#formTransaksi select[name="region_id"]').on('change', filterTerapisByRegion);
+
+  $(document).on("input", "input[name='nominal']", function() {
+    const formatted = formatInputNumber($(this).val());
+    $(this).val(formatted);
+  });
 
   // Submit form transaksi
   $("#formTransaksi").on("submit", function (e) {
@@ -414,6 +513,66 @@ const setupTransaksiPage = () => {
     });
   });
 
+  // Submit form mutasi
+  $("#formMutasi").on("submit", function (e) {
+    e.preventDefault();
+
+    const btn = $("#btnSimpanMutasi");
+    const form = this;
+    const $form = $(form);
+
+    if (!form.checkValidity()) {
+      $form.addClass("was-validated");
+      return;
+    }
+
+    btn.prop("disabled", true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Memproses...');
+
+    const formData = new FormData(form);
+    formData.append(config.csrfName, config.csrfHash);
+
+    $.ajax({
+      url: config.storeMutasiUrl,
+      type: "POST",
+      data: formData,
+      contentType: false,
+      processData: false,
+      dataType: "json",
+      success: function (res) {
+        updateCsrf(res.new_token);
+
+        if (res.status === "success") {
+          if (swalLib?.fire) {
+            swalLib.fire({
+              icon: "success",
+              title: "Berhasil!",
+              text: res.message,
+              timer: 1500,
+              showConfirmButton: false,
+            });
+          }
+
+          closeModal(document.getElementById("modalMutasi"));
+          form.reset();
+          $form.removeClass("was-validated");
+
+          setTimeout(() => location.reload(), 1500);
+        } else {
+          if (swalLib?.fire) {
+            swalLib.fire("Gagal!", res.message, "error");
+          }
+          btn.prop("disabled", false).text("Proses Mutasi");
+        }
+      },
+      error: function (xhr) {
+        if (swalLib?.fire) {
+          swalLib.fire("Error!", "Terjadi kesalahan sistem.", "error");
+        }
+        btn.prop("disabled", false).text("Proses Mutasi");
+      },
+    });
+  });
+
   // Rekap modal
   $("#btnRekap").on("click", function () {
     openModal(document.getElementById("modalRekap"));
@@ -422,9 +581,14 @@ const setupTransaksiPage = () => {
   $("#btnRekapPdf").on("click", function () {
     const tglStart = $("#filter_date_start").val();
     const tglEnd = $("#filter_date_end").val();
+    const filterMonth = $("#filter_month").val();
     let url = config.exportPdfUrl;
-    if (tglStart) url += `?date_start=${tglStart}`;
-    if (tglEnd) url += tglStart ? `&date_end=${tglEnd}` : `?date_end=${tglEnd}`;
+    if (tglStart) {
+      url += `?date_start=${tglStart}`;
+      if (tglEnd) url += `&date_end=${tglEnd}`;
+    } else if (filterMonth) {
+      url += `?month=${filterMonth}`;
+    }
     window.open(url, "_blank");
     closeModal(document.getElementById("modalRekap"));
   });
@@ -432,9 +596,14 @@ const setupTransaksiPage = () => {
   $("#btnRekapExcel").on("click", function () {
     const tglStart = $("#filter_date_start").val();
     const tglEnd = $("#filter_date_end").val();
+    const filterMonth = $("#filter_month").val();
     let url = config.exportExcelUrl;
-    if (tglStart) url += `?date_start=${tglStart}`;
-    if (tglEnd) url += tglStart ? `&date_end=${tglEnd}` : `?date_end=${tglEnd}`;
+    if (tglStart) {
+      url += `?date_start=${tglStart}`;
+      if (tglEnd) url += `&date_end=${tglEnd}`;
+    } else if (filterMonth) {
+      url += `?month=${filterMonth}`;
+    }
     window.location.href = url;
     closeModal(document.getElementById("modalRekap"));
   });
@@ -532,10 +701,16 @@ const setupTransaksiPage = () => {
     updateTypeToggle();
   });
 
+  $("#modalMutasi").on("click", "[data-modal-close]", function () {
+    $("#formMutasi")[0].reset();
+    $("#formMutasi").removeClass("was-validated");
+  });
+
   // Initialize
   loadTableData(1);
   initChart();
   updateTypeToggle();
+  filterTerapisByRegion();
 };
 
 // Initialize page

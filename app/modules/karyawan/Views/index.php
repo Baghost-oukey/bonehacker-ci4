@@ -5,8 +5,8 @@
     <!-- HEADER -->
     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between px-1">
         <div>
-            <h1 class="text-2xl md:text-3xl font-black tracking-tight text-teal-600 uppercase">Manajemen Karyawan</h1>
-            <p class="text-xs md:text-sm font-medium text-slate-500 mt-1">Kelola data akun dan profil karyawan secara terpusat.</p>
+            <h1 class="text-2xl md:text-3xl font-semibold text-teal-700">Manajemen Karyawan</h1>
+            <p class="text-sm text-slate-500 mt-1">Kelola data akun dan profil karyawan secara terpusat.</p>
         </div>
         <button type="button" data-modal-open="modalAdd" class="w-full md:w-auto flex items-center justify-center gap-3 px-6 py-3.5 rounded-2xl bg-teal-600 text-white text-sm font-black hover:bg-teal-700 transition-all shadow-lg shadow-teal-500/25 active:scale-[0.98] outline-none">
             <i class="fas fa-plus text-xs"></i> 
@@ -21,8 +21,8 @@
         <div class="p-5 md:p-6 border-b border-slate-100 bg-slate-50/30">
             <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div class="hidden sm:block">
-                    <h2 class="text-lg font-black text-slate-800">Daftar Pengguna</h2>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Sistem Keamanan & Akses</p>
+                    <h2 class="text-lg font-semibold text-slate-800">Daftar Pengguna</h2>
+                    <p class="text-xs text-slate-400 mt-1">Sistem Keamanan &amp; Akses</p>
                 </div>
                 <div class="relative w-full md:w-80 group">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
@@ -64,7 +64,7 @@
             <div class="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
                 <div class="flex flex-col sm:flex-row items-center gap-4">
                     <div class="flex items-center gap-2">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tampilkan</label>
+                        <label class="text-xs font-medium text-slate-500">Tampilkan</label>
                         <select id="paginationLength" class="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 outline-none focus:border-teal-500 transition-all shadow-sm">
                             <option value="10">10</option>
                             <option value="25" selected>25</option>
@@ -94,7 +94,7 @@
 <div id="modalAdd" class="modal-wrapper hidden fixed inset-0 z-[9999] bg-slate-900/60 backdrop-blur-sm flex flex-col items-center justify-end md:justify-center p-0 md:p-4 opacity-0 transition-opacity duration-300">
     <div class="bg-white rounded-t-3xl md:rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden transform translate-y-full md:translate-y-0 md:scale-95 transition-all duration-300">
         <div class="flex items-center justify-between border-b border-slate-100 px-6 py-5 bg-white">
-            <h5 class="text-lg font-black text-slate-800 uppercase tracking-tight">Tambah User Baru</h5>
+            <h5 class="text-lg font-semibold text-slate-800">Tambah User Baru</h5>
             <button type="button" data-modal-close class="text-slate-400 hover:text-red-500 transition-colors outline-none">
                 <i class="fas fa-times text-xl"></i>
             </button>
@@ -104,22 +104,22 @@
             <?= csrf_field() ?>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="space-y-1.5">
-                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Nama Lengkap</label>
-                    <input type="text" name="realname" required class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 outline-none bg-slate-50 focus:bg-white transition-all shadow-inner" placeholder="Masukkan nama asli">
+                    <label class="text-sm font-medium text-slate-700 ml-1">Nama Lengkap</label>
+                    <input type="text" name="realname" required class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-700 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-white" placeholder="Masukkan nama asli">
                 </div>
                 <div class="space-y-1.5">
-                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Username</label>
-                    <input type="text" name="username" id="username_add" required class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 outline-none bg-slate-50 focus:bg-white transition-all shadow-inner" placeholder="Pilih username unik">
+                    <label class="text-sm font-medium text-slate-700 ml-1">Username</label>
+                    <input type="text" name="username" id="username_add" required class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-700 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-white" placeholder="Pilih username unik">
                     <div class="username-feedback text-[9px] font-bold uppercase tracking-tighter mt-1 hidden"></div>
                 </div>
             </div>
             <div class="space-y-1.5">
-                <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Password Baru</label>
-                <input type="password" name="password" required class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 outline-none bg-slate-50 focus:bg-white transition-all shadow-inner" placeholder="Minimal 6 karakter">
+                <label class="text-sm font-medium text-slate-700 ml-1">Password Baru</label>
+                <input type="password" name="password" required class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-700 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-white" placeholder="Minimal 6 karakter">
             </div>
             <div class="space-y-1.5">
-                <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Level Akses (Role)</label>
-                <select name="role" id="role_add" data-target="#extraTerapisFields" class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 outline-none bg-slate-50 focus:bg-white transition-all shadow-inner" required>
+                <label class="text-sm font-medium text-slate-700 ml-1">Level Akses (Role)</label>
+                <select name="role" id="role_add" data-target="#extraTerapisFields" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-700 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-white" required>
                     <option value="">-- Pilih Akses --</option>
                     <option value="owner">Owner</option>
                     <option value="admin">Admin</option>
@@ -197,14 +197,20 @@
                 </div>
             </div>
 
-            <!-- REGION PATIENT (FOR MANAGEMENT) -->
-            <div class="space-y-1.5 hidden" id="regionFieldAdd">
-                <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Otoritas Wilayah Pasien</label>
-                <select name="regions_patient[]" id="regions_add" multiple class="w-full select2-teal">
-                    <?php foreach ($regions as $region): ?>
-                        <option value="<?= $region->id ?>"><?= $region->name ?></option>
-                    <?php endforeach; ?>
-                </select>
+            <!-- REGION PATIENT (FOR OWNER/ADMIN ONLY) -->
+            <div class="hidden" id="regionFieldAdd">
+                <div class="rounded-lg border border-slate-200 bg-slate-50/50 p-4 space-y-2">
+                    <div class="flex items-center gap-2 mb-1">
+                        <i class="fas fa-map-marker-alt text-teal-500 text-xs"></i>
+                        <label class="text-sm font-medium text-slate-700">Otoritas Wilayah Pasien</label>
+                    </div>
+                    <p class="text-xs text-slate-400 mb-3">Pilih wilayah yang bisa dikelola oleh akun ini.</p>
+                    <select name="regions_patient[]" id="regions_add" multiple class="w-full select2-teal">
+                        <?php foreach ($regions as $region): ?>
+                            <option value="<?= $region->id ?>"><?= $region->name ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
             </div>
             <div class="flex flex-col md:flex-row gap-3 border-t border-slate-100 pt-5 mt-4">
                 <button type="button" data-modal-close class="w-full md:w-auto px-6 py-3.5 rounded-2xl border border-slate-200 text-slate-500 text-sm font-black uppercase tracking-widest hover:bg-slate-50 transition-all">Batal</button>
@@ -218,7 +224,7 @@
 <div id="modalEdit" class="modal-wrapper hidden fixed inset-0 z-[9999] bg-slate-900/60 backdrop-blur-sm flex flex-col items-center justify-end md:justify-center p-0 md:p-4 opacity-0 transition-opacity duration-300">
     <div class="bg-white rounded-t-3xl md:rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden transform translate-y-full md:translate-y-0 md:scale-95 transition-all duration-300">
         <div class="flex items-center justify-between border-b border-slate-100 px-6 py-5 bg-white">
-            <h5 class="text-lg font-black text-slate-800 uppercase tracking-tight">Edit Data User</h5>
+            <h5 class="text-lg font-semibold text-slate-800">Edit Data User</h5>
             <button type="button" data-modal-close class="text-slate-400 hover:text-red-500 transition-colors outline-none">
                 <i class="fas fa-times text-xl"></i>
             </button>
@@ -228,22 +234,22 @@
             <?= csrf_field() ?>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="space-y-1.5">
-                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Nama Lengkap</label>
-                    <input type="text" name="realname" id="edit_realname" required class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 outline-none bg-slate-50 focus:bg-white transition-all shadow-inner">
+                    <label class="text-sm font-medium text-slate-700 ml-1">Nama Lengkap</label>
+                    <input type="text" name="realname" id="edit_realname" required class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-700 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-white">
                 </div>
                 <div class="space-y-1.5">
-                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Username</label>
-                    <input type="text" name="username" id="edit_username" required class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 outline-none bg-slate-50 focus:bg-white transition-all shadow-inner">
+                    <label class="text-sm font-medium text-slate-700 ml-1">Username</label>
+                    <input type="text" name="username" id="edit_username" required class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-700 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-white">
                     <div class="edit-username-feedback text-[9px] font-bold uppercase tracking-tighter mt-1 hidden"></div>
                 </div>
             </div>
             <div class="space-y-1.5">
-                <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Ganti Password <span class="normal-case italic opacity-50">(Kosongkan jika tidak diubah)</span></label>
-                <input type="password" name="password" class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 outline-none bg-slate-50 focus:bg-white transition-all shadow-inner" placeholder="••••••••">
+                <label class="text-sm font-medium text-slate-700 ml-1">Ganti Password <span class="italic font-normal text-slate-400">(Kosongkan jika tidak diubah)</span></label>
+                <input type="password" name="password" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-700 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-white" placeholder="••••••••">
             </div>
             <div class="space-y-1.5">
-                <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Level Akses (Role)</label>
-                <select name="role" id="edit_role" data-target="#regionFieldEdit" class="w-full px-4 py-3 rounded-2xl border border-slate-200 text-sm font-bold text-slate-700 focus:border-teal-500 outline-none bg-slate-50 focus:bg-white transition-all shadow-inner" required>
+                <label class="text-sm font-medium text-slate-700 ml-1">Level Akses (Role)</label>
+                <select name="role" id="edit_role" data-target="#regionFieldEdit" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-700 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-white" required>
                     <option value="superadmin">Super Admin</option>
                     <option value="owner">Owner</option>
                     <option value="admin">Admin</option>
@@ -251,7 +257,7 @@
                 </select>
             </div>
             <div class="space-y-1.5 hidden" id="regionFieldEdit">
-                <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Otoritas Wilayah</label>
+                <label class="text-sm font-medium text-slate-700 ml-1">Otoritas Wilayah</label>
                 <select name="regions_patient[]" id="edit_regions" multiple class="w-full select2-teal">
                     <?php foreach ($regions as $region): ?>
                         <option value="<?= $region->id ?>"><?= $region->name ?></option>

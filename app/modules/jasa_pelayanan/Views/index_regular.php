@@ -13,11 +13,13 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
-            <a href="<?= site_url('jasa-pelayanan/settings') ?>"
-                class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
-                <i class="fas fa-cog text-slate-500"></i>
-                Pengaturan Jaspel
-            </a>
+            <?php if (in_array($sess_role, ['superadmin', 'owner'])): ?>
+                <a href="<?= site_url('jasa-pelayanan/settings') ?>"
+                    class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
+                    <i class="fas fa-cog text-slate-500"></i>
+                    Pengaturan Jaspel
+                </a>
+            <?php endif; ?>
         </div>
     </div>
 

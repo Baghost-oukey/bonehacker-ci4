@@ -120,9 +120,13 @@ class KaryawanController extends BaseController
       }
       $value->username = esc($display_username ?: '-');
 
-      // Determine Display Role (Normalized)
+      // Determine Display Role: terapis tampilkan jabatannya, management tampilkan role
       $role_raw = strtolower($value->role ?? '');
-      $display_role = ($role_raw === 'user') ? 'Terapis' : ucfirst($role_raw ?: '-');
+      if ($role_raw === 'user') {
+        $display_role = !empty($value->terapis_jabatan_name) ? $value->terapis_jabatan_name : 'Terapis';
+      } else {
+        $display_role = ucfirst($role_raw ?: '-');
+      }
       $value->role = $display_role;
 
       $is_terapis = $value->personnel_type === 'Therapist';
@@ -190,6 +194,12 @@ class KaryawanController extends BaseController
         } else {
           $action .= '<button class="w-8 h-8 flex items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all btn_toggle_status" data-status="1" data-id="' . ($is_terapis ? $value->id_terapis_table : $value->user_id) . '" data-type="' . ($is_terapis ? 'terapis' : 'user') . '" title="Aktifkan">
                         <i class="fas fa-toggle-off text-[10px]"></i>
+                      </button>';
+        }
+        // Tombol hapus — hanya tampil untuk terapis (bukan pure user akun)
+        if ($is_terapis) {
+          $action .= '<button class="w-8 h-8 flex items-center justify-center rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all btn_delete" data-href="' . base_url('karyawan/destroy/' . $value->id_terapis_table) . '" title="Hapus Karyawan">
+                        <i class="fas fa-trash-alt text-[10px]"></i>
                       </button>';
         }
       }
