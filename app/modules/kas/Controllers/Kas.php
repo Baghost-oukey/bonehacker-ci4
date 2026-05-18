@@ -25,8 +25,8 @@ class Kas extends BaseController
     {
         $db = \Config\Database::connect();
         $role = session()->get('role');
-        if ($role !== 'owner' && $role !== 'superadmin') {
-            return redirect()->to('/dashboard')->with('error', 'Akses ditolak. Fitur khusus manajemen.');
+        if ($role !== 'owner') {
+            return redirect()->to('/beranda')->with('message', ['error', 'Akses Ditolak', 'Hanya Owner yang dapat mengakses Manajemen Arus Kas.']);
         }
 
         $region_patient = session()->get('region_patient');

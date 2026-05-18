@@ -26,9 +26,7 @@ if ($role === 'superadmin') {
     $menus[] = ['label' => 'Master Kategori Kas', 'url' => site_url('kas/categories'), 'icon' => 'fa-credit-card', 'color' => 'bg-slate-600'];
     
     // Manajemen Section
-    $menus[] = ['label' => 'Tag Keluhan', 'url' => site_url('tag-keluhan'), 'icon' => 'fa-tags', 'color' => 'bg-teal-500'];
-    $menus[] = ['label' => 'Tag Rekam Medis', 'url' => site_url('tag-rekam-medis'), 'icon' => 'fa-tags', 'color' => 'bg-teal-600'];
-    $menus[] = ['label' => 'Tag Pemeriksaan', 'url' => site_url('tag-pemeriksaan'), 'icon' => 'fa-tags', 'color' => 'bg-teal-700'];
+    $menus[] = ['label' => 'Manajemen Tags', 'url' => site_url('tag-keluhan'), 'icon' => 'fa-tags', 'color' => 'bg-teal-600'];
     $menus[] = ['label' => 'Logs', 'url' => site_url('logs'), 'icon' => 'fa-cog', 'color' => 'bg-slate-700'];
     $menus[] = ['label' => 'WhatsApp', 'url' => site_url('whatsapp'), 'icon' => 'fa-cog', 'color' => 'bg-green-600'];
     $menus[] = ['label' => 'Log WhatsApp', 'url' => site_url('log_whatsapp'), 'icon' => 'fa-cog', 'color' => 'bg-green-700'];

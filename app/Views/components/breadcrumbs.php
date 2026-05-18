@@ -43,6 +43,9 @@ $path = '';
 
 // Segments to skip from breadcrumb display (security: prevent unauthorized access)
 $skipSegments = ['terapis'];
+if (session()->get('role') === 'superadmin') {
+    $skipSegments[] = 'kas';
+}
 
 foreach ($segments as $index => $segment) {
 	if ($segment === '') {
