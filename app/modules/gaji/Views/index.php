@@ -51,7 +51,8 @@
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
-                            <th class="p-4 rounded-tl-lg">Nama Terapis</th>
+                            <th class="p-4 rounded-tl-lg">Nama Karyawan</th>
+                            <th class="p-4">Jabatan</th>
                             <th class="p-4">Wilayah</th>
                             <th class="p-4">Tipe & Gaji Dasar</th>
                             <th class="p-4 text-center">Tindakan</th>
@@ -67,6 +68,7 @@
                                     </div>
                                     <span class="font-medium text-slate-800"><?= esc($row['nama']) ?></span>
                                 </td>
+                                <td class="p-4 text-slate-600 font-medium"><?= esc($row['nama_jabatan'] ?? '-') ?></td>
                                 <td class="p-4 text-slate-600"><?= esc($row['wilayah']) ?></td>
                                 <td class="p-4">
                                     <div class="flex items-center gap-2">
@@ -77,7 +79,7 @@
                                             <span class="text-slate-600 font-medium">Rp <?= number_format($row['nominal_gaji'], 0, ',', '.') ?></span>
                                         <?php endif; ?>
                                         <!-- Tombol Gear Modal Setting -->
-                                        <button class="btn-setting text-slate-400 hover:text-blue-600 transition" 
+                                        <button type="button" class="btn-setting text-slate-400 hover:text-blue-600 transition" 
                                                 data-terapis-id="<?= $row['terapis_id'] ?>" 
                                                 data-tipe-gaji="<?= esc($row['tipe_gaji']) ?>"
                                                 data-nominal="<?= $row['nominal_gaji'] ?? 0 ?>"
@@ -95,7 +97,7 @@
                                     </span>
                                 </td>
                                 <td class="p-4 text-right">
-                                    <button class="btn-proses-gaji inline-flex items-center gap-2 px-3 py-1.5 bg-slate-900 text-white rounded-md hover:bg-slate-800 transition text-sm"
+                                    <button type="button" class="btn-proses-gaji inline-flex items-center gap-2 px-3 py-1.5 bg-slate-900 text-white rounded-md hover:bg-slate-800 transition text-sm"
                                             data-terapis-id="<?= $row['terapis_id'] ?>">
                                         Proses Gaji
                                     </button>
@@ -117,10 +119,10 @@
                                 </div>
                                 <div>
                                     <h4 class="font-bold text-slate-800 text-sm"><?= esc($row['nama']) ?></h4>
-                                    <p class="text-[10px] font-medium text-slate-500 uppercase tracking-wider"><?= esc($row['wilayah']) ?></p>
+                                    <p class="text-[10px] font-medium text-slate-500 uppercase tracking-wider"><?= esc($row['nama_jabatan'] ?? '-') ?> &bull; <?= esc($row['wilayah']) ?></p>
                                 </div>
                             </div>
-                            <button class="btn-setting p-2 text-slate-400 bg-slate-50 rounded-lg hover:text-blue-600 transition" 
+                            <button type="button" class="btn-setting p-2 text-slate-400 bg-slate-50 rounded-lg hover:text-blue-600 transition" 
                                     data-terapis-id="<?= $row['terapis_id'] ?>" 
                                     data-tipe-gaji="<?= esc($row['tipe_gaji']) ?>"
                                     data-nominal="<?= $row['nominal_gaji'] ?? 0 ?>"
@@ -149,7 +151,7 @@
                                 <i class="fas fa-stethoscope text-slate-400 text-xs"></i>
                                 <span class="text-xs font-bold text-slate-600"><?= esc($row['jml_tindakan'] ?? 0) ?> Tindakan</span>
                             </div>
-                            <button class="btn-proses-gaji px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold shadow-lg shadow-slate-900/10 active:scale-95 transition-all"
+                            <button type="button" class="btn-proses-gaji px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold shadow-lg shadow-slate-900/10 active:scale-95 transition-all"
                                     data-terapis-id="<?= $row['terapis_id'] ?>">
                                 Proses Gaji
                             </button>
@@ -195,7 +197,7 @@
                     <thead>
                         <tr class="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
                             <th class="p-4">Tanggal Bayar</th>
-                            <th class="p-4">Nama Terapis</th>
+                            <th class="p-4">Nama Karyawan</th>
                             <th class="p-4">Periode</th>
                             <th class="p-4 text-right">Total Dibayar</th>
                         </tr>
@@ -314,47 +316,63 @@
 </div>
 <div id="offcanvasBackdrop" class="offcanvas-backdrop fixed inset-0 bg-slate-900/20 z-40 hidden transition-opacity"></div>
 
-<!-- MODAL SETTING GAJI (Posisinya Fixed di atas layar) -->
-<div id="modalSetting" class="fixed inset-0 z-[100] flex items-center justify-center hidden bg-slate-900/50 backdrop-blur-sm transition-opacity">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden transform scale-95 transition-transform" id="modalSettingContent">
-        <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
-            <h3 class="text-lg font-bold text-slate-800">Atur Gaji Dasar</h3>
-            <button type="button" class="btn-close-modal-setting text-slate-400 hover:text-red-500 transition-colors">
-                <i class="fas fa-times text-xl"></i>
+<!-- MODAL SETTING GAJI (Beautiful, Premium Tailwind Modal) -->
+<div id="modalSetting" class="fixed inset-0 z-[100] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+    <!-- Backdrop Overlay -->
+    <div class="absolute inset-0 bg-black/40"></div>
+    
+    <!-- Modal Card Content -->
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-300 relative z-10 border border-slate-100" id="modalSettingContent">
+        <!-- Header -->
+        <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+            <div>
+                <h3 class="text-base font-bold text-slate-800 tracking-tight">Atur Gaji Dasar</h3>
+                <p class="text-[11px] text-slate-500 font-medium mt-0.5">Konfigurasi remunerasi dasar karyawan.</p>
+            </div>
+            <button type="button" class="btn-close-modal-setting p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all">
+                <i class="fas fa-times text-lg"></i>
             </button>
         </div>
 
-        <!-- Form menembak ke route: gaji/setting/save -->
-        <form action="<?= base_url('gaji/setting/save') ?>" method="POST" class="p-6">
-            <!-- CSRF Token (Penting untuk keamanan Enterprise) -->
+        <!-- Form -->
+        <form action="<?= base_url('gaji/setting/save') ?>" method="POST" id="formSettingGaji" class="p-6">
             <?= csrf_field() ?>
-
             <input type="hidden" name="terapis_id" id="set_terapis_id">
 
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-slate-700 mb-1">Tipe Gaji</label>
-                <select name="tipe_gaji" id="set_tipe_gaji" class="w-full border-slate-200 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+            <!-- Tipe Gaji Select -->
+            <div class="mb-5">
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Tipe Gaji</label>
+                <select name="tipe_gaji" id="set_tipe_gaji" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 text-sm font-semibold focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all">
                     <option value="bulanan">Bulanan (Gaji Tetap)</option>
                     <option value="harian">Harian (Per Kehadiran)</option>
                 </select>
             </div>
 
-            <div class="mb-4" id="div_potong_absen">
-                <label class="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
-                    <input type="checkbox" name="potong_absen" id="set_potong_absen" value="1" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500">
-                    Potong absen untuk gaji bulanan?
+            <!-- Potong Absen Checkbox -->
+            <div class="mb-5 p-4 bg-slate-50 rounded-xl border border-slate-100" id="div_potong_absen">
+                <label class="flex items-start gap-3 text-sm font-bold text-slate-700 cursor-pointer select-none">
+                    <input type="checkbox" name="potong_absen" id="set_potong_absen" value="1" class="w-4.5 h-4.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 focus:ring-2 mt-0.5">
+                    <span class="text-xs font-bold text-slate-700 leading-tight">Potong absen untuk gaji bulanan?</span>
                 </label>
-                <p class="text-[11px] text-slate-500 mt-1 ml-6 leading-tight">Jika dicentang, gaji akan dipotong berdasarkan hari absen (Gaji / Hari Kerja Bulan Ini).</p>
+                <p class="text-[11px] text-slate-500 mt-2 ml-7 leading-normal font-medium">Jika dicentang, gaji bulanan akan dipotong otomatis proporsional berdasarkan hari absen kerja.</p>
             </div>
 
+            <!-- Nominal Gaji Input -->
             <div class="mb-6">
-                <label class="block text-sm font-medium text-slate-700 mb-1">Nominal (Rp)</label>
-                <input type="text" name="nominal_gaji" id="set_nominal_gaji" class="w-full border-slate-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 input-rupiah" placeholder="Contoh: 3.000.000" required>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Nominal Gaji (Rp)</label>
+                <div class="relative">
+                    <input type="text" name="nominal_gaji" id="set_nominal_gaji" class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-4 pr-4 py-3 text-slate-800 text-base font-bold focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all input-rupiah" placeholder="Contoh: 3.000.000" required>
+                </div>
             </div>
 
-            <div class="flex justify-end gap-3">
-                <button type="button" class="btn-close-modal-setting px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition">Batal</button>
-                <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition">Simpan Pengaturan</button>
+            <!-- Action Buttons -->
+            <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                <button type="button" class="btn-close-modal-setting px-5 py-2.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all">
+                    Batal
+                </button>
+                <button type="submit" class="px-5 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-all shadow-md shadow-blue-500/10">
+                    Simpan Pengaturan
+                </button>
             </div>
         </form>
     </div>
@@ -372,136 +390,5 @@
         detailUrl: "<?= base_url('gaji/detail') ?>", // Untuk Offcanvas
         saveSettingUrl: "<?= base_url('gaji/setting/save') ?>",
         prosesBayarUrl: "<?= base_url('gaji/proses_bayar') ?>"
-    };
-
-    // Auto-open active tab based on URL param ?tab=
-    document.addEventListener('DOMContentLoaded', function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const activeTab = urlParams.get('tab');
-        if (activeTab) {
-            const targetContent = document.getElementById('tab-' + activeTab);
-            const targetBtn = document.querySelector('[data-target="tab-' + activeTab + '"]');
-            if (targetContent && targetBtn) {
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-                document.querySelectorAll('.tab-btn').forEach(b => {
-                    b.classList.remove('border-blue-600', 'text-blue-600');
-                    b.classList.add('border-transparent', 'text-slate-500');
-                });
-                targetContent.classList.remove('hidden');
-                targetBtn.classList.add('border-blue-600', 'text-blue-600');
-                targetBtn.classList.remove('border-transparent', 'text-slate-500');
-            }
-        }
-
-        // Tampilkan Modal Setting
-        document.querySelectorAll('.btn-setting').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const terapisId = this.getAttribute('data-terapis-id');
-                const tipeGaji = this.getAttribute('data-tipe-gaji');
-                const nominal = this.getAttribute('data-nominal');
-                const potong = this.getAttribute('data-potong');
-
-                document.getElementById('set_terapis_id').value = terapisId;
-                document.getElementById('set_tipe_gaji').value = (tipeGaji === 'Belum Diset') ? 'bulanan' : tipeGaji.toLowerCase();
-                document.getElementById('set_nominal_gaji').value = new Intl.NumberFormat('id-ID').format(nominal);
-                document.getElementById('set_potong_absen').checked = (potong == '1');
-
-                togglePotongAbsen(); // Update visibility
-
-                const modal = document.getElementById('modalSetting');
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-            });
-        });
-
-        // Close Modal Setting
-        document.querySelectorAll('.btn-close-modal-setting').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const modal = document.getElementById('modalSetting');
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-            });
-        });
-
-        // Handle Potong Absen visibility
-        const tipeGajiSelect = document.getElementById('set_tipe_gaji');
-        function togglePotongAbsen() {
-            const divPotong = document.getElementById('div_potong_absen');
-            if (tipeGajiSelect.value === 'bulanan') {
-                divPotong.style.display = 'block';
-            } else {
-                divPotong.style.display = 'none';
-            }
-        }
-        tipeGajiSelect.addEventListener('change', togglePotongAbsen);
-
-        // PROSES GAJI - Buka Offcanvas & Fetch Data
-        document.querySelectorAll('.btn-proses-gaji').forEach(btn => {
-            btn.addEventListener('click', async function() {
-                const terapisId = this.getAttribute('data-terapis-id');
-                const offcanvas = document.getElementById('offcanvasProses');
-                const backdrop = document.getElementById('offcanvasBackdrop');
-                const loading = document.getElementById('loadingState');
-                const form = document.getElementById('formBayarGaji');
-
-                // Reset & Show Loading
-                offcanvas.classList.remove('translate-x-full');
-                backdrop.classList.remove('hidden');
-                loading.classList.remove('hidden');
-                form.classList.add('hidden');
-
-                try {
-                    const response = await fetch(`${window.gajiConfig.detailUrl}/${terapisId}`);
-                    const result = await response.json();
-
-                    if (result.status === 'success') {
-                        const d = result.data;
-                        const k = result.kalkulasi;
-
-                        document.getElementById('oc_terapis_id').value = d.id;
-                        document.getElementById('oc_nama_terapis').innerText = d.nama;
-                        document.getElementById('oc_tipe_info').innerText = `Tipe Gaji: ${d.tipe_gaji.toUpperCase()}`;
-                        document.getElementById('oc_kehadiran').value = d.current_kehadiran;
-                        document.getElementById('oc_kehadiran_label').innerText = (d.tipe_gaji === 'harian') ? 'Total Kehadiran (Hari)' : 'Kehadiran Terdeteksi (Hari)';
-
-                        // Format Rupiah
-                        const fmt = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num);
-
-                        document.getElementById('oc_gaji_pokok').value = fmt(d.nominal_gaji);
-                        document.getElementById('oc_tunjangan').value = fmt(d.total_tunjangan);
-                        document.getElementById('oc_potongan').value = fmt(d.total_kasbon);
-                        
-                        // Potongan Absen
-                        const groupAbsen = document.getElementById('oc_potongan_absen_group');
-                        if (k && k.potongan_absen > 0) {
-                            groupAbsen.classList.remove('hidden');
-                            document.getElementById('oc_potongan_absen').value = `- ${fmt(k.potongan_absen)}`;
-                        } else {
-                            groupAbsen.classList.add('hidden');
-                        }
-
-                        // Bersih
-                        const totalGaji = (d.tipe_gaji === 'harian') ? (d.nominal_gaji * d.current_kehadiran) : (d.nominal_gaji - (k ? k.potongan_absen : 0));
-                        const bersih = totalGaji + parseInt(d.total_tunjangan) - parseInt(d.total_kasbon);
-                        document.getElementById('oc_bersih').value = fmt(Math.max(0, bersih));
-
-                        loading.classList.add('hidden');
-                        form.classList.remove('hidden');
-                    }
-                } catch (err) {
-                    console.error(err);
-                    alert('Gagal mengambil data rincian gaji.');
-                }
-            });
-        });
-
-        // Close Offcanvas
-        document.querySelectorAll('.btn-close-offcanvas, .offcanvas-backdrop').forEach(el => {
-            el.addEventListener('click', function() {
-                document.getElementById('offcanvasProses').classList.add('translate-x-full');
-                document.getElementById('offcanvasBackdrop').classList.add('hidden');
-            });
-        });
-    });
-</script>
+    };</script>
 <?= $this->endSection() ?>

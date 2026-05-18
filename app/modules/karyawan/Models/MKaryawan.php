@@ -96,7 +96,7 @@ class MKaryawan extends Model
                 rt.name as terapis_region_name,
                 j.nama_jabatan as terapis_jabatan_name,
                 CASE 
-                    WHEN (u.role = 'user' OR (u.terapis_id IS NOT NULL AND u.terapis_id != '')) THEN 'Therapist' 
+                    WHEN u.role = 'user' THEN 'Therapist' 
                     ELSE 'Management' 
                 END as personnel_type,
                 u.is_active,

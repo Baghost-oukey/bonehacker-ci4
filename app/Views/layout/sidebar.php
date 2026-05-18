@@ -48,6 +48,15 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                     </a>
                 </li>
             <?php endif; ?>
+            
+            <?php if ($role === 'admin'): ?>
+                <li>
+                    <a href="<?= base_url('gaji/monitor') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'gaji' && $uri->getSegment(2) == 'monitor' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
+                        <i class="fas fa-wallet w-4 text-center shrink-0"></i>
+                        <span class="truncate">Gaji Saya</span>
+                    </a>
+                </li>
+            <?php endif; ?>
 
             <?php if ($role !== 'user' || empty(session()->get('terapis_id'))): ?>
                 <li>

@@ -180,7 +180,7 @@ class KaryawanController extends BaseController
                     </button>';
       }
 
-      if ($is_terapis) {
+      if (!empty($value->id_terapis_table)) {
         $action .= '<a href="' . base_url('karyawan/show/' . $value->id_terapis_table) . '" class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all" title="Profil Karyawan">
                       <i class="fas fa-id-card text-[10px]"></i>
                     </a>';

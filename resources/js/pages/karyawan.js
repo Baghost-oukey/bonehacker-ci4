@@ -336,6 +336,7 @@ const setupUsersPage = () => {
             type: "POST",
             data: formData, contentType: false, processData: false, dataType: "json",
             success: (res) => {
+                if (res.csrfHash) updateCsrf(res.csrfHash);
                 if (res.status === 'success') {
                     closeModal(modal);
                     if (form.id === 'formAddUser') form.reset();
@@ -474,6 +475,7 @@ const setupUsersPage = () => {
         }).then((result) => {
             if (result.isConfirmed) {
                 $.post(href, getCsrfPayload(config), (res) => {
+                    if (res.csrfHash) updateCsrf(res.csrfHash);
                     swalLib.fire({ icon: res.status, title: res.status === 'success' ? 'Berhasil!' : 'Gagal!', text: res.message, timer: 1500, showConfirmButton: false });
                     loadTableData(currentPage);
                 }, 'json');

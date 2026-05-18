@@ -187,9 +187,12 @@ class TransaksiController extends BaseController
                 $value->nominal_format = '<span class="text-emerald-600 font-weight-bold">+ ' . $formatted_nominal . '</span>';
             }
             
+            // Clean up the prefix from keterangan
+            $clean_keterangan = str_replace(['[KAS_BESAR] ', '[KAS_KECIL] ', '[KAS_BESAR]', '[KAS_KECIL]'], '', $value->keterangan);
+            
             // Add Badge for Kas
             $kas_badge = ($value->kas_type ?? 'kas_kecil') === 'kas_besar' ? '<span class="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded ml-2">Besar</span>' : '<span class="bg-gray-100 text-gray-800 text-xs px-2 py-0.5 rounded ml-2">Kecil</span>';
-            $value->keterangan = $value->keterangan . $kas_badge;
+            $value->keterangan = $clean_keterangan . $kas_badge;
 
             if ($value->status === 'canceled') {
                 $value->aksi = '<span class="badge badge-secondary"></span>';
@@ -249,13 +252,15 @@ class TransaksiController extends BaseController
         
         $nominal = preg_replace('/[^0-9]/', '', $this->request->getPost('nominal'));
 
+        $keteranganInput = $this->request->getPost('keterangan');
+        $keteranganDb = ($kas_type === 'kas_besar') ? '[KAS_BESAR] ' . $keteranganInput : '[KAS_KECIL] ' . $keteranganInput;
+
         $data = [
             'region_id'         => $region_id,
-            'kas_type'          => $kas_type,
             'nominal'           => $nominal,
             'type'              => $typeInput,
             'kategori'          => $kategoriAuto,
-            'keterangan'        => $this->request->getPost('keterangan'),
+            'keterangan'        => $keteranganDb,
             'created_at'        => $tanggal,
             'created_by'        => session()->get('userId')
         ];
@@ -343,25 +348,25 @@ class TransaksiController extends BaseController
             $db->transStart();
 
             // Mutasi Keluar
+            $dari_prefix = ($dari_kas === 'kas_besar') ? '[KAS_BESAR] ' : '[KAS_KECIL] ';
             $this->model_transaksi->insert([
                 'region_id'  => $region_id,
-                'kas_type'   => $dari_kas,
                 'type'       => 'mutasi_out',
                 'nominal'    => $nominal,
                 'kategori'   => 'mutasi',
-                'keterangan' => 'Pindah Buku Keluar: ' . $keterangan,
+                'keterangan' => $dari_prefix . 'Pindah Buku Keluar: ' . $keterangan,
                 'created_at' => $tanggal,
                 'created_by' => $userId
             ]);
 
             // Mutasi Masuk
+            $ke_prefix = ($ke_kas === 'kas_besar') ? '[KAS_BESAR] ' : '[KAS_KECIL] ';
             $this->model_transaksi->insert([
                 'region_id'  => $region_id,
-                'kas_type'   => $ke_kas,
                 'type'       => 'mutasi_in',
                 'nominal'    => $nominal,
                 'kategori'   => 'mutasi',
-                'keterangan' => 'Pindah Buku Masuk: ' . $keterangan,
+                'keterangan' => $ke_prefix . 'Pindah Buku Masuk: ' . $keterangan,
                 'created_at' => $tanggal,
                 'created_by' => $userId
             ]);
@@ -503,9 +508,12 @@ class TransaksiController extends BaseController
         // --- 3. ISI DATA ---
         $row = 5;
         foreach ($data as $index => $t) {
+            $clean_keterangan = str_replace(['[KAS_BESAR] ', '[KAS_KECIL] ', '[KAS_BESAR]', '[KAS_KECIL]'], '', $t['keterangan']);
+            $kas_label = (strpos($t['keterangan'], '[KAS_BESAR]') !== false) ? ' (Kas Besar)' : ' (Kas Kecil)';
+
             $sheet->setCellValue('A' . $row, $index + 1)
                 ->setCellValue('B' . $row, date('d/m/Y H:i', strtotime($t['created_at'])))
-                ->setCellValue('C' . $row, $t['keterangan'])
+                ->setCellValue('C' . $row, $clean_keterangan . $kas_label)
                 ->setCellValue('D' . $row, $t['nominal']);
 
             // Styling baris data
@@ -547,7 +555,14 @@ class TransaksiController extends BaseController
 
     public function export_pdf()
     {
-        $data['transaksi'] = $this->export_data();
+        $raw_transaksi = $this->export_data();
+        $transaksi = [];
+        foreach ($raw_transaksi as $t) {
+            $t['kas_type'] = (strpos($t['keterangan'], '[KAS_BESAR]') !== false) ? 'kas_besar' : 'kas_kecil';
+            $t['keterangan'] = str_replace(['[KAS_BESAR] ', '[KAS_KECIL] ', '[KAS_BESAR]', '[KAS_KECIL]'], '', $t['keterangan']);
+            $transaksi[] = $t;
+        }
+        $data['transaksi'] = $transaksi;
         $data['title'] = "Laporan Transaksi - " . date('d M Y');
 
         $options = new Options();

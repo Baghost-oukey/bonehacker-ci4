@@ -55,10 +55,13 @@
 
                     <!-- FILTER WILAYAH -->
                     <select id="regionSelect" name="regionSelect" class="bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-xl px-4 py-2.5 outline-none cursor-pointer min-w-45 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
-                        <?php if (isset($regions_patient) && !empty($regions_patient)): ?>
+                        <?php if (isset($regions_patient) && !empty($regions_patient) && $regions_patient !== 'all'): ?>
+                            <?php if (is_array($regions_patient) && count($regions_patient) > 1): ?>
+                                <option value="">Semua Wilayah</option>
+                            <?php endif; ?>
                             <?php foreach ($wilayah as $region): ?>
-                                <?php if ($region->id == $regions_patient[0]): ?>
-                                    <option value="<?= $region->id ?>" selected><?= esc($region->name) ?></option>
+                                <?php if (in_array($region->id, (array)$regions_patient)): ?>
+                                    <option value="<?= $region->id ?>"><?= esc($region->name) ?></option>
                                 <?php endif; ?>
                             <?php endforeach; ?>
                         <?php else: ?>
