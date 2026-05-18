@@ -308,6 +308,15 @@ class Statistik extends BaseController
     {
         $startDate = $this->request->getGet('start_date');
         $endDate   = $this->request->getGet('end_date');
+
+        // Validation for secure date formats (Best Practice)
+        if (!$startDate || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $startDate)) {
+            $startDate = date('Y-m-d');
+        }
+        if (!$endDate || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $endDate)) {
+            $endDate = date('Y-m-d');
+        }
+
         // Use URL param if provided, otherwise fall back to session
         $regionId  = $this->request->getGet('region_id');
         if (!$regionId || $regionId === 'all') {

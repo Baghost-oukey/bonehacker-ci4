@@ -16,7 +16,7 @@ if (window.$) {
 
         // --- DATEPICKER ---
         $('#reportrange').daterangepicker({
-            startDate: window.moment().subtract(6, 'days'),
+            startDate: window.moment().subtract(29, 'days'),
             endDate: window.moment(),
             opens: 'left',
             linkedCalendars: false, 
@@ -33,7 +33,7 @@ if (window.$) {
             $('#reportrange span').html(start.format('D MMMM YYYY') + ' - ' + end.format('D MMMM YYYY'));
             fetchStatistics(start, end, currentFilter);
         });
-        var initialStart = window.moment().subtract(6, 'days');
+        var initialStart = window.moment().subtract(29, 'days');
         var initialEnd = window.moment();
         $('#reportrange span').html(initialStart.format('D MMMM YYYY') + ' - ' + initialEnd.format('D MMMM YYYY'));
         fetchKabupaten();

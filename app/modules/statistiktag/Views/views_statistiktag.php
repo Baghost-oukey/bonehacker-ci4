@@ -4,7 +4,7 @@
 <div class="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto">
     <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
-            <h1 class="text-2xl font-black text-slate-800 tracking-tight" id="dynamicTitle">Statistik Keluhan</h1>
+            <h1 class="text-2xl font-semibold text-slate-800 tracking-tight" id="dynamicTitle">Statistik Keluhan</h1>
             <p class="text-sm text-slate-500 mt-1">Laporan Statistik Dan Rekam Medis Pasien </p>
         </div>
 
@@ -26,7 +26,7 @@
         <!-- FILTER MODAL -->
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 lg:p-6">
             <div class="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-                <div class="font-bold text-slate-700 flex items-center gap-2">
+                <div class="text-sm font-medium text-slate-600 flex items-center gap-2">
                     <i class="fas fa-filter text-indigo-500"></i> Filter Data
                 </div>
                 <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto lg:justify-end">
@@ -88,8 +88,8 @@
         <table id="statisticTable" class="w-full text-left border-collapse whitespace-nowrap">
             <thead>
                 <tr class="bg-slate-50/80 border-b border-slate-200">
-                    <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border-0">Nama Tag / Keluhan</th>
-                    <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border-0 text-center">Total Frekuensi</th>
+                    <th class="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider border-0">Nama Tag / Keluhan</th>
+                    <th class="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider border-0 text-center">Total Frekuensi</th>
                 </tr>
             </thead>
             <tbody class="text-sm text-slate-700 font-medium"></tbody>

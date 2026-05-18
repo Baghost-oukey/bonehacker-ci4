@@ -106,14 +106,14 @@ if (window.$) {
                                 <div class="w-5 text-center shrink-0 text-lg">
                                     ${getSocialIcon(label)}
                                 </div>
-                                <span class="font-bold text-slate-800 text-[13px] uppercase tracking-wide">${label}</span>
+                                <span class="font-medium text-slate-700 text-[13px]">${label}</span>
                             </div>
                         </td>
-                        <td class="px-6 py-3.5 text-center text-slate-900 font-black text-[13px]">
+                        <td class="px-6 py-3.5 text-center text-slate-700 font-normal text-[13px]">
                             ${item.total_pasien} Pasien
                         </td>
                         <td class="px-6 py-3.5 text-center">
-                            <span class="inline-flex items-center justify-center px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 text-[11px] font-black tracking-wide">
+                            <span class="inline-flex items-center justify-center px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 text-[11px] font-medium tracking-wide">
                                 ${percent}%
                              </span>
                         </td>

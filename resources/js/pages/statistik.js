@@ -6,8 +6,8 @@ if (window.$) {
         const config = window.statistikPasienConfig;
         if (!config || typeof window.moment === "undefined") return;
 
-        let start = window.moment().startOf('month');
-        let end = window.moment().endOf('month');
+        let start = window.moment().subtract(29, 'days');
+        let end = window.moment();
         let myChart = null;
         $('#region_id').select2({
             width: '100%'
@@ -147,37 +147,37 @@ if (window.$) {
 
                         // RENDER BARIS DESKTOP
                         html += `<tr class="hover:bg-slate-50 transition border-b border-slate-50 last:border-0">
-                            <td class="px-6 py-4 font-bold text-slate-800 text-xs uppercase">${i.cabang}</td>
-                            <td class="px-6 py-4 text-center text-slate-500 font-medium">${avg}</td>
-                            <td class="px-6 py-4 text-center text-slate-900 font-black">${i.total_pasien}</td>
-                            <td class="px-6 py-4 text-center text-slate-500">${i.pasien_lama}</td>
-                            <td class="px-6 py-4 text-center text-slate-500">${i.pasien_baru}</td>
-                            <td class="px-6 py-4 text-center text-indigo-600 font-bold">${pLama}%</td>
-                            <td class="px-6 py-4 text-center text-emerald-600 font-bold">${pBaru}%</td>
+                            <td class="px-6 py-4 font-medium text-slate-700 text-sm">${i.cabang}</td>
+                            <td class="px-6 py-4 text-center text-slate-500 font-normal text-sm">${avg}</td>
+                            <td class="px-6 py-4 text-center text-slate-800 font-medium text-sm">${i.total_pasien}</td>
+                            <td class="px-6 py-4 text-center text-slate-500 text-sm">${i.pasien_lama}</td>
+                            <td class="px-6 py-4 text-center text-slate-500 text-sm">${i.pasien_baru}</td>
+                            <td class="px-6 py-4 text-center text-indigo-600 font-medium text-sm">${pLama}%</td>
+                            <td class="px-6 py-4 text-center text-emerald-600 font-medium text-sm">${pBaru}%</td>
                         </tr>`;
 
                         // RENDER MOBILE CARDS
                         mHtml += `
                             <div class="p-4 space-y-3 bg-white">
                                 <div class="flex items-center justify-between">
-                                    <span class="text-[13px] font-black text-slate-900 uppercase tracking-tight">${i.cabang}</span>
+                                    <span class="text-[13px] font-medium text-slate-700">${i.cabang}</span>
                                     <div class="flex items-center gap-2">
-                                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Total:</span>
-                                        <span class="text-[14px] font-black text-slate-900">${i.total_pasien}</span>
+                                        <span class="text-[10px] text-slate-400 uppercase tracking-widest">Total:</span>
+                                        <span class="text-[14px] font-medium text-slate-800">${i.total_pasien}</span>
                                     </div>
                                 </div>
                                 <div class="grid grid-cols-2 gap-2">
                                     <div class="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                                        <span class="text-[9px] text-slate-400 font-black uppercase tracking-widest block mb-1">Rerata / Hari</span>
-                                        <span class="text-[12px] font-black text-slate-700">${avg}</span>
+                                        <span class="text-[9px] text-slate-400 uppercase tracking-widest block mb-1">Rerata / Hari</span>
+                                        <span class="text-[12px] font-medium text-slate-700">${avg}</span>
                                     </div>
                                     <div class="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                                        <span class="text-[9px] text-slate-400 font-black uppercase tracking-widest block mb-1">Pasien Lama</span>
-                                        <span class="text-[12px] font-black text-indigo-600">${i.pasien_lama} <span class="text-[9px] text-slate-400 ml-1">(${pLama}%)</span></span>
+                                        <span class="text-[9px] text-slate-400 uppercase tracking-widest block mb-1">Pasien Lama</span>
+                                        <span class="text-[12px] font-medium text-indigo-600">${i.pasien_lama} <span class="text-[9px] text-slate-400 ml-1">(${pLama}%)</span></span>
                                     </div>
                                     <div class="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                                        <span class="text-[9px] text-slate-400 font-black uppercase tracking-widest block mb-1">Pasien Baru</span>
-                                        <span class="text-[12px] font-black text-emerald-600">${i.pasien_baru} <span class="text-[9px] text-slate-400 ml-1">(${pBaru}%)</span></span>
+                                        <span class="text-[9px] text-slate-400 uppercase tracking-widest block mb-1">Pasien Baru</span>
+                                        <span class="text-[12px] font-medium text-emerald-600">${i.pasien_baru} <span class="text-[9px] text-slate-400 ml-1">(${pBaru}%)</span></span>
                                     </div>
                                     <div class="bg-slate-50 rounded-xl p-3 border border-slate-100 flex items-center justify-center">
                                          <i class="fas fa-chart-line text-slate-200 text-xl"></i>
