@@ -112,6 +112,7 @@ const setupTransaksiPage = () => {
 
   const renderEmptyState = (message) => {
     $("#tableTransaksi tbody").html(`<tr class="hover:bg-slate-50 transition"><td colspan="7" class="px-6 py-12 text-center text-slate-400 italic text-sm"><i class="fas fa-inbox mr-2 text-slate-300"></i>${message}</td></tr>`);
+    $("#cardsTransaksi").html(`<div class="p-8 text-center text-slate-400 italic text-sm"><i class="fas fa-inbox mr-2 text-slate-300"></i>${message}</div>`);
   };
 
   const loadTableData = (pageNumber = 1) => {
@@ -142,6 +143,8 @@ const setupTransaksiPage = () => {
 
         const tbody = $("#tableTransaksi tbody");
         tbody.empty();
+        const cardsContainer = $("#cardsTransaksi");
+        cardsContainer.empty();
 
         if (!response.data || response.data.length === 0) {
           renderEmptyState("Data transaksi belum tersedia");
@@ -151,20 +154,59 @@ const setupTransaksiPage = () => {
         }
 
         response.data.forEach((row) => {
+          // 1. Tampilan Desktop (Table)
           const tr = $(`<tr class="hover:bg-slate-50 transition border-b border-slate-100"></tr>`);
-          tr.append(`<td class="px-6 py-3.5">${row.no || "-"}</td>`);
-          tr.append(`<td class="px-6 py-3.5 text-slate-600">${row.tanggal || "-"}</td>`);
-          tr.append(`<td class="px-6 py-3.5 font-medium text-slate-800">${row.region_name || "-"}</td>`);
-          tr.append(`<td class="px-6 py-3.5">${row.keterangan || "-"}</td>`);
+          tr.append(`<td class="hidden sm:table-cell px-4 sm:px-6 py-3.5">${row.no || "-"}</td>`);
+          tr.append(`<td class="px-4 sm:px-6 py-3.5 text-slate-600 text-[13px] sm:text-sm whitespace-nowrap">${row.tanggal || "-"}</td>`);
+          tr.append(`<td class="hidden md:table-cell px-4 sm:px-6 py-3.5 font-medium text-slate-800">${row.region_name || "-"}</td>`);
+          
+          const branchBadge = `<span class="inline-block md:hidden bg-slate-100 text-slate-600 text-[10px] font-semibold px-1.5 py-0.5 rounded mr-1.5">${row.region_name || "-"}</span>`;
+          tr.append(`<td class="px-4 sm:px-6 py-3.5 text-slate-800">${branchBadge}${row.keterangan || "-"}</td>`);
+          
           const pembuat = row.nama_pembuat
             ? `<span class="text-[11px] font-bold px-2 py-1 bg-slate-100 text-slate-600 rounded-md">${row.nama_pembuat}</span>`
             : `<span class="text-[11px] font-bold px-2 py-1 bg-slate-100 text-slate-600 rounded-md">Sistem</span>`;
-          tr.append(`<td class="px-6 py-3.5 text-center whitespace-nowrap">${pembuat}</td>`);
+          tr.append(`<td class="hidden lg:table-cell px-4 sm:px-6 py-3.5 text-center whitespace-nowrap">${pembuat}</td>`);
+          
           const nominalColor = row.type === "expense" ? "text-rose-600" : "text-emerald-600";
-          tr.append(`<td class="px-6 py-3.5 font-semibold ${nominalColor}">${row.nominal_format || "-"}</td>`);
-          tr.append(`<td class="px-6 py-3.5 text-center">${row.aksi || "-"}</td>`);
-
+          tr.append(`<td class="px-4 sm:px-6 py-3.5 font-semibold ${nominalColor} whitespace-nowrap">${row.nominal_format || "-"}</td>`);
+          tr.append(`<td class="px-4 sm:px-6 py-3.5 text-center">${row.aksi || "-"}</td>`);
           tbody.append(tr);
+
+          // 2. Tampilan Mobile/Tablet (Cards)
+          const cleanKeterangan = row.keterangan ? row.keterangan.replace(/<span.*<\/span>/g, '') : '-';
+          
+          const cardHtml = `
+            <div class="p-4 bg-white rounded-xl border border-slate-200/50 shadow-sm hover:shadow transition flex flex-col space-y-3">
+                <div class="flex items-center justify-between border-b border-slate-50 pb-2">
+                    <span class="text-xs text-slate-400 font-medium">
+                        <i class="far fa-calendar-alt mr-1"></i> ${row.tanggal || "-"}
+                    </span>
+                    <span class="text-sm font-bold ${nominalColor}">
+                        ${row.nominal_format || "-"}
+                    </span>
+                </div>
+                
+                <div class="text-slate-800 font-semibold text-sm leading-snug">
+                    ${cleanKeterangan}
+                </div>
+                
+                <div class="flex items-center justify-between pt-1">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-50 text-slate-600 border border-slate-200/50">
+                            <i class="fas fa-map-marker-alt text-slate-400 text-[9px]"></i> ${row.region_name || "-"}
+                        </span>
+                        <span class="inline-flex items-center gap-1 text-[10px] font-medium text-slate-500">
+                            <i class="far fa-user text-[9px]"></i> ${row.nama_pembuat || "Sistem"}
+                        </span>
+                    </div>
+                    <div>
+                        ${row.aksi || "-"}
+                    </div>
+                </div>
+            </div>
+          `;
+          cardsContainer.append(cardHtml);
         });
 
         updatePaginationInfo();

@@ -107,14 +107,14 @@
 
     <!-- Table Section -->
     <div class="rounded-2xl bg-white shadow-sm border border-slate-200/50 overflow-hidden">
-        <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4">
+        <div class="border-b border-slate-100 bg-slate-50/50 px-4 sm:px-6 py-4">
             <div class="mb-4">
                 <h3 class="text-lg font-semibold text-slate-800">Riwayat Transaksi</h3>
                 <p class="text-sm text-slate-500">Data transaksi keuangan klinik</p>
             </div>
-
+ 
             <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 w-full">
                     <div class="flex-1 sm:flex-none sm:w-72">
                         <input type="text" id="searchInput" placeholder="Cari transaksi..."
                             class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15">
@@ -127,37 +127,43 @@
                     </div>
                     <span class="text-slate-300 hidden sm:inline">|</span>
                     <?php endif; ?>
-                    <div class="flex items-center gap-2">
+                    <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                         <i class="fas fa-calendar-alt text-slate-400 text-base"></i>
                         <input type="date" id="filter_date_start"
-                            class="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15"
+                            class="flex-1 min-w-[120px] sm:flex-initial rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15"
                             placeholder="Dari Tanggal" value="<?= ($role === 'admin') ? date('Y-m-d') : '' ?>">
                         <span class="text-slate-400">-</span>
                         <input type="date" id="filter_date_end"
-                            class="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15"
+                            class="flex-1 min-w-[120px] sm:flex-initial rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-600 transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15"
                             placeholder="Sampai Tanggal" value="<?= ($role === 'admin') ? date('Y-m-d') : '' ?>">
                     </div>
                 </div>
             </div>
         </div>
-
-        <div class="overflow-x-auto">
+ 
+        <!-- Tampilan Desktop (Table) -->
+        <div class="hidden lg:block overflow-x-auto w-full no-scrollbar">
             <table id="tableTransaksi" class="w-full text-sm">
                 <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
                     <tr>
-                        <th class="px-6 py-3.5 text-left font-semibold">No</th>
-                        <th class="px-6 py-3.5 text-left font-semibold">Tanggal</th>
-                        <th class="px-6 py-3.5 text-left font-semibold">Cabang</th>
-                        <th class="px-6 py-3.5 text-left font-semibold">Keterangan</th>
-                        <th class="px-6 py-3.5 text-left font-semibold">Ditambahkan Oleh</th>
-                        <th class="px-6 py-3.5 text-left font-semibold">Nominal</th>
-                        <th class="px-6 py-3.5 text-center font-semibold">Aksi</th>
+                        <th class="hidden sm:table-cell px-4 sm:px-6 py-3.5 text-left font-semibold">No</th>
+                        <th class="px-4 sm:px-6 py-3.5 text-left font-semibold">Tanggal</th>
+                        <th class="hidden md:table-cell px-4 sm:px-6 py-3.5 text-left font-semibold">Cabang</th>
+                        <th class="px-4 sm:px-6 py-3.5 text-left font-semibold">Keterangan</th>
+                        <th class="hidden lg:table-cell px-4 sm:px-6 py-3.5 text-left font-semibold">Ditambahkan Oleh</th>
+                        <th class="px-4 sm:px-6 py-3.5 text-left font-semibold">Nominal</th>
+                        <th class="px-4 sm:px-6 py-3.5 text-center font-semibold">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-slate-700">
                     <!-- Data ditarik via AJAX -->
                 </tbody>
             </table>
+        </div>
+
+        <!-- Tampilan Mobile/Tablet (Cards) -->
+        <div class="block lg:hidden p-4 space-y-3 bg-slate-50/30" id="cardsTransaksi">
+            <!-- Data ditarik via AJAX -->
         </div>
     </div>
 </section>

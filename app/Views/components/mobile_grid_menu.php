@@ -6,9 +6,11 @@ $current_segment = $uri->getSegment(1);
 $menus = [];
 
 // Menu Khusus TERAPIS (User)
-if ($role === 'user' && !empty(session()->get('terapis_id'))) {
+if ($role === 'user') {
     $menus[] = ['label' => 'Beranda', 'url' => site_url('beranda'), 'icon' => 'fa-home', 'color' => 'bg-slate-800'];
-    $menus[] = ['label' => 'Profil Saya', 'url' => site_url('karyawan/profil_saya'), 'icon' => 'fa-user-circle', 'color' => 'bg-indigo-500'];
+    if (!empty(session()->get('terapis_id'))) {
+        $menus[] = ['label' => 'Profil Saya', 'url' => site_url('karyawan/profil_saya'), 'icon' => 'fa-user-circle', 'color' => 'bg-indigo-500'];
+    }
     $menus[] = ['label' => 'Gaji Saya', 'url' => site_url('gaji/monitor'), 'icon' => 'fa-wallet', 'color' => 'bg-emerald-500'];
 }
 
@@ -67,6 +69,7 @@ if ($role === 'owner') {
 if ($role === 'admin') {
     // Dashboard Section
     $menus[] = ['label' => 'Beranda', 'url' => site_url('beranda'), 'icon' => 'fa-home', 'color' => 'bg-slate-800'];
+    $menus[] = ['label' => 'Gaji Saya', 'url' => site_url('gaji/monitor'), 'icon' => 'fa-wallet', 'color' => 'bg-emerald-500'];
     $menus[] = ['label' => 'Antrean', 'url' => site_url('antrean'), 'icon' => 'fa-pencil-ruler', 'color' => 'bg-orange-500'];
     $menus[] = ['label' => 'Rekam Medis', 'url' => site_url('rekam-medis'), 'icon' => 'fa-file-medical', 'color' => 'bg-rose-500'];
 
