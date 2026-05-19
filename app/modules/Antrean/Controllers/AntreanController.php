@@ -837,13 +837,24 @@ class AntreanController extends BaseController
                 'total' => 0
             ];
 
+            $activePatients = $db->table('patient_queues pq')
+                ->select('p.name as patient_name, pq.queue_number, h.process_at')
+                ->join('patients p', 'p.id = pq.patient_id', 'left')
+                ->join('histories h', 'h.patient_queue_id = pq.id AND h.is_delete = 0', 'left')
+                ->where('pq.region_id', $r->id)
+                ->where('DATE(pq.queue_date)', $date)
+                ->where('(h.finish_at IS NULL OR h.id IS NULL)')
+                ->get()
+                ->getResultArray();
+
             $branches[] = (object)[
                 'id' => $r->id,
                 'name' => $r->name,
                 'waiting' => $rStats['waiting'],
                 'processing' => $rStats['processing'],
                 'finished' => $rStats['finished'],
-                'total' => $rStats['total']
+                'total' => $rStats['total'],
+                'active_patients' => $activePatients
             ];
 
             $totalWaiting += $rStats['waiting'];

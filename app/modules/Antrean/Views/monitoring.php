@@ -37,9 +37,13 @@
             </div>
 
             <!-- Terapi -->
-            <div class="flex flex-col items-center justify-center p-2 pt-6 md:pt-2 text-center">
+            <div class="flex flex-col items-center justify-center p-2 pt-6 md:pt-2 text-center cursor-pointer hover:bg-sky-50/50 hover:shadow-inner rounded-3xl transition-all duration-200"
+                 onclick="showGlobalActivePatients()"
+                 title="Klik untuk melihat semua pasien yang sedang diterapi">
                 <span id="sumProcessing" class="text-4xl md:text-5xl font-black text-sky-500 transition-all duration-300"><?= $totalProcessing ?></span>
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider mt-2">Terapi</span>
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider mt-2 flex items-center gap-1 justify-center">
+                    Terapi <i class="fas fa-external-link-alt text-[8px] text-slate-350"></i>
+                </span>
             </div>
 
             <!-- Selesai -->
@@ -71,14 +75,16 @@
                 
                 <!-- Card Header -->
                 <div class="px-5 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-                    <span class="font-extrabold text-slate-800 tracking-tight text-base uppercase">
-                        <?= esc($branch->name) ?>
-                    </span>
                     <a href="<?= site_url('antrean?region=' . $branch->id) ?>" 
-                       class="text-slate-400 hover:text-teal-600 transition p-1"
-                       title="Kelola antrean cabang ini">
-                        <i class="fas fa-chevron-right text-xs"></i>
+                       class="font-extrabold text-slate-800 hover:text-teal-600 transition-colors tracking-tight text-base uppercase">
+                        <?= esc($branch->name) ?>
                     </a>
+                    <button type="button" 
+                            class="text-slate-400 hover:text-teal-600 transition-colors p-1 focus:outline-none cursor-pointer"
+                            onclick="toggleActivePatients('<?= $branch->id ?>')"
+                            title="Tampilkan antrean cabang ini">
+                        <i class="fas fa-chevron-right text-xs transition-transform duration-200" id="icon-active-<?= $branch->id ?>"></i>
+                    </button>
                 </div>
 
                 <!-- Card Body (Stats row matching the image) -->
@@ -107,6 +113,41 @@
                         <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1">Total</span>
                     </div>
                 </div>
+
+                <!-- Active Patients Dropdown/Collapsible list -->
+                <div class="active-patients-panel hidden border-t border-slate-100 bg-slate-50/50 px-5 py-4 transition-all duration-300" id="panel-active-<?= $branch->id ?>">
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                        <span class="inline-block w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse"></span>
+                        <span>Pasien di Antrean (<span class="panel-count"><?= count($branch->active_patients ?? []) ?></span>)</span>
+                    </div>
+                    <ul class="panel-list space-y-1.5">
+                        <?php if (empty($branch->active_patients)): ?>
+                            <li class="text-xs text-slate-400 italic py-1">Tidak ada pasien di antrean.</li>
+                        <?php else: ?>
+                            <?php foreach ($branch->active_patients as $p): ?>
+                                <?php 
+                                    $isProcessing = !empty($p['process_at']);
+                                    $statusText = $isProcessing ? 'Terapi' : 'Menunggu';
+                                    $statusClass = $isProcessing 
+                                        ? 'bg-sky-50 text-sky-600 ring-sky-600/20' 
+                                        : 'bg-amber-50 text-amber-600 ring-amber-600/20';
+                                ?>
+                                <li class="flex items-center justify-between bg-white px-3.5 py-2.5 rounded-xl border border-slate-100 shadow-sm text-xs font-semibold text-slate-700">
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <i class="fas fa-user-md text-slate-400 text-xs shrink-0"></i>
+                                        <span class="truncate"><?= esc($p['patient_name']) ?></span>
+                                        <span class="inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-medium <?= $statusClass ?> ring-1 ring-inset ml-1 shrink-0">
+                                            <?= $statusText ?>
+                                        </span>
+                                    </div>
+                                    <span class="inline-flex items-center gap-1 rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-bold text-slate-500 shrink-0">
+                                        No. <?= esc($p['queue_number']) ?>
+                                    </span>
+                                </li>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </ul>
+                </div>
             </div>
         <?php endforeach; ?>
     </div>
@@ -125,6 +166,25 @@
         </div>
         <div>
             Terakhir diperbarui: <span id="lastUpdatedTime" class="font-mono font-bold">--:--:--</span>
+        </div>
+    </div>
+    <!-- Modal Active Patients Global -->
+    <div id="modalActivePatientsGlobal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/40 backdrop-blur-sm transition-all duration-300">
+        <div class="bg-white rounded-3xl border border-slate-200/60 shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[75vh] transform scale-95 transition-all duration-300">
+            <!-- Header -->
+            <div class="px-6 py-5 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="inline-block w-2 h-2 rounded-full bg-sky-500 animate-pulse"></span>
+                    <h3 class="text-sm font-extrabold text-slate-800 tracking-tight">Pasien Sedang Diterapi</h3>
+                </div>
+                <button type="button" class="text-slate-400 hover:text-slate-600 transition" onclick="closeActivePatientsGlobalModal()">
+                    <i class="fas fa-times text-base"></i>
+                </button>
+            </div>
+            <!-- Body -->
+            <div class="p-6 overflow-y-auto space-y-5" id="modalActivePatientsGlobalBody">
+                <!-- List populated dynamically via JS -->
+            </div>
         </div>
     </div>
 </section>
@@ -180,6 +240,91 @@
             window.location.href = `<?= site_url('antrean/monitoring') ?>?date=${selectedDate}`;
         });
 
+        let currentBranchesData = <?= json_encode($branches) ?>;
+
+        // Toggle collapsible active patients list
+        window.toggleActivePatients = (branchId) => {
+            const panel = document.getElementById(`panel-active-${branchId}`);
+            const icon = document.getElementById(`icon-active-${branchId}`);
+            if (panel) {
+                panel.classList.toggle('hidden');
+                if (icon) {
+                    icon.classList.toggle('rotate-90');
+                }
+            }
+        };
+
+        // Show global active patients in modal
+        window.showGlobalActivePatients = () => {
+            const modal = document.getElementById('modalActivePatientsGlobal');
+            const body = document.getElementById('modalActivePatientsGlobalBody');
+            if (!modal || !body) return;
+
+            body.innerHTML = '';
+            let totalActive = 0;
+
+            currentBranchesData.forEach(branch => {
+                if (branch.active_patients && branch.active_patients.length > 0) {
+                    totalActive += branch.active_patients.length;
+                    
+                    let branchHtml = `
+                        <div class="space-y-2">
+                            <h4 class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">${branch.name}</h4>
+                            <ul class="space-y-1.5">
+                    `;
+
+                    branch.active_patients.forEach(p => {
+                        const isProcessing = !!p.process_at;
+                        const statusText = isProcessing ? 'Terapi' : 'Menunggu';
+                        const statusClass = isProcessing 
+                            ? 'bg-sky-50 text-sky-600 ring-sky-600/20' 
+                            : 'bg-amber-50 text-amber-600 ring-amber-600/20';
+
+                        branchHtml += `
+                            <li class="flex items-center justify-between bg-slate-50 border border-slate-100 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-700">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <i class="fas fa-user-md text-slate-400 shrink-0"></i>
+                                    <span class="truncate">${p.patient_name}</span>
+                                    <span class="inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-medium ${statusClass} ring-1 ring-inset ml-1 shrink-0">
+                                        ${statusText}
+                                    </span>
+                                </div>
+                                <span class="inline-flex items-center gap-1 rounded bg-white border border-slate-150 px-1.5 py-0.5 text-[9px] font-bold text-slate-500 shrink-0">
+                                    No. ${p.queue_number}
+                                </span>
+                            </li>
+                        `;
+                    });
+
+                    branchHtml += `
+                            </ul>
+                        </div>
+                    `;
+
+                    body.innerHTML += branchHtml;
+                }
+            });
+
+            if (totalActive === 0) {
+                body.innerHTML = `
+                    <div class="text-center py-8 text-slate-400 italic text-sm">
+                        Tidak ada pasien di antrean aktif di semua cabang.
+                    </div>
+                `;
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        };
+
+        window.closeActivePatientsGlobalModal = () => {
+            const modal = document.getElementById('modalActivePatientsGlobal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        };
+
         // 3. AJAX Live Refresh
         function updateStats() {
             const selectedDate = dateInput.value;
@@ -189,6 +334,8 @@
                 dataType: "json",
                 success: function(data) {
                     if (data) {
+                        currentBranchesData = data.branches;
+
                         // Update total headers
                         animateNumber(sumWaiting, data.totalWaiting);
                         animateNumber(sumProcessing, data.totalProcessing);
@@ -204,6 +351,40 @@
                                     card.querySelector('.branch-processing').textContent = branch.processing;
                                     card.querySelector('.branch-finished').textContent = branch.finished;
                                     card.querySelector('.branch-total').textContent = branch.total;
+
+                                    // Update active patients list
+                                    const panel = document.getElementById(`panel-active-${branch.id}`);
+                                    if (panel) {
+                                        panel.querySelector('.panel-count').textContent = branch.active_patients ? branch.active_patients.length : 0;
+                                        const list = panel.querySelector('.panel-list');
+                                        list.innerHTML = '';
+                                        if (!branch.active_patients || branch.active_patients.length === 0) {
+                                            list.innerHTML = '<li class="text-xs text-slate-400 italic py-1">Tidak ada pasien di antrean.</li>';
+                                        } else {
+                                            branch.active_patients.forEach(p => {
+                                                const isProcessing = !!p.process_at;
+                                                const statusText = isProcessing ? 'Terapi' : 'Menunggu';
+                                                const statusClass = isProcessing 
+                                                    ? 'bg-sky-50 text-sky-600 ring-sky-600/20' 
+                                                    : 'bg-amber-50 text-amber-600 ring-amber-600/20';
+
+                                                list.innerHTML += `
+                                                    <li class="flex items-center justify-between bg-white px-3.5 py-2.5 rounded-xl border border-slate-100 shadow-sm text-xs font-semibold text-slate-700">
+                                                        <div class="flex items-center gap-2 min-w-0">
+                                                            <i class="fas fa-user-md text-slate-400 text-xs shrink-0"></i>
+                                                            <span class="truncate">${p.patient_name}</span>
+                                                            <span class="inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-medium ${statusClass} ring-1 ring-inset ml-1 shrink-0">
+                                                                ${statusText}
+                                                            </span>
+                                                        </div>
+                                                        <span class="inline-flex items-center gap-1 rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-bold text-slate-500 shrink-0">
+                                                            No. ${p.queue_number}
+                                                        </span>
+                                                    </li>
+                                                `;
+                                            });
+                                        }
+                                    }
                                 }
                             });
                         }
