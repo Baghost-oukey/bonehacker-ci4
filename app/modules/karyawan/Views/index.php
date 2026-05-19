@@ -75,8 +75,8 @@
 </div>
 
 <!-- MODAL ADD USER -->
-<div id="modalAdd" class="modal-wrapper hidden fixed inset-0 z-[9999] bg-slate-900/60 backdrop-blur-sm flex flex-col items-center justify-end md:justify-center p-0 md:p-4 opacity-0 transition-opacity duration-300">
-    <div class="bg-white rounded-t-3xl md:rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden transform translate-y-full md:translate-y-0 md:scale-95 transition-all duration-300">
+<div id="modalAdd" class="modal-wrapper hidden fixed inset-0 z-[9999] items-center justify-center bg-black/40 p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
         <div class="flex items-center justify-between border-b border-slate-100 px-6 py-5 bg-white">
             <h5 class="text-lg font-black text-slate-800 uppercase tracking-tight">Tambah Karyawan Baru</h5>
             <button type="button" data-modal-close class="text-slate-400 hover:text-red-500 transition-colors outline-none">
@@ -274,8 +274,8 @@
 </div>
 
 <!-- MODAL EDIT ACCOUNT -->
-<div id="modalEdit" class="modal-wrapper hidden fixed inset-0 z-[9999] bg-slate-900/60 backdrop-blur-sm flex flex-col items-center justify-end md:justify-center p-0 md:p-4 opacity-0 transition-opacity duration-300">
-    <div class="bg-white rounded-t-3xl md:rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden transform translate-y-full md:translate-y-0 md:scale-95 transition-all duration-300">
+<div id="modalEdit" class="modal-wrapper hidden fixed inset-0 z-[9999] items-center justify-center bg-black/40 p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
         <div class="flex items-center justify-between border-b border-slate-100 px-6 py-5 bg-white">
             <h5 class="text-lg font-black text-slate-800 uppercase tracking-tight">Edit Akun Personel</h5>
             <button type="button" data-modal-close class="text-slate-400 hover:text-red-500 transition-colors outline-none">

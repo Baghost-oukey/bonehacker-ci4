@@ -133,7 +133,6 @@ class MKaryawan extends Model
             )
             
             UNION ALL
-            UNION ALL
             
             -- 2. Terapis yang BELUM punya akun user
             SELECT 
@@ -211,7 +210,7 @@ class MKaryawan extends Model
         $jsonRegionCond = $this->buildJsonRegionCondition($regionIds);
         $terapisRegionIn = empty($regionIds) ? '' : ' AND t.region_id IN (' . implode(',', $regionIds) . ')';
 
-        $s = $this->db->escapeLikeString($search);
+        $search_esc = $this->db->escapeLikeString($search);
 
         $sql = "
         SELECT COUNT(*) as total FROM (
