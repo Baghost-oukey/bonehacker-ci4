@@ -3,13 +3,26 @@
  * Handles Payroll Calculations, Settings, and Offcanvas Interactions
  */
 
-// 1. KONSTANTA GLOBAL (Sesuai style Terapis Anda)
+// --- Fix NiceScroll MutationObserver Bug (Infinite reflow crash) ---
+if (window.jQuery) {
+    const $ = window.jQuery;
+    if ($.nicescroll && $.nicescroll.options) {
+        $.nicescroll.options.disablemutationobserver = true;
+    }
+    if ($.fn.getNiceScroll) {
+        try {
+            $('*').getNiceScroll().remove();
+        } catch (e) {}
+    }
+}
+
+// 1. KONSTANTA GLOBAL
 const MODAL_VISIBLE_CLASS = "flex";
 const MODAL_HIDDEN_CLASS = "hidden";
 
-// 2. GLOBAL HELPER: Format Angka ke Rupiah (Hanya satu deklarasi)
+// 2. GLOBAL HELPER: Format Angka ke Rupiah
 const formatRupiah = (angka, prefix = 'Rp ') => {
-    if (!angka) return prefix + '0';
+    if (angka === undefined || angka === null || angka === '') return prefix + '0';
     let number_string = angka.toString().replace(/[^,\d]/g, '');
     let split = number_string.split(',');
     let sisa = split[0].length % 3;
@@ -28,9 +41,11 @@ const formatRupiah = (angka, prefix = 'Rp ') => {
 // 3. LOGIKA UTAMA (Encapsulated)
 const setupGajiPage = () => {
     const config = window.gajiConfig;
-    const page = document.getElementById("gajiPage"); // Pastikan ID ini ada di wrapper utama View
+    const page = document.getElementById("gajiPage");
 
-    if (!config || typeof window.$ === "undefined") return;
+    if (!page || !config || typeof window.$ === "undefined") {
+        return;
+    }
 
     // --- Tab Navigation ---
     const tabBtns = document.querySelectorAll('.tab-btn');
@@ -38,6 +53,8 @@ const setupGajiPage = () => {
 
     tabBtns.forEach(btn => {
         btn.addEventListener('click', () => {
+            const targetId = btn.getAttribute('data-target');
+
             tabBtns.forEach(b => {
                 b.classList.remove('border-blue-600', 'text-blue-600', 'active');
                 b.classList.add('border-transparent', 'text-slate-500');
@@ -48,7 +65,6 @@ const setupGajiPage = () => {
             btn.classList.replace('text-slate-500', 'text-blue-600');
             btn.classList.add('active');
 
-            const targetId = btn.getAttribute('data-target');
             document.getElementById(targetId)?.classList.remove('hidden');
         });
     });
@@ -60,22 +76,30 @@ const setupGajiPage = () => {
 
     // --- Event Delegation untuk Button Setting ---
     $(document).on('click', '.btn-setting', function(e) {
-        e.preventDefault();
-        const terapisId = this.dataset.terapisId;
-        const tipeGaji = this.dataset.tipeGaji;
-        const nominal = parseInt(this.dataset.nominal) || 0;
-        window.bukaModalSetting(terapisId, tipeGaji, nominal);
+        try {
+            e.preventDefault();
+            const terapisId = this.dataset.terapisId;
+            const tipeGaji = this.dataset.tipeGaji;
+            const nominal = parseInt(this.dataset.nominal) || 0;
+            const potong = this.dataset.potong || '0';
+
+            window.bukaModalSetting(terapisId, tipeGaji, nominal, potong);
+        } catch (err) {
+            alert("Error: " + err.message);
+        }
     });
 
     // --- Event Delegation untuk Button Proses Gaji ---
     $(document).on('click', '.btn-proses-gaji', function(e) {
-        e.preventDefault();
-        const terapisId = this.dataset.terapisId;
-        window.bukaOffcanvas(terapisId);
+        try {
+            e.preventDefault();
+            const terapisId = this.dataset.terapisId;
+            window.bukaOffcanvas(terapisId);
+        } catch (err) {}
     });
 
     // --- Close Button Modal Setting ---
-    $(document).on('click', '.btn-close-modal-setting', function(e) {
+    $(document).on('click', '.btn-close-modal-setting, #modalSetting [data-dismiss="modal"], #modalSetting .close', function(e) {
         e.preventDefault();
         window.tutupModalSetting();
     });
@@ -90,6 +114,18 @@ const setupGajiPage = () => {
     $(document).on('click', '.offcanvas-backdrop', function(e) {
         if(e.target === this) {
             window.tutupOffcanvas();
+        }
+    });
+
+    // --- Toggle Potong Absen on Select Tipe Gaji (Modal) ---
+    $(document).on('change', '#set_tipe_gaji', function() {
+        const divPotong = document.getElementById('div_potong_absen');
+        if (divPotong) {
+            if (this.value === 'bulanan') {
+                $(divPotong).show();
+            } else {
+                $(divPotong).hide();
+            }
         }
     });
 
@@ -118,7 +154,6 @@ const confirmSwal = (message) => {
             cancelButtonText: 'Batal'
         });
     }
-
     return Promise.resolve({ isConfirmed: window.confirm(message) });
 };
 
@@ -147,7 +182,7 @@ const handleProsesBayarSubmit = (event) => {
     }
 
     if (!gajiBersih || gajiBersih.trim() === '' || gajiBersih.trim() === 'Rp 0') {
-        showSwalError('Gaji bersih belum terhitung. Pastikan data kehadiran dan perhitungan sudah benar.');
+        showSwalError('Gaji bersih belum terhitung. Pastikan data kehadiran and perhitungan sudah benar.');
         return;
     }
 
@@ -160,128 +195,233 @@ const handleProsesBayarSubmit = (event) => {
         });
 };
 
-// 4. FUNGSI GLOBAL (Exposed untuk onclick HTML)
-// Menggunakan window. agar pasti terbaca oleh atribut onclick di Datatables
+// 4. FUNGSI GLOBAL (JQUERY OPTIMIZED)
+window.bukaModalSetting = (id, tipe, nominal, potong = '0') => {
+    try {
+        const modal = $('#modalSetting');
+        const content = $('#modalSettingContent');
 
-window.bukaModalSetting = (id, tipe, nominal) => {
-    const modal = document.getElementById('modalSetting');
-    const content = document.getElementById('modalSettingContent');
+        if (modal.length === 0) return;
 
-    if (!modal) return;
+        $('#set_terapis_id').val(id);
+        
+        const tipeClean = (tipe || 'bulanan').toLowerCase();
+        $('#set_tipe_gaji').val((tipeClean === 'belum diset') ? 'bulanan' : tipeClean);
+        
+        $('#set_nominal_gaji').val(formatRupiah(nominal));
 
-    document.getElementById('set_terapis_id').value = id;
-    document.getElementById('set_tipe_gaji').value = (tipe === 'Belum Diset') ? 'bulanan' : tipe;
-    document.getElementById('set_nominal_gaji').value = formatRupiah(nominal);
+        const potongAbsenCheckbox = $('#set_potong_absen');
+        if (potongAbsenCheckbox.length > 0) {
+            potongAbsenCheckbox.prop('checked', (potong == '1'));
+        }
 
-    modal.classList.replace(MODAL_HIDDEN_CLASS, MODAL_VISIBLE_CLASS);
-    setTimeout(() => content.classList.replace('scale-95', 'scale-100'), 10);
+        const divPotong = $('#div_potong_absen');
+        if (divPotong.length > 0) {
+            if ($('#set_tipe_gaji').val() === 'bulanan') {
+                divPotong.show();
+            } else {
+                divPotong.hide();
+            }
+        }
+
+        modal.appendTo('body');
+        modal.removeClass('hidden').addClass('flex');
+        
+        setTimeout(() => {
+            modal.removeClass('opacity-0').addClass('opacity-100');
+            if (content.length > 0) {
+                content.removeClass('scale-95').addClass('scale-100');
+            }
+        }, 20);
+        
+        $('body').addClass('modal-open').css('overflow', 'hidden');
+    } catch (error) {
+        alert("Buka Modal Error: " + error.message);
+    }
 };
 
 window.tutupModalSetting = () => {
-    const modal = document.getElementById('modalSetting');
-    const content = document.getElementById('modalSettingContent');
+    try {
+        const modal = $('#modalSetting');
+        const content = $('#modalSettingContent');
 
-    content.classList.replace('scale-100', 'scale-95');
-    setTimeout(() => modal.classList.replace(MODAL_VISIBLE_CLASS, MODAL_HIDDEN_CLASS), 200);
+        if (modal.length === 0) return;
+
+        modal.removeClass('opacity-100').addClass('opacity-0');
+        if (content.length > 0) {
+            content.removeClass('scale-100').addClass('scale-95');
+        }
+
+        setTimeout(() => {
+            modal.removeClass('flex').addClass('hidden');
+            $('body').removeClass('modal-open').css('overflow', '');
+        }, 300);
+    } catch (err) {}
 };
 
 window.bukaOffcanvas = (terapisId) => {
-    const config = window.gajiConfig;
-    const offcanvas = document.getElementById('offcanvasProses');
-    const backdrop = document.getElementById('offcanvasBackdrop');
-    const loading = document.getElementById('loadingState');
-    const form = document.getElementById('formBayarGaji');
+    try {
+        const config = window.gajiConfig;
+        const offcanvas = $('#offcanvasProses');
+        const backdrop = $('#offcanvasBackdrop');
+        const loading = $('#loadingState');
+        const form = $('#formBayarGaji');
 
-    backdrop.classList.remove('hidden');
-    offcanvas.classList.remove('translate-x-full');
-    loading.classList.remove('hidden');
-    form.classList.add('hidden');
+        if (offcanvas.length === 0 || backdrop.length === 0) return;
 
-    fetch(`${config.detailUrl}/${terapisId}`)
-        .then(response => response.json())
-        .then(res => {
-            if (res.status === 'success') {
-                const data = res.data;
-                document.getElementById('oc_terapis_id').value = data.id;
-                document.getElementById('oc_nama_terapis').innerText = data.nama;
+        backdrop.appendTo('body');
+        offcanvas.appendTo('body');
 
-                const tipeGaji = data.tipe_gaji || 'bulanan';
-                const nominalGaji = parseInt(data.nominal_gaji) || 0;
-                const totalKasbon = parseInt(data.total_kasbon) || 0;
-                const totalTunjangan = parseInt(data.total_tunjangan) || 0;
-                const currentKehadiran = parseInt(data.current_kehadiran) || 0;
-                const attendanceInput = document.getElementById('oc_kehadiran');
-                const attendanceGroup = document.getElementById('oc_kehadiran_group');
-                const attendanceLabel = document.getElementById('oc_kehadiran_label');
-                const tipeInfo = document.getElementById('oc_tipe_info');
-                const gajiPokokInput = document.getElementById('oc_gaji_pokok');
-                const tunjanganInput = document.getElementById('oc_tunjangan');
-                const potonganInput = document.getElementById('oc_potongan');
-                const bersihInput = document.getElementById('oc_bersih');
-                const tipeGajiField = document.getElementById('oc_tipe_gaji');
+        backdrop.removeClass('hidden');
+        offcanvas.removeClass('translate-x-full');
+        loading.removeClass('hidden');
+        form.addClass('hidden');
 
-                const renderPayroll = () => {
-                    const attendance = parseInt(attendanceInput.value) || 0;
-                    const gajiPokokTotal = tipeGaji === 'harian'
-                        ? nominalGaji * attendance
-                        : nominalGaji;
+        const fetchUrl = `${config.detailUrl}/${terapisId}`;
 
-                    const gajiBersih = gajiPokokTotal + totalTunjangan - totalKasbon;
+        fetch(fetchUrl)
+            .then(response => response.json())
+            .then(res => {
+                if (res.status === 'success') {
+                    const data = res.data;
+                    const kalkulasi = res.kalkulasi;
 
-                    gajiPokokInput.value = formatRupiah(gajiPokokTotal);
-                    tunjanganInput.value = formatRupiah(totalTunjangan);
-                    potonganInput.value = formatRupiah(totalKasbon);
-                    bersihInput.value = formatRupiah(gajiBersih);
-                };
+                    $('#oc_terapis_id').val(data.id || terapisId);
+                    $('#oc_nama_terapis').text(data.nama || '-');
 
-                const updateFormState = () => {
-                    tipeGajiField.value = tipeGaji;
-                    form.dataset.tipeGaji = tipeGaji;
+                    const tipeGaji = (data.tipe_gaji || 'bulanan').toLowerCase();
+                    const nominalGaji = parseInt(data.nominal_gaji) || 0;
+                    const totalKasbon = parseInt(data.total_kasbon) || 0;
+                    const totalTunjangan = parseInt(data.total_tunjangan) || 0;
+                    const currentKehadiran = parseInt(data.current_kehadiran) || 0;
+                    
+                    const attendanceInput = $('#oc_kehadiran');
+                    const attendanceGroup = $('#oc_kehadiran_group');
+                    const attendanceLabel = $('#oc_kehadiran_label');
+                    const tipeInfo = $('#oc_tipe_info');
+                    
+                    const gajiPokokInput = $('#oc_gaji_pokok');
+                    const tunjanganInput = $('#oc_tunjangan');
+                    const potonganInput = $('#oc_potongan');
+                    const bersihInput = $('#oc_bersih');
+                    const tipeGajiField = $('#oc_tipe_gaji');
 
-                    if (tipeGaji === 'harian') {
-                        attendanceGroup.classList.remove('hidden');
-                        attendanceInput.required = true;
-                        attendanceInput.value = currentKehadiran;
-                        attendanceLabel.innerText = 'Total Kehadiran (Hari)';
-                        tipeInfo.innerText = 'Gaji harian dihitung dari kehadiran real karyawan setiap bulan.';
-                    } else {
-                        attendanceGroup.classList.add('hidden');
-                        attendanceInput.required = false;
-                        attendanceInput.value = 0;
-                        attendanceLabel.innerText = 'Kehadiran tidak diperlukan';
-                        tipeInfo.innerText = 'Gaji bulanan tetap sesuai nominal yang sudah diatur.';
+                    const potonganAbsenGroup = $('#oc_potongan_absen_group');
+                    const potonganAbsenInput = $('#oc_potongan_absen');
+
+                    const renderPayroll = () => {
+                        try {
+                            const attendance = parseInt(attendanceInput.val()) || 0;
+                            let gajiPokokTotal = nominalGaji;
+                            let potonganAbsen = 0;
+
+                            if (tipeGaji === 'harian') {
+                                gajiPokokTotal = nominalGaji * attendance;
+                            } else {
+                                if (data.potong_absen == 1 && kalkulasi) {
+                                    const hariKerja = parseInt(kalkulasi.hari_kerja) || 0;
+                                    if (hariKerja > 0) {
+                                        const absen = hariKerja - attendance;
+                                        if (absen > 0) {
+                                            potonganAbsen = Math.round((nominalGaji / hariKerja) * absen);
+                                        }
+                                    }
+                                }
+                            }
+
+                            const gajiBersih = Math.max(0, (gajiPokokTotal - potonganAbsen) + totalTunjangan - totalKasbon);
+
+                            gajiPokokInput.val(formatRupiah(gajiPokokTotal));
+                            tunjanganInput.val(formatRupiah(totalTunjangan));
+                            potonganInput.val(formatRupiah(totalKasbon));
+                            bersihInput.val(formatRupiah(gajiBersih));
+
+                            if (tipeGaji === 'bulanan' && potonganAbsen > 0) {
+                                if (potonganAbsenGroup.length > 0) potonganAbsenGroup.removeClass('hidden');
+                                if (potonganAbsenInput.length > 0) potonganAbsenInput.val(`- ${formatRupiah(potonganAbsen)}`);
+                            } else {
+                                if (potonganAbsenGroup.length > 0) potonganAbsenGroup.addClass('hidden');
+                            }
+                        } catch (calcErr) {}
+                    };
+
+                    const updateFormState = () => {
+                        tipeGajiField.val(tipeGaji);
+                        form.attr('data-tipe-gaji', tipeGaji);
+
+                        if (tipeGaji === 'harian') {
+                            attendanceGroup.removeClass('hidden');
+                            attendanceInput.prop('required', true);
+                            attendanceInput.val(currentKehadiran);
+                            attendanceLabel.text('Total Kehadiran (Hari)');
+                            tipeInfo.text('Gaji harian dihitung dari kehadiran real karyawan setiap bulan.');
+                        } else {
+                            if (data.potong_absen == 1) {
+                                attendanceGroup.removeClass('hidden');
+                                attendanceInput.prop('required', true);
+                                attendanceInput.val(currentKehadiran);
+                                attendanceLabel.text('Kehadiran Terdeteksi (Hari)');
+                                tipeInfo.text('Gaji bulanan dipotong otomatis jika ada hari absen kerja.');
+                            } else {
+                                attendanceGroup.addClass('hidden');
+                                attendanceInput.prop('required', false);
+                                attendanceInput.val(0);
+                                attendanceLabel.text('Kehadiran tidak diperlukan');
+                                tipeInfo.text('Gaji bulanan tetap sesuai nominal yang sudah diatur.');
+                            }
+                        }
+                    };
+
+                    if (attendanceInput.length > 0) {
+                        attendanceInput.off('input').on('input', renderPayroll);
                     }
-                };
+                    
+                    updateFormState();
+                    renderPayroll();
 
-                attendanceInput.oninput = renderPayroll;
-                updateFormState();
-                renderPayroll();
-
-                loading.classList.add('hidden');
-                form.classList.remove('hidden');
-            }
-        })
-        .catch(err => {
-            console.error('Error:', err);
-            loading.innerHTML = '<p class="text-red-500 mt-4 text-center">Gagal memuat data.</p>';
-        });
+                    loading.addClass('hidden');
+                    form.removeClass('hidden');
+                } else {
+                    alert('Gagal: ' + (res.message || 'Data tidak ditemukan'));
+                    window.tutupOffcanvas();
+                }
+            })
+            .catch(err => {
+                loading.html('<p class="text-red-500 mt-4 text-center">Gagal memuat data.</p>');
+            });
+    } catch (err) {}
 };
 
 window.tutupOffcanvas = () => {
-    document.getElementById('offcanvasProses').classList.add('translate-x-full');
-    setTimeout(() => document.getElementById('offcanvasBackdrop').classList.add('hidden'), 300);
+    try {
+        const offcanvas = $('#offcanvasProses');
+        const backdrop = $('#offcanvasBackdrop');
+        if (offcanvas.length > 0) offcanvas.addClass('translate-x-full');
+        setTimeout(() => {
+            if (backdrop.length > 0) backdrop.addClass('hidden');
+        }, 300);
+    } catch (err) {}
 };
 
-// 5. INITIALIZE
-document.addEventListener('DOMContentLoaded', setupGajiPage);
+// 5. INITIALIZE (ASYNCHRONOUS READY STATE CHECKER)
+if (document.readyState === "complete" || document.readyState === "interactive") {
+    setupGajiPage();
+} else {
+    document.addEventListener('DOMContentLoaded', setupGajiPage);
+}
 
 // Cleanup saat navigasi pergi dari halaman ini
 window.addEventListener('beforeunload', () => {
-    const backdrop = document.getElementById('offcanvasBackdrop');
-    const offcanvas = document.getElementById('offcanvasProses');
-    const modal = document.getElementById('modalSetting');
-    if (backdrop) backdrop.classList.add('hidden');
-    if (offcanvas) offcanvas.classList.add('translate-x-full');
-    if (modal) modal.classList.replace('flex', 'hidden');
-    document.body.style.overflow = '';
+    try {
+        const backdrop = $('#offcanvasBackdrop');
+        const offcanvas = $('#offcanvasProses');
+        const modal = $('#modalSetting');
+        if (backdrop.length > 0) backdrop.addClass('hidden');
+        if (offcanvas.length > 0) offcanvas.addClass('translate-x-full');
+        if (modal.length > 0) {
+            modal.removeClass(MODAL_VISIBLE_CLASS);
+            modal.addClass(MODAL_HIDDEN_CLASS);
+        }
+        document.body.style.overflow = '';
+    } catch (e) {}
 });

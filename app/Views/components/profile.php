@@ -3,10 +3,80 @@
 /** @var string $role */
 $role = $role ?? session()->get('role') ?? '';
 $realname = $realname ?? session()->get('realname') ?? 'User';
-$avatarUrl = $avatarUrl ?? session()->get('avatar') ?? session()->get('avatar_url') ?? '';
+
+// Always get fresh avatar from database, not from session
+$avatarUrl = '';
+$db = \Config\Database::connect();
+$terapisId = session()->get('terapis_id_int');
+
+if ($terapisId) {
+    $terapis = $db->table('terapis')
+        ->select('foto')
+        ->where('id', $terapisId)
+        ->get()
+        ->getRow();
+    
+    if ($terapis && !empty($terapis->foto)) {
+        $avatarUrl = base_url('foto_karyawan/' . $terapis->foto);
+    }
+}
+
 $initial = strtoupper(substr(trim($realname), 0, 1));
 if ($initial === '' || $initial === false) {
     $initial = 'U';
+}
+
+// Get jabatan and rank for terapis
+$jabatanName = '';
+$rankName = '';
+
+if ($terapisId) {
+    // Get raw terapis data
+    $terapisRaw = $db->table('terapis')
+        ->select('*')
+        ->where('id', $terapisId)
+        ->get()
+        ->getRow();
+    
+    // Check if rank is an ID or a text value
+    $rankValue = $terapisRaw->rank ?? null;
+    
+    $terapis = $db->table('terapis')
+        ->select('terapis.jabatan_id, terapis.rank, jabatan.nama_jabatan as jabatan_nama')
+        ->join('jabatan', 'jabatan.id = terapis.jabatan_id', 'left')
+        ->where('terapis.id', $terapisId)
+        ->get()
+        ->getRow();
+    
+    if ($terapis) {
+        $jabatanName = $terapis->jabatan_nama ?? '';
+        
+        // Check if rank is numeric (ID) or text
+        if ($rankValue && is_numeric($rankValue)) {
+            // Rank is an ID, get from rank_terapis table
+            $rankData = $db->table('rank_terapis')
+                ->select('name')
+                ->where('id', $rankValue)
+                ->get()
+                ->getRow();
+            $rankName = $rankData->name ?? '';
+        } else {
+            // Rank is stored as text directly
+            $rankName = $rankValue ?? '';
+        }
+    }
+}
+
+// Determine display text for user status
+$userStatus = '';
+if (!empty($jabatanName) && !empty($rankName)) {
+    $userStatus = $jabatanName . ' - ' . $rankName;
+} elseif (!empty($jabatanName)) {
+    $userStatus = $jabatanName;
+} elseif (!empty($rankName)) {
+    $userStatus = $rankName;
+} else {
+    $userStatus = ucfirst($role);
 }
 
 $avatarPalettes = [
@@ -76,17 +146,17 @@ $avatarPalette = $avatarPalettes[$paletteIndex];
             </div>
             <div class="flex flex-col leading-tight">
                 <span class="text-sm font-medium text-slate-900 truncate"><?= esc($realname) ?></span>
-                <span class="text-xs text-slate-500">Akun aktif</span>
+                <span class="text-xs text-slate-500"><?= esc($userStatus) ?></span>
             </div>
         </div>
 
         <div class="my-1 h-px bg-slate-100"></div>
 
-        <button id="editAccountBtn"
+        <a href="<?= site_url('users/account') ?>"
             class="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100">
             <i class="far fa-user text-slate-500"></i>
             Akun saya
-        </button>
+        </a>
 
         <a href="<?= site_url('auth/destroy') ?>"
             class="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-rose-700 transition hover:bg-rose-50">
@@ -95,117 +165,3 @@ $avatarPalette = $avatarPalettes[$paletteIndex];
         </a>
     </div>
 </div>
-
-<script>
-function toggleEditAccountModal(show = true) {
-    const modal = document.getElementById('accountManagementModal');
-    const alert = document.getElementById('accountAlert');
-    const root  = document.getElementById('profileComponent');
-    
-    if (!modal) {
-        console.error('Modal accountManagementModal not found!');
-        return;
-    }
-    
-    if (show) {
-        const userMenu = document.getElementById('userMenu');
-        if (userMenu) userMenu.style.display = 'none';
-        
-        if (alert) {
-            alert.style.setProperty('display', 'none', 'important');
-            alert.textContent = '';
-        }
-        
-        modal.style.setProperty('display', 'flex', 'important');
-        
-        const editUrl = root ? root.getAttribute('data-edit-account-url') : null;
-        if (editUrl) {
-            fetch(editUrl)
-                .then(response => response.json())
-                .then(res => {
-                    document.getElementById('realname').value = res.realname || '';
-                    document.getElementById('username').value = res.username || '';
-                    document.getElementById('user_id').value = res.id || res.userId || '';
-                })
-                .catch(err => console.error('Error fetching account data:', err));
-        }
-    } else {
-        modal.style.setProperty('display', 'none', 'important');
-        const form = document.getElementById('editAccountForm');
-        if (form) form.reset();
-    }
-}
-
-// Handler untuk form submit (Vanilla JS)
-(function() {
-    function initAccountForm() {
-        const form = document.getElementById('editAccountForm');
-        if (!form) return;
-
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const root = document.getElementById('profileComponent');
-            const updateUrl = root ? root.getAttribute('data-update-account-url') : null;
-            const alert = document.getElementById('accountAlert');
-            
-            if (!updateUrl) return;
-            
-            const formData = new FormData(form);
-            const btn = form.querySelector('button[type="submit"]');
-            const originalText = btn.textContent;
-            
-            btn.disabled = true;
-            btn.textContent = 'Menyimpan...';
-            
-            fetch(updateUrl, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.json())
-            .then(res => {
-                if (res.status === 'success') {
-                    if (alert) {
-                        alert.className = "mb-4 rounded-xl bg-green-50 px-4 py-3 text-sm font-medium text-green-700";
-                        alert.textContent = res.message;
-                        alert.style.setProperty('display', 'block', 'important');
-                    }
-                    const label = document.getElementById('currentUserName');
-                    if (label) label.textContent = res.realname;
-                    
-                    setTimeout(() => {
-                        toggleEditAccountModal(false);
-                        location.reload();
-                    }, 800);
-                } else {
-                    if (alert) {
-                        alert.className = "mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700";
-                        alert.textContent = res.message || 'Gagal memperbarui';
-                        alert.style.setProperty('display', 'block', 'important');
-                    }
-                }
-            })
-            .catch(err => {
-                if (alert) {
-                    alert.className = "mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700";
-                    alert.textContent = "Terjadi kesalahan sistem.";
-                    alert.style.setProperty('display', 'block', 'important');
-                }
-                console.error('Update error:', err);
-            })
-            .finally(() => {
-                btn.disabled = false;
-                btn.textContent = originalText;
-            });
-        });
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initAccountForm);
-    } else {
-        initAccountForm();
-    }
-})();
-</script>

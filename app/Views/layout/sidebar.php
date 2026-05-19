@@ -28,7 +28,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                     <span class="truncate">Beranda</span>
                 </a>
             </li>
-            <?php if ($role === 'terapis'): ?>
+            <?php if ($role === 'user' && !empty(session()->get('terapis_id'))): ?>
                 <li>
                     <a href="<?= base_url('karyawan/profil_saya') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'karyawan' && $uri->getSegment(2) == 'profil_saya' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                         <i class="fas fa-user-circle w-4 text-center shrink-0"></i>
@@ -42,8 +42,17 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                     </a>
                 </li>
             <?php endif; ?>
+            
+            <?php if ($role === 'admin'): ?>
+                <li>
+                    <a href="<?= base_url('gaji/monitor') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'gaji' && $uri->getSegment(2) == 'monitor' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
+                        <i class="fas fa-wallet w-4 text-center shrink-0"></i>
+                        <span class="truncate">Gaji Saya</span>
+                    </a>
+                </li>
+            <?php endif; ?>
 
-            <?php if ($role !== 'terapis'): ?>
+            <?php if ($role !== 'user' || empty(session()->get('terapis_id'))): ?>
                 <li>
                     <a href="<?= base_url('antrean') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'antrean' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                         <i class="fas fa-pencil-ruler w-4 text-center shrink-0"></i>
@@ -242,12 +251,12 @@ $userInitial = strtoupper(substr($realname, 0, 1));
     <?php endif; ?>
 
     <!-- STATISTIK | ADMIN - SUPERADMIN - OWNER -->
-    <div class="relative flex w-full min-w-0 flex-col p-2">
-        <div class="sticky top-0 z-10 flex h-8 shrink-0 items-center bg-white px-2 text-xs font-semibold uppercase tracking-wider text-slate-500/80">
-            Analitik
-        </div>
-        <ul class="flex w-full min-w-0 flex-col gap-1">
-            <?php if ($role !== 'terapis'): ?>
+    <?php if ($role === 'superadmin' || $role === 'owner' || $role === 'admin'): ?>
+        <div class="relative flex w-full min-w-0 flex-col p-2">
+            <div class="sticky top-0 z-10 flex h-8 shrink-0 items-center bg-white px-2 text-xs font-semibold uppercase tracking-wider text-slate-500/80">
+                Analitik
+            </div>
+            <ul class="flex w-full min-w-0 flex-col gap-1">
                 <li>
                     <details class="group" <?= in_array($current_segment, ['statistiktag', 'statistik', 'statistikresource', 'statistikresult', 'statistikgender', 'statistikdaerah']) ? 'open' : '' ?>>
                         <summary class="flex w-full cursor-pointer list-none items-center justify-between rounded-md p-2 text-left text-sm transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 [&::-webkit-details-marker]:hidden">
@@ -292,9 +301,9 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                         </ul>
                     </details>
                 </li>
-            <?php endif; ?>
-        </ul>
-    </div>
+            </ul>
+        </div>
+    <?php endif; ?>
 
     <!-- TAGIFY & MANAGE USER | SUPERADMIN - OWNER -->
     <?php if ($role === 'superadmin' || $role === 'owner' || $role === 'admin'): ?>
@@ -324,7 +333,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
 
                 <?php if ($role === 'superadmin'): ?>
                     <li>
-                        <details class="group" <?= in_array($current_segment, ['logs', 'whatsapp', 'log_whatsapp', 'jabatan', 'greeting']) ? 'open' : '' ?>>
+                        <details class="group" <?= in_array($current_segment, ['logs', 'whatsapp', 'log_whatsapp', 'jabatan', 'rank-terapis', 'greeting']) ? 'open' : '' ?>>
                             <summary class="flex w-full cursor-pointer list-none items-center justify-between rounded-md p-2 text-left text-sm transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 [&::-webkit-details-marker]:hidden">
                                 <span class="flex items-center gap-2">
                                     <i class="fas fa-cog w-4 text-center shrink-0"></i>
@@ -337,6 +346,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                                 <li><a href="<?= base_url('whatsapp') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'whatsapp' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">WhatsApp</span></a></li>
                                 <li><a href="<?= base_url('log_whatsapp') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'log_whatsapp' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Log WhatsApp</span></a></li>
                                 <li><a href="<?= base_url('jabatan') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'jabatan' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Jabatan</span></a></li>
+                                <li><a href="<?= base_url('rank-terapis') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'rank-terapis' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Rank Terapis</span></a></li>
                                 <li><a href="<?= base_url('greeting') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'greeting' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>"><span class="truncate">Greetings</span></a></li>
                             </ul>
                         </details>

@@ -82,6 +82,9 @@ const PatientHistoryPage = {
     if (container) {
       container.classList.remove("hidden");
       container.scrollIntoView({ behavior: "smooth", block: "start" });
+      
+      // Auto expand when loading patient
+      this.toggleHistory(true);
     }
 
     this.loadTableData(1);
@@ -101,6 +104,15 @@ const PatientHistoryPage = {
       $('#btn-edit-biodata').hide();
       $('#btn-cancel-edit, #btn-save-biodata').show();
       $('#biodata-subtitle').text('Ubah dan perbarui informasi dasar pasien');
+      
+      // Re-init Select2 after enabling form with longer delay
+      setTimeout(() => {
+        if (window.PatientBiodataPage && typeof window.PatientBiodataPage.initSelect2Instances === 'function') {
+          console.log('Re-initializing Select2 instances...');
+          window.PatientBiodataPage.initSelect2Instances();
+          console.log('Select2 re-init complete');
+        }
+      }, 300); // Increased delay from 100ms to 300ms
     });
 
     // Event listener untuk tombol Batal
@@ -150,6 +162,9 @@ const PatientHistoryPage = {
           $el.removeClass('bg-slate-50 cursor-not-allowed');
         }
       });
+
+      // Paksa field kecamatan, kabupaten, provinsi tetap readonly (auto-filled)
+      $('#kecamatan_nama, #kabupaten_nama, #provinsi_nama').prop('readonly', true).addClass('bg-slate-100 cursor-not-allowed');
 
       // Hide tombol edit, show tombol save & cancel
       $('#btn-edit-biodata').hide();
@@ -801,7 +816,19 @@ const PatientHistoryPage = {
 
   initEventListeners() {
     const self = this;
-    document.getElementById("btn-add-history")?.addEventListener("click", () => self.add());
+    // Toggle History Collapse
+    $(document).on("click", "#historyHeader", function (e) {
+      // Don't toggle if clicking the "Tambah Riwayat" button or its children
+      if ($(e.target).closest('#btn-add-history').length) return;
+      self.toggleHistory();
+    });
+
+    // Handle "Tambah Riwayat" button click separately
+    $(document).on("click", "#btn-add-history", function (e) {
+      e.stopPropagation();
+      self.add();
+    });
+
     $(document).on("click", ".btn-view-history", function () { self.show($(this).data('id'), false, true); });
     $(document).on("click", ".btn-edit-history", function () { self.show($(this).data('id')); });
     $(document).on("click", ".btn-copy-history", function () { self.show($(this).data('id'), true); });
@@ -1032,6 +1059,45 @@ const PatientHistoryPage = {
         }
       }
     });
+  },
+
+  // --- COLLAPSE LOGIC ---
+  toggleHistory(forceExpand = null) {
+    const content = document.getElementById("historyContent");
+    const chevron = document.getElementById("historyChevron");
+    if (!content || !chevron) return;
+
+    // Check current state via data-attribute
+    const currentState = content.getAttribute("data-state") || "collapsed";
+    const shouldExpand = forceExpand !== null ? forceExpand : (currentState === "collapsed");
+    
+    if (shouldExpand) {
+      // Expand
+      content.setAttribute("data-state", "expanded");
+      content.style.maxHeight = content.scrollHeight + "px";
+      content.style.opacity = "1";
+      chevron.style.transform = "rotate(180deg)";
+      
+      // Allow content to grow naturally after animation
+      setTimeout(() => {
+        if (content.getAttribute("data-state") === "expanded") {
+          content.style.maxHeight = "none";
+          content.style.overflow = "visible";
+        }
+      }, 300);
+    } else {
+      // Collapse
+      content.setAttribute("data-state", "collapsed");
+      content.style.maxHeight = content.scrollHeight + "px";
+      content.style.overflow = "hidden";
+      
+      // Force repaint to ensure transition runs
+      content.offsetHeight;
+      
+      content.style.maxHeight = "0px";
+      content.style.opacity = "0";
+      chevron.style.transform = "rotate(0deg)";
+    }
   },
 };
 

@@ -13,12 +13,12 @@
             </p>
         </div>
 
-        <!-- DROPDOWN NAVIGASI MOBILE -->
-        <div class="w-full md:hidden">
+        <!-- DROPDOWN NAVIGASI MOBILE & TABLET -->
+        <div class="w-full lg:hidden mt-2">
             <select onchange="window.location.href=this.value" class="w-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-sm font-bold rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500/20">
-                <option value="<?= site_url('tag-keluhan') ?>" selected>Tag Keluhan</option>
-                <option value="<?= site_url('tag-rekam-medis') ?>">Tag Rekam Medis</option>
-                <option value="<?= site_url('tag-pemeriksaan') ?>">Tag Pemeriksaan</option>
+                <option value="<?= site_url('tag-keluhan') ?>" selected>🏷️ Tag Keluhan</option>
+                <option value="<?= site_url('tag-rekam-medis') ?>">🩺 Tag Rekam Medis</option>
+                <option value="<?= site_url('tag-pemeriksaan') ?>">🔬 Tag Pemeriksaan</option>
             </select>
         </div>
 

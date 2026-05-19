@@ -15,7 +15,17 @@ const openModal = (modal) => {
   modal.classList.remove(MODAL_HIDDEN_CLASS);
   modal.classList.add(MODAL_VISIBLE_CLASS);
   modal.style.display = 'flex'; // Ensure it overrides any fadeOut inline style
+  
+  // Robust opacity & scale reset to support cross-module styles
+  modal.classList.remove("opacity-0");
+  modal.classList.add("opacity-100");
+  const content = modal.querySelector('.transform');
+  if (content) {
+    content.classList.remove("scale-95");
+    content.classList.add("scale-100");
+  }
 };
+window.openModal = openModal;
 
 const closeModal = (modal) => {
   if (!modal) return;
@@ -23,6 +33,7 @@ const closeModal = (modal) => {
   modal.classList.add(MODAL_HIDDEN_CLASS);
   modal.style.display = 'none'; // Sync with hidden class
 };
+window.closeModal = closeModal;
 
 const setupAntreanPage = () => {
   const config = window.antreanConfig;
@@ -127,7 +138,7 @@ const setupAntreanPage = () => {
             const cardHtml = `
               <div class="p-4 space-y-4 bg-white">
                   <div class="flex items-center justify-between">
-                      <div class="flex items-center gap-3">
+                      <div class="flex items-center gap-3 min-w-0 flex-1">
                           <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-800 font-black text-xl border border-slate-200 shadow-sm">
                                ${row.queue_number}
                           </div>
@@ -183,14 +194,34 @@ const setupAntreanPage = () => {
 
   // --- INIT  TABLE 2 (MODAL PASIEN) ---
   let table2Init = false;
+  let isInfiniteScrollLoading = false;
+  let mobileCurrentPage = 0;
+  let totalPages = 1;
+
+  // Deteksi scroll untuk mobile infinite scroll
+  $('#mobile-patient-list').on('scroll', function() {
+    if (window.innerWidth >= 768) return;
+    if (!table2Init || !$.fn.DataTable.isDataTable('#table-2')) return;
+    
+    const container = this;
+    // Jika mendekati bagian paling bawah (selisih 30px)
+    if (container.scrollTop + container.clientHeight >= container.scrollHeight - 30) {
+      if (!isInfiniteScrollLoading && mobileCurrentPage < totalPages - 1) {
+        isInfiniteScrollLoading = true;
+        const table2 = $('#table-2').DataTable();
+        table2.page(mobileCurrentPage + 1).draw('page');
+      }
+    }
+  });
+
   const initTable2 = () => {
     if (!table2Init) {
       table2Init = true;
       $('#table-2').DataTable({
         processing: false,
         serverSide: true,
-        // Ganti baris dom di table-2 menjadi ini:
-        dom: 't<"flex items-center justify-between p-4 bg-slate-50/50 border-t border-slate-200"<"text-xs text-slate-500"i><"flex items-end"p>>',
+        // Sembunyikan pagination/footer datatables di mobile memakai hidden md:flex
+        dom: 't<"hidden md:flex items-center justify-between p-4 bg-slate-50/50 border-t border-slate-200"<"text-xs text-slate-500"i><"flex items-end"p>>',
         language: { search: "", searchPlaceholder: "Ketik Nama atau Nomor WhatsApp...", paginate: { previous: '<i class="fas fa-chevron-left text-[10px]"></i>', next: '<i class="fas fa-chevron-right text-[10px]"></i>' } },
         ajax: {
           url: config.fetchPatientUrl,
@@ -221,16 +252,28 @@ const setupAntreanPage = () => {
         },
         drawCallback: function (settings) {
           if (window.innerWidth < 768) {
-            // --- LOGIKA MOBILE KITA ---
+            // --- LOGIKA MOBILE DENGAN INFINITE SCROLL ---
             $("#iconSearch2").removeClass("hidden");
             $("#iconSpinner2").addClass("hidden");
 
             const api = this.api();
             const data = api.rows({ page: 'current' }).data();
-            const $cardContainer = $('#mobile-patient-list');
-            $cardContainer.empty();
+            const info = api.page.info();
+            
+            totalPages = info.pages;
+            mobileCurrentPage = info.page;
 
-            if (data.length === 0) {
+            const $cardContainer = $('#mobile-patient-list');
+            
+            // Jika halaman pertama (halaman 0), bersihkan container untuk pencarian/filter baru
+            if (mobileCurrentPage === 0) {
+              $cardContainer.empty();
+            }
+
+            // Hapus spinner/loader scroll yang ada sebelumnya agar diposisikan di paling bawah
+            $('#mobile-scroll-loader').remove();
+
+            if (data.length === 0 && mobileCurrentPage === 0) {
               $cardContainer.append('<div class="p-8 text-center text-slate-400 italic text-sm"><i class="fas fa-search mr-2"></i> Tidak ada data pasien.</div>');
             } else {
               data.each(function (row) {
@@ -258,7 +301,18 @@ const setupAntreanPage = () => {
                 `);
                 $cardContainer.append(card);
               });
+
+              // Jika masih ada halaman berikutnya, tampilkan loader animasi estetik di bawah
+              if (mobileCurrentPage < totalPages - 1) {
+                $cardContainer.append(`
+                  <div id="mobile-scroll-loader" class="p-4 text-center text-slate-400 text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 bg-slate-50/50 border-t border-slate-100 shrink-0">
+                    <i class="fas fa-circle-notch fa-spin text-teal-600"></i> Memuat pasien...
+                  </div>
+                `);
+              }
             }
+            
+            isInfiniteScrollLoading = false;
             $('.dataTables_paginate').addClass('!flex !flex-row !items-center !justify-center gap-1 w-full mt-4');
           } else {
             // --- LOGIKA DESKTOP REMOTE ---
@@ -443,7 +497,7 @@ const setupAntreanPage = () => {
   });
 
   $(document).on("click", "[data-modal-open]", function (event) {
-    const targetId = $(this).data("modal-open");
+    const targetId = $(this).attr("data-modal-open");
     const targetModal = document.getElementById(targetId);
     if (!targetModal) return;
 

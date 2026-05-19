@@ -9,8 +9,8 @@
             <p class="text-sm text-slate-500 mt-1">Statistik Pasien Berdasarkan Kunjungan Pasien</p>
         </div>
 
-        <!-- DROPDOWN NAVIGASI MOBILE -->
-        <div class="w-full md:hidden mt-2">
+        <!-- DROPDOWN NAVIGASI MOBILE & TABLET -->
+        <div class="w-full lg:hidden mt-2">
             <select onchange="window.location.href=this.value" class="w-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-sm font-bold rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500/20">
                 <option value="<?= site_url('statistiktag') ?>">Keluhan & Medis</option>
                 <option value="<?= site_url('statistik') ?>" selected>Riwayat Pasien</option>
@@ -31,10 +31,13 @@
             </div>
 
             <select id="region_id" class="bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-xl px-4 py-2.5 outline-none cursor-pointer focus:ring-2 focus:ring-indigo-500/20 w-full sm:w-64 shadow-sm">
-                <?php if (isset($regions_patient) && !empty($regions_patient)): ?>
+                <?php if (isset($regions_patient) && !empty($regions_patient) && $regions_patient !== 'all'): ?>
+                    <?php if (is_array($regions_patient) && count($regions_patient) > 1): ?>
+                        <option value="">-- Semua Wilayah --</option>
+                    <?php endif; ?>
                     <?php foreach ($wilayah as $v): ?>
-                        <?php if ($v->id == $regions_patient[0]): ?>
-                            <option value="<?= $v->id ?>" selected><?= esc($v->name) ?></option>
+                        <?php if (in_array($v->id, (array)$regions_patient)): ?>
+                            <option value="<?= $v->id ?>"><?= esc($v->name) ?></option>
                         <?php endif; ?>
                     <?php endforeach; ?>
                 <?php else: ?>

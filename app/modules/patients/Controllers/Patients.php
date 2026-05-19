@@ -595,6 +595,7 @@ class Patients extends BaseController
         // 1. Ambil ID dari segment URL atau Post (Fallback)
         $id = $id ?? $this->request->getPost('id');
         $patientModel = new \App\modules\patients\Models\MPatients();
+        $historyModel = new \App\modules\patients\Models\MPatientHistory();
 
         // 2. Ambil data lama
         $patient = $patientModel->find($id);
@@ -661,7 +662,7 @@ class Patients extends BaseController
             'phone' => $this->request->getPost('phone') ?: null,
             'region_id' => $this->request->getPost('region_id'),
             'is_suspective' => $this->request->getPost('is_suspective') === 'on' ? 1 : 0,
-            'domestic' => $this->request->getPost('domestic') === 'on' ? 1 : 0,
+            'domestic' => $this->request->getPost('domestic') === 'dalam_negeri' ? 1 : 0,
             'url' => json_encode($finalFileUrls),
             'created_at' => ($submittedDate && $submittedDate != $existingDate) ? $submittedDate . ' ' . date('H:i:s') : $existingCreatedAt,
             'updated_at' => date('Y-m-d H:i:s'),
@@ -671,6 +672,64 @@ class Patients extends BaseController
         ];
 
         $update = $patientModel->update($id, $data);
+
+        // 8. Log perubahan data pasien (Patient History)
+        $userId = $userData;
+        $changes = [];
+        
+        // Field-field penting yang akan di-track
+        $trackedFields = [
+            'name' => 'Nama',
+            'gender' => 'Jenis Kelamin', 
+            'age' => 'Umur',
+            'phone' => 'No. HP',
+            'address' => 'Alamat',
+            'region_id' => 'Wilayah',
+            'country_id' => 'Negara',
+            'is_suspective' => 'Status Rentan',
+            'domestic' => 'Domestik',
+            'patient_information' => 'Informasi Pasien',
+            'ket_suspect' => 'Keterangan Rentan',
+        ];
+
+        foreach ($trackedFields as $field => $label) {
+            $oldValue = $patient->$field ?? null;
+            $newValue = $data[$field] ?? null;
+            
+            // Convert untuk display yang lebih baik
+            if ($field === 'gender') {
+                $oldValue = $oldValue === 'Man' ? 'Laki-laki' : ($oldValue === 'Woman' ? 'Perempuan' : $oldValue);
+                $newValue = $newValue === 'Man' ? 'Laki-laki' : ($newValue === 'Woman' ? 'Perempuan' : $newValue);
+            } elseif ($field === 'is_suspective' || $field === 'domestic') {
+                $oldValue = $oldValue ? 'Ya' : 'Tidak';
+                $newValue = $newValue ? 'Ya' : 'Tidak';
+            }
+
+            // Normalisasi: null, "", "0", 0 semuanya dianggap "kosong" untuk perbandingan
+            // Ini mencegah false positive akibat type mismatch integer DB vs string POST
+            $normalizeValue = function($val) {
+                if ($val === null || $val === '' || $val === '0' || $val === 0) {
+                    return '';
+                }
+                return (string) $val;
+            };
+
+            $oldNorm = $normalizeValue($oldValue);
+            $newNorm = $normalizeValue($newValue);
+            
+            // Hanya log jika benar-benar berbeda (strict string comparison)
+            if ($oldNorm !== $newNorm) {
+                $changes[$label] = [
+                    'old' => $oldValue,
+                    'new' => $newValue,
+                ];
+            }
+        }
+
+        // Simpan history jika ada perubahan
+        if (!empty($changes)) {
+            $historyModel->logMultipleChanges($id, $changes, $userId);
+        }
 
         $addressModel = new \App\modules\address\Models\MAddress();
         $addressData = [
@@ -702,6 +761,24 @@ class Patients extends BaseController
         }
 
         return redirect()->to('patient/show/' . $id);
+    }
+
+    public function getHistory($id = null)
+    {
+        if (!$id) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'ID pasien tidak ditemukan'
+            ]);
+        }
+
+        $historyModel = new \App\modules\patients\Models\MPatientHistory();
+        $history = $historyModel->getGroupedHistory($id);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'data' => $history
+        ]);
     }
 
     public function print_pdf($patients)

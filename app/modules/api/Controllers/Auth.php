@@ -36,6 +36,10 @@ class Auth extends BaseController
             return $this->fail('User tidak ditemukan', 404);
         }
 
+        if (isset($user->is_active) && (int) $user->is_active === 0) {
+            return $this->fail('Akun Anda telah dinonaktifkan. Silakan hubungi Administrator.', 403);
+        }
+
         $isPasswordCorrect = false;
         
         // Cek password (BCRYPT atau MD5 legacy)
@@ -82,7 +86,7 @@ class Auth extends BaseController
                         'id' => (int)$user->id,
                         'username' => $user->username,
                         'realname' => $user->realname,
-                        'role' => $user->role ?? 'terapis',
+                        'role' => $user->role ?? 'user',
                     ],
                     'region' => [
                         'id' => $current_region_Id ? (string)$current_region_Id : '',

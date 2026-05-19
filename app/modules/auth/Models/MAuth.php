@@ -12,7 +12,7 @@ class MAuth extends Model
     protected $returnType       = 'object';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['password', 'is_active', 'remember_token'];
+    protected $allowedFields    = ['password', 'role', 'terapis_id', 'is_active', 'remember_token'];
 
     public function getUserSessionData($user)
     {
@@ -48,11 +48,53 @@ class MAuth extends Model
 
         $avatarUrl = null;
         $terapisIdInt = null;
+        $terapisIdStr = $user->terapis_id;
 
-        if (!empty($user->terapis_id)) {
-            $terapis = $db->table('terapis')->select('id, foto')->where('terapis_id', $user->terapis_id)->get()->getRow();
+        if (!empty($terapisIdStr)) {
+            $terapis = $db->table('terapis')->select('id, foto')->where('terapis_id', $terapisIdStr)->get()->getRow();
             if ($terapis) {
                 $terapisIdInt = $terapis->id;
+                if ($terapis->foto) {
+                    $avatarUrl = base_url('foto_karyawan/' . $terapis->foto);
+                }
+            }
+        }
+
+        // Smart fallback during login for Admin only with empty terapis_id
+        if (empty($terapisIdStr) && $user->role === 'admin') {
+            $realname = $user->realname;
+            $username = $user->username;
+            
+            $terapis = $db->table('terapis')->select('id, terapis_id, foto')
+                ->groupStart()
+                    ->where('nama', $realname)
+                    ->orWhere('nama', $username)
+                ->groupEnd()
+                ->get()->getRow();
+                
+            if (!$terapis) {
+                $builder = $db->table('terapis')->select('id, terapis_id, foto');
+                $hasCond = false;
+                if (!empty($realname) && strlen($realname) >= 3) {
+                    $builder->like('nama', $realname);
+                    $hasCond = true;
+                }
+                if (!empty($username) && strlen($username) >= 3) {
+                    if ($hasCond) {
+                        $builder->orLike('nama', $username);
+                    } else {
+                        $builder->like('nama', $username);
+                        $hasCond = true;
+                    }
+                }
+                if ($hasCond) {
+                    $terapis = $builder->get()->getRow();
+                }
+            }
+            
+            if ($terapis) {
+                $terapisIdInt = $terapis->id;
+                $terapisIdStr = $terapis->terapis_id;
                 if ($terapis->foto) {
                     $avatarUrl = base_url('foto_karyawan/' . $terapis->foto);
                 }
@@ -73,7 +115,7 @@ class MAuth extends Model
             'list_regions_global' => $get_region,
             'active_region'       => $defaultActive,
             'active_region_name'  => $defaultName,
-            'terapis_id'      => $user->terapis_id, // Tetap simpan string ID untuk kebutuhan lain
+            'terapis_id'      => $terapisIdStr, // Tetap simpan string ID untuk kebutuhan lain
             'terapis_id_int'  => $terapisIdInt,    // Tambahkan integer ID untuk sinkronisasi database
         ];
     }

@@ -51,7 +51,7 @@
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3 flex-1">
                         <div class="w-full sm:w-56">
-                            <?php if (session()->get('role') === 'terapis'): ?>
+                            <?php if (session()->get('role') === 'user' && !empty(session()->get('terapis_id'))): ?>
                                 <input type="hidden" id="region" value="<?= is_array(session()->get('region_patient')) ? session()->get('region_patient')[0] : session()->get('region_patient') ?>">
                             <?php else: ?>
                                 <select id="region" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15 bg-white">
@@ -74,9 +74,9 @@
         </div>
 
         <!-- Mobile Card Container (KODE KITA) -->
-        <div id="mobile-journal-container" class="md:hidden divide-y divide-slate-100 bg-white">
-            <div class="p-12 text-center text-slate-400 italic text-sm">
-                <i class="fas fa-spinner fa-spin mr-2 text-slate-300"></i>
+        <div id="mobile-journal-container" class="md:hidden flex flex-col gap-4 p-4 bg-slate-50/50">
+            <div class="p-12 text-center text-slate-400 italic text-sm bg-white rounded-2xl border border-slate-150 shadow-sm">
+                <i class="fas fa-spinner fa-spin mr-2 text-teal-500"></i>
                 Memuat data jurnal...
             </div>
         </div>
@@ -193,7 +193,7 @@
 
             <div class="space-y-1">
                 <label class="text-sm font-medium text-slate-700">Target Wilayah</label>
-                <?php if (session()->get('role') === 'terapis'): ?>
+                <?php if (session()->get('role') === 'user' && !empty(session()->get('terapis_id'))): ?>
                     <input type="text"
                         class="w-full rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-600"
                         value="<?= session()->get('region_name') ?>" readonly>

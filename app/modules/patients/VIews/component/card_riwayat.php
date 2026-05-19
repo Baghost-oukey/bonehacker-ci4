@@ -1,5 +1,5 @@
 <div id="patientHistoryContainer" class="hidden rounded-2xl bg-white shadow-sm border border-slate-200/50 overflow-hidden mt-6">
-    <!-- HEADER TABLE -->
+    <!-- HEADER -->
     <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
             <h3 class="text-lg font-semibold text-slate-800">Riwayat Kunjungan Pasien</h3>
@@ -7,11 +7,12 @@
         </div>
         <?php if (!isset($hide_add_button) || !$hide_add_button): ?>
         <button id="btn-add-history" type="button" data-modal-open="modalRiwayatPasien"
-            class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 transition">
+            class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 transition shadow-sm shadow-teal-600/20">
             <i class="fas fa-plus"></i> Tambah Riwayat
         </button>
         <?php endif; ?>
     </div>
+
 
     <!-- DESKTOP TABLE RIWAYAT -->
     <div class="hidden md:block overflow-x-auto no-scrollbar">
@@ -70,7 +71,6 @@
     </div>
 </div>
 
-
 <!-- MODAL TAMBAH/EDIT RIWAYAT -->
 <style>
     .modal-readonly .modal-title {
@@ -105,7 +105,7 @@
         border-radius: 6px !important;
     }
 </style>
-<div id="modalRiwayatPasien" class="modal-wrapper hidden fixed inset-0 z-60 items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 transition-opacity">
+<div id="modalRiwayatPasien" class="modal-wrapper hidden fixed inset-0 z-[60] items-center justify-center bg-black/40 p-4 transition-opacity">
     <!-- Diperlebar menjadi max-w-6xl karena isi form sangat banyak -->
     <div class="w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
         

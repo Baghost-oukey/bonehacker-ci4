@@ -31,17 +31,17 @@
             <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                 <!-- Pilih Tanggal -->
                 <div class="space-y-2 mb-6">
-                    <label class="text-sm font-semibold text-slate-800">Tanggal Presensi <span class="text-red-500">*</span></label>
+                    <label class="text-sm font-medium text-slate-700">Tanggal Presensi <span class="text-red-500">*</span></label>
                     <input type="date" name="tanggal" id="tanggal_presensi" required
                         value="<?= date('Y-m-d') ?>"
                         max="<?= date('Y-m-d') ?>"
-                        class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white">
+                        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
                     <p class="text-xs text-slate-500">Pilih tanggal untuk presensi (maksimal hari ini)</p>
                 </div>
 
                 <!-- Pilih Terapis -->
                 <div class="space-y-2">
-                    <label class="text-sm font-semibold text-slate-800">Pilih Terapis <span class="text-red-500">*</span></label>
+                    <label class="text-sm font-medium text-slate-700">Pilih Terapis <span class="text-red-500">*</span></label>
                     
                     <?php if (empty($terapis)): ?>
                         <div class="bg-slate-50 rounded-2xl border border-slate-200 p-6 text-center text-slate-400 font-semibold">
@@ -50,7 +50,7 @@
                     <?php else: ?>
                         <div class="space-y-3 max-h-96 overflow-y-auto">
                             <?php foreach ($terapis as $t): ?>
-                                <label class="flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50/30 cursor-pointer transition-all">
+                                <label class="flex items-center gap-4 p-3 rounded-lg border border-slate-300 bg-white hover:border-teal-500 hover:bg-teal-50 cursor-pointer transition-all">
                                     <input type="checkbox" name="terapis_ids[]" value="<?= $t->id ?>" 
                                         class="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" checked>
                                     <div class="flex items-center gap-3 flex-1">
@@ -58,7 +58,7 @@
                                             <?= strtoupper(substr($t->nama, 0, 1)) ?>
                                         </div>
                                         <div>
-                                            <p class="text-sm font-black text-slate-900"><?= esc($t->nama) ?></p>
+                                            <p class="text-sm font-semibold text-slate-800"><?= esc($t->nama) ?></p>
                                             <p class="text-xs text-slate-500"><?= esc($t->region_name ?? 'Terapis') ?></p>
                                         </div>
                                     </div>
@@ -96,11 +96,11 @@
             <!-- Submit Button -->
             <div class="flex items-center justify-end gap-3">
                 <a href="<?= base_url('kehadiran') ?>" 
-                    class="inline-flex items-center justify-center rounded-2xl border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-all">
+                    class="inline-flex items-center justify-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-all">
                     Batal
                 </a>
                 <button type="submit" id="btnSimpan" 
-                    class="inline-flex items-center justify-center rounded-2xl bg-teal-600 px-8 py-3 text-sm font-bold uppercase tracking-[0.2em] text-white shadow-lg shadow-indigo-200 transition-all hover:bg-indigo-700">
+                    class="inline-flex items-center justify-center rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-indigo-200 transition-all hover:bg-indigo-700">
                     <i class="fas fa-save mr-2"></i> Simpan Presensi
                 </button>
             </div>

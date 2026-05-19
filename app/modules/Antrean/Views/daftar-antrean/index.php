@@ -178,139 +178,174 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
         </div>
     </div>
 
-    <!-- BREAK TIME OVERLAY -->
-    <?php if (isset($breakData) && !empty($breakData)): ?>
-        <div id="breakOverlay" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-900/70 transition-all duration-500 px-8">
-            <div class="relative w-full max-w-2xl bg-white p-12 rounded-[3rem] shadow-2xl flex flex-col items-center text-center">
-                <div class="mb-8">
-                    <div class="h-24 w-24 flex items-center justify-center bg-orange-50 rounded-full border-2 border-orange-100 shadow-inner">
-                        <i class="fas fa-coffee text-orange-500 text-5xl animate-bounce"></i>
+    <!-- COLUMN CONTAINER WITH RELATIVE RED OVERLAY -->
+    <div class="relative flex-1 min-h-0">
+        <!-- 3 COLUMNS -->
+        <div id="queue-columns" class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+            <!-- KOLOM MENUNGGU -->
+            <div class="column-orange rounded-3xl overflow-hidden flex flex-col shadow-sm">
+                <div class="py-5 text-center border-b border-white/10">
+                    <h2 class="text-lg font-black header-orange uppercase tracking-[0.2em]">Menunggu</h2>
+                </div>
+                <div class="flex-1 overflow-y-hidden p-5 space-y-4 auto-scroll-list no-scrollbar" data-count="<?= count($waitingList) ?>">
+                    <?php if (!empty($waitingList)): ?>
+                        <?php foreach ($waitingList as $i => $q): ?>
+                            <div class="list-card-white rounded-2xl p-4 flex items-center gap-5 <?= ($i === 0) ? 'active-waiting' : '' ?>">
+                                <div class="h-14 w-14 shrink-0 flex items-center justify-center rounded-xl font-black text-2xl queue-num-box">
+                                    <?= esc($q->queue_number ?? '-') ?>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-xl font-black uppercase tracking-tight truncate"><?= esc($q->patient_name ?? '-') ?></p>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-sm font-black opacity-60">#<?= $i + 1 ?></span>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div class="h-full flex items-center justify-center">
+                            <p class="text-orange-500/20 font-black text-4xl tracking-widest uppercase">KOSONG</p>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- KOLOM SEDANG TERAPI -->
+            <div class="column-blue rounded-3xl overflow-hidden flex flex-col shadow-sm">
+                <div class="py-5 text-center border-b border-white/10">
+                    <h2 class="text-lg font-black header-blue uppercase tracking-[0.2em]">Sedang Terapi</h2>
+                </div>
+                <div class="flex-1 overflow-y-hidden p-5 space-y-4 auto-scroll-list no-scrollbar" data-count="<?= count($processingList) ?>">
+                    <?php if (!empty($processingList)): ?>
+                        <?php foreach ($processingList as $i => $q): ?>
+                            <div class="list-card-white rounded-2xl p-4 flex items-center gap-5 relative overflow-hidden">
+                                <div class="absolute top-0 left-0 right-0 h-1 bg-blue-500/20">
+                                    <div class="h-full bg-blue-500 w-1/4 animate-[translateX_3s_infinite]"></div>
+                                </div>
+                                <div class="h-14 w-14 shrink-0 flex items-center justify-center rounded-xl font-black text-2xl queue-num-box">
+                                    <?= esc($q->queue_number ?? '-') ?>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-xl font-black uppercase tracking-tight truncate"><?= esc($q->patient_name ?? '-') ?></p>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div class="h-full flex items-center justify-center">
+                            <p class="text-blue-500/20 font-black text-4xl tracking-widest uppercase">KOSONG</p>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- KOLOM SELESAI -->
+            <div class="column-green rounded-3xl overflow-hidden flex flex-col shadow-sm">
+                <div class="py-5 text-center border-b border-white/10">
+                    <h2 class="text-lg font-black header-green uppercase tracking-[0.2em]">Selesai</h2>
+                </div>
+                <div class="flex-1 overflow-y-hidden p-5 space-y-4 auto-scroll-list no-scrollbar" data-count="<?= count($finishedList) ?>">
+                    <?php if (!empty($finishedList)): ?>
+                        <?php foreach ($finishedList as $i => $q): ?>
+                            <div class="list-card-white rounded-2xl p-4 flex items-center gap-5 opacity-80">
+                                <div class="h-14 w-14 shrink-0 flex items-center justify-center rounded-xl font-black text-2xl queue-num-box">
+                                    <?= esc($q->queue_number ?? '-') ?>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-xl font-black uppercase tracking-tight truncate"><?= esc($q->patient_name ?? '-') ?></p>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div class="h-full flex items-center justify-center">
+                            <p class="text-emerald-500/20 font-black text-4xl tracking-widest uppercase">KOSONG</p>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- RED OVERLAY ON BREAK (Pita Merah Mewah di Tengah Kolom) -->
+        <?php if (isset($breakData) && !empty($breakData)): ?>
+            <div id="breakOverlay" style="position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); z-index: 50; width: 100%; background: linear-gradient(135deg, rgba(220, 53, 69, 0.98) 0%, rgba(190, 24, 38, 0.98) 50%, rgba(220, 53, 69, 0.98) 100%); backdrop-filter: blur(16px); color: #ffffff; padding: 28px 0; box-shadow: 0 25px 60px rgba(220, 38, 38, 0.45), inset 0 2px 0 rgba(255,255,255,0.25), inset 0 -2px 0 rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; transition: all 0.5s ease-in-out;">
+                
+                <!-- Elegant Diagonal Warning Ribbon Accent (Top) -->
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 5px; background: repeating-linear-gradient(-45deg, #991b1b, #991b1b 12px, #f43f5e 12px, #f43f5e 24px);"></div>
+                
+                <!-- Elegant Diagonal Warning Ribbon Accent (Bottom) -->
+                <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 5px; background: repeating-linear-gradient(-45deg, #991b1b, #991b1b 12px, #f43f5e 12px, #f43f5e 24px);"></div>
+
+                <!-- Glare Shine Effect overlay -->
+                <div style="position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0) 100%); pointer-events: none;"></div>
+
+                <div class="flex flex-col md:flex-row items-center justify-center gap-8 px-8 w-full max-w-7xl relative">
+                    <!-- Live Pulse Badge -->
+                    <div style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); background: #ef4444; border: 1.5px solid rgba(255,255,255,0.3); padding: 4px 16px; border-radius: 9999px; display: flex; align-items: center; gap: 8px; box-shadow: 0 8px 20px rgba(239,68,68,0.4);">
+                        <span style="display: inline-block; width: 8px; height: 8px; background: #ffffff; border-radius: 50%; animation: pulseIndicator 1.5s infinite;"></span>
+                        <span style="color: #ffffff; font-size: 10px; font-weight: 800; tracking-wider; text-transform: uppercase; letter-spacing: 0.15em; font-family: sans-serif;">ISTIRAHAT SEDANG BERLANGSUNG</span>
                     </div>
-                </div>
-                <div class="space-y-4 mb-10">
-                    <h2 class="text-5xl font-black text-slate-900 uppercase tracking-tighter">SEDANG ISTIRAHAT</h2>
-                    <p class="text-slate-400 font-bold tracking-[0.3em] uppercase text-xs">Mohon menunggu sebentar</p>
-                </div>
-                <div class="px-16 py-10 bg-slate-50 rounded-[2rem] border border-slate-100">
-                    <span id="breakTimer" class="text-6xl font-black text-slate-800 font-mono tracking-tighter">--:--:--</span>
-                    <script>
-                        (function() {
-                            const endTimeStr = "<?= $breakData['end_time'] ?>";
-                            const endTime = new Date(endTimeStr.replace(/-/g, '/')).getTime();
-                            const timerEl = document.getElementById('breakTimer');
+                    
+                    <div class="flex items-center gap-5">
+                        <!-- Neon Glowing Coffee Box -->
+                        <div class="h-14 w-14 flex items-center justify-center rounded-2xl shrink-0 animate-bounce" style="background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.35); box-shadow: 0 8px 24px rgba(255,255,255,0.2), inset 0 2px 4px rgba(255,255,255,0.2);">
+                            <i class="fas fa-coffee text-white text-2xl" style="filter: drop-shadow(0 2px 8px rgba(255,255,255,0.4));"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-3xl md:text-4xl font-extrabold uppercase tracking-tight text-white leading-none" style="text-shadow: 0 2px 10px rgba(0,0,0,0.2); font-family: sans-serif;">SEDANG ISTIRAHAT</h2>
+                            <p class="text-red-100 font-bold uppercase tracking-wider text-[10px] mt-1.5" style="color: rgba(255,255,255,0.85); letter-spacing: 0.05em; font-family: sans-serif;">Layanan antrean dijeda sejenak untuk istirahat terapis</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Vertical Divider in desktop -->
+                    <div class="hidden md:block h-12 w-px" style="background: rgba(255,255,255,0.25);"></div>
+                    
+                    <!-- Ultra Glass Timer Bubble -->
+                    <div class="px-8 py-3 rounded-2xl shrink-0 flex items-center gap-4" style="background: rgba(0, 0, 0, 0.25); border: 1.5px solid rgba(255,255,255,0.15); box-shadow: inset 0 4px 12px rgba(0,0,0,0.15); backdrop-filter: blur(12px);">
+                        <div class="flex flex-col text-right shrink-0">
+                            <span style="font-size: 8px; font-weight: 800; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.1em; line-height: 1; font-family: sans-serif;">KEMBALI DALAM</span>
+                            <span style="font-size: 9px; font-weight: 800; color: #ef4444; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 3px; font-family: sans-serif;">COUNTDOWN</span>
+                        </div>
+                        <span id="breakTimer" class="text-3xl md:text-4xl font-black text-white font-mono tracking-tighter" style="letter-spacing: -0.02em; text-shadow: 0 0 10px rgba(255,255,255,0.3);">--:--:--</span>
+                        <script>
+                            (function() {
+                                const endTimeStr = "<?= $breakData['end_time'] ?>";
+                                const endTime = new Date(endTimeStr.replace(/-/g, '/')).getTime();
+                                const timerEl = document.getElementById('breakTimer');
 
-                            function updateTimer() {
-                                const now = new Date().getTime();
-                                const distance = endTime - now;
+                                function updateTimer() {
+                                    const now = new Date().getTime();
+                                    const distance = endTime - now;
 
-                                if (distance <= 0) {
-                                    timerEl.innerHTML = "00:00:00";
-                                    return;
+                                    if (distance <= 0) {
+                                        timerEl.innerHTML = "00:00:00";
+                                        return;
+                                    }
+
+                                    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                                    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                                    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                                    timerEl.innerHTML =
+                                        (hours > 0 ? (hours < 10 ? "0" + hours + ":" : hours + ":") : "") +
+                                        (minutes < 10 ? "0" + minutes : minutes) + ":" +
+                                        (seconds < 10 ? "0" + seconds : seconds);
                                 }
 
-                                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-                                timerEl.innerHTML =
-                                    (hours > 0 ? (hours < 10 ? "0" + hours + ":" : hours + ":") : "") +
-                                    (minutes < 10 ? "0" + minutes : minutes) + ":" +
-                                    (seconds < 10 ? "0" + seconds : seconds);
-                            }
-
-                            updateTimer();
-                            setInterval(updateTimer, 1000);
-                        })();
-                    </script>
+                                updateTimer();
+                                setInterval(updateTimer, 1000);
+                            })();
+                        </script>
+                    </div>
                 </div>
             </div>
-        </div>
-    <?php endif; ?>
-
-    <!-- 3 COLUMNS -->
-    <div id="queue-columns" class="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
-
-        <!-- KOLOM MENUNGGU -->
-        <div class="column-orange rounded-3xl overflow-hidden flex flex-col shadow-sm">
-            <div class="py-5 text-center border-b border-white/10">
-                <h2 class="text-lg font-black header-orange uppercase tracking-[0.2em]">Menunggu</h2>
-            </div>
-            <div class="flex-1 overflow-y-hidden p-5 space-y-4 auto-scroll-list no-scrollbar" data-count="<?= count($waitingList) ?>">
-                <?php if (!empty($waitingList)): ?>
-                    <?php foreach ($waitingList as $i => $q): ?>
-                        <div class="list-card-white rounded-2xl p-4 flex items-center gap-5 <?= ($i === 0) ? 'active-waiting' : '' ?>">
-                            <div class="h-14 w-14 shrink-0 flex items-center justify-center rounded-xl font-black text-2xl queue-num-box">
-                                <?= esc($q->queue_number ?? '-') ?>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-xl font-black uppercase tracking-tight truncate"><?= esc($q->patient_name ?? '-') ?></p>
-                            </div>
-                            <div class="text-right">
-                                <span class="text-sm font-black opacity-60">#<?= $i + 1 ?></span>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <div class="h-full flex items-center justify-center">
-                        <p class="text-orange-500/20 font-black text-4xl tracking-widest uppercase">KOSONG</p>
-                    </div>
-                <?php endif; ?>
-            </div>
-        </div>
-
-        <!-- KOLOM SEDANG TERAPI -->
-        <div class="column-blue rounded-3xl overflow-hidden flex flex-col shadow-sm">
-            <div class="py-5 text-center border-b border-white/10">
-                <h2 class="text-lg font-black header-blue uppercase tracking-[0.2em]">Sedang Terapi</h2>
-            </div>
-            <div class="flex-1 overflow-y-hidden p-5 space-y-4 auto-scroll-list no-scrollbar" data-count="<?= count($processingList) ?>">
-                <?php if (!empty($processingList)): ?>
-                    <?php foreach ($processingList as $i => $q): ?>
-                        <div class="list-card-white rounded-2xl p-4 flex items-center gap-5 relative overflow-hidden">
-                            <div class="absolute top-0 left-0 right-0 h-1 bg-blue-500/20">
-                                <div class="h-full bg-blue-500 w-1/4 animate-[translateX_3s_infinite]"></div>
-                            </div>
-                            <div class="h-14 w-14 shrink-0 flex items-center justify-center rounded-xl font-black text-2xl queue-num-box">
-                                <?= esc($q->queue_number ?? '-') ?>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-xl font-black uppercase tracking-tight truncate"><?= esc($q->patient_name ?? '-') ?></p>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <div class="h-full flex items-center justify-center">
-                        <p class="text-blue-500/20 font-black text-4xl tracking-widest uppercase">KOSONG</p>
-                    </div>
-                <?php endif; ?>
-            </div>
-        </div>
-
-        <!-- KOLOM SELESAI -->
-        <div class="column-green rounded-3xl overflow-hidden flex flex-col shadow-sm">
-            <div class="py-5 text-center border-b border-white/10">
-                <h2 class="text-lg font-black header-green uppercase tracking-[0.2em]">Selesai</h2>
-            </div>
-            <div class="flex-1 overflow-y-hidden p-5 space-y-4 auto-scroll-list no-scrollbar" data-count="<?= count($finishedList) ?>">
-                <?php if (!empty($finishedList)): ?>
-                    <?php foreach ($finishedList as $i => $q): ?>
-                        <div class="list-card-white rounded-2xl p-4 flex items-center gap-5 opacity-80">
-                            <div class="h-14 w-14 shrink-0 flex items-center justify-center rounded-xl font-black text-2xl queue-num-box">
-                                <?= esc($q->queue_number ?? '-') ?>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-xl font-black uppercase tracking-tight truncate"><?= esc($q->patient_name ?? '-') ?></p>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <div class="h-full flex items-center justify-center">
-                        <p class="text-emerald-500/20 font-black text-4xl tracking-widest uppercase">KOSONG</p>
-                    </div>
-                <?php endif; ?>
-            </div>
-        </div>
-
+            
+            <style>
+                @keyframes pulseIndicator {
+                    0% { transform: scale(0.85); opacity: 0.6; box-shadow: 0 0 0 0 rgba(255,255,255,0.4); }
+                    50% { transform: scale(1.15); opacity: 1; box-shadow: 0 0 8px 4px rgba(255,255,255,0.6); }
+                    100% { transform: scale(0.85); opacity: 0.6; box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+                }
+            </style>
+        <?php endif; ?>
     </div>
 
     <!-- MARQUEE BOTTOM BAR -->
@@ -380,7 +415,7 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
             containers.forEach(container => {
                 if (container.getAttribute('data-initialized')) return;
                 const count = parseInt(container.getAttribute('data-count') || '0');
-                if (count > 5) {
+                if (count > 3) {
                     container.setAttribute('data-initialized', 'true');
                     const wrapper = document.createElement('div');
                     wrapper.className = 'scroll-wrapper space-y-4';
@@ -389,13 +424,21 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
                     originalChildren.forEach(child => { wrapper.appendChild(child.cloneNode(true)); });
                     container.appendChild(wrapper);
                     container.style.overflow = 'hidden';
+                    
                     let pos = 0;
                     const speed = 0.8;
+                    let isHovered = false;
+                    
+                    container.addEventListener('mouseenter', () => { isHovered = true; });
+                    container.addEventListener('mouseleave', () => { isHovered = false; });
+                    
                     function scroll() {
-                        pos -= speed;
-                        const halfHeight = wrapper.offsetHeight / 2;
-                        if (Math.abs(pos) >= halfHeight) { pos = 0; }
-                        wrapper.style.transform = `translateY(${pos}px)`;
+                        if (!isHovered) {
+                            pos -= speed;
+                            const halfHeight = wrapper.offsetHeight / 2;
+                            if (Math.abs(pos) >= halfHeight) { pos = 0; }
+                            wrapper.style.transform = `translateY(${pos}px)`;
+                        }
                         requestAnimationFrame(scroll);
                     }
                     setTimeout(() => { requestAnimationFrame(scroll); }, 1000);

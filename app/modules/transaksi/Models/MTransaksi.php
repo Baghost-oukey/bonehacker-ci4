@@ -50,7 +50,7 @@ class MTransaksi extends Model
     public function get_list_data($options, $kategori = null, $region_id = null)
     {
         $builder = $this->db->table('transaksi t')
-            ->select('t.id_transaksi, t.created_at, t.nominal, t.type, t.kategori, t.keterangan, r.name as region_name, t.status, t.cancel_reason, u_created.username as nama_pembuat, u_cancelled.realname as cancelled_by_name, c.name as category_name')
+            ->select("t.id_transaksi, t.created_at, t.nominal, t.type, (CASE WHEN t.keterangan LIKE '[KAS_BESAR]%' THEN 'kas_besar' ELSE 'kas_kecil' END) as kas_type, t.kategori, t.keterangan, r.name as region_name, t.status, t.cancel_reason, u_created.username as nama_pembuat, u_cancelled.realname as cancelled_by_name, c.name as category_name")
             ->join('regions r', 'r.id = t.region_id', 'left')
             ->join('users u_created', 'u_created.id = t.created_by', 'left')
             ->join('users u_cancelled', 'u_cancelled.id = t.cancelled_by', 'left')
@@ -84,6 +84,12 @@ class MTransaksi extends Model
     {
         $builder = $this->db->table('transaksi t');
 
+        if (!empty($options['where'])) {
+            foreach ($options['where'] as $key => $value) {
+                $builder->where($key, $value);
+            }
+        }
+
         if ($kategori) {
             $builder->where('t.kategori', $kategori);
         }
@@ -104,6 +110,44 @@ class MTransaksi extends Model
         }
 
         return $builder->countAllResults();
+    }
+
+    public function get_saldo_kas($kas_type, $filter_region = null)
+    {
+        $db = \Config\Database::connect();
+        
+        
+        $builder = $db->table($this->table)->select('type, SUM(nominal) as total');
+        $builder->where('status', 'active');
+        
+        if ($kas_type === 'kas_besar') {
+            $builder->like('keterangan', '[KAS_BESAR]', 'after');
+        } else {
+            $builder->groupStart()
+                    ->like('keterangan', '[KAS_KECIL]', 'after')
+                    ->orWhere("keterangan NOT LIKE '[KAS_BESAR]%'")
+                    ->groupEnd();
+        }
+        
+        if ($filter_region && $filter_region !== 'all') {
+            if (is_array($filter_region)) {
+                $builder->whereIn('region_id', $filter_region);
+            } else {
+                $builder->where('region_id', $filter_region);
+            }
+        }
+        
+        $result = $builder->groupBy('type')->get()->getResultArray();
+        
+        $totals = ['income' => 0, 'expense' => 0, 'mutasi_in' => 0, 'mutasi_out' => 0];
+        foreach ($result as $row) {
+            $totals[$row['type']] = (float) $row['total'];
+        }
+        
+        // Saldo = (Pemasukan + Setoran Masuk) - (Pengeluaran + Setoran Keluar)
+        $saldo = ($totals['income'] + $totals['mutasi_in']) - ($totals['expense'] + $totals['mutasi_out']);
+        
+        return $saldo;
     }
 
     public function get_dashboard_stats($filter_region = null)

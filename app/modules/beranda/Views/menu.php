@@ -11,3 +11,24 @@
 </section>
 
 <?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script>
+    /**
+     * Jurus Anti-Menu-Desktop: 
+     * Kalau layar sudah lebar (Desktop), ngapain masih di /menu? 
+     * Langsung tendang ke Beranda.
+     */
+    function handleDesktopRedirect() {
+        if (window.innerWidth >= 1024) { // Breakpoint lg
+            window.location.href = "<?= base_url('beranda') ?>";
+        }
+    }
+
+    // Cek pas halaman dibuka
+    handleDesktopRedirect();
+
+    // Cek juga pas layar di-resize (misal dari landscape ke portrait atau sebaliknya)
+    window.addEventListener('resize', handleDesktopRedirect);
+</script>
+<?= $this->endSection() ?>

@@ -18,7 +18,8 @@
             <?php 
             $files = !empty($file_urls) ? (is_array($file_urls) ? $file_urls : (json_decode($file_urls, true) ?? [])) : [];
             if (!empty($files)): ?>
-                <div class="overflow-x-auto">
+                <!-- DESKTOP LAYOUT (TABLE) -->
+                <div class="hidden md:block overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
                             <tr>
@@ -35,11 +36,11 @@
                             ?>
                                 <tr class="hover:bg-slate-50 transition">
                                     <td class="px-6 py-3.5">
-                                        <div class="flex items-center gap-3">
+                                        <div class="flex items-center gap-3 min-w-0">
                                             <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
                                                 <i class="fas fa-file-alt text-xs"></i>
                                             </div>
-                                            <span class="text-sm font-medium text-slate-800 truncate max-w-xs"><?= esc($file_name) ?></span>
+                                            <span class="text-sm font-medium text-slate-800 truncate block max-w-[150px] sm:max-w-xs" title="<?= esc($file_name) ?>"><?= esc($file_name) ?></span>
                                         </div>
                                     </td>
                                     <td class="px-6 py-3.5 text-center">
@@ -61,6 +62,64 @@
                         </tbody>
                     </table>
                 </div>
+
+                <!-- MOBILE & TABLET LAYOUT (CARDS) -->
+                <div class="block md:hidden p-4 space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <?php foreach ($files as $index => $file_url):
+                            $file_extension = strtolower(pathinfo($file_url, PATHINFO_EXTENSION));
+                            $file_name = basename($file_url);
+                            
+                            // Beautiful colors and icons based on file type
+                            $icon_bg = 'bg-teal-50 text-teal-600 border border-teal-100/50';
+                            $icon_class = 'fa-file-alt';
+                            if ($file_extension === 'pdf') {
+                                $icon_bg = 'bg-red-50 text-red-600 border border-red-100/50';
+                                $icon_class = 'fa-file-pdf';
+                            } elseif (in_array($file_extension, ['jpg', 'jpeg', 'png', 'webp', 'gif'])) {
+                                $icon_bg = 'bg-blue-50 text-blue-600 border border-blue-100/50';
+                                $icon_class = 'fa-file-image';
+                            }
+                        ?>
+                            <div class="relative flex flex-col gap-3 rounded-2xl border border-slate-100 bg-slate-50/50 p-4 transition hover:bg-slate-100 hover:border-slate-200">
+                                <!-- Top Info Header -->
+                                <div class="flex items-center justify-between">
+                                    <span class="inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider <?= $icon_bg ?>">
+                                        <?= strtoupper($file_extension) ?>
+                                    </span>
+                                    
+                                    <!-- Deletion check label -->
+                                    <label class="flex items-center gap-2 cursor-pointer select-none">
+                                        <input class="delete-checkbox h-4.5 w-4.5 rounded border-slate-300 text-red-600 focus:ring-red-500 cursor-pointer transition" 
+                                            type="checkbox" name="delete_files[]" value="<?= $index ?>" id="delete_file_mob_<?= $index ?>">
+                                        <span class="text-xs font-semibold text-slate-500">Pilih</span>
+                                    </label>
+                                </div>
+
+                                <!-- File Details -->
+                                <div class="flex items-start gap-3 min-w-0 mt-1">
+                                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl <?= $icon_bg ?>">
+                                        <i class="fas <?= $icon_class ?> text-lg"></i>
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <p class="text-sm font-semibold text-slate-800 break-all" title="<?= esc($file_name) ?>">
+                                            <?= esc($file_name) ?>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Action Buttons row -->
+                                <div class="mt-2 border-t border-slate-200/60 pt-3 flex items-center justify-end">
+                                    <button type="button" class="previewBtn w-full justify-center inline-flex items-center gap-2 rounded-xl bg-white border border-slate-200/80 px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition active:scale-[0.98] shadow-sm" 
+                                        data-id="<?= $index ?>" data-url="<?= esc($file_url) ?>">
+                                        <i class="fas fa-eye text-teal-600"></i> Lihat Berkas
+                                    </button>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
                 <div class="border-t border-slate-100 bg-slate-50/50 px-6 py-3 flex justify-end">
                     <button type="submit" id="batchDeleteBtn" class="hidden rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 transition">
                         <i class="fas fa-trash-alt mr-1"></i> Hapus File Terpilih

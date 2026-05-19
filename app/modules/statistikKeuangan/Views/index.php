@@ -48,6 +48,15 @@
         </div>
     </div>
 
+    <!-- DROPDOWN NAVIGASI MOBILE -->
+    <div class="w-full lg:hidden">
+        <select onchange="window.location.href=this.value" class="w-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-sm font-bold rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500/20">
+            <option value="<?= site_url('kas') ?>">📊 Arus Kas</option>
+            <option value="<?= site_url('statistikkeuangan') ?>" selected>📈 Statistik Keuangan</option>
+            <option value="<?= site_url('kas/categories') ?>">⚙️ Master Kategori</option>
+        </select>
+    </div>
+
     <!-- Charts  -->
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <!-- CHART 1 -->

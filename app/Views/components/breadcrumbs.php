@@ -41,12 +41,23 @@ if (!function_exists('breadcrumb_label')) {
 $crumbs = [];
 $path = '';
 
+// Segments to skip from breadcrumb display (security: prevent unauthorized access)
+$skipSegments = ['terapis'];
+if (session()->get('role') === 'superadmin') {
+    $skipSegments[] = 'kas';
+}
+
 foreach ($segments as $index => $segment) {
 	if ($segment === '') {
 		continue;
 	}
 
 	$path .= '/' . $segment;
+
+	// Skip certain segments from breadcrumb to prevent unauthorized navigation
+	if (in_array(strtolower($segment), $skipSegments)) {
+		continue;
+	}
 
 	$crumbs[] = [
 		'label' => breadcrumb_label($segment),

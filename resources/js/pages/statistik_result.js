@@ -11,7 +11,7 @@ if (window.$) {
             allowClear: true
         });
         var currentFilter = 'daily';
-        var previousStartDate = window.moment().subtract(6, 'days');
+        var previousStartDate = window.moment().subtract(29, 'days');
         var previousEndDate = window.moment();
 
 
@@ -40,7 +40,7 @@ if (window.$) {
                     "className": "px-6 py-3 align-middle border-b border-slate-50/50",
                     "render": function (data, type) {
                         if (type === 'display' && data) {
-                            return `<span class="text-[13px] font-bold text-slate-700">${data}</span>`;
+                            return `<span class="text-[13px] font-normal text-slate-700">${data}</span>`;
                         }
                         return data;
                     }
@@ -50,7 +50,7 @@ if (window.$) {
                     "className": "px-6 py-3.5 align-middle text-center border-b border-slate-50",
                     "render": function (data, type) {
                         if (type === 'display' && data !== null) {
-                            return `<span class="inline-flex items-center justify-center min-w-10 px-2 py-1 rounded-md bg-slate-100 text-slate-600 text-xs font-bold">${data}</span>`;
+                            return `<span class="inline-flex items-center justify-center min-w-10 px-2 py-1 rounded-md bg-slate-100 text-slate-600 text-xs font-medium">${data}</span>`;
                         }
                         return data;
                     }

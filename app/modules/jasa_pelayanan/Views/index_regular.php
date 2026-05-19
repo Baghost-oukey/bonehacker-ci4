@@ -13,12 +13,22 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
-            <a href="<?= site_url('jasa-pelayanan/settings') ?>"
-                class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
-                <i class="fas fa-cog text-slate-500"></i>
-                Pengaturan Jaspel
-            </a>
+            <?php if (in_array($sess_role, ['superadmin', 'owner'])): ?>
+                <a href="<?= site_url('jasa-pelayanan/settings') ?>"
+                    class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
+                    <i class="fas fa-cog text-slate-500"></i>
+                    Pengaturan Jaspel
+                </a>
+            <?php endif; ?>
         </div>
+    </div>
+
+    <!-- DROPDOWN NAVIGASI MOBILE -->
+    <div class="w-full lg:hidden">
+        <select onchange="window.location.href=this.value" class="w-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-sm font-bold rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500/20">
+            <option value="<?= base_url('jasa-pelayanan/reguler') ?>" selected>🌸 Pasien Reguler</option>
+            <option value="<?= base_url('jasa-pelayanan/kejantanan') ?>">🔥 Pasien Kejantanan</option>
+        </select>
     </div>
 
     <div class="rounded-2xl bg-white shadow-sm border border-slate-200/50 overflow-hidden">

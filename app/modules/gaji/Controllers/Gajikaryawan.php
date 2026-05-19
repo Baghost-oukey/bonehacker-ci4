@@ -18,9 +18,25 @@ class Gajikaryawan extends BaseController
         $this->db = \Config\Database::connect();
     }
 
+    /**
+     * Check if current user is authorized to access admin gaji features
+     */
+    private function checkAdminAccess()
+    {
+        $role = session()->get('role');
+        if ($role === 'user' && !empty(session()->get('terapis_id'))) {
+            // Redirect terapis to beranda
+            return redirect()->to(base_url('beranda'))->with('error', 'Anda tidak memiliki akses ke halaman ini');
+        }
+        return null;
+    }
 
     public function index()
     {
+        // Check authorization
+        $redirect = $this->checkAdminAccess();
+        if ($redirect) return $redirect;
+        
         $region_patient = session()->get('region_patient');
         $sessionRegionId = ($region_patient !== 'all' && !empty($region_patient))
             ? (is_array($region_patient) ? $region_patient[0] : $region_patient)
@@ -44,6 +60,10 @@ class Gajikaryawan extends BaseController
 
     public function saveSetting()
     {
+        // Check authorization
+        $redirect = $this->checkAdminAccess();
+        if ($redirect) return $redirect;
+        
         $terapisId   = $this->request->getPost('terapis_id');
         $tipeGaji    = $this->request->getPost('tipe_gaji');
         $nominalGaji = preg_replace('/[^0-9]/', '', $this->request->getPost('nominal_gaji'));
@@ -74,12 +94,17 @@ class Gajikaryawan extends BaseController
 
     public function detailEstimasi($terapisId)
     {
+        // Check authorization
+        $redirect = $this->checkAdminAccess();
+        if ($redirect) return $redirect;
+        
         $detail = $this->Mriwayatgaji->getDetailPerhitungan($terapisId);
         if (!empty($detail['terapis'])) {
             return $this->response->setJSON([
-                'status'   => 'success',
-                'data'     => array_merge($detail['terapis'], ['komponen' => $detail['komponen']]),
-                'csrfHash' => csrf_hash()
+                'status'    => 'success',
+                'data'      => $detail['terapis'],
+                'kalkulasi' => $detail['komponen'],
+                'csrfHash'  => csrf_hash()
             ]);
         }
         return $this->response->setJSON(['status' => 'error', 'message' => 'Data tidak ditemukan']);
@@ -88,6 +113,10 @@ class Gajikaryawan extends BaseController
 
     public function prosesBayar()
     {
+        // Check authorization
+        $redirect = $this->checkAdminAccess();
+        if ($redirect) return $redirect;
+        
         $terapisId = (int)$this->request->getPost('terapis_id');
 
         if (empty($terapisId) || $terapisId <= 0) {
@@ -150,6 +179,10 @@ class Gajikaryawan extends BaseController
     }
     public function fetchEstimasi()
     {
+        // Check authorization
+        $redirect = $this->checkAdminAccess();
+        if ($redirect) return $redirect;
+        
         $region_patient = session()->get('region_patient');
         $sessionRegionId = ($region_patient !== 'all' && !empty($region_patient))
             ? (is_array($region_patient) ? $region_patient[0] : $region_patient)
@@ -165,6 +198,10 @@ class Gajikaryawan extends BaseController
     }
     public function export()
     {
+        // Check authorization
+        $redirect = $this->checkAdminAccess();
+        if ($redirect) return $redirect;
+        
         $role = session()->get('role');
         if (!in_array($role, ['superadmin', 'owner', 'admin'])) {
             return redirect()->to('/gaji')->with('error', 'Unauthorized access');
@@ -272,8 +309,52 @@ class Gajikaryawan extends BaseController
             }
         }
 
+        // Fallback cerdas untuk Admin: Cocokkan terapis berdasarkan nama (realname) atau username jika belum ada link terapis_id
+        if (!$terapis_id && session()->get('role') === 'admin') {
+            $realname = session()->get('realname');
+            $username = session()->get('username');
+            
+            $terapis = $this->db->table('terapis')->select('id')
+                ->groupStart()
+                    ->where('nama', $realname)
+                    ->orWhere('nama', $username)
+                ->groupEnd()
+                ->get()->getRow();
+                
+            if (!$terapis) {
+                $builder = $this->db->table('terapis')->select('id');
+                $hasCond = false;
+                if (!empty($realname) && strlen($realname) >= 3) {
+                    $builder->like('nama', $realname);
+                    $hasCond = true;
+                }
+                if (!empty($username) && strlen($username) >= 3) {
+                    if ($hasCond) {
+                        $builder->orLike('nama', $username);
+                    } else {
+                        $builder->like('nama', $username);
+                        $hasCond = true;
+                    }
+                }
+                if ($hasCond) {
+                    $terapis = $builder->get()->getRow();
+                }
+            }
+            
+            if ($terapis) {
+                $terapis_id = $terapis->id;
+                session()->set('terapis_id_int', $terapis_id);
+            }
+        }
+
         if (!$terapis_id) {
-            return redirect()->to(base_url('beranda'))->with('error', 'Akun Anda tidak terhubung dengan data Terapis.');
+            $data = [
+                'title'       => 'Gaji Saya',
+                'is_unlinked' => true,
+                'role'        => session()->get('role'),
+                'realname'    => session()->get('realname'),
+            ];
+            return view('App\modules\gaji\Views\monitor', $data);
         }
 
         $detail = $this->Mriwayatgaji->getDetailPerhitungan($terapis_id);
