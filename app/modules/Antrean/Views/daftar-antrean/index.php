@@ -132,230 +132,349 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
     </style>
 </head>
 
-<body class="flex flex-col h-screen overflow-hidden p-4 md:p-6 gap-6">
+<body class="min-h-screen">
 
-    <!-- HEADER -->
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center px-4">
-        <div>
-            <h1 class="text-3xl md:text-4xl font-black tracking-tight text-current" style="color: var(--header-text)">
-                MONITOR ANTRIAN
-            </h1>
-            <p class="text-sm md:text-base font-semibold mt-1" style="color: var(--text-muted)">
-                Bone Hacker - <?= esc($regionName ?? 'Semua Wilayah') ?>
+    <!-- ==================== DESKTOP TV VIEW ==================== -->
+    <div class="hidden lg:flex flex-col h-screen overflow-hidden p-4 md:p-6 gap-6 w-full">
+        <!-- HEADER -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center px-4">
+            <div>
+                <h1 class="text-3xl md:text-4xl font-black tracking-tight text-current" style="color: var(--header-text)">
+                    MONITOR ANTRIAN
+                </h1>
+                <p class="text-sm md:text-base font-semibold mt-1" style="color: var(--text-muted)">
+                    Bone Hacker - <?= esc($regionName ?? 'Semua Wilayah') ?>
+                </p>
+            </div>
+
+            <div class="text-right flex items-center gap-8 mt-4 md:mt-0">
+                <div class="text-right">
+                    <div id="liveTime" class="text-5xl md:text-6xl font-black text-blue-500 tracking-tighter font-mono"></div>
+                    <p id="liveDate" class="text-xs md:text-sm font-bold uppercase tracking-widest mt-1" style="color: var(--text-muted)"></p>
+                </div>
+                
+                <button id="themeToggle" class="theme-toggle-btn">
+                    <i class="fas fa-sun" id="themeIcon"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- STATS PANEL -->
+        <div class="white-card rounded-3xl p-6 flex flex-row items-center justify-around divide-x divide-slate-500/20">
+            <!-- Menunggu -->
+            <div class="flex flex-col items-center justify-center flex-1">
+                <span class="text-6xl md:text-7xl font-black text-orange-500"><?= count($waitingList) ?></span>
+                <span class="text-xs md:text-sm font-bold uppercase tracking-[0.2em] mt-2" style="color: var(--text-muted)">Menunggu</span>
+            </div>
+
+            <!-- Terapi -->
+            <div class="flex flex-col items-center justify-center flex-1">
+                <span class="text-6xl md:text-7xl font-black text-blue-500"><?= count($processingList) ?></span>
+                <span class="text-xs md:text-sm font-bold uppercase tracking-[0.2em] mt-2" style="color: var(--text-muted)">Terapi</span>
+            </div>
+
+            <!-- Selesai -->
+            <div class="flex flex-col items-center justify-center flex-1">
+                <span class="text-6xl md:text-7xl font-black text-emerald-500"><?= count($finishedList) ?></span>
+                <span class="text-xs md:text-sm font-bold uppercase tracking-[0.2em] mt-2" style="color: var(--text-muted)">Selesai</span>
+            </div>
+        </div>
+
+        <!-- COLUMN CONTAINER WITH RELATIVE RED OVERLAY -->
+        <div class="relative flex-1 min-h-0">
+            <!-- 3 COLUMNS -->
+            <div id="queue-columns" class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+                <!-- KOLOM MENUNGGU -->
+                <div class="column-orange rounded-3xl overflow-hidden flex flex-col shadow-sm">
+                    <div class="py-5 text-center border-b border-white/10">
+                        <h2 class="text-lg font-black header-orange uppercase tracking-[0.2em]">Menunggu</h2>
+                    </div>
+                    <div class="flex-1 overflow-y-hidden p-5 space-y-4 auto-scroll-list no-scrollbar" data-count="<?= count($waitingList) ?>">
+                        <?php if (!empty($waitingList)): ?>
+                            <?php foreach ($waitingList as $i => $q): ?>
+                                <div class="list-card-white rounded-2xl p-4 flex items-center gap-5 <?= ($i === 0) ? 'active-waiting' : '' ?>">
+                                    <div class="h-14 w-14 shrink-0 flex items-center justify-center rounded-xl font-black text-2xl queue-num-box">
+                                        <?= esc($q->queue_number ?? '-') ?>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-xl font-black uppercase tracking-tight truncate"><?= esc($q->patient_name ?? '-') ?></p>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-sm font-black opacity-60">#<?= $i + 1 ?></span>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div class="h-full flex items-center justify-center">
+                                <p class="text-orange-500/20 font-black text-4xl tracking-widest uppercase">KOSONG</p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- KOLOM SEDANG TERAPI -->
+                <div class="column-blue rounded-3xl overflow-hidden flex flex-col shadow-sm">
+                    <div class="py-5 text-center border-b border-white/10">
+                        <h2 class="text-lg font-black header-blue uppercase tracking-[0.2em]">Sedang Terapi</h2>
+                    </div>
+                    <div class="flex-1 overflow-y-hidden p-5 space-y-4 auto-scroll-list no-scrollbar" data-count="<?= count($processingList) ?>">
+                        <?php if (!empty($processingList)): ?>
+                            <?php foreach ($processingList as $i => $q): ?>
+                                <div class="list-card-white rounded-2xl p-4 flex items-center gap-5 relative overflow-hidden">
+                                    <div class="absolute top-0 left-0 right-0 h-1 bg-blue-500/20">
+                                        <div class="h-full bg-blue-500 w-1/4 animate-[translateX_3s_infinite]"></div>
+                                    </div>
+                                    <div class="h-14 w-14 shrink-0 flex items-center justify-center rounded-xl font-black text-2xl queue-num-box">
+                                        <?= esc($q->queue_number ?? '-') ?>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-xl font-black uppercase tracking-tight truncate"><?= esc($q->patient_name ?? '-') ?></p>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div class="h-full flex items-center justify-center">
+                                <p class="text-blue-500/20 font-black text-4xl tracking-widest uppercase">KOSONG</p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- KOLOM SELESAI -->
+                <div class="column-green rounded-3xl overflow-hidden flex flex-col shadow-sm">
+                    <div class="py-5 text-center border-b border-white/10">
+                        <h2 class="text-lg font-black header-green uppercase tracking-[0.2em]">Selesai</h2>
+                    </div>
+                    <div class="flex-1 overflow-y-hidden p-5 space-y-4 auto-scroll-list no-scrollbar" data-count="<?= count($finishedList) ?>">
+                        <?php if (!empty($finishedList)): ?>
+                            <?php foreach ($finishedList as $i => $q): ?>
+                                <div class="list-card-white rounded-2xl p-4 flex items-center gap-5 opacity-80">
+                                    <div class="h-14 w-14 shrink-0 flex items-center justify-center rounded-xl font-black text-2xl queue-num-box">
+                                        <?= esc($q->queue_number ?? '-') ?>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-xl font-black uppercase tracking-tight truncate"><?= esc($q->patient_name ?? '-') ?></p>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div class="h-full flex items-center justify-center">
+                                <p class="text-emerald-500/20 font-black text-4xl tracking-widest uppercase">KOSONG</p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RED OVERLAY ON BREAK (Pita Merah Mewah di Tengah Kolom) -->
+            <?php if (isset($breakData) && !empty($breakData)): ?>
+                <div id="breakOverlay" style="position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); z-index: 50; width: 100%; background: linear-gradient(135deg, rgba(220, 53, 69, 0.98) 0%, rgba(190, 24, 38, 0.98) 50%, rgba(220, 53, 69, 0.98) 100%); backdrop-filter: blur(16px); color: #ffffff; padding: 28px 0; box-shadow: 0 25px 60px rgba(220, 38, 38, 0.45), inset 0 2px 0 rgba(255,255,255,0.25), inset 0 -2px 0 rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; transition: all 0.5s ease-in-out;">
+                    
+                    <!-- Elegant Diagonal Warning Ribbon Accent (Top) -->
+                    <div style="position: absolute; top: 0; left: 0; right: 0; height: 5px; background: repeating-linear-gradient(-45deg, #991b1b, #991b1b 12px, #f43f5e 12px, #f43f5e 24px);"></div>
+                    
+                    <!-- Elegant Diagonal Warning Ribbon Accent (Bottom) -->
+                    <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 5px; background: repeating-linear-gradient(-45deg, #991b1b, #991b1b 12px, #f43f5e 12px, #f43f5e 24px);"></div>
+
+                    <!-- Glare Shine Effect overlay -->
+                    <div style="position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0) 100%); pointer-events: none;"></div>
+
+                    <div class="flex flex-col md:flex-row items-center justify-center gap-8 px-8 w-full max-w-7xl relative">
+                        <!-- Live Pulse Badge -->
+                        <div style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); background: #ef4444; border: 1.5px solid rgba(255,255,255,0.3); padding: 4px 16px; border-radius: 9999px; display: flex; align-items: center; gap: 8px; box-shadow: 0 8px 20px rgba(239,68,68,0.4);">
+                            <span style="display: inline-block; width: 8px; height: 8px; background: #ffffff; border-radius: 50%; animation: pulseIndicator 1.5s infinite;"></span>
+                            <span style="color: #ffffff; font-size: 10px; font-weight: 800; tracking-wider; text-transform: uppercase; letter-spacing: 0.15em; font-family: sans-serif;">ISTIRAHAT SEDANG BERLANGSUNG</span>
+                        </div>
+                        
+                        <div class="flex items-center gap-5">
+                            <!-- Neon Glowing Coffee Box -->
+                            <div class="h-14 w-14 flex items-center justify-center rounded-2xl shrink-0 animate-bounce" style="background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.35); box-shadow: 0 8px 24px rgba(255,255,255,0.2), inset 0 2px 4px rgba(255,255,255,0.2);">
+                                <i class="fas fa-coffee text-white text-2xl" style="filter: drop-shadow(0 2px 8px rgba(255,255,255,0.4));"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-3xl md:text-4xl font-extrabold uppercase tracking-tight text-white leading-none" style="text-shadow: 0 2px 10px rgba(0,0,0,0.2); font-family: sans-serif;">SEDANG ISTIRAHAT</h2>
+                                <p class="text-red-100 font-bold uppercase tracking-wider text-[10px] mt-1.5" style="color: rgba(255,255,255,0.85); letter-spacing: 0.05em; font-family: sans-serif;">Layanan antrean dijeda sejenak untuk istirahat terapis</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Vertical Divider in desktop -->
+                        <div class="hidden md:block h-12 w-px" style="background: rgba(255,255,255,0.25);"></div>
+                        
+                        <!-- Ultra Glass Timer Bubble -->
+                        <div class="px-8 py-3 rounded-2xl shrink-0 flex items-center gap-4" style="background: rgba(0, 0, 0, 0.25); border: 1.5px solid rgba(255,255,255,0.15); box-shadow: inset 0 4px 12px rgba(0,0,0,0.15); backdrop-filter: blur(12px);">
+                            <div class="flex flex-col text-right shrink-0">
+                                <span style="font-size: 8px; font-weight: 800; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.1em; line-height: 1; font-family: sans-serif;">KEMBALI DALAM</span>
+                                <span style="font-size: 9px; font-weight: 800; color: #ef4444; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 3px; font-family: sans-serif;">COUNTDOWN</span>
+                            </div>
+                            <span id="breakTimer" class="text-3xl md:text-4xl font-black text-white font-mono tracking-tighter" style="letter-spacing: -0.02em; text-shadow: 0 0 10px rgba(255,255,255,0.3);">--:--:--</span>
+                            <script>
+                                (function() {
+                                    const endTimeStr = "<?= $breakData['end_time'] ?? '' ?>";
+                                    if (!endTimeStr) return;
+                                    const endTime = new Date(endTimeStr.replace(/-/g, '/')).getTime();
+                                    const timerEl = document.getElementById('breakTimer');
+
+                                    function updateTimer() {
+                                        const now = new Date().getTime();
+                                        const distance = endTime - now;
+
+                                        if (distance <= 0) {
+                                            timerEl.innerHTML = "00:00:00";
+                                            return;
+                                        }
+
+                                        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                                        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                                        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                                        timerEl.innerHTML =
+                                            (hours > 0 ? (hours < 10 ? "0" + hours + ":" : hours + ":") : "") +
+                                            (minutes < 10 ? "0" + minutes : minutes) + ":" +
+                                            (seconds < 10 ? "0" + seconds : seconds);
+                                    }
+
+                                    updateTimer();
+                                    setInterval(updateTimer, 1000);
+                                })();
+                            </script>
+                        </div>
+                    </div>
+                </div>
+                
+                <style>
+                    @keyframes pulseIndicator {
+                        0% { transform: scale(0.85); opacity: 0.6; box-shadow: 0 0 0 0 rgba(255,255,255,0.4); }
+                        50% { transform: scale(1.15); opacity: 1; box-shadow: 0 0 8px 4px rgba(255,255,255,0.6); }
+                        100% { transform: scale(0.85); opacity: 0.6; box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+                    }
+                </style>
+            <?php endif; ?>
+        </div>
+
+        <!-- MARQUEE BOTTOM BAR -->
+        <div class="white-card py-4 px-8 rounded-2xl mt-auto flex items-center overflow-hidden">
+            <marquee behavior="scroll" direction="left" scrollamount="5" class="text-base font-bold w-full whitespace-nowrap">
+                <span class="text-blue-500 font-black">PURWOKERTO:</span> <span style="color: var(--text-muted)">Jl. Dr. Gumbreg, Kel. Mersi, Kec. Purwokerto Timur</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <span class="text-blue-500 font-black">PURBALINGGA:</span> <span style="color: var(--text-muted)">RT 3/RW 2, Dusun Parung Bongas, Desa Kradenan</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <span class="text-blue-500 font-black">PEMALANG:</span> <span style="color: var(--text-muted)">Jl. Banjarsari, Bojongnangka</span>
+            </marquee>
+        </div>
+    </div>
+
+
+    <!-- ==================== MOBILE PATIENT VIEW ==================== -->
+    <div class="block lg:hidden min-h-screen p-4 space-y-6 max-w-2xl mx-auto pb-12 w-full text-slate-800">
+        <!-- Title Header -->
+        <div class="text-center space-y-2 py-4">
+            <h1 class="text-3xl font-extrabold tracking-tight text-slate-800">Antrian Pasien</h1>
+            <p class="text-xs font-black uppercase tracking-widest text-slate-400">
+                Bone Hacker Live Status - Cabang <?= esc($regionName ?? 'Semua Cabang') ?>
             </p>
         </div>
 
-        <div class="text-right flex items-center gap-8 mt-4 md:mt-0">
-            <div class="text-right">
-                <div id="liveTime" class="text-5xl md:text-6xl font-black text-blue-500 tracking-tighter font-mono"></div>
-                <p id="liveDate" class="text-xs md:text-sm font-bold uppercase tracking-widest mt-1" style="color: var(--text-muted)"></p>
-            </div>
-            
-            <button id="themeToggle" class="theme-toggle-btn">
-                <i class="fas fa-sun" id="themeIcon"></i>
-            </button>
-        </div>
-    </div>
-
-    <!-- STATS PANEL -->
-    <div class="white-card rounded-3xl p-6 flex flex-row items-center justify-around divide-x divide-slate-500/20">
-        <!-- Menunggu -->
-        <div class="flex flex-col items-center justify-center flex-1">
-            <span class="text-6xl md:text-7xl font-black text-orange-500"><?= count($waitingList) ?></span>
-            <span class="text-xs md:text-sm font-bold uppercase tracking-[0.2em] mt-2" style="color: var(--text-muted)">Menunggu</span>
-        </div>
-
-        <!-- Terapi -->
-        <div class="flex flex-col items-center justify-center flex-1">
-            <span class="text-6xl md:text-7xl font-black text-blue-500"><?= count($processingList) ?></span>
-            <span class="text-xs md:text-sm font-bold uppercase tracking-[0.2em] mt-2" style="color: var(--text-muted)">Terapi</span>
-        </div>
-
-        <!-- Selesai -->
-        <div class="flex flex-col items-center justify-center flex-1">
-            <span class="text-6xl md:text-7xl font-black text-emerald-500"><?= count($finishedList) ?></span>
-            <span class="text-xs md:text-sm font-bold uppercase tracking-[0.2em] mt-2" style="color: var(--text-muted)">Selesai</span>
-        </div>
-    </div>
-
-    <!-- COLUMN CONTAINER WITH RELATIVE RED OVERLAY -->
-    <div class="relative flex-1 min-h-0">
-        <!-- 3 COLUMNS -->
-        <div id="queue-columns" class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
-            <!-- KOLOM MENUNGGU -->
-            <div class="column-orange rounded-3xl overflow-hidden flex flex-col shadow-sm">
-                <div class="py-5 text-center border-b border-white/10">
-                    <h2 class="text-lg font-black header-orange uppercase tracking-[0.2em]">Menunggu</h2>
-                </div>
-                <div class="flex-1 overflow-y-hidden p-5 space-y-4 auto-scroll-list no-scrollbar" data-count="<?= count($waitingList) ?>">
-                    <?php if (!empty($waitingList)): ?>
-                        <?php foreach ($waitingList as $i => $q): ?>
-                            <div class="list-card-white rounded-2xl p-4 flex items-center gap-5 <?= ($i === 0) ? 'active-waiting' : '' ?>">
-                                <div class="h-14 w-14 shrink-0 flex items-center justify-center rounded-xl font-black text-2xl queue-num-box">
-                                    <?= esc($q->queue_number ?? '-') ?>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-xl font-black uppercase tracking-tight truncate"><?= esc($q->patient_name ?? '-') ?></p>
-                                </div>
-                                <div class="text-right">
-                                    <span class="text-sm font-black opacity-60">#<?= $i + 1 ?></span>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <div class="h-full flex items-center justify-center">
-                            <p class="text-orange-500/20 font-black text-4xl tracking-widest uppercase">KOSONG</p>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-            <!-- KOLOM SEDANG TERAPI -->
-            <div class="column-blue rounded-3xl overflow-hidden flex flex-col shadow-sm">
-                <div class="py-5 text-center border-b border-white/10">
-                    <h2 class="text-lg font-black header-blue uppercase tracking-[0.2em]">Sedang Terapi</h2>
-                </div>
-                <div class="flex-1 overflow-y-hidden p-5 space-y-4 auto-scroll-list no-scrollbar" data-count="<?= count($processingList) ?>">
-                    <?php if (!empty($processingList)): ?>
-                        <?php foreach ($processingList as $i => $q): ?>
-                            <div class="list-card-white rounded-2xl p-4 flex items-center gap-5 relative overflow-hidden">
-                                <div class="absolute top-0 left-0 right-0 h-1 bg-blue-500/20">
-                                    <div class="h-full bg-blue-500 w-1/4 animate-[translateX_3s_infinite]"></div>
-                                </div>
-                                <div class="h-14 w-14 shrink-0 flex items-center justify-center rounded-xl font-black text-2xl queue-num-box">
-                                    <?= esc($q->queue_number ?? '-') ?>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-xl font-black uppercase tracking-tight truncate"><?= esc($q->patient_name ?? '-') ?></p>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <div class="h-full flex items-center justify-center">
-                            <p class="text-blue-500/20 font-black text-4xl tracking-widest uppercase">KOSONG</p>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-            <!-- KOLOM SELESAI -->
-            <div class="column-green rounded-3xl overflow-hidden flex flex-col shadow-sm">
-                <div class="py-5 text-center border-b border-white/10">
-                    <h2 class="text-lg font-black header-green uppercase tracking-[0.2em]">Selesai</h2>
-                </div>
-                <div class="flex-1 overflow-y-hidden p-5 space-y-4 auto-scroll-list no-scrollbar" data-count="<?= count($finishedList) ?>">
-                    <?php if (!empty($finishedList)): ?>
-                        <?php foreach ($finishedList as $i => $q): ?>
-                            <div class="list-card-white rounded-2xl p-4 flex items-center gap-5 opacity-80">
-                                <div class="h-14 w-14 shrink-0 flex items-center justify-center rounded-xl font-black text-2xl queue-num-box">
-                                    <?= esc($q->queue_number ?? '-') ?>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-xl font-black uppercase tracking-tight truncate"><?= esc($q->patient_name ?? '-') ?></p>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <div class="h-full flex items-center justify-center">
-                            <p class="text-emerald-500/20 font-black text-4xl tracking-widest uppercase">KOSONG</p>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-
-        <!-- RED OVERLAY ON BREAK (Pita Merah Mewah di Tengah Kolom) -->
+        <!-- Istirahat Warning Banner if Active -->
         <?php if (isset($breakData) && !empty($breakData)): ?>
-            <div id="breakOverlay" style="position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); z-index: 50; width: 100%; background: linear-gradient(135deg, rgba(220, 53, 69, 0.98) 0%, rgba(190, 24, 38, 0.98) 50%, rgba(220, 53, 69, 0.98) 100%); backdrop-filter: blur(16px); color: #ffffff; padding: 28px 0; box-shadow: 0 25px 60px rgba(220, 38, 38, 0.45), inset 0 2px 0 rgba(255,255,255,0.25), inset 0 -2px 0 rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; transition: all 0.5s ease-in-out;">
-                
-                <!-- Elegant Diagonal Warning Ribbon Accent (Top) -->
-                <div style="position: absolute; top: 0; left: 0; right: 0; height: 5px; background: repeating-linear-gradient(-45deg, #991b1b, #991b1b 12px, #f43f5e 12px, #f43f5e 24px);"></div>
-                
-                <!-- Elegant Diagonal Warning Ribbon Accent (Bottom) -->
-                <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 5px; background: repeating-linear-gradient(-45deg, #991b1b, #991b1b 12px, #f43f5e 12px, #f43f5e 24px);"></div>
-
-                <!-- Glare Shine Effect overlay -->
-                <div style="position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0) 100%); pointer-events: none;"></div>
-
-                <div class="flex flex-col md:flex-row items-center justify-center gap-8 px-8 w-full max-w-7xl relative">
-                    <!-- Live Pulse Badge -->
-                    <div style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); background: #ef4444; border: 1.5px solid rgba(255,255,255,0.3); padding: 4px 16px; border-radius: 9999px; display: flex; align-items: center; gap: 8px; box-shadow: 0 8px 20px rgba(239,68,68,0.4);">
-                        <span style="display: inline-block; width: 8px; height: 8px; background: #ffffff; border-radius: 50%; animation: pulseIndicator 1.5s infinite;"></span>
-                        <span style="color: #ffffff; font-size: 10px; font-weight: 800; tracking-wider; text-transform: uppercase; letter-spacing: 0.15em; font-family: sans-serif;">ISTIRAHAT SEDANG BERLANGSUNG</span>
+            <div class="bg-gradient-to-r from-red-500 to-rose-600 rounded-3xl p-5 text-white shadow-md border border-red-400/20 relative overflow-hidden">
+                <div class="flex items-center gap-4">
+                    <div class="h-11 w-11 flex items-center justify-center bg-white/10 border border-white/20 rounded-2xl shrink-0 animate-bounce">
+                        <i class="fas fa-coffee text-white text-lg"></i>
                     </div>
-                    
-                    <div class="flex items-center gap-5">
-                        <!-- Neon Glowing Coffee Box -->
-                        <div class="h-14 w-14 flex items-center justify-center rounded-2xl shrink-0 animate-bounce" style="background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.35); box-shadow: 0 8px 24px rgba(255,255,255,0.2), inset 0 2px 4px rgba(255,255,255,0.2);">
-                            <i class="fas fa-coffee text-white text-2xl" style="filter: drop-shadow(0 2px 8px rgba(255,255,255,0.4));"></i>
-                        </div>
-                        <div>
-                            <h2 class="text-3xl md:text-4xl font-extrabold uppercase tracking-tight text-white leading-none" style="text-shadow: 0 2px 10px rgba(0,0,0,0.2); font-family: sans-serif;">SEDANG ISTIRAHAT</h2>
-                            <p class="text-red-100 font-bold uppercase tracking-wider text-[10px] mt-1.5" style="color: rgba(255,255,255,0.85); letter-spacing: 0.05em; font-family: sans-serif;">Layanan antrean dijeda sejenak untuk istirahat terapis</p>
-                        </div>
-                    </div>
-                    
-                    <!-- Vertical Divider in desktop -->
-                    <div class="hidden md:block h-12 w-px" style="background: rgba(255,255,255,0.25);"></div>
-                    
-                    <!-- Ultra Glass Timer Bubble -->
-                    <div class="px-8 py-3 rounded-2xl shrink-0 flex items-center gap-4" style="background: rgba(0, 0, 0, 0.25); border: 1.5px solid rgba(255,255,255,0.15); box-shadow: inset 0 4px 12px rgba(0,0,0,0.15); backdrop-filter: blur(12px);">
-                        <div class="flex flex-col text-right shrink-0">
-                            <span style="font-size: 8px; font-weight: 800; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.1em; line-height: 1; font-family: sans-serif;">KEMBALI DALAM</span>
-                            <span style="font-size: 9px; font-weight: 800; color: #ef4444; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 3px; font-family: sans-serif;">COUNTDOWN</span>
-                        </div>
-                        <span id="breakTimer" class="text-3xl md:text-4xl font-black text-white font-mono tracking-tighter" style="letter-spacing: -0.02em; text-shadow: 0 0 10px rgba(255,255,255,0.3);">--:--:--</span>
-                        <script>
-                            (function() {
-                                const endTimeStr = "<?= $breakData['end_time'] ?>";
-                                const endTime = new Date(endTimeStr.replace(/-/g, '/')).getTime();
-                                const timerEl = document.getElementById('breakTimer');
-
-                                function updateTimer() {
-                                    const now = new Date().getTime();
-                                    const distance = endTime - now;
-
-                                    if (distance <= 0) {
-                                        timerEl.innerHTML = "00:00:00";
-                                        return;
-                                    }
-
-                                    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                                    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                                    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-                                    timerEl.innerHTML =
-                                        (hours > 0 ? (hours < 10 ? "0" + hours + ":" : hours + ":") : "") +
-                                        (minutes < 10 ? "0" + minutes : minutes) + ":" +
-                                        (seconds < 10 ? "0" + seconds : seconds);
-                                }
-
-                                updateTimer();
-                                setInterval(updateTimer, 1000);
-                            })();
-                        </script>
+                    <div>
+                        <h4 class="font-extrabold text-sm uppercase tracking-wider">Sedang Istirahat</h4>
+                        <p class="text-[10px] text-red-100 font-semibold mt-1">Layanan antrean dijeda sejenak untuk istirahat terapis.</p>
                     </div>
                 </div>
             </div>
-            
-            <style>
-                @keyframes pulseIndicator {
-                    0% { transform: scale(0.85); opacity: 0.6; box-shadow: 0 0 0 0 rgba(255,255,255,0.4); }
-                    50% { transform: scale(1.15); opacity: 1; box-shadow: 0 0 8px 4px rgba(255,255,255,0.6); }
-                    100% { transform: scale(0.85); opacity: 0.6; box-shadow: 0 0 0 0 rgba(255,255,255,0); }
-                }
-            </style>
         <?php endif; ?>
+
+        <!-- Card 1: Informasi Penting -->
+        <div class="bg-white rounded-3xl p-5 border border-slate-200/50 shadow-sm space-y-3">
+            <h3 class="text-xs font-black text-slate-800 uppercase tracking-wider">Informasi Penting</h3>
+            <ul class="list-disc pl-5 text-[11px] md:text-xs text-slate-500 space-y-2 font-bold leading-relaxed">
+                <li>Periksa nomor urut dan status pendaftaran pasien terbaru.</li>
+                <li>Rata-rata durasi terapi untuk setiap pasien adalah 15-20 menit, tergantung pada jenis keluhan dan tingkat keparahan.</li>
+                <li>Pendaftaran dilakukan langsung di lokasi terapi. Urutan terapi mengikuti urutan kedatangan.</li>
+            </ul>
+        </div>
+
+        <!-- Card 2: Ringkasan Antrian -->
+        <div class="bg-white rounded-3xl p-5 border border-slate-200/50 shadow-sm space-y-4">
+            <h3 class="text-xs font-black text-slate-800 uppercase tracking-wider">Ringkasan Antrian</h3>
+            <div class="flex flex-row gap-4 text-center">
+                <!-- Menunggu -->
+                <div class="flex-1 border-t-4 border-orange-500 pt-3 min-w-0">
+                    <span class="text-2xl font-black text-orange-500"><?= count($waitingList) ?></span>
+                    <p class="text-[10px] font-bold text-slate-500 mt-1">Menunggu</p>
+                </div>
+                <!-- Terapi -->
+                <div class="flex-1 border-t-4 border-blue-500 pt-3 min-w-0">
+                    <span class="text-2xl font-black text-blue-500"><?= count($processingList) ?></span>
+                    <p class="text-[10px] font-bold text-slate-500 mt-1">Terapi</p>
+                </div>
+                <!-- Selesai -->
+                <div class="flex-1 border-t-4 border-emerald-500 pt-3 min-w-0">
+                    <span class="text-2xl font-black text-emerald-500"><?= count($finishedList) ?></span>
+                    <p class="text-[10px] font-bold text-slate-500 mt-1">Selesai</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 3: Patient Table -->
+        <div class="bg-white rounded-3xl border border-slate-200/50 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50/50 border-b border-slate-100">
+                            <th class="px-5 py-4 text-[10px] font-black uppercase text-slate-400 tracking-wider w-[15%]">No.</th>
+                            <th class="px-5 py-4 text-[10px] font-black uppercase text-slate-400 tracking-wider w-[45%]">Nama Pasien</th>
+                            <th class="px-5 py-4 text-[10px] font-black uppercase text-slate-400 tracking-wider w-[20%]">Status</th>
+                            <th class="px-5 py-4 text-[10px] font-black uppercase text-slate-400 tracking-wider w-[20%] text-center">Posisi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 font-bold text-slate-700 text-xs">
+                        <?php 
+                        $waitingPosition = 0;
+                        if (!empty($patient_queues)):
+                            foreach ($patient_queues as $p): 
+                                $statusText = '';
+                                $statusClass = '';
+                                $posisi = '-';
+
+                                if ($p->finish_at !== null) {
+                                    $statusText = 'Selesai';
+                                    $statusClass = 'text-emerald-500';
+                                } else if ($p->process_at !== null) {
+                                    $statusText = 'Terapi';
+                                    $statusClass = 'text-blue-500';
+                                } else {
+                                    $statusText = 'Menunggu';
+                                    $statusClass = 'text-amber-500';
+                                    $waitingPosition++;
+                                    $posisi = $waitingPosition;
+                                }
+                        ?>
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="px-5 py-4 text-slate-800 font-black"><?= esc($p->queue_number) ?></td>
+                                <td class="px-5 py-4 text-slate-800 font-black uppercase truncate max-w-[120px]"><?= esc($p->patient_name) ?></td>
+                                <td class="px-5 py-4 font-black <?= $statusClass ?>"><?= $statusText ?></td>
+                                <td class="px-5 py-4 text-slate-500 font-black text-center"><?= $posisi ?></td>
+                            </tr>
+                        <?php endforeach; else: ?>
+                            <tr>
+                                <td colspan="4" class="text-center py-10 text-slate-400 font-black uppercase tracking-wider text-[10px]">Tidak ada antrean hari ini</td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Footer Timestamp -->
+        <div class="text-center text-[10px] text-slate-400 font-black uppercase tracking-wider py-4">
+            Terakhir diperbarui: <?= date('H.i') ?> WIB
+        </div>
     </div>
 
-    <!-- MARQUEE BOTTOM BAR -->
-    <div class="white-card py-4 px-8 rounded-2xl mt-auto flex items-center overflow-hidden">
-        <marquee behavior="scroll" direction="left" scrollamount="5" class="text-base font-bold w-full whitespace-nowrap">
-            <span class="text-blue-500 font-black">PURWOKERTO:</span> <span style="color: var(--text-muted)">Jl. Dr. Gumbreg, Kel. Mersi, Kec. Purwokerto Timur</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            <span class="text-blue-500 font-black">PURBALINGGA:</span> <span style="color: var(--text-muted)">RT 3/RW 2, Dusun Parung Bongas, Desa Kradenan</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            <span class="text-blue-500 font-black">PEMALANG:</span> <span style="color: var(--text-muted)">Jl. Banjarsari, Bojongnangka</span>
-        </marquee>
-    </div>
 
     <script>
         // --- THEME TOGGLE LOGIC ---
@@ -381,10 +500,12 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
             setTheme(true);
         }
 
-        themeToggle.addEventListener('click', () => {
-            const isDark = body.classList.contains('dark-mode');
-            setTheme(!isDark);
-        });
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                const isDark = body.classList.contains('dark-mode');
+                setTheme(!isDark);
+            });
+        }
 
         // --- LIVE CLOCK ---
         function updateLiveClock() {

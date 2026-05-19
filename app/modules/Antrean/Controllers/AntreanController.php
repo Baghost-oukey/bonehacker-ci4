@@ -47,6 +47,153 @@ class AntreanController extends BaseController
         return view('App\Modules\Antrean\Views\index', $data);
     }
 
+    public function monitor()
+    {
+        $db = \Config\Database::connect();
+        $role = session()->get('role');
+        $region_session = session()->get('region_patient');
+        $active_region = session()->get('active_region');
+
+        // Helper untuk mengekstrak satu region ID aman dari array atau JSON string
+        $getSingleRegionId = function ($rawRegion) {
+            if (empty($rawRegion)) return null;
+            if (is_string($rawRegion)) {
+                $decoded = json_decode($rawRegion, true);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $rawRegion = $decoded;
+                } else if (strpos($rawRegion, ',') !== false) {
+                    $rawRegion = explode(',', $rawRegion);
+                }
+            }
+            if (is_array($rawRegion)) {
+                return !empty($rawRegion) ? $rawRegion[0] : null;
+            }
+            return $rawRegion;
+        };
+
+        // Otomatis pasang parameter region di URL jika belum ada agar mudah di-copy
+        $region_param = $this->request->getGet('region');
+        if (empty($region_param)) {
+            if (!empty($role)) {
+                // Jika login sebagai Owner atau Cabang Admin / Terapis / User
+                if ($role === 'owner') {
+                    $target_region = ($active_region !== 'all' && !empty($active_region)) ? $active_region : $region_session;
+                    $single_region = $getSingleRegionId($target_region);
+                    if (!empty($single_region)) {
+                        return redirect()->to(base_url('antrean/monitor?region=' . $single_region));
+                    }
+                } else if ($role !== 'superadmin') {
+                    $single_region = $getSingleRegionId($region_session);
+                    if (!empty($single_region)) {
+                        return redirect()->to(base_url('antrean/monitor?region=' . $single_region));
+                    }
+                }
+            } else {
+                // Jika belum login (pasien publik), gunakan cookie jika ada
+                $cookie_region = $this->request->getCookie('public_region') ?: ($_COOKIE['public_region'] ?? null);
+                $single_cookie = $getSingleRegionId($cookie_region);
+                if (!empty($single_cookie)) {
+                    return redirect()->to(base_url('antrean/monitor?region=' . $single_cookie));
+                }
+            }
+        } else {
+            // Jika parameter region ada dan bukan admin/user, simpan ke cookie agar diingat selanjutnya
+            if (empty($role)) {
+                setcookie('public_region', $region_param, time() + (365 * 24 * 60 * 60), '/');
+            }
+        }
+
+        // Tentukan region_id yang diizinkan untuk diakses
+        if ($role === 'superadmin') {
+            $allowed_regions = $this->request->getGet('region') ?: null; // null mengambil seluruh cabang yang aktif
+        } else if ($role === 'owner') {
+            $allowed_regions = $this->request->getGet('region') ?: (($active_region !== 'all' && !empty($active_region)) ? $active_region : $region_session);
+        } else {
+            $allowed_regions = $this->request->getGet('region') ?: $region_session;
+        }
+
+        // Dekode JSON jika berupa string JSON array (biasanya untuk multiselect region)
+        if (is_string($allowed_regions)) {
+            $decoded = json_decode($allowed_regions, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $allowed_regions = $decoded;
+            } else if (strpos($allowed_regions, ',') !== false) {
+                $allowed_regions = explode(',', $allowed_regions);
+            }
+        }
+
+        // Ambil data region/cabang aktif
+        $regions = $this->regionModel->getData(null, $allowed_regions);
+
+        // Ambil data antrean hari ini
+        $today = date('Y-m-d');
+        $builder = $db->table('patient_queues pq')
+            ->select('pq.id as queue_id, pq.queue_number, pq.region_id, p.id as patient_id, p.name as patient_name, p.age as patient_age, p.phone as patient_phone, p.address as patient_address, h.process_at, h.finish_at, r.name as region_name')
+            ->join('patients p', 'p.id = pq.patient_id', 'left')
+            ->join('regions r', 'r.id = pq.region_id', 'left')
+            ->join('histories h', 'h.patient_queue_id = pq.id AND h.is_delete = 0', 'left')
+            ->where('DATE(pq.queue_date)', $today)
+            ->orderBy('pq.queue_number', 'ASC');
+
+        $queues = $builder->get()->getResult();
+
+        // Kelompokkan data antrean berdasarkan region_id
+        $queuesByRegion = [];
+        foreach ($regions as $reg) {
+            $queuesByRegion[$reg->id] = [
+                'region' => $reg,
+                'waiting' => [],
+                'processing' => [],
+                'finished' => [],
+                'all_patients' => [],
+            ];
+        }
+
+        foreach ($queues as $q) {
+            $rId = $q->region_id;
+            if (!isset($queuesByRegion[$rId])) {
+                continue;
+            }
+
+            // Klasifikasikan antrean
+            if ($q->finish_at !== null) {
+                $queuesByRegion[$rId]['finished'][] = $q;
+            } else if ($q->process_at !== null) {
+                $queuesByRegion[$rId]['processing'][] = $q;
+            } else {
+                $queuesByRegion[$rId]['waiting'][] = $q;
+            }
+            $queuesByRegion[$rId]['all_patients'][] = $q;
+        }
+
+        // Ringkasan semua cabang
+        $totalWaiting = 0;
+        $totalProcessing = 0;
+        $totalFinished = 0;
+        $totalPatients = 0;
+
+        foreach ($queuesByRegion as $rId => $group) {
+            $totalWaiting += count($group['waiting']);
+            $totalProcessing += count($group['processing']);
+            $totalFinished += count($group['finished']);
+            $totalPatients += count($group['all_patients']);
+        }
+
+        $data = [
+            'title' => 'Monitoring Antrean',
+            'role' => $role,
+            'regions' => $regions,
+            'queuesByRegion' => $queuesByRegion,
+            'totalWaiting' => $totalWaiting,
+            'totalProcessing' => $totalProcessing,
+            'totalFinished' => $totalFinished,
+            'totalPatients' => $totalPatients,
+            'todayDate' => date('d-m-Y')
+        ];
+
+        return view('App\Modules\Antrean\Views\monitor', $data);
+    }
+
     public function fetchDataTable()
     {
         $request = service('request');
@@ -371,7 +518,7 @@ class AntreanController extends BaseController
             foreach ($regionsToCheck as $rid) {
                 $rid = trim($rid);
                 if (empty($rid)) continue;
-                
+
                 $cached = $cache->get('break_region_' . $rid);
                 if ($cached) {
                     $endTime = Time::parse($cached['end_time'], 'Asia/Jakarta');

@@ -35,6 +35,7 @@ $routes->get('menu', 'BerandaController::menu', ['namespace' => 'App\Modules\Ber
 
 // Antrean Public
 $routes->get('antrean/daftar-antrean', '\App\Modules\Antrean\Controllers\AntreanController::daftarAntrean');
+$routes->get('antrean/monitor', '\App\Modules\Antrean\Controllers\AntreanController::monitor');
 
 // Antrean
 $routes->group('antrean', ['namespace' => 'App\Modules\Antrean\Controllers', 'filter' => 'auth'], function ($routes) {
