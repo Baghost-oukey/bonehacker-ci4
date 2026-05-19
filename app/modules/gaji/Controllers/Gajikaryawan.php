@@ -348,7 +348,13 @@ class Gajikaryawan extends BaseController
         }
 
         if (!$terapis_id) {
-            return redirect()->to(base_url('beranda'))->with('error', 'Akun Anda tidak terhubung dengan data Terapis.');
+            $data = [
+                'title'       => 'Gaji Saya',
+                'is_unlinked' => true,
+                'role'        => session()->get('role'),
+                'realname'    => session()->get('realname'),
+            ];
+            return view('App\modules\gaji\Views\monitor', $data);
         }
 
         $detail = $this->Mriwayatgaji->getDetailPerhitungan($terapis_id);

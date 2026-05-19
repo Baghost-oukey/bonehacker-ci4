@@ -274,6 +274,56 @@ class KaryawanController extends BaseController
 
       $this->model_karyawan->insert($terapis_data);
       $terapis_id = $post['terapis_id'];
+    } elseif ($post['role'] === 'admin') {
+      // For Admin, Owner, Superadmin: Automatically create employee profile in the terapis table
+      $nextId = 1;
+      $lastTerapis = $this->model_karyawan->db->table('terapis')
+          ->where('terapis_id LIKE', 'ADM.%')
+          ->orderBy('id', 'DESC')
+          ->get()->getRow();
+      if ($lastTerapis) {
+          $lastNum = (int) substr($lastTerapis->terapis_id, 4);
+          $nextId = $lastNum + 1;
+      }
+      $gen_terapis_id = 'ADM.' . str_pad($nextId, 4, '0', STR_PAD_LEFT);
+      
+      // Determine default region
+      $defaultRegionId = null;
+      if (!empty($post['regions_patient'])) {
+          $regionsArr = is_array($post['regions_patient']) ? $post['regions_patient'] : json_decode($post['regions_patient'], true);
+          if (is_array($regionsArr) && !empty($regionsArr)) {
+              $defaultRegionId = intval($regionsArr[0]);
+          }
+      } else {
+          $firstRegion = $this->model_karyawan->db->table('regions')->select('id')->get()->getRow();
+          if ($firstRegion) {
+              $defaultRegionId = $firstRegion->id;
+          }
+      }
+
+      // Query default jabatan
+      $defaultJabatanId = null;
+      $firstJabatan = $this->model_karyawan->db->table('jabatan')->select('id')->orderBy('id', 'ASC')->get()->getRow();
+      if ($firstJabatan) {
+          $defaultJabatanId = $firstJabatan->id;
+      }
+
+      $terapis_data = [
+        'terapis_id' => $gen_terapis_id,
+        'nama' => $post['realname'],
+        'tempat_lahir' => '-',
+        'tanggal_lahir' => '2000-01-01',
+        'alamat' => '-',
+        'region_id' => $defaultRegionId,
+        'jabatan_id' => $defaultJabatanId,
+        'rank' => 'Junior',
+        'tgl_mulai_kerja' => date('Y-m-d H:i:s'),
+        'foto' => null,
+        'is_active' => 1
+      ];
+
+      $this->model_karyawan->insert($terapis_data);
+      $terapis_id = $gen_terapis_id;
     }
 
     $user_data = [

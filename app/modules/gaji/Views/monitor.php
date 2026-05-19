@@ -3,8 +3,8 @@
 
 <div id="monitorGajiPage" class="p-6 bg-slate-50 min-h-screen">
     <div class="mb-8">
-        <h1 class="text-3xl font-black text-slate-800 uppercase tracking-tight">Gaji Saya</h1>
-        <p class="text-sm font-bold text-slate-500 mt-1 uppercase tracking-widest">Pantau penghasilan dan riwayat pembayaran Anda.</p>
+        <h1 class="text-2xl md:text-3xl font-black tracking-tight text-slate-800">Gaji Saya</h1>
+        <p class="text-xs md:text-sm font-medium text-slate-500 mt-1">Pantau penghasilan dan riwayat pembayaran Anda.</p>
     </div>
 
     <!-- Alert Notifikasi -->
@@ -14,6 +14,36 @@
             <span class="font-bold"><?= esc(session()->getFlashdata('success')) ?></span>
         </div>
     <?php endif; ?>
+
+    <?php if (isset($is_unlinked) && $is_unlinked) : ?>
+        <!-- GORGEOUS UNLINKED PROFILE SCREEN -->
+        <div class="max-w-xl mx-auto my-12 bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 p-8 text-center space-y-6">
+            <div class="w-20 h-20 mx-auto rounded-full bg-teal-50 flex items-center justify-center text-teal-600 text-3xl animate-bounce">
+                <i class="fas fa-user-shield"></i>
+            </div>
+            <div class="space-y-2">
+                <h3 class="text-xl font-black text-slate-800">Profil Karyawan Belum Terhubung</h3>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Akses Akun: <?= esc(ucfirst($role)) ?></p>
+            </div>
+            <p class="text-slate-500 text-sm leading-relaxed">
+                Halo, <strong><?= esc($realname) ?></strong>. Akun Anda saat ini memiliki tingkat akses administrator namun <strong>belum dikaitkan dengan profil karyawan</strong> di database. 
+            </p>
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-left text-xs text-slate-600 space-y-2.5">
+                <p class="font-bold text-slate-700 uppercase tracking-wider text-[10px]">Mengapa hal ini terjadi?</p>
+                <p>Menu <strong>Gaji Saya</strong> hanya menampilkan rincian komisi tindakan, absensi, tunjangan, dan kasbon apabila akun login Anda terhubung dengan satu profil karyawan aktif di database.</p>
+            </div>
+            <div class="pt-4 flex flex-col sm:flex-row gap-3 justify-center">
+                <a href="<?= base_url('beranda') ?>" class="rounded-xl border border-slate-200 px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-600 hover:bg-slate-50 transition-all">
+                    Kembali ke Beranda
+                </a>
+                <?php if ($role === 'owner' || $role === 'superadmin' || $role === 'admin') : ?>
+                    <a href="<?= base_url('karyawan') ?>" class="rounded-xl bg-teal-600 px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-white hover:bg-teal-700 transition-all shadow-md shadow-teal-600/10">
+                        Hubungkan di Menu Karyawan
+                    </a>
+                <?php endif; ?>
+            </div>
+        </div>
+    <?php else : ?>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Kolom Kiri: Estimasi Bulan Ini -->
@@ -87,8 +117,8 @@
             <div class="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden flex flex-col h-full">
                 <div class="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
                     <div>
-                        <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">Riwayat Pembayaran</h3>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Daftar gaji yang telah dicairkan.</p>
+                        <h3 class="text-lg font-black text-slate-800">Riwayat Pembayaran</h3>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Daftar gaji yang telah dicairkan.</p>
                     </div>
                     <div class="h-10 w-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400">
                         <i class="fas fa-history"></i>
@@ -221,6 +251,7 @@
             </div>
         </div>
     </div>
+    <?php endif; ?>
 </div>
 
 <?= $this->endSection() ?>
