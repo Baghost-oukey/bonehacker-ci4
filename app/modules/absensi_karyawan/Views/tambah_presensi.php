@@ -6,9 +6,11 @@
     <div class="flex flex-col gap-6">
         <!-- Header -->
         <div class="flex items-center gap-3">
+            <?php if (session()->get('role') !== 'owner'): ?>
             <a href="<?= base_url('kehadiran') ?>" class="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50 transition-all">
                 <i class="fas fa-arrow-left"></i> Kembali
             </a>
+            <?php endif; ?>
             <div>
                 <h1 class="text-3xl font-bold text-slate-900 tracking-tight">Tambah Presensi</h1>
                 <p class="text-slate-500 text-sm mt-1">Pilih tanggal dan terapis untuk menambah presensi</p>
@@ -16,6 +18,7 @@
         </div>
 
         <!-- DROPDOWN NAVIGASI MOBILE -->
+        
         <div class="w-full lg:hidden">
             <select onchange="window.location.href=this.value" class="w-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-sm font-bold rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500/20">
                 <option value="<?= base_url('kehadiran') ?>">📅 Rekap Presensi</option>
@@ -23,6 +26,7 @@
                 <option value="<?= base_url('kehadiran/cuti') ?>">🏖️ Cuti Karyawan</option>
             </select>
         </div>
+    
 
         <!-- Form -->
         <form id="formTambahPresensi" class="space-y-6">
@@ -95,7 +99,7 @@
 
             <!-- Submit Button -->
             <div class="flex items-center justify-end gap-3">
-                <a href="<?= base_url('kehadiran') ?>" 
+                <a href="<?= session()->get('role') === 'owner' ? base_url('beranda') : base_url('kehadiran') ?>" 
                     class="inline-flex items-center justify-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-all">
                     Batal
                 </a>
@@ -115,7 +119,7 @@
         csrfName: "<?= csrf_token() ?>",
         csrfHash: "<?= csrf_hash() ?>",
         storeUrl: "<?= base_url('kehadiran/simpan_presensi_baru') ?>",
-        redirectUrl: "<?= base_url('kehadiran') ?>",
+        redirectUrl: "<?= session()->get('role') === 'owner' ? base_url('beranda') : base_url('kehadiran') ?>",
     };
 
     // Inline script untuk handle form

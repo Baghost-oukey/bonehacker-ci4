@@ -10,6 +10,7 @@
     </div>
 
     <!-- DROPDOWN NAVIGASI MOBILE -->
+    <?php if (session()->get('role') !== 'superadmin'): ?>
     <div class="w-full lg:hidden">
         <select onchange="window.location.href=this.value" class="w-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-sm font-bold rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500/20">
             <option value="<?= site_url('kas') ?>">📊 Arus Kas</option>
@@ -17,6 +18,7 @@
             <option value="<?= site_url('kas/categories') ?>" selected>⚙️ Master Kategori</option>
         </select>
     </div>
+    <?php endif; ?>
 
     <?php if (session()->getFlashdata('success')): ?>
         <div class="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl flex items-center gap-3">
