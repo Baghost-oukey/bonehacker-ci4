@@ -54,10 +54,34 @@ $userInitial = strtoupper(substr($realname, 0, 1));
 
             <?php if ($role !== 'user' || empty(session()->get('terapis_id'))): ?>
                 <li>
-                    <a href="<?= base_url('antrean') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'antrean' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
-                        <i class="fas fa-pencil-ruler w-4 text-center shrink-0"></i>
-                        <span class="truncate">Antrean</span>
-                    </a>
+                    <?php if ($role === 'superadmin'): ?>
+                        <details class="group" <?= $current_segment == 'antrean' ? 'open' : '' ?>>
+                            <summary class="flex w-full cursor-pointer list-none items-center justify-between rounded-md p-2 text-left text-sm transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 [&::-webkit-details-marker]:hidden">
+                                <span class="flex items-center gap-2">
+                                    <i class="fas fa-pencil-ruler w-4 text-center shrink-0"></i>
+                                    <span class="truncate font-medium">Antrean</span>
+                                </span>
+                                <i class="fas fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200 group-open:rotate-180 shrink-0"></i>
+                            </summary>
+                            <ul class="mx-3.5 mt-1 flex min-w-0 translate-x-px flex-col gap-1 border-l border-slate-200 px-2.5 py-0.5">
+                                <li>
+                                    <a href="<?= base_url('antrean') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'antrean' && ($uri->getTotalSegments() < 2 || $uri->getSegment(2) == '' || $uri->getSegment(2) == 'index') ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                        <span class="truncate">Kelola Antrean</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="<?= base_url('antrean/monitoring') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'antrean' && $uri->getTotalSegments() >= 2 && $uri->getSegment(2) == 'monitoring' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
+                                        <span class="truncate">Monitoring Antrean</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </details>
+                    <?php else: ?>
+                        <a href="<?= base_url('antrean') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'antrean' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
+                            <i class="fas fa-pencil-ruler w-4 text-center shrink-0"></i>
+                            <span class="truncate">Antrean</span>
+                        </a>
+                    <?php endif; ?>
                 </li>
                 <li>
                     <a href="<?= base_url('rekam-medis') ?>" class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'rekam-medis' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">

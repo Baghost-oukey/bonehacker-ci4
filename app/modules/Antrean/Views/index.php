@@ -15,14 +15,32 @@
         <div class="grid grid-cols-2 gap-3 w-full md:w-auto md:flex md:items-center">
             <?php
             $regionQuery = '';
+            $activeRegionName = 'Semua Wilayah';
             if (isset($regions_patient) && !empty($regions_patient)) {
                 $val = is_array($regions_patient) ? implode(',', $regions_patient) : $regions_patient;
                 $regionQuery = '?region=' . $val;
+                
+                $allowedIds = is_array($regions_patient) ? $regions_patient : explode(',', $regions_patient);
+                $names = [];
+                foreach ($wilayah as $w) {
+                    if (in_array($w->id, $allowedIds)) {
+                        $names[] = $w->name;
+                    }
+                }
+                if (!empty($names)) {
+                    $activeRegionName = implode(', ', $names);
+                }
             }
             ?>
+            <button type="button" data-modal-open="modalQRCode"
+                class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
+                <i class="fas fa-qrcode text-slate-500"></i>
+                QR Antrean
+            </button>
+
             <a href="<?= site_url('antrean/daftar-antrean') . $regionQuery ?>" target="_blank"
                 class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
-                <i class="fas fa-sync-alt text-slate-500"></i>
+                <i class="fas fa-external-link-alt text-slate-500"></i>
                 Lihat Antrean
             </a>
 
@@ -485,6 +503,45 @@
     </div>
 </div>
 
+<!-- Modal QR Code -->
+<div id="modalQRCode" class="modal-wrapper hidden fixed inset-0 z-[60] items-center justify-center bg-black/40 p-4">
+    <div class="w-full max-w-sm overflow-hidden rounded-3xl bg-white shadow-2xl relative p-6 text-center space-y-6">
+        <!-- Close Button -->
+        <button type="button" data-modal-close class="absolute top-4 right-4 text-slate-400 hover:text-red-500 transition-colors outline-none">
+            <i class="fas fa-times text-xl"></i>
+        </button>
+
+        <div class="space-y-1">
+            <h5 class="text-lg font-bold text-slate-800">QR Code Antrean</h5>
+            <p class="text-xs text-slate-500">Cabang: <span class="font-semibold text-slate-700"><?= esc($activeRegionName) ?></span></p>
+        </div>
+
+        <?php
+        $targetUrl = site_url('antrean/daftar-antrean') . $regionQuery;
+        $qrImageUrl = "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=" . urlencode($targetUrl);
+        ?>
+
+        <div class="flex justify-center p-4 bg-slate-50 rounded-2xl border border-slate-100 max-w-[220px] mx-auto">
+            <img src="<?= $qrImageUrl ?>" alt="QR Code Antrean" class="w-full h-auto aspect-square object-contain" />
+        </div>
+
+        <p class="text-[11px] text-slate-400 leading-relaxed px-2">
+            Pasien dapat memindai QR code ini menggunakan handphone untuk langsung memantau antrean secara live tanpa login.
+        </p>
+
+        <div class="grid grid-cols-2 gap-3 pt-2">
+            <button type="button" onclick="printQRCode('<?= $qrImageUrl ?>', '<?= esc($activeRegionName) ?>')"
+                class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-slate-200 text-slate-700 text-xs font-bold uppercase tracking-wider hover:bg-slate-50 transition-all">
+                <i class="fas fa-print"></i> Cetak QR
+            </button>
+            <button type="button" onclick="downloadQRCode('<?= $qrImageUrl ?>', 'qr-antrean-<?= strtolower(url_title($activeRegionName)) ?>.png')"
+                class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-teal-600 text-white text-xs font-bold uppercase tracking-wider hover:bg-teal-700 transition-all shadow-md shadow-teal-600/10">
+                <i class="fas fa-download"></i> Download QR
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const modalBreak = document.getElementById('modalBreakTime');
@@ -674,5 +731,83 @@
             }
         }
     }
+
+    // --- QR CODE PRINT & DOWNLOAD HELPERS ---
+    window.printQRCode = function(qrImageUrl, titleText) {
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <html>
+            <head>
+                <title>Cetak QR Code Antrean</title>
+                <style>
+                    body {
+                        font-family: sans-serif;
+                        text-align: center;
+                        padding: 40px;
+                        color: #0f172a;
+                    }
+                    .container {
+                        max-width: 400px;
+                        margin: 0 auto;
+                        border: 2px dashed #cbd5e1;
+                        padding: 30px;
+                        border-radius: 24px;
+                    }
+                    img {
+                        width: 250px;
+                        height: 250px;
+                        margin-top: 20px;
+                    }
+                    h1 {
+                        font-size: 24px;
+                        margin-bottom: 5px;
+                    }
+                    p {
+                        font-size: 14px;
+                        color: #64748b;
+                        margin-top: 5px;
+                    }
+                    .instructions {
+                        margin-top: 20px;
+                        font-size: 12px;
+                        color: #94a3b8;
+                        border-top: 1px solid #e2e8f0;
+                        padding-top: 15px;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h1>Cabang ${titleText}</h1>
+                    <p>Scan QR Code untuk memantau status antrean pasien secara live.</p>
+                    <img src="${qrImageUrl}" alt="QR Code" onload="window.print(); window.close();" />
+                    <div class="instructions">
+                        Bone Hacker Live Queue Monitor
+                    </div>
+                </div>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+    };
+
+    window.downloadQRCode = function(url, filename) {
+        fetch(url)
+            .then(response => response.blob())
+            .then(blob => {
+                const blobUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(blobUrl);
+            })
+            .catch(err => {
+                console.error("Gagal mendownload QR Code:", err);
+                window.open(url, '_blank');
+            });
+    };
 </script>
 <?= $this->endSection() ?>

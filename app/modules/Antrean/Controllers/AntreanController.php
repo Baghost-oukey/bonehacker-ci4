@@ -781,4 +781,99 @@ class AntreanController extends BaseController
             ]
         ]);
     }
+
+    public function monitoring()
+    {
+        if (session()->get('role') !== 'superadmin') {
+            return redirect()->to('antrean')->with('message', ['error', 'Unauthorized access']);
+        }
+
+        $db = \Config\Database::connect();
+        $today = date('Y-m-d');
+        $date = $this->request->getGet('date') ?: $today;
+
+        // Query all regions
+        $regions = $db->table('regions')
+            ->where('is_active', 1)
+            ->get()
+            ->getResult();
+
+        // Query stats per region for the selected date
+        $queuesData = $db->table('patient_queues pq')
+            ->select('pq.region_id, 
+                SUM(CASE WHEN h.process_at IS NULL AND h.finish_at IS NULL THEN 1 ELSE 0 END) as waiting,
+                SUM(CASE WHEN h.process_at IS NOT NULL AND h.finish_at IS NULL THEN 1 ELSE 0 END) as processing,
+                SUM(CASE WHEN h.finish_at IS NOT NULL THEN 1 ELSE 0 END) as finished,
+                COUNT(pq.id) as total')
+            ->join('histories h', 'h.patient_queue_id = pq.id AND h.is_delete = 0', 'left')
+            ->where('DATE(pq.queue_date)', $date)
+            ->groupBy('pq.region_id')
+            ->get()
+            ->getResult();
+
+        // Index stats by region_id
+        $statsByRegion = [];
+        foreach ($queuesData as $row) {
+            $statsByRegion[$row->region_id] = [
+                'waiting' => (int)$row->waiting,
+                'processing' => (int)$row->processing,
+                'finished' => (int)$row->finished,
+                'total' => (int)$row->total
+            ];
+        }
+
+        // Combine regions with stats
+        $branches = [];
+        $totalWaiting = 0;
+        $totalProcessing = 0;
+        $totalFinished = 0;
+        $totalAll = 0;
+
+        foreach ($regions as $r) {
+            $rStats = $statsByRegion[$r->id] ?? [
+                'waiting' => 0,
+                'processing' => 0,
+                'finished' => 0,
+                'total' => 0
+            ];
+
+            $branches[] = (object)[
+                'id' => $r->id,
+                'name' => $r->name,
+                'waiting' => $rStats['waiting'],
+                'processing' => $rStats['processing'],
+                'finished' => $rStats['finished'],
+                'total' => $rStats['total']
+            ];
+
+            $totalWaiting += $rStats['waiting'];
+            $totalProcessing += $rStats['processing'];
+            $totalFinished += $rStats['finished'];
+            $totalAll += $rStats['total'];
+        }
+
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'branches' => $branches,
+                'totalWaiting' => $totalWaiting,
+                'totalProcessing' => $totalProcessing,
+                'totalFinished' => $totalFinished,
+                'totalAll' => $totalAll
+            ]);
+        }
+
+        $data = [
+            'title' => 'Monitoring Antrean',
+            'date' => $date,
+            'branches' => $branches,
+            'totalWaiting' => $totalWaiting,
+            'totalProcessing' => $totalProcessing,
+            'totalFinished' => $totalFinished,
+            'totalAll' => $totalAll,
+            'realname' => session()->get('realname'),
+            'role' => session()->get('role')
+        ];
+
+        return view('App\modules\antrean\Views\monitoring', $data);
+    }
 }

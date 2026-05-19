@@ -6,6 +6,12 @@ $shouldUseViteDevServer = false;
 $waitingList = array_values(array_filter($patient_queues ?? [], static fn($q) => empty($q->process_at) && empty($q->finish_at)));
 $processingList = array_values(array_filter($patient_queues ?? [], static fn($q) => !empty($q->process_at) && empty($q->finish_at)));
 $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) => !empty($q->finish_at)));
+
+// Sort queues naturally by queue_number for the mobile view
+$mobileQueues = $patient_queues ?? [];
+usort($mobileQueues, function($a, $b) {
+    return strnatcasecmp($a->queue_number ?? '', $b->queue_number ?? '');
+});
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -132,7 +138,10 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
     </style>
 </head>
 
-<body class="flex flex-col h-screen overflow-hidden p-4 md:p-6 gap-6">
+<body class="flex flex-col lg:h-screen lg:overflow-hidden min-h-screen overflow-y-auto p-4 md:p-6 gap-6">
+
+    <!-- DESKTOP MONITOR VIEW (KEEPS 3 COLUMNS INTACT) -->
+    <div class="hidden lg:flex flex-col flex-1 min-h-0 gap-6 w-full">
 
     <!-- HEADER -->
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center px-4">
@@ -357,6 +366,121 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
         </marquee>
     </div>
 
+    </div> <!-- END DESKTOP MONITOR VIEW -->
+
+    <!-- MOBILE VIEW (AS PER MOCKUP MENTIONS) -->
+    <div class="block lg:hidden w-full max-w-2xl mx-auto space-y-6 pb-16 px-2">
+        <!-- Header -->
+        <div class="text-center py-4 space-y-1">
+            <h1 class="text-2xl font-semibold tracking-tight" style="color: var(--header-text)">Antrian Pasien</h1>
+            <p class="text-xs font-medium tracking-wide" style="color: var(--text-muted)">
+                Bone Hacker Live Status - Cabang <?= esc($regionName ?? 'Semua Wilayah') ?>
+            </p>
+        </div>
+
+        <!-- Informasi Penting -->
+        <div class="white-card rounded-2xl p-5 space-y-3">
+            <h3 class="text-xs font-semibold uppercase tracking-widest" style="color: var(--text-muted)">Informasi Penting</h3>
+            <ul class="text-xs space-y-2.5" style="color: var(--text-muted); font-weight: 300;">
+                <li class="flex items-start">
+                    <span class="inline-block w-1.5 h-1.5 rounded-full bg-slate-400 mt-1.5 mr-2.5 shrink-0"></span>
+                    <span>Periksa nomor urut dan status pendaftaran pasien terbaru.</span>
+                </li>
+                <li class="flex items-start">
+                    <span class="inline-block w-1.5 h-1.5 rounded-full bg-slate-400 mt-1.5 mr-2.5 shrink-0"></span>
+                    <span>Rata-rata durasi terapi untuk setiap pasien adalah 15-20 menit, tergantung pada jenis keluhan dan tingkat keparahan.</span>
+                </li>
+                <li class="flex items-start">
+                    <span class="inline-block w-1.5 h-1.5 rounded-full bg-slate-400 mt-1.5 mr-2.5 shrink-0"></span>
+                    <span>Pendaftaran dilakukan langsung di lokasi terapi. Urutan terapi mengikuti urutan kedatangan.</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Ringkasan Antrian -->
+        <div class="white-card rounded-2xl p-5 space-y-4">
+            <h3 class="text-[10px] font-semibold uppercase tracking-widest text-center" style="color: var(--text-muted); opacity: 0.7;">Ringkasan Antrian</h3>
+            <div class="grid grid-cols-3 gap-3 text-center">
+                <!-- Menunggu -->
+                <div class="pt-2.5 border-t-2 border-orange-500/80">
+                    <span class="block text-2xl font-semibold text-orange-500"><?= count($waitingList) ?></span>
+                    <span class="text-[9px] font-semibold uppercase mt-0.5 block tracking-wider" style="color: var(--text-muted)">Menunggu</span>
+                </div>
+                <!-- Terapi -->
+                <div class="pt-2.5 border-t-2 border-blue-500/80">
+                    <span class="block text-2xl font-semibold text-blue-500"><?= count($processingList) ?></span>
+                    <span class="text-[9px] font-semibold uppercase mt-0.5 block tracking-wider" style="color: var(--text-muted)">Terapi</span>
+                </div>
+                <!-- Selesai -->
+                <div class="pt-2.5 border-t-2 border-emerald-500/80">
+                    <span class="block text-2xl font-semibold text-emerald-500"><?= count($finishedList) ?></span>
+                    <span class="text-[9px] font-semibold uppercase mt-0.5 block tracking-wider" style="color: var(--text-muted)">Selesai</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table Card -->
+        <div class="white-card rounded-2xl overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                        <tr class="border-b border-slate-200/50 text-[10px] font-semibold uppercase tracking-wider" style="color: var(--text-muted)">
+                            <th class="px-4 py-3 text-center w-12">No.</th>
+                            <th class="px-4 py-3">Nama Pasien</th>
+                            <th class="px-4 py-3">Status</th>
+                            <th class="px-4 py-3 text-center w-28">Posisi Antrian</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100/10 text-xs">
+                        <?php if (!empty($mobileQueues)): ?>
+                            <?php 
+                            $waitingPos = 1;
+                            foreach ($mobileQueues as $index => $q): 
+                                $statusText = 'Menunggu';
+                                $statusClass = 'bg-orange-500/10 text-orange-600 dark:text-orange-400';
+                                $positionText = '-';
+
+                                if (!empty($q->finish_at)) {
+                                    $statusText = 'Selesai';
+                                    $statusClass = 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400';
+                                } elseif (!empty($q->process_at)) {
+                                    $statusText = 'Terapi';
+                                    $statusClass = 'bg-blue-500/10 text-blue-600 dark:text-blue-400';
+                                } else {
+                                    $positionText = $waitingPos++;
+                                }
+                            ?>
+                                <tr class="hover:bg-slate-100/5 transition-colors">
+                                    <td class="px-4 py-3.5 text-center font-medium" style="color: var(--text-muted)"><?= $index + 1 ?></td>
+                                    <td class="px-4 py-3.5 font-semibold uppercase tracking-tight" style="color: var(--text-main)">
+                                        <?= esc($q->patient_name ?? '-') ?>
+                                    </td>
+                                    <td class="px-4 py-3.5">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold <?= $statusClass ?>">
+                                            <?= $statusText ?>
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3.5 text-center font-medium" style="color: var(--text-muted)"><?= $positionText ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="4" class="px-4 py-12 text-center italic font-medium" style="color: var(--text-muted)">
+                                    Tidak ada antrean hari ini
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Live clock & footer updated -->
+        <div class="text-center text-[10px]" style="color: var(--text-muted)">
+            Terakhir diperbarui: <span id="mobileLastUpdatedTime" class="font-bold">--:-- WIB</span>
+        </div>
+    </div>
+
     <script>
         // --- THEME TOGGLE LOGIC ---
         const themeToggle = document.getElementById('themeToggle');
@@ -407,6 +531,15 @@ $finishedList = array_values(array_filter($patient_queues ?? [], static fn($q) =
         }
         setInterval(updateLiveClock, 1000);
         updateLiveClock();
+
+        // --- MOBILE LAST UPDATED TIME ---
+        const lastUpdatedEl = document.getElementById('mobileLastUpdatedTime');
+        if (lastUpdatedEl) {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            lastUpdatedEl.textContent = `${hours}.${minutes} WIB`;
+        }
 
         setTimeout(() => { window.location.reload(); }, 60000);
 

@@ -22,20 +22,12 @@ const openModal = (modal) => {
     if (!modal) return;
     modal.classList.remove(MODAL_HIDDEN_CLASS);
     modal.classList.add(MODAL_VISIBLE_CLASS);
-    setTimeout(() => {
-        modal.querySelector('.transform')?.classList.remove('translate-y-full', 'scale-95');
-        modal.classList.remove('opacity-0');
-    }, 10);
 };
 
 const closeModal = (modal) => {
     if (!modal) return;
-    modal.querySelector('.transform')?.classList.add('translate-y-full', 'md:scale-95');
-    modal.classList.add('opacity-0');
-    setTimeout(() => {
-        modal.classList.remove(MODAL_VISIBLE_CLASS);
-        modal.classList.add(MODAL_HIDDEN_CLASS);
-    }, 300);
+    modal.classList.remove(MODAL_VISIBLE_CLASS);
+    modal.classList.add(MODAL_HIDDEN_CLASS);
 };
 
 const setupUsersPage = () => {

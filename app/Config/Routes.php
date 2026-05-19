@@ -39,6 +39,7 @@ $routes->get('antrean/daftar-antrean', '\App\Modules\Antrean\Controllers\Antrean
 // Antrean
 $routes->group('antrean', ['namespace' => 'App\Modules\Antrean\Controllers', 'filter' => 'auth'], function ($routes) {
   $routes->get('', 'AntreanController::index');
+  $routes->get('monitoring', 'AntreanController::monitoring');
   $routes->get('fetchJson', 'AntreanController::fetchJson');
   $routes->post('fetchDataTable', 'AntreanController::fetchDataTable');
   $routes->post('fetchPatientDataTables', 'AntreanController::fetchPatientDataTables');
