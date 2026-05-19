@@ -124,17 +124,17 @@
                     <option value="owner">Owner</option>
                     <option value="admin">Admin</option>
                     <option value="superadmin">Super Admin</option>
-                    <option value="user">Karyawan</option>
+                    <option value="user">Terapis</option>
                 </select>
             </div>
 
             <!-- EXTRA FIELDS FOR THERAPIST -->
             <div id="extraTerapisFields" class="hidden space-y-4 border-t border-slate-200 pt-4 mt-4">
-                <p class="text-sm font-semibold text-teal-600 mb-2">Data Profil Karyawan</p>
+                <p class="text-sm font-semibold text-teal-600 mb-2">Data Profil Terapis</p>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-1">
-                        <label class="text-sm font-medium text-slate-700">ID Karyawan (NIK/ID)</label>
+                        <label class="text-sm font-medium text-slate-700">ID Terapis (NIK/ID)</label>
                         <input type="text" name="terapis_id" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-700 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 bg-white" placeholder="Contoh: TSI-001">
                     </div>
                     <div class="space-y-1">
@@ -253,7 +253,7 @@
                     <option value="superadmin">Super Admin</option>
                     <option value="owner">Owner</option>
                     <option value="admin">Admin</option>
-                    <option value="user">Karyawan</option>
+                    <option value="user">Terapis</option>
                 </select>
             </div>
             <div class="space-y-1 hidden" id="regionFieldEdit">
@@ -293,7 +293,7 @@
                     <i class="fas fa-user-check text-xl"></i>
                 </div>
                 <div>
-                    <p class="text-xs font-semibold text-teal-600">Karyawan</p>
+                    <p class="text-xs font-semibold text-teal-600">Terapis</p>
                     <p id="quick-realname" class="text-sm font-semibold text-slate-800"></p>
                 </div>
             </div>
