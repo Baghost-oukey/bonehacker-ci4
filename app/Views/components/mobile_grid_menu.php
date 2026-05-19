@@ -30,14 +30,8 @@ if ($role === 'superadmin') {
 
     // Manajemen Section
     $menus[] = ['label' => 'Manajemen Tags', 'url' => site_url('tag-keluhan'), 'icon' => 'fa-tags', 'color' => 'bg-teal-600'];
-    $menus[] = ['label' => 'Logs', 'url' => site_url('logs'), 'icon' => 'fa-cog', 'color' => 'bg-slate-700'];
-    $menus[] = ['label' => 'WhatsApp', 'url' => site_url('whatsapp'), 'icon' => 'fa-cog', 'color' => 'bg-green-600'];
-    $menus[] = ['label' => 'Log WhatsApp', 'url' => site_url('log_whatsapp'), 'icon' => 'fa-cog', 'color' => 'bg-green-700'];
-    $menus[] = ['label' => 'Jabatan', 'url' => site_url('jabatan'), 'icon' => 'fa-cog', 'color' => 'bg-blue-700'];
-    $menus[] = ['label' => 'Rank Terapis', 'url' => site_url('rank-terapis'), 'icon' => 'fa-star', 'color' => 'bg-amber-600'];
-    $menus[] = ['label' => 'Greetings', 'url' => site_url('greeting'), 'icon' => 'fa-cog', 'color' => 'bg-purple-600'];
+    $menus[] = ['label' => 'Pengaturan', 'url' => site_url('logs'), 'icon' => 'fa-cogs', 'color' => 'bg-indigo-600'];
     $menus[] = ['label' => 'Manajemen Karyawan', 'url' => site_url('karyawan'), 'icon' => 'fa-user-friends', 'color' => 'bg-blue-500'];
-    $menus[] = ['label' => 'Statistik Tag', 'url' => site_url('statistiktag'), 'icon' => 'fa-chart-bar', 'color' => 'bg-purple-600'];
 }
 
 // Menu untuk OWNER

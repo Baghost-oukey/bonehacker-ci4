@@ -21,13 +21,18 @@ class StatistikKeuangan extends BaseController
 
     public function index()
     {
+        $role = session()->get('role');
+        if ($role !== 'owner') {
+            return redirect()->to('/beranda')->with('message', ['error', 'Akses Ditolak', 'Hanya Owner yang dapat mengakses Analisis Keuangan.']);
+        }
+
         $region_patient = session()->get('region_patient');
         $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
         $list_regions = $this->mRegion->getData(null, $allowed_regions);
 
         $data = [
             'title'        => 'Analisis Keuangan',
-            'role'         => session()->get('role'),
+            'role'         => $role,
             'list_regions' => $list_regions
         ];
         return view('App\Modules\StatistikKeuangan\Views\index', $data);
