@@ -42,6 +42,12 @@ const setupJabatanPage = () => {
 
     let table = null;
 
+    const updateCsrf = (newToken) => {
+        if (!newToken) return;
+        config.csrfHash = newToken;
+        $(`input[name='${config.csrfName}']`).val(newToken);
+    };
+
     const checkFlashdata = () => {
         if (config.flashSuccess) {
             swalLib.fire({
@@ -72,11 +78,17 @@ const setupJabatanPage = () => {
                 type: "POST",
                 data: function (d) {
                     d[config.csrfName] = config.csrfHash;
+                },
+                dataSrc: function (json) {
+                    if (json.csrfHash) {
+                        updateCsrf(json.csrfHash);
+                    }
+                    return json.data;
                 }
             },
             columns: [
                 { data: "no", width: "5%", sortable: false, searchable: false, className: "px-6 py-4 text-xs font-mono text-slate-400 border-0" },
-                { data: "nama_jabatan", width: "25%", className: "px-6 py-4 text-sm font-black text-slate-700 border-0" },
+                { data: "nama_jabatan", width: "25%", className: "px-6 py-4 text-sm font-semibold text-slate-700 border-0" },
                 { data: "deskripsi", width: "50%", className: "px-6 py-4 text-xs text-slate-500 border-0 font-medium" },
                 { data: "action", class: "text-right px-6 py-4 border-0", width: "20%", sortable: false, searchable: false }
             ],
@@ -103,7 +115,7 @@ const setupJabatanPage = () => {
                     mobileContainer.append(`
                         <div class="py-16 text-center opacity-30">
                             <i class="fas fa-id-badge text-4xl text-slate-300 mb-3"></i>
-                            <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Jabatan Kosong</p>
+                            <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">Jabatan Kosong</p>
                         </div>
                     `);
                 } else {
@@ -112,15 +124,15 @@ const setupJabatanPage = () => {
                             <div class="p-5 space-y-4 hover:bg-slate-50/50 transition-colors">
                                 <div class="flex justify-between items-start">
                                     <div class="space-y-1">
-                                        <p class="text-[9px] font-black text-slate-300 uppercase tracking-widest italic">#${row.no}</p>
-                                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">${row.nama_jabatan}</h3>
+                                        <p class="text-[9px] font-bold text-slate-300 uppercase tracking-widest italic">#${row.no}</p>
+                                        <h3 class="text-sm font-semibold text-slate-800 uppercase tracking-tight">${row.nama_jabatan}</h3>
                                     </div>
                                     <div class="flex gap-2">
                                         ${row.action}
                                     </div>
                                 </div>
                                 <div class="bg-slate-50/80 p-3.5 rounded-2xl border border-slate-100 shadow-inner">
-                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 opacity-60">Deskripsi Pekerjaan</p>
+                                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 opacity-60">Deskripsi Pekerjaan</p>
                                     <p class="text-xs font-bold text-slate-600 leading-relaxed">${row.deskripsi || '<span class="italic opacity-30">Tidak ada deskripsi.</span>'}</p>
                                 </div>
                             </div>
@@ -133,7 +145,7 @@ const setupJabatanPage = () => {
                 const info = api.page.info();
                 const pagination = $(`
                     <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-                        <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
                             Menampilkan ${info.start + 1} - ${info.end} dari ${info.recordsTotal} Jabatan
                         </div>
                         <div class="flex items-center gap-2" id="custom-pagination"></div>
@@ -152,7 +164,7 @@ const setupJabatanPage = () => {
                         <i class="fas fa-chevron-left text-[10px]"></i>
                     </button>
                     <div class="flex items-center bg-slate-50 rounded-xl px-1 border border-slate-100 shadow-inner">
-                        <span class="px-3 py-2 text-[11px] font-black text-slate-700">${info.page + 1} / ${info.pages}</span>
+                        <span class="px-3 py-2 text-[11px] font-semibold text-slate-700">${info.page + 1} / ${info.pages}</span>
                     </div>
                     <button class="px-3 py-2 rounded-xl border border-slate-200 text-slate-400 hover:bg-slate-50 transition-all ${nextDisabled}" onclick="window.jabatanTable.page('next').draw('page')">
                         <i class="fas fa-chevron-right text-[10px]"></i>
@@ -194,15 +206,42 @@ const setupJabatanPage = () => {
 
     // --- SETUP EVENT LISTENERS ---
     const initEvents = () => {
+        // Modal Open / Close delegation listeners
+        $(document).on("click", "[data-modal-open]", function (event) {
+            const targetId = $(this).attr("data-modal-open");
+            const targetModal = document.getElementById(targetId);
+            if (targetModal) {
+                openModal(targetModal);
+            }
+        });
+
+        $(document).on("click", "[data-modal-close]", function (e) {
+            e.preventDefault();
+            closeModal($(this).closest(".modal-wrapper")[0]);
+        });
+
+        $(document).on("click", ".modal-wrapper", function (e) {
+            if (e.target === this) {
+                closeModal(this);
+            }
+        });
+
         $(document).on('click', '.btn_edit', function (e) {
             e.preventDefault();
             const btn = $(this);
-            $('#modal_edit_jabatan').modal('show');
+            const modal = document.getElementById('modal_edit_jabatan');
+            openModal(modal);
+
             $('#edit_name').val(btn.data('name'));
             $('#edit_deskripsi').val(btn.data('description'));
             $('#editjabatanForm').attr("action", btn.data('href'));
             $('#edit_submitBtn').prop('disabled', false);
             $('#edit_name').removeClass('is-invalid');
+
+            const originalName = $('#edit_name').val();
+            const urlParts = $('#editjabatanForm').attr("action").split('/');
+            const originalId = urlParts[urlParts.length - 1];
+            setupValidation('#edit_name', '#edit_submitBtn', '#edit_nameError', originalName, originalId);
         });
 
         $(document).on('click', '.btn_delete', function (e) {
@@ -223,28 +262,135 @@ const setupJabatanPage = () => {
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.post(href, { [config.csrfName]: config.csrfHash }, function (res) {
+                        if (res && res.csrfHash) updateCsrf(res.csrfHash);
                         swalLib.fire({
                             icon: res.status,
                             title: res.status === 'success' ? 'Berhasil!' : 'Gagal!',
                             text: res.message,
                             timer: 2000,
                             showConfirmButton: false
-                        }).then(() => { location.reload(); });
+                        }).then(() => { if (table) table.ajax.reload(null, false); });
                     }, 'json');
                 }
             });
         });
 
-        $('#jabatanModal').on('shown.bs.modal', function () {
-            setupValidation('#add_name', '#add_submitBtn', '#add_nameError', '', '');
+        // Handle Add Form AJAX Submit
+        $('#addJabatanForm').on('submit', function (e) {
+            e.preventDefault();
+            const form = $(this);
+            const actionUrl = form.attr('action');
+            const data = form.serialize();
+
+            swalLib.fire({
+                title: 'Menyimpan...',
+                text: 'Harap tunggu sebentar.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    swalLib.showLoading();
+                }
+            });
+
+            $.ajax({
+                url: actionUrl,
+                type: 'POST',
+                data: data,
+                dataType: 'json',
+                success: function (res) {
+                    if (res && res.csrfHash) updateCsrf(res.csrfHash);
+                    if (res.status === 'success') {
+                        swalLib.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: res.message,
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            closeModal(document.getElementById('jabatanModal'));
+                            form[0].reset();
+                            $('#add_submitBtn').prop('disabled', true);
+                            if (table) table.ajax.reload(null, false);
+                        });
+                    } else {
+                        swalLib.fire({
+                            icon: 'error',
+                            title: 'Gagal!',
+                            text: res.message,
+                            confirmButtonText: 'Oke'
+                        });
+                    }
+                },
+                error: function (xhr) {
+                    const res = xhr.responseJSON;
+                    if (res && res.csrfHash) updateCsrf(res.csrfHash);
+                    swalLib.fire({
+                        icon: 'error',
+                        title: 'Oops!',
+                        text: (res && res.message) ? res.message : 'Terjadi kesalahan pada server.',
+                        confirmButtonText: 'Oke'
+                    });
+                }
+            });
         });
 
-        $('#modal_edit_jabatan').on('shown.bs.modal', function () {
-            const originalName = $('#edit_name').val();
-            const urlParts = $('#editjabatanForm').attr("action").split('/');
-            const originalId = urlParts[urlParts.length - 1];
-            setupValidation('#edit_name', '#edit_submitBtn', '#edit_nameError', originalName, originalId);
+        // Handle Edit Form AJAX Submit
+        $('#editjabatanForm').on('submit', function (e) {
+            e.preventDefault();
+            const form = $(this);
+            const actionUrl = form.attr('action');
+            const data = form.serialize();
+
+            swalLib.fire({
+                title: 'Memperbarui...',
+                text: 'Harap tunggu sebentar.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    swalLib.showLoading();
+                }
+            });
+
+            $.ajax({
+                url: actionUrl,
+                type: 'POST',
+                data: data,
+                dataType: 'json',
+                success: function (res) {
+                    if (res && res.csrfHash) updateCsrf(res.csrfHash);
+                    if (res.status === 'success') {
+                        swalLib.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: res.message,
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            closeModal(document.getElementById('modal_edit_jabatan'));
+                            if (table) table.ajax.reload(null, false);
+                        });
+                    } else {
+                        swalLib.fire({
+                            icon: 'error',
+                            title: 'Gagal!',
+                            text: res.message,
+                            confirmButtonText: 'Oke'
+                        });
+                    }
+                },
+                error: function (xhr) {
+                    const res = xhr.responseJSON;
+                    if (res && res.csrfHash) updateCsrf(res.csrfHash);
+                    swalLib.fire({
+                        icon: 'error',
+                        title: 'Oops!',
+                        text: (res && res.message) ? res.message : 'Terjadi kesalahan pada server.',
+                        confirmButtonText: 'Oke'
+                    });
+                }
+            });
         });
+
+        // Initialize Add Form validation on page load
+        setupValidation('#add_name', '#add_submitBtn', '#add_nameError', '', '');
     };
 
     checkFlashdata();
