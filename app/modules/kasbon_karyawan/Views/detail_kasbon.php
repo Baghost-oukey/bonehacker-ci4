@@ -31,10 +31,10 @@
     <div class="md:hidden mb-8">
         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Pilih Menu</label>
         <select id="mobile-tab-select" class="w-full bg-white border border-slate-200 text-slate-800 text-sm font-bold rounded-xl px-4 py-3.5 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 shadow-sm transition-all">
-            <option value="tab-riwayat">🕒 Riwayat Kasbon</option>
-            <option value="tab-ajukan">💸 Kasbon Karyawan</option>
-            <option value="tab-cicilan">💰 Cicilan Kasbon</option>
-            <option value="tab-potongan">✂️ Potongan Rutin</option>
+            <option value="tab-riwayat">Riwayat Kasbon</option>
+            <option value="tab-ajukan">Kasbon Karyawan</option>
+            <option value="tab-cicilan">Cicilan Kasbon</option>
+            <option value="tab-potongan">Potongan Rutin</option>
         </select>
     </div>
 
