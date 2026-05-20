@@ -161,60 +161,136 @@ class Mgajikaryawan extends Model
         }
         $gajiPokok -= $potonganAbsen;
 
-        // ── JASPEL (dari jaspel_settings) ───────────────────────────
+        // ── JASPEL (dari jaspel_harian – pool-splitting harian) ──────
         $mJaspel = new \App\modules\jasa_pelayanan\Models\MJaspelSettings();
 
-        // Jaspel Reguler
-        $jaspelReguler    = 0;
-        $settingReguler   = $mJaspel->getByRegion($terapis['region_id'], 'reguler');
+        // Jaspel Reguler: baca dari jaspel_harian (data yang sudah dihitung saat tampilkan)
+        $jaspelReguler = 0;
+        $settingReguler = $mJaspel->getByRegion($terapis['region_id'], 'reguler');
         if ($settingReguler) {
             $terapisAllowed = json_decode($settingReguler->terapis_ids, true) ?? [];
             if (in_array($id, $terapisAllowed)) {
-                // Hitung total pasien reguler pada hari-hari ketika terapis ini hadir
-                $sql = "SELECT COALESCE(SUM(daily_patients), 0) as total_patients FROM (
-                            SELECT DATE(pq.queue_date) as tanggal, COUNT(DISTINCT pq.patient_id) as daily_patients
-                            FROM patient_queues pq
-                            JOIN histories h ON h.patient_queue_id = pq.id
-                            JOIN absensi_karyawan ak ON ak.tanggal = DATE(pq.queue_date)
-                            WHERE pq.region_id = ?
-                              AND h.finish_at IS NOT NULL
-                              AND (h.kejantanan != 'ya' OR h.kejantanan IS NULL)
-                              AND MONTH(pq.queue_date) = ?
-                              AND YEAR(pq.queue_date) = ?
-                              AND ak.terapis_id = ?
-                              AND ak.status = 'Hadir'
-                            GROUP BY DATE(pq.queue_date)
-                        ) tmp";
-                $query = $this->db->query($sql, [$terapis['region_id'], $bulan, $tahun, $id])->getRow();
-                $pasienReguler = (int)($query->total_patients ?? 0);
-                $jaspelReguler = $pasienReguler * $settingReguler->nominal_per_pasien;
+                // Ambil hari-hari terapis ini hadir bulan ini
+                $presentDates = array_column(
+                    $this->db->table('absensi_karyawan')
+                        ->select('tanggal')
+                        ->where('terapis_id', $id)
+                        ->where('status', 'Hadir')
+                        ->where('MONTH(tanggal)', $bulan)
+                        ->where('YEAR(tanggal)', $tahun)
+                        ->get()->getResultArray(),
+                    'tanggal'
+                );
+
+                if (!empty($presentDates)) {
+                    // Baca jaspel_harian untuk wilayah ini tipe reguler bulan ini
+                    $jaspelHarianRows = $this->db->table('jaspel_harian')
+                        ->where('region_id', $terapis['region_id'])
+                        ->where('tipe', 'reguler')
+                        ->where('is_processed', 0)
+                        ->where('MONTH(tanggal)', $bulan)
+                        ->where('YEAR(tanggal)', $tahun)
+                        ->get()->getResultArray();
+
+                    // Map tanggal → jaspel_per_terapis
+                    $jaspelPerHari = [];
+                    foreach ($jaspelHarianRows as $jr) {
+                        $jaspelPerHari[$jr['tanggal']] = (float)$jr['jaspel_per_terapis'];
+                    }
+
+                    // Akumulasi hanya untuk hari-hari terapis ini hadir
+                    foreach ($presentDates as $tgl) {
+                        if (isset($jaspelPerHari[$tgl])) {
+                            $jaspelReguler += $jaspelPerHari[$tgl];
+                        } else {
+                            // Fallback: hitung langsung jika belum ada di jaspel_harian
+                            $patientRow = $this->db->table('patient_queues pq')
+                                ->select('COUNT(DISTINCT pq.patient_id) as cnt')
+                                ->join('histories h', 'h.patient_queue_id = pq.id')
+                                ->where('pq.region_id', $terapis['region_id'])
+                                ->where('DATE(pq.queue_date)', $tgl)
+                                ->where('h.finish_at IS NOT NULL')
+                                ->groupStart()
+                                    ->where('h.kejantanan !=', 'ya')
+                                    ->orWhere('h.kejantanan IS NULL')
+                                ->groupEnd()
+                                ->get()->getRow();
+
+                            $totalPasien = (int)($patientRow->cnt ?? 0);
+                            if ($totalPasien > 0) {
+                                $hadirCount = (int)$this->db->table('absensi_karyawan')
+                                    ->whereIn('terapis_id', $terapisAllowed)
+                                    ->where('tanggal', $tgl)
+                                    ->where('status', 'Hadir')
+                                    ->countAllResults();
+                                if ($hadirCount > 0) {
+                                    $jaspelReguler += ($totalPasien * $settingReguler->nominal_per_pasien) / $hadirCount;
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 
         // Jaspel Kejantanan
-        $jaspelKejantanan  = 0;
+        $jaspelKejantanan = 0;
         $settingKejantanan = $mJaspel->getByRegion($terapis['region_id'], 'kejantanan');
         if ($settingKejantanan) {
             $terapisAllowed = json_decode($settingKejantanan->terapis_ids, true) ?? [];
             if (in_array($id, $terapisAllowed)) {
-                // Hitung total pasien kejantanan pada hari-hari ketika terapis ini hadir
-                $sql = "SELECT COALESCE(SUM(daily_patients), 0) as total_patients FROM (
-                            SELECT DATE(pq.queue_date) as tanggal, COUNT(DISTINCT pq.patient_id) as daily_patients
-                            FROM patient_queues pq
-                            JOIN histories h ON h.patient_queue_id = pq.id
-                            JOIN absensi_karyawan ak ON ak.tanggal = DATE(pq.queue_date)
-                            WHERE pq.region_id = ?
-                              AND h.finish_at IS NOT NULL
-                              AND h.kejantanan = 'ya'
-                              AND MONTH(pq.queue_date) = ?
-                              AND YEAR(pq.queue_date) = ?
-                              AND ak.terapis_id = ?
-                              AND ak.status = 'Hadir'
-                            GROUP BY DATE(pq.queue_date)
-                        ) tmp";
-                $query = $this->db->query($sql, [$terapis['region_id'], $bulan, $tahun, $id])->getRow();
-                $pasienKejantanan = (int)($query->total_patients ?? 0);
-                $jaspelKejantanan = $pasienKejantanan * $settingKejantanan->nominal_per_pasien;
+                $presentDates = array_column(
+                    $this->db->table('absensi_karyawan')
+                        ->select('tanggal')
+                        ->where('terapis_id', $id)
+                        ->where('status', 'Hadir')
+                        ->where('MONTH(tanggal)', $bulan)
+                        ->where('YEAR(tanggal)', $tahun)
+                        ->get()->getResultArray(),
+                    'tanggal'
+                );
+
+                if (!empty($presentDates)) {
+                    $jaspelHarianRows = $this->db->table('jaspel_harian')
+                        ->where('region_id', $terapis['region_id'])
+                        ->where('tipe', 'kejantanan')
+                        ->where('is_processed', 0)
+                        ->where('MONTH(tanggal)', $bulan)
+                        ->where('YEAR(tanggal)', $tahun)
+                        ->get()->getResultArray();
+
+                    $jaspelPerHari = [];
+                    foreach ($jaspelHarianRows as $jr) {
+                        $jaspelPerHari[$jr['tanggal']] = (float)$jr['jaspel_per_terapis'];
+                    }
+
+                    foreach ($presentDates as $tgl) {
+                        if (isset($jaspelPerHari[$tgl])) {
+                            $jaspelKejantanan += $jaspelPerHari[$tgl];
+                        } else {
+                            $patientRow = $this->db->table('patient_queues pq')
+                                ->select('COUNT(DISTINCT pq.patient_id) as cnt')
+                                ->join('histories h', 'h.patient_queue_id = pq.id')
+                                ->where('pq.region_id', $terapis['region_id'])
+                                ->where('DATE(pq.queue_date)', $tgl)
+                                ->where('h.finish_at IS NOT NULL')
+                                ->where('h.kejantanan', 'ya')
+                                ->get()->getRow();
+
+                            $totalPasien = (int)($patientRow->cnt ?? 0);
+                            if ($totalPasien > 0) {
+                                $hadirCount = (int)$this->db->table('absensi_karyawan')
+                                    ->whereIn('terapis_id', $terapisAllowed)
+                                    ->where('tanggal', $tgl)
+                                    ->where('status', 'Hadir')
+                                    ->countAllResults();
+                                if ($hadirCount > 0) {
+                                    $jaspelKejantanan += ($totalPasien * $settingKejantanan->nominal_per_pasien) / $hadirCount;
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -222,61 +298,60 @@ class Mgajikaryawan extends Model
         $mMasterGaji = new \App\modules\tunjangan_karyawan\Models\Mtunjangankaryawan();
         $settingTunjangan = $mMasterGaji->getForTerapis($id, $terapis['region_id']);
 
-        $benefitList    = [];
-        $totalBenefit   = 0;
+        $benefitList  = [];
+        $totalBenefit = 0;
 
         foreach ($settingTunjangan as $t) {
             $nominal = ($t['tipe'] === 'harian')
                 ? (float)$t['nominal'] * $kehadiran
                 : (float)$t['nominal'];
 
-            $item = ['nama' => $t['nama_tunjangan'], 'nominal' => (int)$nominal, 'kategori' => $t['kategori']];
-            $benefitList[]  = $item;
+            $benefitList[]  = ['nama' => $t['nama_tunjangan'], 'nominal' => (int)$nominal, 'kategori' => $t['kategori']];
             $totalBenefit  += $nominal;
         }
 
-        // ── POTONGAN RUTIN dari master gaji (kategori=potongan) ──────
-        // Sudah termasuk di atas karena getForTerapis ambil semua kategori
         // Pisahkan benefit dan potongan
-        $benefitOnly  = array_values(array_filter($benefitList, fn($i) => $i['kategori'] === 'tunjangan'));
-        $potonganMaster = array_values(array_filter($benefitList, fn($i) => $i['kategori'] === 'potongan'));
-        $totalBenefitOnly = array_sum(array_column($benefitOnly, 'nominal'));
+        $benefitOnly         = array_values(array_filter($benefitList, fn($i) => $i['kategori'] === 'tunjangan'));
+        $potonganMaster      = array_values(array_filter($benefitList, fn($i) => $i['kategori'] === 'potongan'));
+        $totalBenefitOnly    = array_sum(array_column($benefitOnly, 'nominal'));
         $totalPotonganMaster = array_sum(array_column($potonganMaster, 'nominal'));
 
         // ── TOTAL KASBON ─────────────────────────────────────────────
         $totalKasbon = (int)$terapis['total_kasbon'];
 
         // ── KALKULASI AKHIR ──────────────────────────────────────────
-        $totalA      = $gajiPokok + $jaspelReguler + $jaspelKejantanan;
-        $totalB      = $totalBenefitOnly;
-        $totalC      = $totalPotonganMaster + $totalKasbon;
-        $gajiBersih  = ($totalA + $totalB) - $totalC;
+        $totalA     = $gajiPokok + $jaspelReguler + $jaspelKejantanan;
+        $totalB     = $totalBenefitOnly;
+        $totalC     = $totalPotonganMaster + $totalKasbon;
+        $gajiBersih = ($totalA + $totalB) - $totalC;
 
-        $terapis['total_tunjangan'] = (int)$totalBenefit;
+        // total_tunjangan = tunjangan tetap + jaspel (untuk tampilan ringkasan)
+        $terapis['total_tunjangan'] = (int)($totalBenefitOnly + $jaspelReguler + $jaspelKejantanan);
 
         return [
-            'terapis'    => $terapis,
-            'komponen'   => [
+            'terapis'  => $terapis,
+            'komponen' => [
                 // Take Home
-                'gaji_pokok'        => (int)$gajiPokok,
-                'jaspel_reguler'    => (int)$jaspelReguler,
-                'jaspel_kejantanan' => (int)$jaspelKejantanan,
-                'total_A'           => (int)$totalA,
+                'gaji_pokok'           => (int)$gajiPokok,
+                'jaspel_reguler'       => (int)$jaspelReguler,
+                'jaspel_kejantanan'    => (int)$jaspelKejantanan,
+                'total_A'              => (int)$totalA,
                 // Benefit
-                'benefit_list'      => $benefitOnly,
-                'total_B'           => (int)$totalBenefitOnly,
+                'benefit_list'         => $benefitOnly,
+                'total_B'              => (int)$totalBenefitOnly,
                 // Potongan
-                'potongan_list'     => $potonganMaster,
+                'potongan_list'        => $potonganMaster,
                 'total_potongan_rutin' => (int)$totalPotonganMaster,
-                'total_kasbon'      => $totalKasbon,
-                'total_C'           => (int)$totalC,
+                'total_kasbon'         => $totalKasbon,
+                'total_C'              => (int)$totalC,
                 // Hasil
-                'gaji_bersih'       => (int)$gajiBersih,
-                'kehadiran'         => $kehadiran,
-                'hari_kerja'        => $hariKerja,
+                'gaji_bersih'          => (int)$gajiBersih,
+                'kehadiran'            => $kehadiran,
+                'hari_kerja'           => $hariKerja,
             ]
         ];
     }
+
     public function getHistoryByTerapis($terapisId)
     {
         return $this->db->table($this->table . ' p')

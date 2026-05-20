@@ -452,4 +452,4 @@
         saveSettingUrl: "<?= base_url('gaji/setting/save') ?>",
         prosesBayarUrl: "<?= base_url('gaji/proses_bayar') ?>"
     };</script>
-<?= $this->endSection() ?>
+<?= $this->endSection() ?>

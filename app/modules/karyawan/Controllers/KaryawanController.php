@@ -49,8 +49,8 @@ class KaryawanController extends BaseController
   {
     $role = $this->session->get('role');
 
-    // Terapis tidak boleh akses halaman list karyawan
-    if ($role === 'user' && !empty($this->session->get('terapis_id'))) {
+    // Hanya superadmin yang boleh akses halaman list karyawan
+    if ($role !== 'superadmin') {
       return redirect()->to('beranda')->with('message', ['error', 'Anda tidak memiliki akses ke halaman ini']);
     }
 
@@ -76,6 +76,11 @@ class KaryawanController extends BaseController
   public function fetch()
   {
     if (!$this->request->isAJAX()) {
+      return $this->response->setStatusCode(403)->setJSON(['error' => 'Forbidden']);
+    }
+
+    $role = $this->session->get('role');
+    if ($role !== 'superadmin') {
       return $this->response->setStatusCode(403)->setJSON(['error' => 'Forbidden']);
     }
 
@@ -242,6 +247,11 @@ class KaryawanController extends BaseController
   }
   public function store()
   {
+    $role = $this->session->get('role');
+    if ($role !== 'superadmin') {
+      return $this->response->setStatusCode(403)->setJSON(['status' => 'error', 'message' => 'Forbidden']);
+    }
+
     $post = $this->request->getPost();
 
     // Check username
@@ -355,10 +365,12 @@ class KaryawanController extends BaseController
     $role = $this->session->get('role');
     $terapisIdInt = $this->session->get('terapis_id_int');
 
-    // Terapis hanya boleh lihat profil sendiri
-    if ($role === 'user' && !empty($terapisIdInt)) {
-      if (!$terapisIdInt || $terapisIdInt != $id) {
-        return redirect()->to('terapis/profil_saya')->with('message', ['error', 'Anda hanya dapat melihat profil sendiri']);
+    // Restrict access to superadmin, except users (therapists) viewing their own profile
+    if ($role !== 'superadmin') {
+      if ($role === 'user' && !empty($terapisIdInt) && $terapisIdInt == $id) {
+        // Allowed
+      } else {
+        return redirect()->to('beranda')->with('message', ['error', 'Anda tidak memiliki akses ke halaman ini']);
       }
     }
 
@@ -393,6 +405,11 @@ class KaryawanController extends BaseController
   public function generate_user()
   {
     if (!$this->request->isAJAX()) return redirect()->to(site_url('karyawan'));
+
+    $role = $this->session->get('role');
+    if ($role !== 'superadmin') {
+      return $this->response->setJSON(['status' => 'error', 'message' => 'Anda tidak memiliki akses', 'csrfHash' => csrf_hash()]);
+    }
 
     $karyawan_id = $this->request->getPost('karyawan_id');
     $username = $this->request->getPost('username');
@@ -436,6 +453,11 @@ class KaryawanController extends BaseController
   {
     if (!$this->request->isAJAX()) return redirect()->to(site_url('karyawan'));
 
+    $role = $this->session->get('role');
+    if ($role !== 'superadmin') {
+      return $this->response->setJSON(['status' => 'error', 'message' => 'Anda tidak memiliki akses', 'csrfHash' => csrf_hash()]);
+    }
+
     $user_id = $this->request->getPost('user_id');
     $karyawan_id = $this->request->getPost('karyawan_id');
 
@@ -455,27 +477,25 @@ class KaryawanController extends BaseController
     $role = $this->session->get('role');
     $terapisIdInt = $this->session->get('terapis_id_int');
 
-    // Terapis hanya boleh update profil sendiri
-    if ($role === 'user' && !empty($terapisIdInt)) {
-      if (!$terapisIdInt || $terapisIdInt != $id) {
-        $this->session->setFlashdata('message', ['error', 'Anda hanya dapat mengubah profil sendiri']);
+    // Hanya superadmin yang boleh mengubah profil karyawan lain, terapis hanya boleh foto sendiri
+    if ($role !== 'superadmin') {
+      if ($role === 'user' && !empty($terapisIdInt) && $terapisIdInt == $id) {
+        $file = $this->request->getFile('foto');
+        if ($file && $file->isValid() && !$file->hasMoved()) {
+          $newName = $file->getRandomName();
+          $file->move(FCPATH . 'foto_karyawan', $newName);
+
+          // Update HANYA foto
+          $this->model_karyawan->update($id, ['foto' => $newName]);
+          $this->session->setFlashdata('message', ['success', 'Foto profil berhasil diperbarui']);
+        } else {
+          $this->session->setFlashdata('message', ['error', 'Tidak ada perubahan yang dilakukan']);
+        }
+        return redirect()->back();
+      } else {
+        $this->session->setFlashdata('message', ['error', 'Anda tidak memiliki akses ke halaman ini']);
         return redirect()->back();
       }
-
-      // Terapis HANYA boleh update foto, tidak boleh update field lain
-      $file = $this->request->getFile('foto');
-      if ($file && $file->isValid() && !$file->hasMoved()) {
-        $newName = $file->getRandomName();
-        $file->move(FCPATH . 'foto_karyawan', $newName);
-
-        // Update HANYA foto
-        $this->model_karyawan->update($id, ['foto' => $newName]);
-        $this->session->setFlashdata('message', ['success', 'Foto profil berhasil diperbarui']);
-      } else {
-        $this->session->setFlashdata('message', ['error', 'Tidak ada perubahan yang dilakukan']);
-      }
-
-      return redirect()->back();
     }
 
     // Untuk admin/owner/superadmin, boleh update semua field
@@ -510,6 +530,11 @@ class KaryawanController extends BaseController
 
   public function update_account($id)
   {
+    $role = $this->session->get('role');
+    if ($role !== 'superadmin') {
+      return $this->response->setJSON(['status' => 'error', 'message' => 'Anda tidak memiliki akses', 'csrfHash' => csrf_hash()]);
+    }
+
     $post = $this->request->getPost();
     $regions_patient = [];
     if ($post['role'] === 'superadmin') {
@@ -546,6 +571,11 @@ class KaryawanController extends BaseController
 
   public function delete_account($id)
   {
+    $role = $this->session->get('role');
+    if ($role !== 'superadmin') {
+      return $this->response->setJSON(['status' => 'error', 'message' => 'Anda tidak memiliki akses', 'csrfHash' => csrf_hash()]);
+    }
+
     if ($this->model_karyawan->db->table('users')->delete(['id' => $id])) {
       return $this->response->setJSON(['status' => 'success', 'message' => 'Akun berhasil dihapus', 'csrfHash' => csrf_hash()]);
     }
@@ -572,9 +602,8 @@ class KaryawanController extends BaseController
 
   public function active($id)
   {
-    // Only admin/owner/superadmin can activate/deactivate
     $role = $this->session->get('role');
-    if ($role === 'user' && !empty($this->session->get('terapis_id'))) {
+    if ($role !== 'superadmin') {
       return $this->response->setJSON(['status' => 'error', 'message' => 'Anda tidak memiliki akses', 'csrfHash' => csrf_hash()]);
     }
 
@@ -593,9 +622,8 @@ class KaryawanController extends BaseController
 
   public function nonActive($id)
   {
-    // Only admin/owner/superadmin can activate/deactivate
     $role = $this->session->get('role');
-    if ($role === 'user' && !empty($this->session->get('terapis_id'))) {
+    if ($role !== 'superadmin') {
       return $this->response->setJSON(['status' => 'error', 'message' => 'Anda tidak memiliki akses', 'csrfHash' => csrf_hash()]);
     }
 
@@ -614,9 +642,8 @@ class KaryawanController extends BaseController
 
   public function destroy($id)
   {
-    // Only admin/owner/superadmin can delete
     $role = $this->session->get('role');
-    if ($role === 'user' && !empty($this->session->get('terapis_id'))) {
+    if ($role !== 'superadmin') {
       return $this->response->setJSON(['status' => 'error', 'message' => 'Anda tidak memiliki akses', 'csrfHash' => csrf_hash()]);
     }
 
@@ -647,6 +674,11 @@ class KaryawanController extends BaseController
 
   public function view_patient($user_id)
   {
+    $role = $this->session->get('role');
+    if ($role !== 'superadmin') {
+      return redirect()->to('beranda')->with('message', ['error', 'Anda tidak memiliki akses ke halaman ini']);
+    }
+
     $user = $this->model_karyawan->db->table('users')->where('id', $user_id)->get()->getRow();
     if (!$user) return redirect()->to('karyawan');
 
@@ -672,6 +704,11 @@ class KaryawanController extends BaseController
 
   public function fetch_patients()
   {
+    $role = $this->session->get('role');
+    if ($role !== 'superadmin') {
+      return $this->response->setStatusCode(403)->setJSON(['error' => 'Forbidden']);
+    }
+
     $user_id = $this->request->getPost('user_id');
     $draw = $this->request->getPost('draw');
     $start = $this->request->getPost('start');
@@ -711,6 +748,11 @@ class KaryawanController extends BaseController
 
   public function fetch_patients_luar()
   {
+    $role = $this->session->get('role');
+    if ($role !== 'superadmin') {
+      return $this->response->setStatusCode(403)->setJSON(['error' => 'Forbidden']);
+    }
+
     $user_id = $this->request->getPost('user_id');
     $draw = $this->request->getPost('draw');
     $start = $this->request->getPost('start');
@@ -754,6 +796,11 @@ class KaryawanController extends BaseController
 
   public function get_outside_patients_select()
   {
+    $role = $this->session->get('role');
+    if ($role !== 'superadmin') {
+      return $this->response->setStatusCode(403)->setJSON(['error' => 'Forbidden']);
+    }
+
     $user_id = $this->request->getPost('user_id');
     $term = $this->request->getPost('searchTerm');
     $data = $this->model_karyawan->search_outside_patients($user_id, $term);
@@ -762,6 +809,11 @@ class KaryawanController extends BaseController
 
   public function add_outside_patient()
   {
+    $role = $this->session->get('role');
+    if ($role !== 'superadmin') {
+      return $this->response->setStatusCode(403)->setJSON(['status' => 'error', 'message' => 'Forbidden']);
+    }
+
     $user_id = $this->request->getPost('user_id');
     $patient_id = $this->request->getPost('patient_id');
 
@@ -773,6 +825,11 @@ class KaryawanController extends BaseController
 
   public function delete_outside_patient()
   {
+    $role = $this->session->get('role');
+    if ($role !== 'superadmin') {
+      return $this->response->setStatusCode(403)->setJSON(['success' => false]);
+    }
+
     $user_id = $this->request->getPost('user_id');
     $patient_id = $this->request->getPost('patient_id');
 

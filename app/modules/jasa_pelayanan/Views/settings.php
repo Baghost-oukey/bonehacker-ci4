@@ -68,11 +68,11 @@
                     <label class="text-sm font-semibold text-slate-800">Nominal Per Pasien <span class="text-red-500">*</span></label>
                     <div class="relative">
                         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">Rp</span>
-                        <input type="number" name="nominal_per_pasien" id="nominal_per_pasien" required min="0" step="1000"
+                        <input type="number" name="nominal_per_pasien" id="nominal_per_pasien" required min="0" step="1"
                             placeholder="5000"
                             class="w-full rounded-lg border border-slate-300 pl-10 pr-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
                     </div>
-                    <p class="text-xs text-slate-500">Nominal ini akan dibagi rata ke terapis yang hadir</p>
+                    <p class="text-xs text-slate-500">Nominal ini adalah pool harian yang dibagi rata ke terapis yang hadir</p>
                 </div>
 
                 <!-- Pilih Terapis -->
@@ -91,10 +91,10 @@
                         <div class="text-sm text-blue-800">
                             <p class="font-semibold mb-1">Cara Kerja Pembagian Jaspel:</p>
                             <ul class="list-disc list-inside space-y-1 text-xs">
-                                <li>Jaspel hanya diberikan kepada terapis yang <strong>hadir</strong> sesuai presensi</li>
-                                <li>Setiap terapis yang hadir mendapatkan nominal penuh per pasien</li>
-                                <li>Contoh: Rp 5.000 per pasien. Jika ada 10 pasien, setiap terapis yang hadir hari itu mendapatkan Rp 5.000 × 10 = Rp 50.000</li>
-                                <li>Terapis yang tidak hadir tidak mendapat jaspel</li>
+                                <li>Total Jaspel Harian = <strong>Jumlah Pasien × Nominal Per Pasien</strong></li>
+                                <li>Jaspel Per Terapis = <strong>Total Jaspel ÷ Jumlah Terapis Hadir</strong></li>
+                                <li>Contoh: Rp 7.000 per pasien, ada 10 pasien dan 8 terapis hadir → Total Pool = Rp 70.000 → Tiap terapis = Rp 8.750</li>
+                                <li>Terapis yang tidak hadir tidak mendapat jaspel hari itu</li>
                             </ul>
                         </div>
                     </div>
@@ -139,11 +139,14 @@
         });
 
         // Submit form
+        let nominalUserEdited = false;
+        $('#nominal_per_pasien').on('input', function() { nominalUserEdited = true; });
+
         $('#formJaspelSettings').on('submit', function(e) {
             e.preventDefault();
 
             const regionId  = $('#region_id').val();
-            const nominal   = $('#nominal_per_pasien').val();
+            const nominal   = parseInt($('#nominal_per_pasien').val(), 10);
             const tipe      = $('input[name="tipe"]:checked').val();
             const terapisIds = [];
 
@@ -151,11 +154,11 @@
                 terapisIds.push($(this).val());
             });
 
-            if (!regionId || !nominal) {
+            if (!regionId || !nominal || nominal <= 0) {
                 Swal.fire({
                     icon: 'warning',
                     title: 'Validasi Gagal',
-                    text: 'Cabang dan nominal wajib diisi',
+                    text: 'Cabang dan nominal wajib diisi (harus lebih dari 0)',
                     confirmButtonColor: '#0d9488'
                 });
                 return;
@@ -251,16 +254,22 @@
         const tipe    = $('input[name="tipe"]:checked').val();
         const setting = existingSettings.find(s => s.region_id == regionId && s.tipe == tipe);
 
-        // Reset dulu
-        $('#nominal_per_pasien').val('');
+        // Reset checkbox terapis
         $('input[name="terapis_ids[]"]').prop('checked', false);
 
         if (setting) {
-            $('#nominal_per_pasien').val(setting.nominal_per_pasien);
+            // Hanya isi nominal jika user belum mengetik sendiri
+            if (!nominalUserEdited) {
+                $('#nominal_per_pasien').val(setting.nominal_per_pasien);
+            }
             const terapisIds = JSON.parse(setting.terapis_ids || '[]');
             terapisIds.forEach(id => {
                 $(`input[name="terapis_ids[]"][value="${id}"]`).prop('checked', true);
             });
+        } else {
+            if (!nominalUserEdited) {
+                $('#nominal_per_pasien').val('');
+            }
         }
     }
 </script>

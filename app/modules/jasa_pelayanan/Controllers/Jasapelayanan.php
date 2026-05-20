@@ -599,20 +599,49 @@ class Jasapelayanan extends BaseController
             }
 
             $jumlahTerapisHadir = count($terapisHadir);
-            $jaspelPerTerapis = $jumlahTerapisHadir > 0 ? $totalPasien * $nominalPerPasien : 0;
-            $totalJaspelHariIni = $jumlahTerapisHadir * $jaspelPerTerapis;
+            // ✅ Rumus benar: Total Jaspel = Pool (pasien × nominal)
+            $totalJaspelHariIni = $totalPasien * $nominalPerPasien;
+            // ✅ Jaspel/Terapis = Pool dibagi terapis yang hadir
+            $jaspelPerTerapis = $jumlahTerapisHadir > 0 ? $totalJaspelHariIni / $jumlahTerapisHadir : 0;
 
             // Get nama terapis yang hadir
+            $terapisHadirIds = [];
             $namaTerapisHadir = '-';
             if ($jumlahTerapisHadir > 0) {
                 $terapisHadirIds = array_column($terapisHadir, 'terapis_id');
                 $namaTerapis = $this->db->table('terapis')
                     ->select('nama')
                     ->whereIn('id', $terapisHadirIds)
-                    ->where('is_active', 1) // Hanya terapis yang aktif
+                    ->where('is_active', 1)
                     ->get()
                     ->getResultArray();
                 $namaTerapisHadir = implode(', ', array_column($namaTerapis, 'nama'));
+            }
+
+            // Simpan/update ke tabel jaspel_harian
+            $existing = $this->db->table('jaspel_harian')
+                ->where('tanggal', $tanggal)
+                ->where('region_id', $regionId)
+                ->where('tipe', 'reguler')
+                ->get()->getRow();
+            $jaspelHarianData = [
+                'total_pasien'         => $totalPasien,
+                'nominal_per_pasien'   => $nominalPerPasien,
+                'total_jaspel'         => $totalJaspelHariIni,
+                'terapis_hadir_ids'    => json_encode($terapisHadirIds),
+                'jumlah_terapis_hadir' => $jumlahTerapisHadir,
+                'jaspel_per_terapis'   => $jaspelPerTerapis,
+                'updated_at'           => date('Y-m-d H:i:s'),
+            ];
+            if ($existing) {
+                $this->db->table('jaspel_harian')->where('id', $existing->id)->update($jaspelHarianData);
+            } else {
+                $jaspelHarianData['tanggal']    = $tanggal;
+                $jaspelHarianData['region_id']  = $regionId;
+                $jaspelHarianData['tipe']       = 'reguler';
+                $jaspelHarianData['is_processed'] = 0;
+                $jaspelHarianData['created_at'] = date('Y-m-d H:i:s');
+                $this->db->table('jaspel_harian')->insert($jaspelHarianData);
             }
 
             // Format tanggal ke bahasa Indonesia
@@ -627,13 +656,13 @@ class Jasapelayanan extends BaseController
             $tanggalIndo = "$tgl $bln $thn";
 
             $output[] = [
-                'no' => $no++,
-                'tanggal' => $tanggalIndo,
-                'total_pasien' => $totalPasien,
-                'terapis_hadir' => $jumlahTerapisHadir . ' orang',
-                'nama_terapis' => $namaTerapisHadir,
-                'total_jaspel' => 'Rp ' . number_format($totalJaspelHariIni, 0, ',', '.'),
-                'jaspel_per_terapis' => 'Rp ' . number_format($jaspelPerTerapis, 0, ',', '.'),
+                'no'                => $no++,
+                'tanggal'           => $tanggalIndo,
+                'total_pasien'      => $totalPasien,
+                'terapis_hadir'     => $jumlahTerapisHadir . ' orang',
+                'nama_terapis'      => $namaTerapisHadir,
+                'total_jaspel'      => 'Rp ' . number_format($totalJaspelHariIni, 0, ',', '.'),
+                'jaspel_per_terapis'=> 'Rp ' . number_format($jaspelPerTerapis, 0, ',', '.'),
             ];
         }
 
@@ -739,9 +768,12 @@ class Jasapelayanan extends BaseController
             }
 
             $jumlahTerapisHadir  = count($terapisHadir);
-            $jaspelPerTerapis    = $jumlahTerapisHadir > 0 ? $totalPasien * $nominalPerPasien : 0;
-            $totalJaspelHariIni  = $jumlahTerapisHadir * $jaspelPerTerapis;
+            // ✅ Rumus benar: Total Jaspel = Pool (pasien × nominal)
+            $totalJaspelHariIni  = $totalPasien * $nominalPerPasien;
+            // ✅ Jaspel/Terapis = Pool dibagi terapis yang hadir
+            $jaspelPerTerapis    = $jumlahTerapisHadir > 0 ? $totalJaspelHariIni / $jumlahTerapisHadir : 0;
 
+            $terapisHadirIds = [];
             $namaTerapisHadir = '-';
             if ($jumlahTerapisHadir > 0) {
                 $terapisHadirIds = array_column($terapisHadir, 'terapis_id');
@@ -752,6 +784,32 @@ class Jasapelayanan extends BaseController
                     ->get()
                     ->getResultArray();
                 $namaTerapisHadir = implode(', ', array_column($namaTerapis, 'nama'));
+            }
+
+            // Simpan/update ke tabel jaspel_harian
+            $existingKej = $this->db->table('jaspel_harian')
+                ->where('tanggal', $tanggal)
+                ->where('region_id', $regionId)
+                ->where('tipe', 'kejantanan')
+                ->get()->getRow();
+            $jaspelHarianDataKej = [
+                'total_pasien'         => $totalPasien,
+                'nominal_per_pasien'   => $nominalPerPasien,
+                'total_jaspel'         => $totalJaspelHariIni,
+                'terapis_hadir_ids'    => json_encode($terapisHadirIds),
+                'jumlah_terapis_hadir' => $jumlahTerapisHadir,
+                'jaspel_per_terapis'   => $jaspelPerTerapis,
+                'updated_at'           => date('Y-m-d H:i:s'),
+            ];
+            if ($existingKej) {
+                $this->db->table('jaspel_harian')->where('id', $existingKej->id)->update($jaspelHarianDataKej);
+            } else {
+                $jaspelHarianDataKej['tanggal']    = $tanggal;
+                $jaspelHarianDataKej['region_id']  = $regionId;
+                $jaspelHarianDataKej['tipe']       = 'kejantanan';
+                $jaspelHarianDataKej['is_processed'] = 0;
+                $jaspelHarianDataKej['created_at'] = date('Y-m-d H:i:s');
+                $this->db->table('jaspel_harian')->insert($jaspelHarianDataKej);
             }
 
             $tgl = date('d', strtotime($tanggal));
