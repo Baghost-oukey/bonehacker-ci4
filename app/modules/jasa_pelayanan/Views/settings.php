@@ -78,8 +78,8 @@
                 <!-- Pilih Terapis -->
                 <div class="space-y-2">
                     <label class="text-sm font-semibold text-slate-800">Terapis Yang Berhak Menerima Jaspel</label>
-                    <div id="terapisList" class="space-y-2 border border-slate-200 rounded-lg p-4 max-h-64 overflow-y-auto">
-                        <p class="text-sm text-slate-400 italic">Pilih cabang terlebih dahulu</p>
+                    <div id="terapisList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 border border-slate-200 rounded-lg p-4 max-h-64 overflow-y-auto">
+                        <p class="col-span-full text-sm text-slate-400 italic">Pilih cabang terlebih dahulu</p>
                     </div>
                     <p class="text-xs text-slate-500">Centang terapis yang berhak menerima jaspel di cabang ini</p>
                 </div>
@@ -92,8 +92,8 @@
                             <p class="font-semibold mb-1">Cara Kerja Pembagian Jaspel:</p>
                             <ul class="list-disc list-inside space-y-1 text-xs">
                                 <li>Jaspel hanya diberikan kepada terapis yang <strong>hadir</strong> sesuai presensi</li>
-                                <li>Nominal per pasien dibagi rata ke semua terapis yang hadir</li>
-                                <li>Contoh: Rp 5.000 ÷ 2 terapis hadir = Rp 2.500 per terapis</li>
+                                <li>Setiap terapis yang hadir mendapatkan nominal penuh per pasien</li>
+                                <li>Contoh: Rp 5.000 per pasien. Jika ada 10 pasien, setiap terapis yang hadir hari itu mendapatkan Rp 5.000 × 10 = Rp 50.000</li>
                                 <li>Terapis yang tidak hadir tidak mendapat jaspel</li>
                             </ul>
                         </div>
@@ -115,92 +115,7 @@
             </form>
         </div>
     </div>
-
-    <!-- Daftar Pengaturan Reguler -->
-    <?php if (!empty($settings)): ?>
-    <div class="rounded-2xl bg-white shadow-sm border border-slate-200/50 overflow-hidden">
-        <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4 flex items-center gap-3">
-            <span class="inline-flex items-center rounded-full bg-teal-100 px-3 py-1 text-xs font-bold text-teal-700">Reguler</span>
-            <div>
-                <h3 class="text-lg font-semibold text-slate-800">Pengaturan Jaspel Reguler</h3>
-                <p class="text-sm text-slate-500">Nominal untuk terapi reguler per cabang</p>
-            </div>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
-                    <tr>
-                        <th class="px-6 py-3.5 text-left font-semibold">Cabang</th>
-                        <th class="px-6 py-3.5 text-right font-semibold">Nominal/Pasien</th>
-                        <th class="px-6 py-3.5 text-center font-semibold">Jumlah Terapis</th>
-                        <th class="px-6 py-3.5 text-center font-semibold">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 text-slate-700">
-                    <?php foreach ($settings as $setting): ?>
-                        <?php $jumlahTerapis = count(json_decode($setting->terapis_ids, true) ?? []); ?>
-                        <tr class="hover:bg-slate-50 transition">
-                            <td class="px-6 py-4 font-medium"><?= esc($setting->region_name) ?></td>
-                            <td class="px-6 py-4 text-right font-semibold text-teal-600">
-                                Rp <?= number_format($setting->nominal_per_pasien, 0, ',', '.') ?>
-                            </td>
-                            <td class="px-6 py-4 text-center"><?= $jumlahTerapis ?> orang</td>
-                            <td class="px-6 py-4 text-center">
-                                <button type="button" onclick="editSetting(<?= $setting->region_id ?>, 'reguler')"
-                                    class="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-100">
-                                    <i class="fas fa-edit"></i> Edit
-                                </button>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
-    <?php endif; ?>
-
-    <!-- Daftar Pengaturan Kejantanan -->
-    <?php if (!empty($settings_kejantanan)): ?>
-    <div class="rounded-2xl bg-white shadow-sm border border-slate-200/50 overflow-hidden">
-        <div class="border-b border-slate-100 bg-slate-50/50 px-6 py-4 flex items-center gap-3">
-            <span class="inline-flex items-center rounded-full bg-purple-100 px-3 py-1 text-xs font-bold text-purple-700">Kejantanan</span>
-            <div>
-                <h3 class="text-lg font-semibold text-slate-800">Pengaturan Jaspel Kejantanan</h3>
-                <p class="text-sm text-slate-500">Nominal untuk terapi kejantanan per cabang</p>
-            </div>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
-                    <tr>
-                        <th class="px-6 py-3.5 text-left font-semibold">Cabang</th>
-                        <th class="px-6 py-3.5 text-right font-semibold">Nominal/Pasien</th>
-                        <th class="px-6 py-3.5 text-center font-semibold">Jumlah Terapis</th>
-                        <th class="px-6 py-3.5 text-center font-semibold">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 text-slate-700">
-                    <?php foreach ($settings_kejantanan as $setting): ?>
-                        <?php $jumlahTerapis = count(json_decode($setting->terapis_ids, true) ?? []); ?>
-                        <tr class="hover:bg-slate-50 transition">
-                            <td class="px-6 py-4 font-medium"><?= esc($setting->region_name) ?></td>
-                            <td class="px-6 py-4 text-right font-semibold text-purple-600">
-                                Rp <?= number_format($setting->nominal_per_pasien, 0, ',', '.') ?>
-                            </td>
-                            <td class="px-6 py-4 text-center"><?= $jumlahTerapis ?> orang</td>
-                            <td class="px-6 py-4 text-center">
-                                <button type="button" onclick="editSetting(<?= $setting->region_id ?>, 'kejantanan')"
-                                    class="inline-flex items-center gap-1 rounded-lg bg-purple-50 px-3 py-1.5 text-xs font-medium text-purple-600 hover:bg-purple-100">
-                                    <i class="fas fa-edit"></i> Edit
-                                </button>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
-    <?php endif; ?>
+    <!-- Removed static tables from bottom as they are moved to their respective report tables index pages -->
 </section>
 
 <?= $this->endSection() ?>
@@ -215,7 +130,7 @@
         $('#region_id, input[name="tipe"]').on('change', function() {
             const regionId = $('#region_id').val();
             if (!regionId) {
-                $('#terapisList').html('<p class="text-sm text-slate-400 italic">Pilih cabang terlebih dahulu</p>');
+                $('#terapisList').html('<p class="col-span-full text-sm text-slate-400 italic">Pilih cabang terlebih dahulu</p>');
                 $('#nominal_per_pasien').val('');
                 return;
             }
@@ -237,7 +152,12 @@
             });
 
             if (!regionId || !nominal) {
-                alert('Cabang dan nominal wajib diisi');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Validasi Gagal',
+                    text: 'Cabang dan nominal wajib diisi',
+                    confirmButtonColor: '#0d9488'
+                });
                 return;
             }
 
@@ -259,38 +179,64 @@
                         $('input[name="<?= csrf_token() ?>"]').val(response.csrfHash);
                     }
                     if (response.status === 'success') {
-                        alert(response.message);
-                        window.location.reload();
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil',
+                            text: response.message,
+                            confirmButtonColor: '#0d9488'
+                        }).then(() => {
+                            window.location.href = '<?= site_url('jasa-pelayanan/') ?>' + tipe;
+                        });
                     } else {
-                        alert(response.message || 'Gagal menyimpan pengaturan');
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal',
+                            text: response.message || 'Gagal menyimpan pengaturan',
+                            confirmButtonColor: '#ef4444'
+                        });
                     }
                 },
                 error: function(xhr) {
                     console.error('Error:', xhr);
-                    alert('Terjadi kesalahan saat menyimpan');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Terjadi Kesalahan',
+                        text: 'Terjadi kesalahan saat menyimpan pengaturan',
+                        confirmButtonColor: '#ef4444'
+                    });
                 },
                 complete: function() {
                     $('#btnSave').prop('disabled', false).html('<i class="fas fa-save mr-2"></i>Simpan Pengaturan');
                 }
             });
         });
+
+        // Handle URL parameters for editing setting
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlRegionId = urlParams.get('region_id');
+        const urlTipe = urlParams.get('tipe');
+
+        if (urlRegionId && urlTipe) {
+            $(`input[name="tipe"][value="${urlTipe}"]`).prop('checked', true);
+            $('#region_id').val(urlRegionId).trigger('change');
+        }
     });
 
     function loadTerapisByRegion(regionId) {
         const terapisInRegion = allTerapis.filter(t => t.region_id == regionId);
 
         if (terapisInRegion.length === 0) {
-            $('#terapisList').html('<p class="text-sm text-slate-400 italic">Tidak ada terapis di cabang ini</p>');
+            $('#terapisList').html('<p class="col-span-full text-sm text-slate-400 italic">Tidak ada terapis di cabang ini</p>');
             return;
         }
 
         let html = '';
         terapisInRegion.forEach(terapis => {
             html += `
-                <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer">
+                <label class="flex items-center gap-3 p-2.5 rounded-lg border border-slate-100 hover:bg-slate-50 cursor-pointer transition duration-150">
                     <input type="checkbox" name="terapis_ids[]" value="${terapis.id}" 
                         class="rounded border-slate-300 text-teal-600 focus:ring-teal-500 w-4 h-4">
-                    <span class="text-sm text-slate-700">${terapis.nama}</span>
+                    <span class="text-sm font-semibold text-slate-700">${terapis.nama}</span>
                 </label>
             `;
         });
@@ -316,12 +262,6 @@
                 $(`input[name="terapis_ids[]"][value="${id}"]`).prop('checked', true);
             });
         }
-    }
-
-    function editSetting(regionId, tipe) {
-        $(`input[name="tipe"][value="${tipe}"]`).prop('checked', true);
-        $('#region_id').val(regionId).trigger('change');
-        $('html, body').animate({ scrollTop: 0 }, 500);
     }
 </script>
 

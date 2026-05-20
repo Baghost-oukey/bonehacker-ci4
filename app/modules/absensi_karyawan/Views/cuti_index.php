@@ -149,20 +149,20 @@
 </div>
 
 <!-- Modal Input Cuti -->
-<div id="modalCuti" class="modal-wrapper hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
-        <div class="p-8 border-b border-slate-50 flex items-center justify-between bg-teal-600">
-            <h3 class="text-xl font-black text-white uppercase tracking-tight">Formulir Pengajuan Cuti</h3>
-            <button onclick="closeModalCuti()" class="text-white/70 hover:text-white transition-colors">
-                <i class="fas fa-times text-xl"></i>
+<div id="modalCuti" class="modal-wrapper hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4 bg-white">
+            <h5 class="text-lg font-semibold text-slate-800">Formulir Pengajuan Cuti</h5>
+            <button type="button" onclick="closeModalCuti()" class="rounded-md p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors">
+                <i class="fas fa-times"></i>
             </button>
         </div>
-        <form id="formCuti" action="<?= base_url('kehadiran/cuti/simpan') ?>" method="POST" class="p-8 space-y-6">
+        <form id="formCuti" action="<?= base_url('kehadiran/cuti/simpan') ?>" method="POST" class="p-5 space-y-4">
             <?= csrf_field() ?>
             
-            <div class="space-y-2">
-                <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Karyawan</label>
-                <select name="terapis_id" id="terapis_id_select" onchange="checkSisaCuti(this.value)" required class="w-full h-14 rounded-2xl border-slate-200 bg-slate-50 text-sm font-bold focus:ring-teal-500 focus:border-teal-500 transition-all">
+            <div class="space-y-1">
+                <label class="text-sm font-medium text-slate-700">Karyawan <span class="text-red-500">*</span></label>
+                <select name="terapis_id" id="terapis_id_select" onchange="checkSisaCuti(this.value)" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 transition-colors">
                     <option value="">Pilih Karyawan</option>
                     <?php foreach ($terapis as $t): ?>
                     <option value="<?= $t->id ?>"><?= esc($t->nama) ?></option>
@@ -170,79 +170,86 @@
                 </select>
                 
                 <!-- Info Sisa Cuti -->
-                <div id="infoSisaCuti" class="hidden mt-3 p-4 rounded-2xl bg-teal-50 border border-teal-100 flex items-center justify-between">
+                <div id="infoSisaCuti" class="hidden mt-3 p-4 rounded-lg bg-teal-50/50 border border-teal-100 flex items-center justify-between">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full bg-teal-600 flex items-center justify-center text-white">
-                            <i class="fas fa-info-circle"></i>
+                        <div class="w-10 h-10 rounded-full bg-teal-50 flex items-center justify-center text-teal-600">
+                            <i class="fas fa-info-circle text-lg"></i>
                         </div>
                         <div>
-                            <p class="text-[10px] font-black text-teal-600 uppercase tracking-widest">Sisa Kuota Cuti</p>
-                            <p class="text-sm font-black text-teal-900"><span id="sisa_hari_label">0</span> Hari <span class="text-teal-600/50 font-medium">/ 1 Tahun</span></p>
+                            <p class="text-[10px] font-bold text-teal-600 uppercase tracking-wider">Sisa Kuota Cuti</p>
+                            <p class="text-sm font-bold text-teal-900"><span id="sisa_hari_label">0</span> Hari <span class="text-slate-400 text-xs font-normal">/ 1 Tahun</span></p>
                         </div>
                     </div>
                     <div class="text-right">
-                        <p class="text-[10px] font-black text-teal-600 uppercase tracking-widest">Terpakai</p>
-                        <p class="text-sm font-black text-teal-900"><span id="terpakai_hari_label">0</span> Hari</p>
+                        <p class="text-[10px] font-bold text-teal-600 uppercase tracking-wider">Terpakai</p>
+                        <p class="text-sm font-bold text-slate-800"><span id="terpakai_hari_label">0</span> Hari</p>
                     </div>
                 </div>
             </div>
 
-            <div class="space-y-6">
-                <!-- Start Date Hidden (Defaults to Today) -->
-                <input type="hidden" name="tanggal_mulai" value="<?= date('Y-m-d') ?>">
-                
-                <div class="space-y-2">
-                    <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Durasi Cuti</label>
-                    <select name="jumlah_hari" required class="w-full h-14 rounded-2xl border-slate-200 bg-slate-50 text-sm font-bold focus:ring-teal-500 focus:border-teal-500 transition-all">
-                        <?php for($i=1; $i<=12; $i++): ?>
-                        <option value="<?= $i ?>"><?= $i ?> Hari</option>
-                        <?php endfor; ?>
-                    </select>
-                </div>
+            <!-- Start Date Hidden (Defaults to Today) -->
+            <input type="hidden" name="tanggal_mulai" value="<?= date('Y-m-d') ?>">
+            
+            <div class="space-y-1">
+                <label class="text-sm font-medium text-slate-700">Durasi Cuti <span class="text-red-500">*</span></label>
+                <select name="jumlah_hari" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 transition-colors">
+                    <?php for($i=1; $i<=12; $i++): ?>
+                    <option value="<?= $i ?>"><?= $i ?> Hari</option>
+                    <?php endfor; ?>
+                </select>
             </div>
 
-            <div class="space-y-2">
-                <label class="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Keterangan / Alasan</label>
-                <textarea name="keterangan" rows="3" placeholder="Contoh: Acara Keluarga, Mudik, dll..." class="w-full rounded-2xl border-slate-200 bg-slate-50 text-sm font-bold focus:ring-teal-500 focus:border-teal-500 transition-all p-4"></textarea>
+            <div class="space-y-1">
+                <label class="text-sm font-medium text-slate-700">Keterangan / Alasan</label>
+                <textarea name="keterangan" rows="3" placeholder="Contoh: Acara Keluarga, Mudik, dll..." class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 transition-colors"></textarea>
             </div>
 
-            <div class="pt-4 flex flex-col gap-3">
-                <button type="submit" class="w-full h-14 bg-teal-600 hover:bg-teal-700 text-white rounded-2xl font-black uppercase tracking-widest transition-all shadow-xl shadow-teal-100 flex items-center justify-center gap-3">
-                    <i class="fas fa-paper-plane"></i>
-                    Simpan Data Cuti
+            <div class="flex items-center justify-end gap-2 border-t border-slate-200 pt-4">
+                <button type="button" onclick="closeModalCuti()"
+                    class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Batal</button>
+                <button type="submit"
+                    class="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 flex items-center gap-2">
+                    <i class="fas fa-paper-plane text-xs"></i>
+                    <span>Simpan Data Cuti</span>
                 </button>
-                <p class="text-center text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                    <i class="fas fa-lock mr-1"></i> Data akan otomatis terhubung ke presensi
-                </p>
             </div>
+            <p class="text-center text-[10px] text-slate-400 font-semibold tracking-wide mt-2">
+                <i class="fas fa-lock mr-1"></i> Data akan otomatis terhubung ke presensi
+            </p>
         </form>
     </div>
 </div>
 
 <!-- Modal Edit Kuota -->
-<div id="modalKuota" class="modal-wrapper hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in duration-200">
-        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
-            <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">Edit Kuota Cuti</h3>
-            <button onclick="closeModalKuota()" class="text-slate-400 hover:text-slate-600 transition-colors">
+<div id="modalKuota" class="modal-wrapper hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4 bg-white">
+            <h5 class="text-lg font-semibold text-slate-800">Edit Kuota Cuti</h5>
+            <button type="button" onclick="closeModalKuota()" class="rounded-md p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors">
                 <i class="fas fa-times"></i>
             </button>
         </div>
-        <form id="formKuota" action="<?= base_url('kehadiran/cuti/update_kuota') ?>" method="POST" class="p-6 space-y-4">
+        <form id="formKuota" action="<?= base_url('kehadiran/cuti/update_kuota') ?>" method="POST" class="p-5 space-y-4">
             <?= csrf_field() ?>
             <input type="hidden" name="terapis_id" id="kuota_terapis_id">
-            <div class="p-4 bg-teal-50 rounded-xl mb-4">
-                <span class="text-xs text-teal-600 font-bold block">Karyawan:</span>
-                <span id="kuota_nama_terapis" class="text-sm font-black text-teal-800">Nama Terapis</span>
+            
+            <div class="p-3 bg-teal-50/50 border border-teal-100 rounded-lg">
+                <span class="text-xs text-slate-500 block">Karyawan:</span>
+                <span id="kuota_nama_terapis" class="text-sm font-semibold text-slate-800">Nama Terapis</span>
             </div>
-            <div class="space-y-1.5">
-                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Kuota Cuti (Hari/Tahun)</label>
-                <input type="number" name="jatah_cuti" id="kuota_input" required min="0" class="w-full h-11 rounded-xl border-slate-200 bg-slate-50 text-sm font-black focus:ring-teal-500 focus:border-teal-500 px-4">
+            
+            <div class="space-y-1">
+                <label class="text-sm font-medium text-slate-700">Kuota Cuti (Hari/Tahun) <span class="text-red-500">*</span></label>
+                <input type="number" name="jatah_cuti" id="kuota_input" required min="0" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 transition-colors">
             </div>
-            <div class="pt-2">
-                <button type="submit" class="w-full h-12 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-black uppercase tracking-widest transition-all shadow-lg shadow-slate-200 flex items-center justify-center gap-2">
-                    <i class="fas fa-check-circle"></i>
-                    Update Kuota
+            
+            <div class="flex items-center justify-end gap-2 border-t border-slate-200 pt-4">
+                <button type="button" onclick="closeModalKuota()"
+                    class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Batal</button>
+                <button type="submit"
+                    class="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 flex items-center gap-2">
+                    <i class="fas fa-check-circle text-xs"></i>
+                    <span>Update Kuota</span>
                 </button>
             </div>
         </form>
@@ -397,7 +404,7 @@
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        z-index: 9999 !important;
+        z-index: 1040 !important;
         background-color: rgba(15, 23, 42, 0.6) !important; /* Overlay gelap premium */
     }
 

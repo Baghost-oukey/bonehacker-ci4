@@ -62,6 +62,34 @@ class Cutikaryawan extends BaseController
         $jumlah_hari = (int)$this->request->getPost('jumlah_hari');
         $keterangan = $this->request->getPost('keterangan');
 
+        // Validasi Karyawan & Sisa Kuota di Server Side
+        $terapis = $this->model_karyawan->find($terapis_id);
+        if (!$terapis) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Karyawan tidak ditemukan.',
+                'csrfHash' => csrf_hash()
+            ]);
+        }
+
+        $tahun = date('Y', strtotime($tgl_mulai));
+        $total_terpakai = $this->model_cuti->where('terapis_id', $terapis_id)
+            ->where('YEAR(tanggal_mulai)', $tahun)
+            ->selectSum('jumlah_hari')
+            ->first();
+
+        $terpakai = (int)($total_terpakai->jumlah_hari ?? 0);
+        $kuota = (int)$terapis->jatah_cuti;
+        $sisa = $kuota - $terpakai;
+
+        if ($sisa < $jumlah_hari) {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => "Kuota cuti tidak mencukupi. Sisa kuota {$terapis->nama} adalah {$sisa} hari.",
+                'csrfHash' => csrf_hash()
+            ]);
+        }
+
         // Hitung tanggal selesai
         $start = new \DateTime($tgl_mulai);
         $end = clone $start;

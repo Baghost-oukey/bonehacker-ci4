@@ -36,6 +36,8 @@ class Jasapelayanan extends BaseController
         $region_patient = session()->get('region_patient');
         $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
 
+        $settingsReguler = $this->modelJaspelSettings->getAllWithRegion('reguler');
+
         $data = [
             'realname'        => session()->get('realname'),
             'role'            => $role,
@@ -47,6 +49,7 @@ class Jasapelayanan extends BaseController
             'sess_region_id'  => session()->get('active_region'),
             'sess_role'       => $role,
             'current_month'   => date('Y-m'),
+            'settings'        => $settingsReguler,
         ];
 
         return view('App\modules\jasa_pelayanan\Views\index_regular', $data);
@@ -67,6 +70,8 @@ class Jasapelayanan extends BaseController
         $region_patient = session()->get('region_patient');
         $allowed_regions = ($region_patient !== 'all') ? $region_patient : null;
 
+        $settingsKejantanan = $this->modelJaspelSettings->getAllWithRegion('kejantanan');
+
         $data = [
             'realname'         => session()->get('realname'),
             'role'             => $role,
@@ -78,6 +83,7 @@ class Jasapelayanan extends BaseController
             'sess_region_id'   => session()->get('active_region'),
             'sess_role'        => $role,
             'current_month'    => date('Y-m'),
+            'settings_kejantanan' => $settingsKejantanan,
         ];
 
         return view('App\modules\jasa_pelayanan\Views\index_kejantanan', $data);
@@ -459,7 +465,6 @@ class Jasapelayanan extends BaseController
             return $this->response->setJSON(['status' => 'error', 'message' => 'Unauthorized']);
         }
 
-        $regionId = $this->request->getPost('region_id');
         $regionId   = $this->request->getPost('region_id');
         $nominal    = $this->request->getPost('nominal_per_pasien');
         $terapisIds = $this->request->getPost('terapis_ids');
@@ -467,14 +472,16 @@ class Jasapelayanan extends BaseController
 
         if (empty($regionId) || empty($nominal)) {
             return $this->response->setJSON([
-                'status'  => 'error',
-                'message' => 'Region dan nominal wajib diisi'
+                'status'   => 'error',
+                'message'  => 'Region dan nominal wajib diisi',
+                'csrfHash' => csrf_hash()
             ]);
         }
 
         $data = [
             'nominal_per_pasien' => $nominal,
             'terapis_ids'        => json_encode($terapisIds ?? []),
+            'is_active'          => 1, // Enforce active state
             'updated_by'         => session()->get('userId'),
         ];
 
@@ -495,8 +502,9 @@ class Jasapelayanan extends BaseController
         }
 
         return $this->response->setJSON([
-            'status'  => 'error',
-            'message' => 'Gagal menyimpan pengaturan'
+            'status'   => 'error',
+            'message'  => 'Gagal menyimpan pengaturan',
+            'csrfHash' => csrf_hash()
         ]);
     }
 
@@ -516,7 +524,10 @@ class Jasapelayanan extends BaseController
         // Filter region berdasarkan role
         if ($role !== 'superadmin') {
             if ($region_patient !== 'all') {
-                $regionId = is_array($region_patient) ? $region_patient[0] : $region_patient;
+                $allowed = is_array($region_patient) ? $region_patient : [$region_patient];
+                if (empty($regionId) || !in_array($regionId, $allowed)) {
+                    $regionId = $allowed[0];
+                }
             }
         }
 
@@ -588,8 +599,8 @@ class Jasapelayanan extends BaseController
             }
 
             $jumlahTerapisHadir = count($terapisHadir);
-            $totalJaspelHariIni = $totalPasien * $nominalPerPasien;
-            $jaspelPerTerapis = $jumlahTerapisHadir > 0 ? $totalJaspelHariIni / $jumlahTerapisHadir : 0;
+            $jaspelPerTerapis = $jumlahTerapisHadir > 0 ? $totalPasien * $nominalPerPasien : 0;
+            $totalJaspelHariIni = $jumlahTerapisHadir * $jaspelPerTerapis;
 
             // Get nama terapis yang hadir
             $namaTerapisHadir = '-';
@@ -649,7 +660,10 @@ class Jasapelayanan extends BaseController
 
         if ($role !== 'superadmin') {
             if ($region_patient !== 'all') {
-                $regionId = is_array($region_patient) ? $region_patient[0] : $region_patient;
+                $allowed = is_array($region_patient) ? $region_patient : [$region_patient];
+                if (empty($regionId) || !in_array($regionId, $allowed)) {
+                    $regionId = $allowed[0];
+                }
             }
         }
 
@@ -725,8 +739,8 @@ class Jasapelayanan extends BaseController
             }
 
             $jumlahTerapisHadir  = count($terapisHadir);
-            $totalJaspelHariIni  = $totalPasien * $nominalPerPasien;
-            $jaspelPerTerapis    = $jumlahTerapisHadir > 0 ? $totalJaspelHariIni / $jumlahTerapisHadir : 0;
+            $jaspelPerTerapis    = $jumlahTerapisHadir > 0 ? $totalPasien * $nominalPerPasien : 0;
+            $totalJaspelHariIni  = $jumlahTerapisHadir * $jaspelPerTerapis;
 
             $namaTerapisHadir = '-';
             if ($jumlahTerapisHadir > 0) {

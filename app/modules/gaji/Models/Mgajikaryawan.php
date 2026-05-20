@@ -170,38 +170,24 @@ class Mgajikaryawan extends Model
         if ($settingReguler) {
             $terapisAllowed = json_decode($settingReguler->terapis_ids, true) ?? [];
             if (in_array($id, $terapisAllowed)) {
-                // Hitung pasien reguler bulan ini (bukan kejantanan, sudah selesai)
-                $pasienReguler = $this->db->table('patient_queues pq')
-                    ->join('histories h', 'h.patient_queue_id = pq.id', 'inner')
-                    ->where('pq.region_id', $terapis['region_id'])
-                    ->where('h.finish_at IS NOT NULL', null, false)
-                    ->where('(h.kejantanan != \'ya\' OR h.kejantanan IS NULL)', null, false)
-                    ->where('MONTH(pq.queue_date)', $bulan)
-                    ->where('YEAR(pq.queue_date)', $tahun)
-                    ->countAllResults();
-
-                // Cek kehadiran terapis di bulan ini
-                $hadirBulanIni = $this->db->table('absensi_karyawan')
-                    ->where('terapis_id', $id)
-                    ->where('status', 'Hadir')
-                    ->where("tanggal >= '$tanggalAwal'")
-                    ->where("tanggal <= '$tanggalAkhir'")
-                    ->countAllResults();
-
-                // Hitung terapis hadir lain yang berhak
-                $terapisHadir = $this->db->table('absensi_karyawan ak')
-                    ->whereIn('ak.terapis_id', $terapisAllowed)
-                    ->where('ak.status', 'Hadir')
-                    ->where("ak.tanggal >= '$tanggalAwal'")
-                    ->where("ak.tanggal <= '$tanggalAkhir'")
-                    ->select('ak.terapis_id')
-                    ->distinct()
-                    ->countAllResults();
-
-                if ($hadirBulanIni > 0 && $terapisHadir > 0 && $pasienReguler > 0) {
-                    $totalJaspel   = $pasienReguler * $settingReguler->nominal_per_pasien;
-                    $jaspelReguler = $totalJaspel / $terapisHadir;
-                }
+                // Hitung total pasien reguler pada hari-hari ketika terapis ini hadir
+                $sql = "SELECT COALESCE(SUM(daily_patients), 0) as total_patients FROM (
+                            SELECT DATE(pq.queue_date) as tanggal, COUNT(DISTINCT pq.patient_id) as daily_patients
+                            FROM patient_queues pq
+                            JOIN histories h ON h.patient_queue_id = pq.id
+                            JOIN absensi_karyawan ak ON ak.tanggal = DATE(pq.queue_date)
+                            WHERE pq.region_id = ?
+                              AND h.finish_at IS NOT NULL
+                              AND (h.kejantanan != 'ya' OR h.kejantanan IS NULL)
+                              AND MONTH(pq.queue_date) = ?
+                              AND YEAR(pq.queue_date) = ?
+                              AND ak.terapis_id = ?
+                              AND ak.status = 'Hadir'
+                            GROUP BY DATE(pq.queue_date)
+                        ) tmp";
+                $query = $this->db->query($sql, [$terapis['region_id'], $bulan, $tahun, $id])->getRow();
+                $pasienReguler = (int)($query->total_patients ?? 0);
+                $jaspelReguler = $pasienReguler * $settingReguler->nominal_per_pasien;
             }
         }
 
@@ -211,30 +197,24 @@ class Mgajikaryawan extends Model
         if ($settingKejantanan) {
             $terapisAllowed = json_decode($settingKejantanan->terapis_ids, true) ?? [];
             if (in_array($id, $terapisAllowed)) {
-                $pasienKejantanan = $this->db->table('patient_queues pq')
-                    ->join('histories h', 'h.patient_queue_id = pq.id', 'inner')
-                    ->where('pq.region_id', $terapis['region_id'])
-                    ->where('h.finish_at IS NOT NULL', null, false)
-                    ->where('h.kejantanan', 'ya')
-                    ->where('MONTH(pq.queue_date)', $bulan)
-                    ->where('YEAR(pq.queue_date)', $tahun)
-                    ->countAllResults();
-
-                $hadirBulanIni = $this->db->table('absensi_karyawan')
-                    ->where('terapis_id', $id)->where('status', 'Hadir')
-                    ->where("tanggal >= '$tanggalAwal'")->where("tanggal <= '$tanggalAkhir'")
-                    ->countAllResults();
-
-                $terapisHadir = $this->db->table('absensi_karyawan ak')
-                    ->whereIn('ak.terapis_id', $terapisAllowed)
-                    ->where('ak.status', 'Hadir')
-                    ->where("ak.tanggal >= '$tanggalAwal'")->where("ak.tanggal <= '$tanggalAkhir'")
-                    ->select('ak.terapis_id')->distinct()->countAllResults();
-
-                if ($hadirBulanIni > 0 && $terapisHadir > 0 && $pasienKejantanan > 0) {
-                    $totalJaspel      = $pasienKejantanan * $settingKejantanan->nominal_per_pasien;
-                    $jaspelKejantanan = $totalJaspel / $terapisHadir;
-                }
+                // Hitung total pasien kejantanan pada hari-hari ketika terapis ini hadir
+                $sql = "SELECT COALESCE(SUM(daily_patients), 0) as total_patients FROM (
+                            SELECT DATE(pq.queue_date) as tanggal, COUNT(DISTINCT pq.patient_id) as daily_patients
+                            FROM patient_queues pq
+                            JOIN histories h ON h.patient_queue_id = pq.id
+                            JOIN absensi_karyawan ak ON ak.tanggal = DATE(pq.queue_date)
+                            WHERE pq.region_id = ?
+                              AND h.finish_at IS NOT NULL
+                              AND h.kejantanan = 'ya'
+                              AND MONTH(pq.queue_date) = ?
+                              AND YEAR(pq.queue_date) = ?
+                              AND ak.terapis_id = ?
+                              AND ak.status = 'Hadir'
+                            GROUP BY DATE(pq.queue_date)
+                        ) tmp";
+                $query = $this->db->query($sql, [$terapis['region_id'], $bulan, $tahun, $id])->getRow();
+                $pasienKejantanan = (int)($query->total_patients ?? 0);
+                $jaspelKejantanan = $pasienKejantanan * $settingKejantanan->nominal_per_pasien;
             }
         }
 

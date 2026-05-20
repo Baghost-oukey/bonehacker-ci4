@@ -343,6 +343,11 @@ class BerandaController extends BaseController
     $nominalReguler = $settingsReguler ? (int) $settingsReguler->nominal_per_pasien : 0;
     $nominalKejantanan = $settingsKejantanan ? (int) $settingsKejantanan->nominal_per_pasien : 0;
 
+    $terapisIdsReguler = $settingsReguler ? json_decode($settingsReguler->terapis_ids, true) ?? [] : [];
+    $terapisIdsKejantanan = $settingsKejantanan ? json_decode($settingsKejantanan->terapis_ids, true) ?? [] : [];
+    $allowedReguler = in_array($terapisId, $terapisIdsReguler);
+    $allowedKejantanan = in_array($terapisId, $terapisIdsKejantanan);
+
     $jaspelPerHari = [];
 
     $kehadiranQuery = $db->table('absensi_karyawan')
@@ -386,8 +391,8 @@ class BerandaController extends BaseController
         ->countAllResults();
 
       if ($jumlahTerapisHadir > 0) {
-        $jaspelReguler = ($totalPasienReguler * $nominalReguler) / $jumlahTerapisHadir;
-        $jaspelKejantanan = ($totalPasienKejantanan * $nominalKejantanan) / $jumlahTerapisHadir;
+        $jaspelReguler = $allowedReguler ? ($totalPasienReguler * $nominalReguler) : 0;
+        $jaspelKejantanan = $allowedKejantanan ? ($totalPasienKejantanan * $nominalKejantanan) : 0;
         $totalJaspel = $jaspelReguler + $jaspelKejantanan;
 
         $jaspelPerHari[$tanggal] = [

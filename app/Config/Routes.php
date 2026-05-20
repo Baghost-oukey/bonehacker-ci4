@@ -443,3 +443,4 @@ $routes->group('jasa-pelayanan', ['namespace' => 'App\modules\jasa_pelayanan\Con
   $routes->get('detail-kejantanan/(:num)', 'Jasapelayanan::showKejantanan/$1');
   $routes->post('destroy/(:num)', 'Jasapelayanan::destroy/$1');
 });
+
