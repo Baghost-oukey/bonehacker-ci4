@@ -348,6 +348,119 @@
         font-size: 11px !important;
         padding: 2px 8px !important;
     }
+
+    /* Responsive Table for Manajemen Karyawan to prevent horizontal scroll on desktop/tablet */
+    #table-user {
+        table-layout: fixed !important;
+        width: 100% !important;
+    }
+    
+    #table-user th, 
+    #table-user td {
+        padding-left: 0.5rem !important;    /* 8px */
+        padding-right: 0.5rem !important;   /* 8px */
+        padding-top: 0.75rem !important;    /* 12px */
+        padding-bottom: 0.75rem !important; /* 12px */
+        font-size: 0.75rem !important;      /* text-xs */
+        vertical-align: middle !important;
+    }
+
+    /* Column Widths & Wrapping Rules */
+    /* No Column */
+    #table-user th:nth-child(1), 
+    #table-user td:nth-child(1) {
+        width: 45px !important;
+        white-space: nowrap !important;
+    }
+    /* Nama Lengkap */
+    #table-user th:nth-child(2), 
+    #table-user td:nth-child(2) {
+        width: 20% !important;
+        min-width: 110px !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+    }
+    /* Username */
+    #table-user th:nth-child(3), 
+    #table-user td:nth-child(3) {
+        width: 14% !important;
+        min-width: 85px !important;
+        white-space: normal !important;
+        word-break: break-all !important;
+    }
+    /* Role */
+    #table-user th:nth-child(4), 
+    #table-user td:nth-child(4) {
+        width: 16% !important;
+        min-width: 95px !important;
+        white-space: normal !important;
+    }
+    #table-user td:nth-child(4) span {
+        display: inline-block !important;
+        white-space: normal !important;
+        text-align: center !important;
+    }
+    /* Wilayah */
+    #table-user th:nth-child(5), 
+    #table-user td:nth-child(5) {
+        width: 18% !important;
+        min-width: 110px !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+    }
+    /* Status */
+    #table-user th:nth-child(6), 
+    #table-user td:nth-child(6) {
+        width: 12% !important;
+        min-width: 85px !important;
+        white-space: normal !important;
+    }
+    #table-user td:nth-child(6) span {
+        display: inline-block !important;
+        white-space: normal !important;
+        text-align: center !important;
+    }
+    /* Aksi */
+    #table-user th:nth-child(7), 
+    #table-user td:nth-child(7) {
+        width: 20% !important;
+        min-width: 160px !important;
+        white-space: nowrap !important;
+    }
+
+    /* Action Buttons Responsive Scale */
+    #table-user td:nth-child(7) button,
+    #table-user td:nth-child(7) a {
+        width: 1.875rem !important; /* 30px */
+        height: 1.875rem !important; /* 30px */
+    }
+
+    @media (min-width: 1024px) {
+        #table-user th, 
+        #table-user td {
+            padding-left: 0.75rem !important;   /* 12px */
+            padding-right: 0.75rem !important;  /* 12px */
+            padding-top: 0.875rem !important;   /* 14px */
+            padding-bottom: 0.875rem !important;/* 14px */
+            font-size: 0.8125rem !important;    /* ~text-sm */
+        }
+    }
+
+    @media (min-width: 1440px) {
+        #table-user th, 
+        #table-user td {
+            padding-left: 1.25rem !important;  /* 20px */
+            padding-right: 1.25rem !important; /* 20px */
+            padding-top: 1rem !important;      /* 16px */
+            padding-bottom: 1rem !important;   /* 16px */
+            font-size: 0.875rem !important;     /* text-sm */
+        }
+        #table-user td:nth-child(7) button,
+        #table-user td:nth-child(7) a {
+            width: 2.25rem !important; /* 36px */
+            height: 2.25rem !important; /* 36px */
+        }
+    }
 </style>
 
 <?= $this->endSection() ?>

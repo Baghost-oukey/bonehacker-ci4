@@ -76,29 +76,48 @@
                 </div>
             </div>
         </div>
+
+        <!-- TABLE KETERANGAN STATISTIK -->
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden w-full max-w-6xl mx-auto transition-all hover:shadow-md">
+            <div class="p-6 border-b border-slate-100 bg-white">
+                <div class="flex items-center justify-between">
+                    <h5 class="text-base font-bold text-slate-800 m-0" id="heading">Statistik Keluhan</h5>
+                    <div id="table-search-container"></div>
+                </div>
+            </div>
+            <div class="overflow-x-auto w-full">
+                <table id="statisticTable" class="w-full text-left border-collapse whitespace-normal md:whitespace-nowrap">
+                    <thead>
+                        <tr class="bg-slate-50/80 border-b border-slate-200">
+                            <th class="text-xs font-semibold text-slate-500 uppercase tracking-wider border-0">Nama Tag / Keluhan</th>
+                            <th class="text-xs font-semibold text-slate-500 uppercase tracking-wider border-0 text-center">Total Frekuensi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm text-slate-700 font-medium"></tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
 </div>
 
-<!-- TABLE KETERANGAN STATISTIK -->
-<div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden w-full max-w-6xl mx-auto transition-all hover:shadow-md">
-    <div class="p-6 border-b border-slate-100 bg-white">
-        <div class="flex items-center justify-between">
-            <h5 class="text-base font-bold text-slate-800 m-0" id="heading">Statistik Keluhan</h5>
-            <div id="table-search-container"></div>
-        </div>
-    </div>
-    <div class="overflow-x-auto w-full">
-        <table id="statisticTable" class="w-full text-left border-collapse whitespace-nowrap">
-            <thead>
-                <tr class="bg-slate-50/80 border-b border-slate-200">
-                    <th class="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider border-0">Nama Tag / Keluhan</th>
-                    <th class="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider border-0 text-center">Total Frekuensi</th>
-                </tr>
-            </thead>
-            <tbody class="text-sm text-slate-700 font-medium"></tbody>
-        </table>
-    </div>
-</div>
+<style>
+    #statisticTable th, #statisticTable td {
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+        padding-top: 0.875rem !important;
+        padding-bottom: 0.875rem !important;
+    }
+
+    @media (min-width: 640px) {
+        #statisticTable th, #statisticTable td {
+            padding-left: 1.5rem !important;
+            padding-right: 1.5rem !important;
+            padding-top: 1rem !important;
+            padding-bottom: 1rem !important;
+        }
+    }
+</style>
 
 
 <?= $this->endSection() ?>
