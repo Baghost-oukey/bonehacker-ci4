@@ -11,6 +11,14 @@
             <p class="text-sm text-slate-500">
                 Pilih Wilayah / Cabang
             </p>
+            <?php if (session()->get('role') === 'superadmin'): ?>
+                <div class="lg:hidden mt-3 max-w-xs">
+                    <select onchange="location = this.value;" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-bold text-slate-700 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/10 transition shadow-sm outline-none cursor-pointer">
+                        <option value="<?= base_url('antrean') ?>">📋 Kelola Antrean</option>
+                        <option value="<?= base_url('antrean/monitoring') ?>" selected>📊 Monitoring Antrean</option>
+                    </select>
+                </div>
+            <?php endif; ?>
         </div>
 
         <div class="flex items-center gap-3 w-full md:w-auto">
