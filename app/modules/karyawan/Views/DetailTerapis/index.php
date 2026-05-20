@@ -21,7 +21,7 @@ $canEditSensitiveFields = !$isOwnProfile; // Only non-terapis can edit rank, jab
 
         <div class="flex flex-wrap items-center gap-3">
             <a href="<?= $isOwnProfile ? site_url('beranda') : site_url('karyawan') ?>"
-                class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
+                class="<?= $isOwnProfile ? 'hidden md:inline-flex' : 'inline-flex' ?> items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
                 <i class="fas fa-arrow-left text-slate-500"></i>
                 Kembali
             </a>

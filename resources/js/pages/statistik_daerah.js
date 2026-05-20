@@ -226,7 +226,7 @@ if (window.$) {
                     },
                     scales: {
                         y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { color: '#94a3b8' } },
-                        x: { grid: { display: false }, ticks: { color: '#64748b', autoSkip: false } }
+                        x: { grid: { display: false }, ticks: { color: '#64748b', autoSkip: true } }
                     }
                 }
             });
