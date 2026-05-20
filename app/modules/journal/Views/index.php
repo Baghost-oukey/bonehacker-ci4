@@ -295,8 +295,47 @@
     </div>
 </div>
 
-<!-- MODAL REKAM MEDIS DETAIL -->
 <?= $this->include('App\modules\patients\Views\component\card_riwayat') ?>
+
+<style>
+    /* Mengoptimalkan tabel Jurnal pada layar tablet/laptop kecil (768px s/d 1200px) agar pas & bebas dari scroll horizontal */
+    @media (min-width: 768px) and (max-width: 1200px) {
+        #journalPage #table-journal {
+            width: 100% !important;
+            table-layout: fixed !important; /* Paksa lebar tabel pas 100% tanpa melar keluar */
+        }
+
+        #journalPage #table-journal th, 
+        #journalPage #table-journal td {
+            padding-left: 0.3rem !important;  /* Rapatkan padding kiri */
+            padding-right: 0.3rem !important; /* Rapatkan padding kanan */
+            font-size: 0.7rem !important;     /* Perkecil font sedikit agar text pas */
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important; /* Potong teks dengan (...) jika kepanjangan */
+        }
+
+        /* Atur proporsi lebar 9 kolom secara presisi agar seimbang */
+        #journalPage #table-journal th:nth-child(1),
+        #journalPage #table-journal td:nth-child(1) { width: 4% !important; text-align: center !important; }  /* No */
+        #journalPage #table-journal th:nth-child(2),
+        #journalPage #table-journal td:nth-child(2) { width: 10% !important; }                               /* Tanggal */
+        #journalPage #table-journal th:nth-child(3),
+        #journalPage #table-journal td:nth-child(3) { width: 16% !important; }                               /* Nama Pasien */
+        #journalPage #table-journal th:nth-child(4),
+        #journalPage #table-journal td:nth-child(4) { width: 10% !important; text-align: center !important; } /* Status */
+        #journalPage #table-journal th:nth-child(5),
+        #journalPage #table-journal td:nth-child(5) { width: 10% !important; text-align: center !important; } /* Rekam Medis */
+        #journalPage #table-journal th:nth-child(6),
+        #journalPage #table-journal td:nth-child(6) { width: 14% !important; }                               /* Alamat */
+        #journalPage #table-journal th:nth-child(7),
+        #journalPage #table-journal td:nth-child(7) { width: 14% !important; }                               /* Hasil Pemeriksaan */
+        #journalPage #table-journal th:nth-child(8),
+        #journalPage #table-journal td:nth-child(8) { width: 14% !important; }                               /* Tindakan */
+        #journalPage #table-journal th:nth-child(9),
+        #journalPage #table-journal td:nth-child(9) { width: 8% !important; text-align: center !important; }  /* Aksi */
+    }
+</style>
 
 <?= $this->endSection() ?>
 

@@ -1,6 +1,67 @@
 <?= $this->extend('layout/layout') ?>
 <?= $this->section('content') ?>
 
+<style>
+    /* Optimasi responsivitas tabel Gaji pada layar tablet (portrait & landscape) */
+    @media (min-width: 768px) and (max-width: 1200px) {
+        #tab-estimasi table, #tab-riwayat table {
+            table-layout: fixed !important;
+            width: 100% !important;
+        }
+
+        #tab-estimasi th, #tab-estimasi td,
+        #tab-riwayat th, #tab-riwayat td {
+            font-size: 11px !important;
+            padding: 8px 6px !important;
+        }
+
+        /* Pembagian kolom tabel Periode Berjalan (6 kolom) */
+        #tab-estimasi th:nth-child(1), #tab-estimasi td:nth-child(1) { width: 22% !important; } /* Nama Karyawan */
+        #tab-estimasi th:nth-child(2), #tab-estimasi td:nth-child(2) { width: 18% !important; } /* Jabatan */
+        #tab-estimasi th:nth-child(3), #tab-estimasi td:nth-child(3) { width: 12% !important; } /* Wilayah */
+        #tab-estimasi th:nth-child(4), #tab-estimasi td:nth-child(4) { width: 26% !important; } /* Tipe & Gaji Dasar */
+        #tab-estimasi th:nth-child(5), #tab-estimasi td:nth-child(5) { width: 8% !important; }  /* Tindakan */
+        #tab-estimasi th:nth-child(6), #tab-estimasi td:nth-child(6) { width: 14% !important; } /* Aksi (Proses Gaji) */
+
+        /* Pembagian kolom tabel Riwayat Transaksi (4 kolom) */
+        #tab-riwayat th:nth-child(1), #tab-riwayat td:nth-child(1) { width: 25% !important; } /* Tanggal Bayar */
+        #tab-riwayat th:nth-child(2), #tab-riwayat td:nth-child(2) { width: 35% !important; } /* Nama Karyawan */
+        #tab-riwayat th:nth-child(3), #tab-riwayat td:nth-child(3) { width: 20% !important; } /* Periode */
+        #tab-riwayat th:nth-child(4), #tab-riwayat td:nth-child(4) { width: 20% !important; } /* Total Dibayar */
+
+        /* Potong teks yang terlalu panjang dan berikan elipsis agar tidak meluber */
+        #tab-estimasi td, #tab-riwayat td {
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        /* Jangan potong tombol & elemen di dalam Tipe & Gaji Dasar atau Aksi */
+        #tab-estimasi td:nth-child(1),
+        #tab-estimasi td:nth-child(4),
+        #tab-estimasi td:nth-child(6) {
+            overflow: visible !important;
+            white-space: normal !important;
+        }
+
+        #tab-estimasi td:nth-child(1) span {
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+            display: inline-block;
+            max-width: calc(100% - 36px);
+            vertical-align: middle;
+        }
+
+        /* Ukuran font tombol Proses Gaji disesuaikan */
+        .btn-proses-gaji {
+            font-size: 10px !important;
+            padding: 4px 8px !important;
+            white-space: nowrap !important;
+        }
+    }
+</style>
+
 <div id="gajiPage" class="p-6 bg-slate-50 min-h-screen">
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div class="w-full md:w-auto">

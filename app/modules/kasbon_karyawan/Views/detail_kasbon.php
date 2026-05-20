@@ -27,23 +27,36 @@
         </div>
     </div>
 
-    <div class="flex border-b border-slate-200 mb-8 gap-8 px-2">
-        <button class="tab-btn active pb-4 text-sm font-black text-teal-600 border-b-2 border-teal-600 transition-all uppercase tracking-widest" data-target="tab-riwayat">
+    <!-- DROPDOWN TAB MOBILE -->
+    <div class="md:hidden mb-8">
+        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Pilih Menu</label>
+        <select id="mobile-tab-select" class="w-full bg-white border border-slate-200 text-slate-800 text-sm font-bold rounded-xl px-4 py-3.5 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 shadow-sm transition-all">
+            <option value="tab-riwayat">🕒 Riwayat Kasbon</option>
+            <option value="tab-ajukan">💸 Kasbon Karyawan</option>
+            <option value="tab-cicilan">💰 Cicilan Kasbon</option>
+            <option value="tab-potongan">✂️ Potongan Rutin</option>
+        </select>
+    </div>
+
+    <!-- TAMPILAN TABS DESKTOP -->
+    <div class="hidden md:flex border-b border-slate-200 mb-8 gap-8 px-2">
+        <button class="tab-btn active pb-4 text-sm font-black text-teal-600 border-b-2 border-teal-600 transition-all uppercase tracking-widest shrink-0" data-target="tab-riwayat">
             <i class="fas fa-history mr-2"></i> Riwayat
         </button>
-        <button class="tab-btn pb-4 text-sm font-black text-slate-400 border-b-2 border-transparent hover:text-slate-600 transition-all uppercase tracking-widest" data-target="tab-ajukan">
+        <button class="tab-btn pb-4 text-sm font-black text-slate-400 border-b-2 border-transparent hover:text-slate-600 transition-all uppercase tracking-widest shrink-0" data-target="tab-ajukan">
             <i class="fas fa-plus-circle mr-2"></i> Kasbon
         </button>
-        <button class="tab-btn pb-4 text-sm font-black text-slate-400 border-b-2 border-transparent hover:text-slate-600 transition-all uppercase tracking-widest" data-target="tab-cicilan">
+        <button class="tab-btn pb-4 text-sm font-black text-slate-400 border-b-2 border-transparent hover:text-slate-600 transition-all uppercase tracking-widest shrink-0" data-target="tab-cicilan">
             <i class="fas fa-plus-circle mr-2"></i> Cicilan Kasbon
         </button>
-        <button class="tab-btn pb-4 text-sm font-black text-slate-400 border-b-2 border-transparent hover:text-slate-600 transition-all uppercase tracking-widest" data-target="tab-potongan">
+        <button class="tab-btn pb-4 text-sm font-black text-slate-400 border-b-2 border-transparent hover:text-slate-600 transition-all uppercase tracking-widest shrink-0" data-target="tab-potongan">
             <i class="fas fa-scissors mr-2"></i> Potongan Rutin
         </button>
     </div>
 
     <div id="tab-riwayat" class="tab-content block animate-in fade-in duration-300">
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <!-- TAMPILAN DESKTOP (TABLE) -->
+        <div class="hidden md:block bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead class="bg-slate-50 border-b border-slate-100 text-[10px] font-black text-slate-500 uppercase tracking-widest">
@@ -88,6 +101,52 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+
+        <!-- TAMPILAN MOBILE (CARDS) -->
+        <div class="md:hidden space-y-4">
+            <?php if (empty($riwayat)): ?>
+                <div class="p-10 text-center text-slate-400 font-bold italic bg-white rounded-2xl border border-slate-200 shadow-sm">
+                    Belum ada transaksi terekam.
+                </div>
+            <?php else: ?>
+                <?php foreach ($riwayat as $rw): ?>
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex flex-col gap-3 animate-in fade-in duration-300">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold text-slate-500"><?= date('d M Y', strtotime($rw['tanggal'])) ?></span>
+                            <div>
+                                <?php if ($rw['status_potongan'] == 'belum_lunas'): ?>
+                                    <span class="inline-flex items-center gap-1 bg-amber-100 text-amber-700 px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                        Aktif
+                                    </span>
+                                <?php else: ?>
+                                    <span class="inline-flex items-center gap-1 bg-teal-100 text-teal-700 px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider">
+                                        <i class="fas fa-check-circle text-[8px]"></i>
+                                        Lunas
+                                    </span>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        
+                        <div class="border-t border-slate-50 pt-2.5">
+                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Keterangan</p>
+                            <p class="text-xs font-bold text-slate-800 break-words"><?= esc($rw['keterangan']) ?></p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 border-t border-slate-50 pt-3 mt-1">
+                            <div class="flex flex-col gap-0.5">
+                                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Pinjaman Awal</span>
+                                <span class="text-xs font-bold text-slate-500">Rp <?= number_format($rw['nominal'], 0, ',', '.') ?></span>
+                            </div>
+                            <div class="flex flex-col gap-0.5 text-right">
+                                <span class="text-[9px] font-black text-teal-600 uppercase tracking-widest block mb-0.5">Sisa Hutang</span>
+                                <span class="text-xs font-black text-slate-900">Rp <?= number_format($rw['sisa_hutang'], 0, ',', '.') ?></span>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -224,5 +283,24 @@
             });
         });
     };
+
+    // Sinkronisasi mobile dropdown dengan tab buttons (Dua Arah)
+    document.getElementById('mobile-tab-select')?.addEventListener('change', function () {
+        const target = this.value;
+        const matchingBtn = document.querySelector(`.tab-btn[data-target="${target}"]`);
+        if (matchingBtn) {
+            matchingBtn.click();
+        }
+    });
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const target = this.getAttribute('data-target');
+            const selectEl = document.getElementById('mobile-tab-select');
+            if (selectEl && selectEl.value !== target) {
+                selectEl.value = target;
+            }
+        });
+    });
 </script>
 <?= $this->endSection() ?>

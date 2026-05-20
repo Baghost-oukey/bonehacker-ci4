@@ -383,6 +383,62 @@
     </div>
 </div>
 
+<style>
+    /* Mengoptimalkan tabel Transaksi pada layar tablet landscape/laptop kecil (1024px s/d 1200px) agar pas & bebas dari scroll horizontal */
+    @media (min-width: 1024px) and (max-width: 1200px) {
+        #transaksiPage #tableTransaksi {
+            width: 100% !important;
+            table-layout: fixed !important; /* Paksa lebar tabel pas 100% tanpa melar keluar */
+        }
+
+        #transaksiPage #tableTransaksi th, 
+        #transaksiPage #tableTransaksi td {
+            padding-left: 0.4rem !important;  /* Rapatkan padding kiri */
+            padding-right: 0.4rem !important; /* Rapatkan padding kanan */
+            font-size: 0.75rem !important;    /* Perkecil font sedikit agar text pas */
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important; /* Potong teks dengan (...) jika kepanjangan */
+        }
+
+        /* Atur proporsi lebar 7 kolom secara presisi agar seimbang */
+        #transaksiPage #tableTransaksi th:nth-child(1),
+        #transaksiPage #tableTransaksi td:nth-child(1) { width: 5% !important; text-align: center !important; }  /* No */
+        #transaksiPage #tableTransaksi th:nth-child(2),
+        #transaksiPage #tableTransaksi td:nth-child(2) { width: 18% !important; }                               /* Tanggal */
+        #transaksiPage #tableTransaksi th:nth-child(3),
+        #transaksiPage #tableTransaksi td:nth-child(3) { width: 14% !important; }                               /* Cabang */
+        #transaksiPage #tableTransaksi th:nth-child(4),
+        #transaksiPage #tableTransaksi td:nth-child(4) { width: 25% !important; }                               /* Keterangan */
+        #transaksiPage #tableTransaksi th:nth-child(5),
+        #transaksiPage #tableTransaksi td:nth-child(5) { width: 16% !important; }                               /* Ditambahkan Oleh */
+        #transaksiPage #tableTransaksi th:nth-child(6),
+        #transaksiPage #tableTransaksi td:nth-child(6) { width: 14% !important; }                               /* Nominal */
+        #transaksiPage #tableTransaksi th:nth-child(7),
+        #transaksiPage #tableTransaksi td:nth-child(7) { width: 8% !important; text-align: center !important; }  /* Aksi */
+
+        /* Merapikan input filter tanggal agar tidak patah/wrap ke bawah */
+        #transaksiPage .flex-wrap {
+            flex-wrap: nowrap !important; /* Cegah input tanggal turun ke bawah */
+        }
+        #transaksiPage #searchInput {
+            max-width: 170px !important;  /* Rapatkan kotak pencarian */
+        }
+        #transaksiPage #filter_month {
+            max-width: 120px !important;  /* Rapatkan input bulan */
+            padding-left: 0.4rem !important;
+            padding-right: 0.4rem !important;
+        }
+        #transaksiPage #filter_date_start,
+        #transaksiPage #filter_date_end {
+            width: 105px !important;      /* Rapatkan input tanggal start/end */
+            min-width: 105px !important;
+            padding-left: 0.4rem !important;
+            padding-right: 0.4rem !important;
+        }
+    }
+</style>
+
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>

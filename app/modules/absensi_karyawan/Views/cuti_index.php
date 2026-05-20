@@ -65,7 +65,8 @@
                     Riwayat Cuti Terbaru
                 </h3>
             </div>
-            <div class="overflow-y-auto max-h-[600px] custom-scrollbar">
+            <!-- Tampilan Desktop & Tablet (Table) -->
+            <div class="hidden md:block overflow-y-auto max-h-[600px] custom-scrollbar">
                 <table class="w-full text-left border-collapse">
                     <thead class="bg-slate-50 sticky top-0 z-10 shadow-sm">
                         <tr>
@@ -108,6 +109,40 @@
                         <?php endforeach; ?>
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Tampilan Mobile (Cards) -->
+            <div class="block md:hidden overflow-y-auto max-h-[600px] custom-scrollbar bg-slate-50/30 p-4 space-y-3">
+                <?php if (empty($cuti)): ?>
+                    <div class="p-8 text-center text-slate-400 italic text-sm">
+                        Belum ada data cuti yang diinput.
+                    </div>
+                <?php endif; ?>
+                <?php foreach ($cuti as $c): ?>
+                    <div class="p-4 bg-white rounded-xl border border-slate-200/50 shadow-sm flex flex-col space-y-3">
+                        <div class="flex items-center justify-between border-b border-slate-50 pb-2">
+                            <span class="font-bold text-slate-800 text-sm"><?= esc($c->nama_terapis) ?></span>
+                            <span class="px-2.5 py-1 rounded-lg bg-teal-50 text-teal-600 text-[10px] font-black uppercase">
+                                <?= $c->jumlah_hari ?> Hari
+                            </span>
+                        </div>
+                        <div class="text-xs text-slate-500 font-medium flex items-center gap-1.5">
+                            <i class="far fa-calendar-alt text-teal-600"></i>
+                            <span><?= date('d M Y', strtotime($c->tanggal_mulai)) ?> s/d <?= date('d M Y', strtotime($c->tanggal_selesai)) ?></span>
+                        </div>
+                        <?php if (!empty($c->keterangan)): ?>
+                            <div class="text-xs text-slate-600 italic bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                                "<?= esc($c->keterangan) ?>"
+                            </div>
+                        <?php endif; ?>
+                        <div class="flex justify-end pt-1">
+                            <button onclick="hapusCuti('<?= $c->id ?>')" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg transition-all">
+                                <i class="fas fa-trash-alt"></i>
+                                Hapus
+                            </button>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
             </div>
         </div>
     </div>
@@ -350,4 +385,30 @@
         });
     }
 </script>
+
+<style>
+    /* Memastikan modal input cuti & kuota selalu berada di tengah layar secara vertikal & horizontal pada semua ukuran layar */
+    #modalCuti, #modalKuota {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        z-index: 9999 !important;
+        background-color: rgba(15, 23, 42, 0.6) !important; /* Overlay gelap premium */
+    }
+
+    #modalCuti.hidden, #modalKuota.hidden {
+        display: none !important; /* Tetap sembunyikan jika kelas hidden aktif */
+    }
+
+    /* Memastikan card modal di dalamnya terpusat dengan indah */
+    #modalCuti > div, #modalKuota > div {
+        margin: auto !important;
+    }
+</style>
+
 <?= $this->endSection() ?>

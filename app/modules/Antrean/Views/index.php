@@ -75,18 +75,18 @@
                             class="w-full rounded-lg border border-slate-200 pl-9 pr-3 py-2 text-sm transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15">
                     </div>
 
-                    <div class="flex items-center gap-2 text-sm">
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-calendar-alt text-slate-400 text-base"></i>
+                    <div class="flex items-center gap-2 text-sm w-full sm:w-auto">
+                        <div class="relative flex-1 sm:flex-initial">
+                            <i class="fas fa-calendar-alt text-slate-400 text-sm absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
                             <input type="date" id="startDate"
-                                class="rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-600 transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15"
+                                class="w-full sm:w-40 rounded-lg border border-slate-200 pl-9 pr-3 py-2 text-xs text-slate-600 transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15"
                                 value="<?= date('Y-m-d') ?>">
                         </div>
-                        <span class="text-slate-300">-</span>
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-calendar-check text-slate-400 text-base"></i>
+                        <span class="text-slate-350 shrink-0 font-medium">-</span>
+                        <div class="relative flex-1 sm:flex-initial">
+                            <i class="fas fa-calendar-check text-slate-400 text-sm absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
                             <input type="date" id="endDate"
-                                class="rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-600 transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15"
+                                class="w-full sm:w-40 rounded-lg border border-slate-200 pl-9 pr-3 py-2 text-xs text-slate-600 transition focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500/15"
                                 value="<?= date('Y-m-d') ?>">
                         </div>
                     </div>
@@ -427,6 +427,59 @@
     #table-1 thead th {
         color: #475569 !important;
         /* slate-600 */
+    }
+
+    /* Sembunyikan ikon kalender bawaan browser agar tidak menumpuk & merusak simetrisitas */
+    #antreanPage input[type="date"] {
+        position: relative;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+
+    #antreanPage input[type="date"]::-webkit-calendar-picker-indicator {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    /* Mengoptimalkan tabel pada layar tablet (768px s/d 1200px) agar pas & tidak memerlukan scroll horizontal */
+    @media (min-width: 768px) and (max-width: 1200px) {
+        #antreanPage #table-1 {
+            width: 100% !important;
+            table-layout: fixed !important; /* Paksa lebar tabel pas 100% tanpa melar keluar */
+        }
+
+        #antreanPage #table-1 th, 
+        #antreanPage #table-1 td {
+            padding-left: 0.4rem !important;  /* Rapatkan padding kiri */
+            padding-right: 0.4rem !important; /* Rapatkan padding kanan */
+            font-size: 0.75rem !important;    /* Perkecil font sedikit agar text pas */
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important; /* Otomatis potong dengan titik tiga (...) jika terlalu lebar */
+        }
+
+        /* Atur proporsi lebar kolom secara presisi agar seimbang */
+        #antreanPage #table-1 th:nth-child(1),
+        #antreanPage #table-1 td:nth-child(1) { width: 6% !important; text-align: center !important; }  /* Antrean */
+        #antreanPage #table-1 th:nth-child(2),
+        #antreanPage #table-1 td:nth-child(2) { width: 12% !important; }                                /* Tanggal */
+        #antreanPage #table-1 th:nth-child(3),
+        #antreanPage #table-1 td:nth-child(3) { width: 22% !important; }                                /* Nama */
+        #antreanPage #table-1 th:nth-child(4),
+        #antreanPage #table-1 td:nth-child(4) { width: 6% !important; }                                 /* Usia */
+        #antreanPage #table-1 th:nth-child(5),
+        #antreanPage #table-1 td:nth-child(5) { width: 18% !important; }                                /* Alamat */
+        #antreanPage #table-1 th:nth-child(6),
+        #antreanPage #table-1 td:nth-child(6) { width: 12% !important; }                                /* Status */
+        #antreanPage #table-1 th:nth-child(7),
+        #antreanPage #table-1 td:nth-child(7) { width: 24% !important; }                                /* Keterangan/Action (Beri porsi lebar agar tombol muat berdampingan) */
     }
 </style>
 <?= $this->include('App\modules\patients\Views\component\card_riwayat') ?>

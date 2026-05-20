@@ -384,6 +384,42 @@
     </div>
 </div>
 
+<style>
+    /* Mengoptimalkan tabel Rekam Medis pada layar tablet/laptop kecil (768px s/d 1200px) agar pas & bebas dari scroll horizontal */
+    @media (min-width: 768px) and (max-width: 1200px) {
+        #rekamMedisPage #table-RekamMedis {
+            width: 100% !important;
+            table-layout: fixed !important; /* Paksa lebar tabel pas 100% tanpa melar keluar */
+        }
+
+        #rekamMedisPage #table-RekamMedis th, 
+        #rekamMedisPage #table-RekamMedis td {
+            padding-left: 0.4rem !important;  /* Rapatkan padding kiri */
+            padding-right: 0.4rem !important; /* Rapatkan padding kanan */
+            font-size: 0.75rem !important;    /* Perkecil font sedikit agar text pas */
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important; /* Potong teks dengan (...) jika kepanjangan */
+        }
+
+        /* Atur proporsi lebar kolom secara presisi agar seimbang */
+        #rekamMedisPage #table-RekamMedis th:nth-child(1),
+        #rekamMedisPage #table-RekamMedis td:nth-child(1) { width: 10% !important; } /* ID Pasien */
+        #rekamMedisPage #table-RekamMedis th:nth-child(2),
+        #rekamMedisPage #table-RekamMedis td:nth-child(2) { width: 22% !important; } /* Nama */
+        #rekamMedisPage #table-RekamMedis th:nth-child(3),
+        #rekamMedisPage #table-RekamMedis td:nth-child(3) { width: 14% !important; } /* Wilayah */
+        #rekamMedisPage #table-RekamMedis th:nth-child(4),
+        #rekamMedisPage #table-RekamMedis td:nth-child(4) { width: 24% !important; } /* Alamat */
+        #rekamMedisPage #table-RekamMedis th:nth-child(5),
+        #rekamMedisPage #table-RekamMedis td:nth-child(5) { width: 14% !important; text-align: center !important; } /* Kunjungan Terakhir */
+        #rekamMedisPage #table-RekamMedis th:nth-child(6),
+        #rekamMedisPage #table-RekamMedis td:nth-child(6) { width: 8% !important; text-align: center !important; }  /* Jumlah Kunjungan */
+        #rekamMedisPage #table-RekamMedis th:nth-child(7),
+        #rekamMedisPage #table-RekamMedis td:nth-child(7) { width: 8% !important; text-align: center !important; }  /* Aksi */
+    }
+</style>
+
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
