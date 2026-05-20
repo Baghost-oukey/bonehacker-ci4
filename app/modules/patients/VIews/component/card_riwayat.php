@@ -106,12 +106,12 @@
     }
 
     /* Responsive Form Table */
-    @media (min-width: 768px) {
+    @media (min-width: 1024px) {
         table.responsive-form-table {
             min-width: 800px;
         }
     }
-    @media (max-width: 767px) {
+    @media (max-width: 1023px) {
         table.responsive-form-table,
         table.responsive-form-table > tbody,
         table.responsive-form-table > tbody > tr,
