@@ -62,6 +62,49 @@
 
 
 <!-- MODAL TAMBAH/EDIT RIWAYAT -->
+<style>
+    /* Responsive Form Table */
+    @media (min-width: 768px) {
+        table.responsive-form-table {
+            min-width: 800px;
+        }
+    }
+    @media (max-width: 767px) {
+        table.responsive-form-table,
+        table.responsive-form-table > tbody,
+        table.responsive-form-table > tbody > tr,
+        table.responsive-form-table > tbody > tr > td {
+            display: block !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+        table.responsive-form-table > tbody > tr > td:first-child {
+            background-color: #f8fafc !important;
+            border-right: none !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            padding-top: 10px !important;
+            padding-bottom: 10px !important;
+            font-size: 0.8rem !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.05em !important;
+        }
+        table.responsive-form-table > tbody > tr > td:not(:first-child) {
+            border-right: none !important;
+            border-left: none !important;
+            padding-top: 12px !important;
+            padding-bottom: 12px !important;
+        }
+        table.responsive-form-table > tbody > tr > td:last-child {
+            border-bottom: none !important;
+        }
+        table.responsive-form-table textarea,
+        table.responsive-form-table input[type="text"] {
+            width: 100% !important;
+        }
+    }
+</style>
 <div id="exampleModal" class="modal-wrapper hidden fixed inset-0 z-60 items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 transition-opacity">
     <!-- Diperlebar menjadi max-w-6xl karena isi form sangat banyak -->
     <div class="w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
@@ -177,8 +220,8 @@
                 </div>
 
                 <!-- TABLE PEMERIKSAAN UTAMA (Mirip Screenshot) -->
-                <div class="rounded-xl border border-slate-200 overflow-hidden bg-white">
-                    <table class="w-full text-sm text-left">
+                <div class="rounded-xl border border-slate-200 overflow-x-auto bg-white">
+                    <table class="w-full text-sm text-left responsive-form-table">
                         <tbody class="divide-y divide-slate-200">
                             <!-- TENSI -->
                             <tr class="hover:bg-slate-50/50 transition-colors">
