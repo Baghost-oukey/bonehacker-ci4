@@ -313,6 +313,18 @@ class Mgajikaryawan extends Model
         // Pisahkan benefit dan potongan
         $benefitOnly         = array_values(array_filter($benefitList, fn($i) => $i['kategori'] === 'tunjangan'));
         $potonganMaster      = array_values(array_filter($benefitList, fn($i) => $i['kategori'] === 'potongan'));
+
+        // Ambil potongan rutin yang aktif
+        $mPotonganRutin = new \App\modules\kasbon_karyawan\Models\MPotonganRutin();
+        $potonganRutinList = $mPotonganRutin->getByTerapis((int)$id);
+        foreach ($potonganRutinList as $pr) {
+            $potonganMaster[] = [
+                'nama'     => $pr['nama_potongan'],
+                'nominal'  => (int)$pr['nominal'],
+                'kategori' => 'potongan'
+            ];
+        }
+
         $totalBenefitOnly    = array_sum(array_column($benefitOnly, 'nominal'));
         $totalPotonganMaster = array_sum(array_column($potonganMaster, 'nominal'));
 

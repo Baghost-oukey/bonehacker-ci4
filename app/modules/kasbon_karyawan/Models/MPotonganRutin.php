@@ -29,4 +29,26 @@ class MPotonganRutin extends Model
                        ->first();
         return (int)($result['total'] ?? 0);
     }
+
+    public function saveSetting(int $terapisId, string $namaPotongan, float $nominal, int $userId): bool
+    {
+        $existing = $this->where('terapis_id', $terapisId)
+                         ->where('nama_potongan', $namaPotongan)
+                         ->first();
+
+        if ($existing) {
+            return $this->update($existing['id'], [
+                'nominal'   => $nominal,
+                'is_active' => 1,
+            ]);
+        }
+
+        return $this->insert([
+            'terapis_id'    => $terapisId,
+            'nama_potongan' => $namaPotongan,
+            'nominal'       => $nominal,
+            'is_active'     => 1,
+            'created_by'    => $userId,
+        ]) !== false;
+    }
 }

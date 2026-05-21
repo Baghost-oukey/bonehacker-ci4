@@ -227,12 +227,12 @@ class Absensikaryawan extends BaseController
     public function simpan_presensi_baru()
     {
         $tanggal = $this->request->getPost('tanggal');
-        $terapisIds = $this->request->getPost('terapis_ids');
+        $postAbsen = $this->request->getPost('absen');
 
-        if (empty($tanggal) || empty($terapisIds)) {
+        if (empty($tanggal) || empty($postAbsen)) {
             return $this->response->setJSON([
                 'status' => 'error',
-                'message' => 'Tanggal dan terapis wajib dipilih'
+                'message' => 'Tanggal dan data presensi wajib diisi'
             ]);
         }
 
@@ -246,27 +246,31 @@ class Absensikaryawan extends BaseController
         }
 
         $dataInsert = [];
-        foreach ($terapisIds as $terapisId) {
+        foreach ($postAbsen as $row) {
             $dataInsert[] = [
-                'terapis_id' => $terapisId,
+                'terapis_id' => $row['terapis_id'],
                 'tanggal'    => $tanggal,
-                'status'     => 'Hadir', // Default Hadir
-                'keterangan' => null
+                'status'     => $row['status'],
+                'keterangan' => $row['keterangan'] ?? null
             ];
         }
+
+        $terapisIds = array_column($dataInsert, 'terapis_id');
 
         // DATABASE TRANSACTION
         $db = \Config\Database::connect();
         $db->transStart();
 
-        // Hapus presensi existing untuk terapis yang dipilih di tanggal ini
-        $this->model_absensi->builder()
-            ->whereIn('terapis_id', $terapisIds)
-            ->where('tanggal', $tanggal)
-            ->delete();
+        if (!empty($terapisIds)) {
+            // Hapus presensi existing untuk terapis yang dipilih di tanggal ini
+            $this->model_absensi->builder()
+                ->whereIn('terapis_id', $terapisIds)
+                ->where('tanggal', $tanggal)
+                ->delete();
 
-        // Insert presensi baru
-        $this->model_absensi->insertBatch($dataInsert);
+            // Insert presensi baru
+            $this->model_absensi->insertBatch($dataInsert);
+        }
 
         $db->transComplete();
 

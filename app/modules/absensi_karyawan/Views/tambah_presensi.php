@@ -1,24 +1,35 @@
 <?= $this->extend('layout/layout'); ?>
 
 <?= $this->section('content'); ?>
-<div class="container mx-auto px-4 py-8 max-w-4xl" id="tambahPresensiPage">
+<div class="container mx-auto px-4 py-8 max-w-6xl" id="tambahPresensiPage">
 
     <div class="flex flex-col gap-6">
         <!-- Header -->
-        <div class="flex items-center gap-3">
-            <?php if (session()->get('role') !== 'owner'): ?>
-            <a href="<?= base_url('kehadiran') ?>" class="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50 transition-all">
-                <i class="fas fa-arrow-left"></i> Kembali
-            </a>
-            <?php endif; ?>
-            <div>
-                <h1 class="text-3xl font-bold text-slate-900 tracking-tight">Tambah Presensi</h1>
-                <p class="text-slate-500 text-sm mt-1">Pilih tanggal dan terapis untuk menambah presensi</p>
+        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <?php if (session()->get('role') !== 'owner'): ?>
+                <a href="<?= base_url('kehadiran') ?>" class="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50 transition-all">
+                    <i class="fas fa-arrow-left"></i> Kembali
+                </a>
+                <?php endif; ?>
+                <div>
+                    <h1 class="text-3xl font-bold text-slate-900 tracking-tight">Tambah Presensi</h1>
+                    <p class="text-slate-500 text-sm mt-1">Pilih tanggal dan isi presensi terapis.</p>
+                </div>
+            </div>
+
+            <div class="rounded-3xl border border-slate-200 bg-white px-5 py-4 shadow-sm flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-slate-700">Tanggal Presensi</p>
+                    <input type="date" id="tanggal_presensi" value="<?= date('Y-m-d') ?>" max="<?= date('Y-m-d') ?>" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                </div>
             </div>
         </div>
 
         <!-- DROPDOWN NAVIGASI MOBILE -->
-        
         <div class="w-full lg:hidden">
             <select onchange="window.location.href=this.value" class="w-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-sm font-bold rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500/20">
                 <option value="<?= base_url('kehadiran') ?>">📅 Rekap Presensi</option>
@@ -26,87 +37,75 @@
                 <option value="<?= base_url('kehadiran/cuti') ?>">🏖️ Cuti Karyawan</option>
             </select>
         </div>
-    
 
         <!-- Form -->
-        <form id="formTambahPresensi" class="space-y-6">
+        <form id="formTambahPresensi" class="space-y-4">
             <?= csrf_field() ?>
+            <input type="hidden" name="tanggal" id="tanggal_presensi_hidden" value="<?= date('Y-m-d') ?>">
 
-            <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                <!-- Pilih Tanggal -->
-                <div class="space-y-2 mb-6">
-                    <label class="text-sm font-medium text-slate-700">Tanggal Presensi <span class="text-red-500">*</span></label>
-                    <input type="date" name="tanggal" id="tanggal_presensi" required
-                        value="<?= date('Y-m-d') ?>"
-                        max="<?= date('Y-m-d') ?>"
-                        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
-                    <p class="text-xs text-slate-500">Pilih tanggal untuk presensi (maksimal hari ini)</p>
+            <?php if (empty($terapis)): ?>
+                <div class="bg-white rounded-4xl border border-slate-200 p-8 text-center text-slate-400 font-semibold shadow-sm">
+                    Belum ada data terapis aktif.
                 </div>
+            <?php else: ?>
+                <?php foreach ($terapis as $index => $t): ?>
+                    <div class="rounded-4xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:border-indigo-300 hover:shadow-md">
+                        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                            <div class="flex items-center gap-4">
+                                <div class="flex h-14 w-14 items-center justify-center rounded-full bg-teal-100 text-teal-700 font-bold text-xl">
+                                    <?= strtoupper(substr($t->nama, 0, 1)) ?>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-semibold text-slate-800 uppercase"><?= esc($t->nama) ?></p>
+                                    <p class="text-xs font-medium text-slate-500 mt-0.5"><?= esc($t->region_name ?? 'Terapis') ?></p>
+                                </div>
+                            </div>
 
-                <!-- Pilih Terapis -->
-                <div class="space-y-2">
-                    <label class="text-sm font-medium text-slate-700">Pilih Terapis <span class="text-red-500">*</span></label>
-                    
-                    <?php if (empty($terapis)): ?>
-                        <div class="bg-slate-50 rounded-2xl border border-slate-200 p-6 text-center text-slate-400 font-semibold">
-                            Tidak ada terapis aktif yang ikut presensi
+                            <div class="flex items-center gap-3">
+                                <span class="text-sm font-medium text-slate-700">Keterangan</span>
+                                <input type="text" name="absen[<?= $index ?>][keterangan]" placeholder="Sakit / Izin..." class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500">
+                            </div>
                         </div>
-                    <?php else: ?>
-                        <div class="space-y-3 max-h-96 overflow-y-auto">
-                            <?php foreach ($terapis as $t): ?>
-                                <label class="flex items-center gap-4 p-3 rounded-lg border border-slate-300 bg-white hover:border-teal-500 hover:bg-teal-50 cursor-pointer transition-all">
-                                    <input type="checkbox" name="terapis_ids[]" value="<?= $t->id ?>" 
-                                        class="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" checked>
-                                    <div class="flex items-center gap-3 flex-1">
-                                        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-indigo-700 font-black text-sm">
-                                            <?= strtoupper(substr($t->nama, 0, 1)) ?>
-                                        </div>
-                                        <div>
-                                            <p class="text-sm font-semibold text-slate-800"><?= esc($t->nama) ?></p>
-                                            <p class="text-xs text-slate-500"><?= esc($t->region_name ?? 'Terapis') ?></p>
-                                        </div>
+
+                        <div class="mt-5 grid gap-3 lg:grid-cols-[1.3fr_1fr] lg:items-center">
+                            <div class="flex items-center gap-3">
+                                <input type="hidden" name="absen[<?= $index ?>][terapis_id]" value="<?= $t->id ?>">
+                                <label class="cursor-pointer flex-1">
+                                    <input type="radio" name="absen[<?= $index ?>][status]" value="Hadir" class="peer sr-only" checked>
+                                    <div class="flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition-all peer-checked:border-emerald-500 peer-checked:ring-1 peer-checked:ring-emerald-500 peer-checked:bg-emerald-50 peer-checked:text-emerald-700">
+                                        <i class="fas fa-check-circle"></i> Hadir
                                     </div>
                                 </label>
-                            <?php endforeach; ?>
-                        </div>
-
-                        <!-- Select All -->
-                        <div class="mt-4 pt-4 border-t border-slate-200">
-                            <label class="inline-flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" id="selectAll" 
-                                    class="w-4 h-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500" checked>
-                                <span class="text-sm font-semibold text-slate-700">Pilih Semua Terapis</span>
-                            </label>
-                        </div>
-                    <?php endif; ?>
-                </div>
-
-                <!-- Info -->
-                <div class="mt-6 bg-blue-50 border border-blue-200 rounded-2xl p-4">
-                    <div class="flex gap-3">
-                        <i class="fas fa-info-circle text-blue-600 mt-0.5"></i>
-                        <div class="text-sm text-blue-800">
-                            <p class="font-bold mb-1">Informasi:</p>
-                            <ul class="list-disc list-inside space-y-1 text-xs">
-                                <li>Status default adalah <strong>Hadir</strong></li>
-                                <li>Pilih satu atau lebih terapis</li>
-                                <li>Jika terapis sudah ada presensi di tanggal ini, data akan diupdate</li>
-                            </ul>
+                                <label class="cursor-pointer flex-1">
+                                    <input type="radio" name="absen[<?= $index ?>][status]" value="Tidak Hadir" class="peer sr-only">
+                                    <div class="flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition-all peer-checked:border-rose-500 peer-checked:ring-1 peer-checked:ring-rose-500 peer-checked:bg-rose-50 peer-checked:text-rose-700">
+                                        <i class="fas fa-times-circle"></i> Tidak Hadir
+                                    </div>
+                                </label>
+                                <label class="cursor-pointer flex-1">
+                                    <input type="radio" name="absen[<?= $index ?>][status]" value="Izin" class="peer sr-only">
+                                    <div class="flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition-all peer-checked:border-blue-500 peer-checked:ring-1 peer-checked:ring-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700">
+                                        <i class="fas fa-info-circle"></i> Izin
+                                    </div>
+                                </label>
+                                <label class="cursor-pointer flex-1">
+                                    <input type="radio" name="absen[<?= $index ?>][status]" value="Cuti" class="peer sr-only">
+                                    <div class="flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition-all peer-checked:border-orange-500 peer-checked:ring-1 peer-checked:ring-orange-500 peer-checked:bg-orange-50 peer-checked:text-orange-700">
+                                        <i class="fas fa-calendar-times"></i> Cuti
+                                    </div>
+                                </label>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
 
-            <!-- Submit Button -->
-            <div class="flex items-center justify-end gap-3">
-                <a href="<?= session()->get('role') === 'owner' ? base_url('beranda') : base_url('kehadiran') ?>" 
-                    class="inline-flex items-center justify-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-all">
-                    Batal
-                </a>
-                <button type="submit" id="btnSimpan" 
-                    class="inline-flex items-center justify-center rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-indigo-200 transition-all hover:bg-indigo-700">
-                    <i class="fas fa-save mr-2"></i> Simpan Presensi
-                </button>
+            <div class="sticky bottom-0 z-40 bg-slate-50/80 pt-4 backdrop-blur-sm">
+                <div class="mx-auto flex w-full max-w-6xl justify-center px-4 py-3">
+                    <button type="submit" id="btnSimpan" class="inline-flex items-center justify-center rounded-3xl bg-teal-600 px-8 py-4 text-sm font-bold uppercase tracking-[0.2em] text-white shadow-lg shadow-teal-200 transition-all hover:bg-teal-700">
+                        <i class="fas fa-save mr-3"></i> Simpan Presensi Baru
+                    </button>
+                </div>
             </div>
         </form>
     </div>
@@ -122,35 +121,27 @@
         redirectUrl: "<?= session()->get('role') === 'owner' ? base_url('beranda') : base_url('kehadiran') ?>",
     };
 
-    // Inline script untuk handle form
     $(document).ready(function() {
-        const selectAllCheckbox = $('#selectAll');
-        const terapisCheckboxes = $('input[name="terapis_ids[]"]');
+        const config = window.tambahPresensiConfig;
+        const swalLib = window.Swal || window.swal;
+        const formTambahPresensi = $('#formTambahPresensi');
+        const tanggalInput = $('#tanggal_presensi');
+        const tanggalHidden = $('#tanggal_presensi_hidden');
 
-        // Select All functionality
-        if (selectAllCheckbox.length && terapisCheckboxes.length > 0) {
-            selectAllCheckbox.on('change', function() {
-                terapisCheckboxes.prop('checked', this.checked);
-            });
-
-            // Update Select All checkbox when individual checkboxes change
-            terapisCheckboxes.on('change', function() {
-                const allChecked = terapisCheckboxes.toArray().every(cb => cb.checked);
-                const someChecked = terapisCheckboxes.toArray().some(cb => cb.checked);
-                selectAllCheckbox.prop('checked', allChecked);
-                selectAllCheckbox.prop('indeterminate', someChecked && !allChecked);
+        // Sinkronisasi tanggal input dengan hidden field
+        if (tanggalInput.length && tanggalHidden.length) {
+            tanggalInput.on('change', function() {
+                const newDate = $(this).val();
+                tanggalHidden.val(newDate);
             });
         }
 
-        // Form submit
-        $('#formTambahPresensi').on('submit', function(e) {
+        formTambahPresensi.on('submit', function(e) {
             e.preventDefault();
             
-            const tanggal = $('#tanggal_presensi').val();
-            const selectedTerapis = $('input[name="terapis_ids[]"]:checked').length;
-
+            const tanggal = tanggalHidden.val();
             if (!tanggal) {
-                Swal.fire({
+                swalLib.fire({
                     icon: 'warning',
                     title: 'Perhatian',
                     text: 'Pilih tanggal presensi terlebih dahulu',
@@ -166,20 +157,10 @@
             selectedDate.setHours(0, 0, 0, 0);
 
             if (selectedDate > today) {
-                Swal.fire({
+                swalLib.fire({
                     icon: 'warning',
                     title: 'Tanggal Tidak Valid',
                     text: 'Tidak dapat input presensi untuk tanggal masa depan',
-                    confirmButtonColor: '#4f46e5'
-                });
-                return;
-            }
-
-            if (selectedTerapis === 0) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Perhatian',
-                    text: 'Pilih minimal satu terapis',
                     confirmButtonColor: '#4f46e5'
                 });
                 return;
@@ -194,28 +175,30 @@
             let formData = $(this).serializeArray();
             
             // Tambahkan CSRF Token bila belum ada
-            if (!formData.some(field => field.name === window.tambahPresensiConfig.csrfName)) {
-                formData.push({ 
-                    name: window.tambahPresensiConfig.csrfName, 
-                    value: window.tambahPresensiConfig.csrfHash 
-                });
+            if (!formData.some(field => field.name === config.csrfName)) {
+                formData.push({ name: config.csrfName, value: config.csrfHash });
             }
 
             $.ajax({
-                url: window.tambahPresensiConfig.storeUrl,
+                url: config.storeUrl,
                 type: "POST",
                 data: $.param(formData),
                 dataType: "json",
                 success: function(response) {
-                    if (response.csrfHash) {
-                        window.tambahPresensiConfig.csrfHash = response.csrfHash;
-                    }
+                    if (response.csrfHash) config.csrfHash = response.csrfHash; 
 
                     if (response.status === 'success') {
-                        // Langsung redirect tanpa alert
-                        window.location.href = window.tambahPresensiConfig.redirectUrl;
+                        swalLib.fire({
+                            icon: 'success',
+                            title: 'Tersimpan!',
+                            text: response.message,
+                            confirmButtonColor: '#4f46e5',
+                            customClass: { popup: 'rounded-3xl' }
+                        }).then(() => {
+                            window.location.href = config.redirectUrl;
+                        });
                     } else {
-                        Swal.fire({
+                        swalLib.fire({
                             icon: 'error',
                             title: 'Gagal',
                             text: response.message || "Terjadi kesalahan",
@@ -225,11 +208,11 @@
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error('AJAX Error:', xhr.responseText);
-                    Swal.fire({
+                    console.error("AJAX Error:", xhr.responseText);
+                    swalLib.fire({
                         icon: 'error',
                         title: 'Kesalahan Sistem',
-                        text: 'Gagal menghubungi server: ' + error,
+                        text: 'Gagal menghubungi server.',
                         confirmButtonColor: '#4f46e5'
                     });
                     btn.html(originalText).prop('disabled', false).removeClass('opacity-70');

@@ -46,3 +46,4 @@ import "./pages/transaksi_tunjangan_detail.js";
 import "./pages/absensi_karyawan.js";
 import "./pages/jasa_pelayanan.js";
 import "./pages/monitoring.js";
+import "./pages/potongan_rutin.js";

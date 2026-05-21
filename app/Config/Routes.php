@@ -391,6 +391,16 @@ $routes->group('transaksi-tunjangan', ['namespace' => 'App\modules\transaksi_tun
   $routes->post('delete-setting/(:num)', 'Transaksitunjangan::deleteSetting/$1');
 });
 
+// Rutes - potongan rutin
+$routes->group('potongan-rutin', ['namespace' => 'App\modules\potongan_rutin\Controllers', 'filter' => 'auth'], function ($routes) {
+  $routes->get('/', 'PotonganRutinController::index');
+  $routes->post('fetch', 'PotonganRutinController::fetch');
+  $routes->get('detail/(:num)', 'PotonganRutinController::detail/$1');
+  $routes->post('save-setting', 'PotonganRutinController::saveSetting');
+  $routes->post('save-setting-massal', 'PotonganRutinController::saveSettingMassal');
+  $routes->post('delete-setting/(:num)', 'PotonganRutinController::deleteSetting/$1');
+});
+
 // ROUTES MODUL PENGGAJIAN (PAYROLL)
 $routes->group('detail-gaji', ['namespace' => 'App\modules\detail_gaji\Controllers', 'filter' => 'auth'], function ($routes) {
   $routes->get('/', 'Detailgaji::index');
