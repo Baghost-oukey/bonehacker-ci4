@@ -73,25 +73,55 @@
                                 </div>
                             <?php endif; ?>
 
-                            <div class="flex justify-between items-end">
-                                <span class="text-xs font-black text-indigo-500 uppercase tracking-widest">Tunjangan Berjalan</span>
-                                <span class="text-sm font-black text-indigo-600">Rp <?= number_format($estimasi['total_tunjangan'], 0, ',', '.') ?></span>
-                            </div>
+                            <?php 
+                            $potonganAbsen = 0;
+                            if ($estimasi['tipe_gaji'] === 'bulanan' && $estimasi['potong_absen'] == 1) {
+                                $potonganAbsen = (float)($estimasi['komponen']['potongan_absen'] ?? 0);
+                            }
+                            ?>
+
+                            <?php if ($estimasi['tipe_gaji'] === 'bulanan' && $estimasi['potong_absen'] == 1) : ?>
+                                <div class="flex flex-col gap-2 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                                    <div class="flex justify-between items-end">
+                                        <span class="text-[10px] font-black text-slate-500 uppercase">Kehadiran (Bulan Ini)</span>
+                                        <span class="text-xs font-black text-slate-700"><?= $estimasi['current_kehadiran'] ?> Hari</span>
+                                    </div>
+                                    <div class="flex justify-between items-end border-t border-slate-200/60 pt-2">
+                                        <span class="text-[10px] font-black text-slate-500 uppercase">Absen/Tidak Hadir</span>
+                                        <span class="text-xs font-black text-slate-700"><?= $estimasi['komponen']['absen'] ?? 0 ?> Hari</span>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+
+                            <?php if ($potonganAbsen > 0) : ?>
+                                <div class="flex justify-between items-end">
+                                    <span class="text-xs font-black text-amber-600 uppercase tracking-widest">Potongan Hari (Absen)</span>
+                                    <span class="text-sm font-black text-amber-600">- Rp <?= number_format($potonganAbsen, 0, ',', '.') ?></span>
+                                </div>
+                            <?php endif; ?>
 
                             <div class="flex justify-between items-end">
-                                <span class="text-xs font-black text-rose-500 uppercase tracking-widest">Potongan Kasbon</span>
-                                <span class="text-sm font-black text-rose-600">- Rp <?= number_format($estimasi['total_kasbon'], 0, ',', '.') ?></span>
+                                <span class="text-xs font-black text-indigo-500 uppercase tracking-widest">Tunjangan Berjalan</span>
+                                <span class="text-sm font-black text-indigo-600">Rp <?= number_format($estimasi['total_tunjangan'] ?? 0, 0, ',', '.') ?></span>
+                            </div>
+
+                            <?php if (isset($estimasi['komponen']['total_benefit_non_cash']) && $estimasi['komponen']['total_benefit_non_cash'] > 0) : ?>
+                                <div class="flex justify-between items-end">
+                                    <span class="text-xs font-black text-teal-600 uppercase tracking-widest">Benefit (Non-Cash)</span>
+                                    <span class="text-sm font-black text-teal-600">Rp <?= number_format($estimasi['komponen']['total_benefit_non_cash'], 0, ',', '.') ?></span>
+                                </div>
+                            <?php endif; ?>
+
+                            <div class="flex justify-between items-end">
+                                <span class="text-xs font-black text-rose-500 uppercase tracking-widest">Potongan Rutin & Kasbon</span>
+                                <span class="text-sm font-black text-rose-600">- Rp <?= number_format($estimasi['komponen']['total_C'] ?? ($estimasi['total_kasbon'] ?? 0), 0, ',', '.') ?></span>
                             </div>
 
                             <div class="pt-4 border-t border-slate-100">
                                 <div class="flex justify-between items-center bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
                                     <span class="text-[10px] font-black text-emerald-700 uppercase tracking-[0.2em]">Take Home Pay</span>
                                     <span class="text-xl font-black text-emerald-700">
-                                        <?php 
-                                            $totalGaji = ($estimasi['tipe_gaji'] === 'harian') ? ($estimasi['nominal_gaji'] * $estimasi['current_kehadiran']) : $estimasi['nominal_gaji'];
-                                            $bersih = $totalGaji + $estimasi['total_tunjangan'] - $estimasi['total_kasbon'];
-                                            echo 'Rp ' . number_format(max(0, $bersih), 0, ',', '.');
-                                        ?>
+                                        Rp <?= number_format(max(0, $estimasi['komponen']['gaji_bersih'] ?? 0), 0, ',', '.') ?>
                                     </span>
                                 </div>
                             </div>

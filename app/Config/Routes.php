@@ -378,6 +378,9 @@ $routes->group('master-gaji', ['namespace' => 'App\modules\tunjangan_karyawan\Co
   $routes->get('detail/(:num)', 'Tunjangankaryawan::detail/$1');
   $routes->delete('delete/(:num)', 'Tunjangankaryawan::delete/$1');
   $routes->post('delete/(:num)', 'Tunjangankaryawan::delete/$1');
+  $routes->get('terapis-detail/(:num)', 'Tunjangankaryawan::terapisDetail/$1');
+  $routes->post('save-terapis-settings', 'Tunjangankaryawan::saveTerapisSettings');
+  $routes->post('save-gaji-pokok', 'Tunjangankaryawan::saveGajiPokok');
 });
 
 // Rutes - transaksi tunjangan

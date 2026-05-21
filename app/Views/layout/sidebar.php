@@ -156,7 +156,7 @@ $userInitial = strtoupper(substr($realname, 0, 1));
 
                 <?php if (in_array($role, ['owner'])): ?>
                     <li>
-                        <details class="group" <?= in_array($current_segment, ['gaji', 'transaksi-tunjangan', 'master-gaji', 'kasbon', 'potongan-rutin']) ? 'open' : '' ?>>
+                        <details class="group" <?= in_array($current_segment, ['gaji', 'master-gaji', 'kasbon']) ? 'open' : '' ?>>
                             <summary class="flex w-full cursor-pointer list-none items-center justify-between rounded-md p-2 text-left text-sm transition-all text-slate-600 hover:bg-slate-100 hover:text-slate-900 [&::-webkit-details-marker]:hidden">
                                 <span class="flex items-center gap-2">
                                     <i class="fa-solid fa-dollar-sign w-4 text-center shrink-0"></i>
@@ -172,21 +172,9 @@ $userInitial = strtoupper(substr($realname, 0, 1));
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="<?= base_url('transaksi-tunjangan') ?>"
-                                        class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'transaksi-tunjangan' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
-                                        <span class="truncate">Tunjangan Terapis</span>
-                                    </a>
-                                </li>
-                                <li>
                                     <a href="<?= base_url('master-gaji') ?>"
                                         class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'master-gaji' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
                                         <span class="truncate">Master Gaji</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="<?= base_url('potongan-rutin') ?>"
-                                        class="flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm transition-all <?= $current_segment == 'potongan-rutin' ? 'bg-slate-100 font-medium text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>">
-                                        <span class="truncate">Potongan Rutin</span>
                                     </a>
                                 </li>
                                 <li>

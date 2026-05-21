@@ -46,10 +46,52 @@ class Gajikaryawan extends BaseController
         $bulan = $this->request->getGet('bulan') ?? date('n');
         $tahun = $this->request->getGet('tahun') ?? date('Y');
 
+        $riwayat_gaji = $this->Mriwayatgaji->getPayrollHistory($bulan, $tahun, $regionId);
+        $riwayat_ids = array_column($riwayat_gaji, 'id');
+        
+        $riwayat_details = [];
+        if (!empty($riwayat_ids)) {
+            $details = $this->db->table('riwayat_gaji_detail')
+                ->whereIn('riwayat_gaji_id', $riwayat_ids)
+                ->get()
+                ->getResultArray();
+            
+            foreach ($details as $d) {
+                $histId = $d['riwayat_gaji_id'];
+                $kelompok = $d['kelompok']; // 'take_home', 'benefit', 'benefit_non_cash', 'potongan'
+                
+                if (!isset($riwayat_details[$histId])) {
+                    $riwayat_details[$histId] = [
+                        'take_home' => [],
+                        'benefit' => [],
+                        'benefit_non_cash' => [],
+                        'potongan' => [],
+                        'total_take_home' => 0,
+                        'total_benefit' => 0,
+                        'total_benefit_non_cash' => 0,
+                        'total_potongan' => 0
+                    ];
+                }
+                
+                $riwayat_details[$histId][$kelompok][] = $d;
+                
+                if ($kelompok === 'take_home') {
+                    $riwayat_details[$histId]['total_take_home'] += (float)$d['nominal'];
+                } elseif ($kelompok === 'benefit') {
+                    $riwayat_details[$histId]['total_benefit'] += (float)$d['nominal'];
+                } elseif ($kelompok === 'benefit_non_cash') {
+                    $riwayat_details[$histId]['total_benefit_non_cash'] += (float)$d['nominal'];
+                } elseif ($kelompok === 'potongan') {
+                    $riwayat_details[$histId]['total_potongan'] += (float)$d['nominal'];
+                }
+            }
+        }
+
         $data = [
             'title'            => 'Kelola Gaji Karyawan',
             'estimasi_gaji'    => $this->Mriwayatgaji->getPayrollEstimates($regionId),
-            'riwayat_gaji'     => $this->Mriwayatgaji->getPayrollHistory($bulan, $tahun, $regionId),
+            'riwayat_gaji'     => $riwayat_gaji,
+            'riwayat_details'  => $riwayat_details,
             'filter_region'    => $regionId,
             'filter_bulan'     => $bulan,
             'filter_tahun'     => $tahun
@@ -68,15 +110,17 @@ class Gajikaryawan extends BaseController
         $tipeGaji    = $this->request->getPost('tipe_gaji');
         $nominalGaji = preg_replace('/[^0-9]/', '', $this->request->getPost('nominal_gaji'));
         $potongAbsen = $this->request->getPost('potong_absen') ? 1 : 0;
+        $nominalPotongAbsen = preg_replace('/[^0-9]/', '', $this->request->getPost('nominal_potong_absen') ?? '0');
         
         $builder = $this->db->table('gaji_karyawan');
         $cekData = $builder->where('terapis_id', $terapisId)->get()->getRowArray();
         $dataSimpan = [
-            'terapis_id'   => $terapisId,
-            'tipe_gaji'    => $tipeGaji,
-            'potong_absen' => $potongAbsen,
-            'nominal_gaji' => $nominalGaji,
-            'updated_at'   => date('Y-m-d H:i:s')
+            'terapis_id'           => $terapisId,
+            'tipe_gaji'            => $tipeGaji,
+            'potong_absen'         => $potongAbsen,
+            'nominal_gaji'         => $nominalGaji,
+            'nominal_potong_absen' => $nominalPotongAbsen,
+            'updated_at'           => date('Y-m-d H:i:s')
         ];
 
         if ($cekData) {
@@ -138,7 +182,7 @@ class Gajikaryawan extends BaseController
             'total_kehadiran'  => $k['kehadiran'],
             'gaji_pokok_total' => $k['gaji_pokok'],
             'total_tunjangan'  => $k['total_A'] - $k['gaji_pokok'] + $k['total_B'],
-            'total_potongan'   => $k['total_C'],
+            'total_potongan'   => $k['total_C'] + $k['potongan_absen'],
             'gaji_bersih'      => $k['gaji_bersih'],
             'tanggal_bayar'    => date('Y-m-d H:i:s'),
             'status'           => 'lunas'
@@ -156,10 +200,17 @@ class Gajikaryawan extends BaseController
             $detailBatch[] = ['riwayat_gaji_id' => $riwayatId, 'kelompok' => 'take_home', 'nama_komponen' => 'Jasa Terapi Kejantanan', 'nominal' => $k['jaspel_kejantanan']];
         foreach ($k['benefit_list'] as $b)
             $detailBatch[] = ['riwayat_gaji_id' => $riwayatId, 'kelompok' => 'benefit', 'nama_komponen' => $b['nama'], 'nominal' => $b['nominal']];
+        if (!empty($k['benefit_non_cash_list'])) {
+            foreach ($k['benefit_non_cash_list'] as $bnc) {
+                $detailBatch[] = ['riwayat_gaji_id' => $riwayatId, 'kelompok' => 'benefit_non_cash', 'nama_komponen' => $bnc['nama'], 'nominal' => $bnc['nominal']];
+            }
+        }
         foreach ($k['potongan_list'] as $p)
             $detailBatch[] = ['riwayat_gaji_id' => $riwayatId, 'kelompok' => 'potongan', 'nama_komponen' => $p['nama'], 'nominal' => $p['nominal']];
         if ($k['total_kasbon'] > 0)
             $detailBatch[] = ['riwayat_gaji_id' => $riwayatId, 'kelompok' => 'potongan', 'nama_komponen' => 'Cicilan Kasbon', 'nominal' => $k['total_kasbon']];
+        if ($k['potongan_absen'] > 0)
+            $detailBatch[] = ['riwayat_gaji_id' => $riwayatId, 'kelompok' => 'potongan', 'nama_komponen' => 'Potongan Absensi (' . $k['absen'] . ' Hari)', 'nominal' => $k['potongan_absen']];
 
         if (!empty($detailBatch))
             $this->db->table('riwayat_gaji_detail')->insertBatch($detailBatch);
@@ -360,9 +411,14 @@ class Gajikaryawan extends BaseController
         $detail = $this->Mriwayatgaji->getDetailPerhitungan($terapis_id);
         $history = $this->Mriwayatgaji->getHistoryByTerapis($terapis_id);
 
+        $estimasi = $detail['terapis'];
+        if ($estimasi && isset($detail['komponen'])) {
+            $estimasi['komponen'] = $detail['komponen'];
+        }
+
         $data = [
             'title'     => 'Gaji Saya',
-            'estimasi'  => $detail['terapis'],
+            'estimasi'  => $estimasi,
             'history'   => $history,
             'realname'  => session()->get('realname'),
         ];

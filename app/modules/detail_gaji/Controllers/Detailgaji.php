@@ -62,7 +62,7 @@ class Detailgaji extends BaseController
             'total_kehadiran'  => $k['kehadiran'],
             'gaji_pokok_total' => $k['gaji_pokok'],
             'total_tunjangan'  => $k['total_A'] - $k['gaji_pokok'] + $k['total_B'],
-            'total_potongan'   => $k['total_C'],
+            'total_potongan'   => $k['total_C'] + $k['potongan_absen'],
             'gaji_bersih'      => $gajiBersih,
             'tanggal_bayar'    => date('Y-m-d H:i:s'),
             'status'           => 'lunas'
@@ -85,11 +85,20 @@ class Detailgaji extends BaseController
         foreach ($k['benefit_list'] as $b)
             $detailBatch[] = ['riwayat_gaji_id' => $riwayatId, 'kelompok' => 'benefit', 'nama_komponen' => $b['nama'], 'nominal' => $b['nominal']];
 
+        // Benefit Non-Cash
+        if (!empty($k['benefit_non_cash_list'])) {
+            foreach ($k['benefit_non_cash_list'] as $bnc) {
+                $detailBatch[] = ['riwayat_gaji_id' => $riwayatId, 'kelompok' => 'benefit_non_cash', 'nama_komponen' => $bnc['nama'], 'nominal' => $bnc['nominal']];
+            }
+        }
+
         // Potongan
         foreach ($k['potongan_list'] as $p)
             $detailBatch[] = ['riwayat_gaji_id' => $riwayatId, 'kelompok' => 'potongan', 'nama_komponen' => $p['nama'], 'nominal' => $p['nominal']];
         if ($k['total_kasbon'] > 0)
             $detailBatch[] = ['riwayat_gaji_id' => $riwayatId, 'kelompok' => 'potongan', 'nama_komponen' => 'Cicilan Kasbon', 'nominal' => $k['total_kasbon']];
+        if ($k['potongan_absen'] > 0)
+            $detailBatch[] = ['riwayat_gaji_id' => $riwayatId, 'kelompok' => 'potongan', 'nama_komponen' => 'Potongan Absensi (' . $k['absen'] . ' Hari)', 'nominal' => $k['potongan_absen']];
 
         if (!empty($detailBatch))
             $this->db->table('riwayat_gaji_detail')->insertBatch($detailBatch);

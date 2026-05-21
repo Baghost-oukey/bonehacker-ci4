@@ -75,6 +75,7 @@ class Mgajikaryawan extends Model
         COALESCE(pg.tipe_gaji, "Belum Diset") as tipe_gaji,
         COALESCE(pg.nominal_gaji, 0) as nominal_gaji,
         COALESCE(pg.potong_absen, 0) as potong_absen,
+        COALESCE(pg.nominal_potong_absen, 0) as nominal_potong_absen,
         ' . $subQueryTindakan . ' as jml_tindakan, 
         ' . $subQueryKasbon . ' as total_kasbon,
         ' . $subQueryTunjangan . ' as total_tunjangan'
@@ -97,10 +98,13 @@ class Mgajikaryawan extends Model
         $builder->select('
             p.*, 
             t.nama, 
+            t.foto,
+            j.nama_jabatan,
             r.name as wilayah
         ');
         $builder->join('terapis t', 't.id = p.terapis_id');
         $builder->join('regions r', 'r.id = t.region_id', 'left');
+        $builder->join('jabatan j', 'j.id = t.jabatan_id', 'left');
 
         $builder->where('p.periode_bulan', $bulan);
         $builder->where('p.periode_tahun', $tahun);
@@ -124,6 +128,7 @@ class Mgajikaryawan extends Model
         $tanggalAkhir = date('Y-m-t', strtotime($tanggalAwal));
 
         $subQueryKehadiran = "(SELECT COUNT(*) FROM absensi_karyawan WHERE terapis_id = t.id AND status IN ('Hadir','Cuti') AND tanggal >= '$tanggalAwal' AND tanggal <= '$tanggalAkhir')";
+        $subQueryAbsen     = "(SELECT COUNT(*) FROM absensi_karyawan WHERE terapis_id = t.id AND status = 'Tidak Hadir' AND tanggal >= '$tanggalAwal' AND tanggal <= '$tanggalAkhir')";
         $subQueryKasbon    = "(SELECT COALESCE(SUM(sisa_hutang), 0) FROM kasbon_karyawan WHERE terapis_id = t.id AND status_potongan = 'belum_lunas')";
 
         $builder = $this->db->table('terapis t');
@@ -132,7 +137,9 @@ class Mgajikaryawan extends Model
             COALESCE(pg.tipe_gaji, "Belum Diset") as tipe_gaji,
             COALESCE(pg.nominal_gaji, 0) as nominal_gaji,
             COALESCE(pg.potong_absen, 0) as potong_absen,
+            COALESCE(pg.nominal_potong_absen, 0) as nominal_potong_absen,
             ' . $subQueryKehadiran . ' as current_kehadiran,
+            ' . $subQueryAbsen . ' as current_absen,
             ' . $subQueryKasbon . ' as total_kasbon'
         , false);
         $builder->join('gaji_karyawan pg', 'pg.terapis_id = t.id', 'left');
@@ -151,15 +158,14 @@ class Mgajikaryawan extends Model
         // Potongan absen (gaji bulanan)
         $potonganAbsen = 0;
         $hariKerja     = 0;
+        $absenCount    = (int)($terapis['current_absen'] ?? 0);
         if ($tipeGaji === 'bulanan' && $terapis['potong_absen'] == 1) {
             $mKalender = new \App\modules\kalender\Models\MKalender();
             $hariKerja = $mKalender->getHariKerjaBulanan($bulan, $tahun, $terapis['region_id'] ?? null);
-            if ($hariKerja > 0) {
-                $absen = $hariKerja - $kehadiran;
-                if ($absen > 0) $potonganAbsen = ($nominalGaji / $hariKerja) * $absen;
+            if ($absenCount > 0) {
+                $potonganAbsen = (float)$terapis['nominal_potong_absen'] * $absenCount;
             }
         }
-        $gajiPokok -= $potonganAbsen;
 
         // ── JASPEL (dari jaspel_harian – pool-splitting harian) ──────
         $mJaspel = new \App\modules\jasa_pelayanan\Models\MJaspelSettings();
@@ -313,6 +319,7 @@ class Mgajikaryawan extends Model
         // Pisahkan benefit dan potongan
         $benefitOnly         = array_values(array_filter($benefitList, fn($i) => $i['kategori'] === 'tunjangan'));
         $potonganMaster      = array_values(array_filter($benefitList, fn($i) => $i['kategori'] === 'potongan'));
+        $benefitNonCash      = array_values(array_filter($benefitList, fn($i) => $i['kategori'] === 'benefit'));
 
         // Ambil potongan rutin yang aktif
         $mPotonganRutin = new \App\modules\kasbon_karyawan\Models\MPotonganRutin();
@@ -327,6 +334,7 @@ class Mgajikaryawan extends Model
 
         $totalBenefitOnly    = array_sum(array_column($benefitOnly, 'nominal'));
         $totalPotonganMaster = array_sum(array_column($potonganMaster, 'nominal'));
+        $totalBenefitNonCash = array_sum(array_column($benefitNonCash, 'nominal'));
 
         // ── TOTAL KASBON ─────────────────────────────────────────────
         $totalKasbon = (int)$terapis['total_kasbon'];
@@ -335,7 +343,7 @@ class Mgajikaryawan extends Model
         $totalA     = $gajiPokok + $jaspelReguler + $jaspelKejantanan;
         $totalB     = $totalBenefitOnly;
         $totalC     = $totalPotonganMaster + $totalKasbon;
-        $gajiBersih = ($totalA + $totalB) - $totalC;
+        $gajiBersih = ($totalA + $totalB) - ($totalC + $potonganAbsen);
 
         // total_tunjangan = tunjangan tetap + jaspel (untuk tampilan ringkasan)
         $terapis['total_tunjangan'] = (int)($totalBenefitOnly + $jaspelReguler + $jaspelKejantanan);
@@ -351,6 +359,9 @@ class Mgajikaryawan extends Model
                 // Benefit
                 'benefit_list'         => $benefitOnly,
                 'total_B'              => (int)$totalBenefitOnly,
+                // Benefit Non-Cash
+                'benefit_non_cash_list'  => $benefitNonCash,
+                'total_benefit_non_cash' => (int)$totalBenefitNonCash,
                 // Potongan
                 'potongan_list'        => $potonganMaster,
                 'total_potongan_rutin' => (int)$totalPotonganMaster,
@@ -360,6 +371,8 @@ class Mgajikaryawan extends Model
                 'gaji_bersih'          => (int)$gajiBersih,
                 'kehadiran'            => $kehadiran,
                 'hari_kerja'           => $hariKerja,
+                'absen'                => $absenCount,
+                'potongan_absen'       => (int)$potonganAbsen,
             ]
         ];
     }

@@ -80,8 +80,29 @@
                 </div>
                 <?php endif; ?>
 
+                <!-- BENEFIT NON-CASH (FASILITAS / PENCATATAN SAJA) -->
+                <?php if (!empty($komponen['benefit_non_cash_list'])): ?>
+                <div>
+                    <h3 class="text-xs font-black text-teal-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <i class="fas fa-gift"></i> Benefit Non-Cash / Fasilitas (Hanya Pencatatan)
+                    </h3>
+                    <div class="bg-teal-50/50 rounded-2xl border border-teal-100 divide-y divide-teal-100">
+                        <?php foreach ($komponen['benefit_non_cash_list'] as $bnc): ?>
+                        <div class="flex justify-between px-5 py-3 text-sm">
+                            <span class="text-slate-600"><?= esc($bnc['nama']) ?></span>
+                            <span class="font-bold text-slate-800">Rp <?= number_format($bnc['nominal'], 0, ',', '.') ?></span>
+                        </div>
+                        <?php endforeach; ?>
+                        <div class="flex justify-between px-5 py-3 text-sm bg-teal-50 rounded-b-2xl">
+                            <span class="font-black text-teal-700">Total Benefit Non-Cash</span>
+                            <span class="font-black text-teal-700">Rp <?= number_format($komponen['total_benefit_non_cash'], 0, ',', '.') ?></span>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+
                 <!-- POTONGAN -->
-                <?php if ($komponen['total_C'] > 0): ?>
+                <?php if ($komponen['total_C'] > 0 || $komponen['potongan_absen'] > 0): ?>
                 <div>
                     <h3 class="text-xs font-black text-rose-600 uppercase tracking-widest mb-3 flex items-center gap-2">
                         <i class="fas fa-minus-circle"></i> Potongan
@@ -99,9 +120,15 @@
                             <span class="font-bold text-rose-600">- Rp <?= number_format($komponen['total_kasbon'], 0, ',', '.') ?></span>
                         </div>
                         <?php endif; ?>
+                        <?php if ($komponen['potongan_absen'] > 0): ?>
+                        <div class="flex justify-between px-5 py-3 text-sm">
+                            <span class="text-slate-600">Potongan Absensi (<?= $komponen['absen'] ?> Hari)</span>
+                            <span class="font-bold text-rose-600">- Rp <?= number_format($komponen['potongan_absen'], 0, ',', '.') ?></span>
+                        </div>
+                        <?php endif; ?>
                         <div class="flex justify-between px-5 py-3 text-sm bg-rose-50 rounded-b-2xl">
                             <span class="font-black text-rose-700">Total Potongan</span>
-                            <span class="font-black text-rose-700">- Rp <?= number_format($komponen['total_C'], 0, ',', '.') ?></span>
+                            <span class="font-black text-rose-700">- Rp <?= number_format($komponen['total_C'] + $komponen['potongan_absen'], 0, ',', '.') ?></span>
                         </div>
                     </div>
                 </div>
@@ -113,10 +140,10 @@
                         <span class="text-slate-400">Total Take Home + Benefit</span>
                         <span class="font-bold">Rp <?= number_format($komponen['total_A'] + $komponen['total_B'], 0, ',', '.') ?></span>
                     </div>
-                    <?php if ($komponen['total_C'] > 0): ?>
+                    <?php if ($komponen['total_C'] > 0 || $komponen['potongan_absen'] > 0): ?>
                     <div class="flex justify-between text-sm mb-4 pb-4 border-b border-slate-700">
                         <span class="text-slate-400">Total Potongan</span>
-                        <span class="font-bold text-rose-400">- Rp <?= number_format($komponen['total_C'], 0, ',', '.') ?></span>
+                        <span class="font-bold text-rose-400">- Rp <?= number_format($komponen['total_C'] + $komponen['potongan_absen'], 0, ',', '.') ?></span>
                     </div>
                     <?php endif; ?>
                     <div class="flex justify-between items-center">
