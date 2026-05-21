@@ -56,7 +56,15 @@ class FinanceCategoryController extends BaseController
         // Security check
         if ($role !== 'superadmin') {
             // Owner can only add for their own region
-            $target_region = $region_patient;
+            $activeRegion = session()->get('active_region');
+            if ($activeRegion && $activeRegion !== 'all') {
+                $target_region = (int)$activeRegion;
+            } else {
+                $target_region = session()->get('region_id');
+                if (empty($target_region) && is_array($region_patient) && !empty($region_patient)) {
+                    $target_region = $region_patient[0];
+                }
+            }
         } else {
             // Superadmin can choose region or set to NULL (Global)
             if ($target_region === 'global') {
@@ -91,12 +99,14 @@ class FinanceCategoryController extends BaseController
             return redirect()->back()->with('error', 'Kategori bawaan sistem tidak dapat dihapus.');
         }
 
-        $role = session()->get('role');
         $region_patient = session()->get('region_patient');
 
         // Permission check
-        if ($role !== 'superadmin' && $category['region_id'] !== $region_patient) {
-            return redirect()->back()->with('error', 'Unauthorized access');
+        if ($role !== 'superadmin') {
+            $allowedRegions = is_array($region_patient) ? $region_patient : [$region_patient];
+            if (!in_array($category['region_id'], $allowedRegions)) {
+                return redirect()->back()->with('error', 'Unauthorized access');
+            }
         }
 
         $this->mCategory->delete($id);
