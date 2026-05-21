@@ -2,13 +2,13 @@
 <?= $this->section('content') ?>
 
 <div class="p-4 sm:p-8 bg-slate-50 min-h-screen">
-    <a href="<?= base_url('transaksi-tunjangan') ?>" class="inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-indigo-600 transition-colors mb-6">
+    <a href="<?= base_url('transaksi-tunjangan') ?>" class="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-teal-600 transition-colors mb-6">
         <i class="fas fa-arrow-left"></i> Kembali ke Daftar Terapis
     </a>
 
     <!-- Header Terapis -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6 flex flex-col lg:flex-row items-center gap-6">
-        <div class="w-16 h-16 rounded-full bg-indigo-500 flex items-center justify-center text-white text-2xl font-extrabold shadow-inner shrink-0">
+        <div class="w-16 h-16 rounded-full bg-teal-600 flex items-center justify-center text-white text-2xl font-extrabold shrink-0">
             <?= strtoupper(substr($terapis['nama'], 0, 1)) ?>
         </div>
         <div class="flex-1 text-center sm:text-left">
@@ -30,7 +30,7 @@
                     <h3 class="text-sm font-bold text-slate-800">Tunjangan Aktif</h3>
                     <p class="text-xs text-slate-500 mt-0.5">Dihitung otomatis saat proses gaji</p>
                 </div>
-                <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full">
+                <span class="text-xs font-bold text-teal-600 bg-teal-50 px-2.5 py-1 rounded-full">
                     <?= count($settings) ?> aktif
                 </span>
             </div>
@@ -104,9 +104,9 @@
                 <input type="hidden" name="terapis_id" value="<?= $terapis['id'] ?>">
 
                 <div>
-                    <label class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Jenis Tunjangan <span class="text-red-500">*</span></label>
+                    <label class="text-sm font-medium text-slate-700 mb-1.5 block">Jenis Tunjangan <span class="text-red-500">*</span></label>
                     <select name="tunjangan_karyawan_id" required
-                        class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 transition-colors">
                         <option value="">-- Pilih Jenis --</option>
                         <?php foreach ($master_tunjangan as $mt): ?>
                             <option value="<?= $mt['id'] ?>"><?= esc($mt['nama_tunjangan']) ?></option>
@@ -115,11 +115,11 @@
                 </div>
 
                 <div>
-                    <label class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Tipe Pemberian <span class="text-red-500">*</span></label>
+                    <label class="text-sm font-medium text-slate-700 mb-1.5 block">Tipe Pemberian <span class="text-red-500">*</span></label>
                     <div class="grid grid-cols-2 gap-3">
                         <label class="cursor-pointer">
                             <input type="radio" name="tipe" value="bulanan" class="peer sr-only" checked>
-                            <div class="flex flex-col items-center gap-1.5 rounded-xl border-2 border-slate-200 bg-white p-3 text-center transition peer-checked:border-blue-500 peer-checked:bg-blue-50">
+                            <div class="flex flex-col items-center gap-1.5 rounded-lg border-2 border-slate-200 bg-white p-3 text-center transition peer-checked:border-teal-500 peer-checked:bg-teal-50">
                                 <i class="fas fa-calendar-check text-slate-400 peer-checked:text-blue-600 text-lg"></i>
                                 <span class="text-xs font-bold text-slate-600">Bulanan</span>
                                 <span class="text-[10px] text-slate-400">Nominal tetap/bulan</span>
@@ -127,7 +127,7 @@
                         </label>
                         <label class="cursor-pointer">
                             <input type="radio" name="tipe" value="harian" class="peer sr-only">
-                            <div class="flex flex-col items-center gap-1.5 rounded-xl border-2 border-slate-200 bg-white p-3 text-center transition peer-checked:border-amber-500 peer-checked:bg-amber-50">
+                            <div class="flex flex-col items-center gap-1.5 rounded-lg border-2 border-slate-200 bg-white p-3 text-center transition peer-checked:border-teal-500 peer-checked:bg-teal-50">
                                 <i class="fas fa-sun text-slate-400 text-lg"></i>
                                 <span class="text-xs font-bold text-slate-600">Harian</span>
                                 <span class="text-[10px] text-slate-400">Nominal × hari hadir</span>
@@ -137,15 +137,15 @@
                 </div>
 
                 <div>
-                    <label class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Nominal (Rp) <span class="text-red-500">*</span></label>
+                    <label class="text-sm font-medium text-slate-700 mb-1.5 block">Nominal (Rp) <span class="text-red-500">*</span></label>
                     <input type="text" name="nominal" id="inputNominalSetting" required placeholder="Contoh: 100.000"
-                        class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-bold text-indigo-600 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 transition-colors">
                     <p id="keteranganNominal" class="text-xs text-slate-400 mt-1">Nominal per bulan</p>
                 </div>
 
                 <button type="submit" id="btnSaveSetting"
-                    class="w-full rounded-xl bg-indigo-600 py-3 text-sm font-black uppercase tracking-widest text-white shadow-md shadow-indigo-100 transition hover:bg-indigo-700">
-                    <i class="fas fa-save mr-2"></i> Simpan Setting
+                    class="w-full rounded-lg bg-teal-600 py-2.5 text-sm font-medium text-white transition hover:bg-teal-700">
+                    <i class="fas fa-save mr-1.5"></i> Simpan Setting
                 </button>
             </form>
         </div>

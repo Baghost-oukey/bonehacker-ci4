@@ -18,7 +18,7 @@
             </select>
         </div>
 
-        <button id="btnInputMassal" class="w-full md:w-auto px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm rounded-xl shadow-lg shadow-indigo-200 transition-all flex items-center justify-center gap-2 font-black uppercase tracking-widest">
+        <button id="btnInputMassal" class="w-full md:w-auto px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white text-xs sm:text-sm rounded-xl transition-all flex items-center justify-center gap-2 font-medium">
             <i class="fas fa-users text-base"></i>
             Input Tunjangan Massal
         </button>
@@ -50,22 +50,22 @@
     </div>
 </div>
 
-<div id="modalMassal" class="modal-wrapper fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden">
-        <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+<div id="modalMassal" class="modal-wrapper fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4">
+    <div class="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-xl">
+        <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
             <div>
-                <h3 class="font-black text-slate-800 text-lg">Setting Tunjangan Massal</h3>
-                <p class="text-xs text-slate-500 mt-0.5">Set tunjangan ke semua terapis aktif di cabang ini sekaligus</p>
+                <h5 class="text-lg font-semibold text-slate-800">Setting Tunjangan Massal</h5>
+                <p class="text-sm text-slate-500 mt-0.5">Set tunjangan ke semua terapis aktif di cabang ini sekaligus</p>
             </div>
-            <button class="close-modal text-slate-400 hover:text-slate-600 p-2"><i class="fas fa-times"></i></button>
+            <button class="close-modal rounded-md p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800">&times;</button>
         </div>
-        <form id="formMassal" class="p-6 space-y-5">
+        <form id="formMassal" class="space-y-4 p-5">
             <?= csrf_field(); ?>
 
-            <div>
-                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Jenis Tunjangan <span class="text-red-500">*</span></label>
+            <div class="space-y-1">
+                <label class="text-sm font-medium text-slate-700">Jenis Tunjangan <span class="text-red-500">*</span></label>
                 <select name="tunjangan_karyawan_id" required
-                    class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                    class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 transition-colors">
                     <option value="">-- Pilih Jenis --</option>
                     <?php foreach ($master_tunjangan as $mt): ?>
                         <option value="<?= $mt['id'] ?>"><?= esc($mt['nama_tunjangan']) ?></option>
@@ -73,44 +73,47 @@
                 </select>
             </div>
 
-            <div>
-                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Tipe Pemberian <span class="text-red-500">*</span></label>
+            <div class="space-y-1">
+                <label class="text-sm font-medium text-slate-700">Tipe Pemberian <span class="text-red-500">*</span></label>
                 <div class="grid grid-cols-2 gap-3">
                     <label class="cursor-pointer">
                         <input type="radio" name="tipe" value="bulanan" class="peer sr-only" checked>
-                        <div class="flex flex-col items-center gap-1 rounded-xl border-2 border-slate-200 bg-white p-3 text-center transition peer-checked:border-blue-500 peer-checked:bg-blue-50">
-                            <i class="fas fa-calendar-check text-slate-400 text-base"></i>
-                            <span class="text-xs font-bold text-slate-600">Bulanan</span>
+                        <div class="flex flex-col items-center gap-1 rounded-lg border-2 border-slate-200 bg-white p-3 text-center transition peer-checked:border-teal-500 peer-checked:bg-teal-50">
+                            <i class="fas fa-calendar-check text-slate-400 text-base peer-checked:text-teal-500"></i>
+                            <span class="text-xs font-medium text-slate-600">Bulanan</span>
                             <span class="text-[10px] text-slate-400">Nominal tetap/bulan</span>
                         </div>
                     </label>
                     <label class="cursor-pointer">
                         <input type="radio" name="tipe" value="harian" class="peer sr-only">
-                        <div class="flex flex-col items-center gap-1 rounded-xl border-2 border-slate-200 bg-white p-3 text-center transition peer-checked:border-amber-500 peer-checked:bg-amber-50">
+                        <div class="flex flex-col items-center gap-1 rounded-lg border-2 border-slate-200 bg-white p-3 text-center transition peer-checked:border-teal-500 peer-checked:bg-teal-50">
                             <i class="fas fa-sun text-slate-400 text-base"></i>
-                            <span class="text-xs font-bold text-slate-600">Harian</span>
+                            <span class="text-xs font-medium text-slate-600">Harian</span>
                             <span class="text-[10px] text-slate-400">Nominal × hari hadir</span>
                         </div>
                     </label>
                 </div>
             </div>
 
-            <div>
-                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Nominal (Rp) <span class="text-red-500">*</span></label>
+            <div class="space-y-1">
+                <label class="text-sm font-medium text-slate-700">Nominal (Rp) <span class="text-red-500">*</span></label>
                 <input type="text" name="nominal" id="inputNominalMassal" required placeholder="Contoh: 100.000"
-                    class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-bold text-indigo-600 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                    class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 transition-colors">
                 <p id="keteranganNominalMassal" class="text-xs text-slate-400 mt-1">Nominal per bulan untuk semua terapis aktif</p>
             </div>
 
-            <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-700">
+            <div class="rounded-lg bg-amber-50 border border-amber-200 p-3 text-xs text-amber-700">
                 <i class="fas fa-info-circle mr-1"></i>
                 Jika terapis sudah punya setting tunjangan jenis ini, nominalnya akan <strong>diperbarui</strong>.
             </div>
 
-            <button type="submit" id="btnSimpanMassal"
-                class="w-full rounded-xl bg-indigo-600 py-3 text-sm font-black uppercase tracking-widest text-white shadow-md transition hover:bg-indigo-700">
-                <i class="fas fa-users mr-2"></i> Terapkan ke Semua Terapis
-            </button>
+            <div class="flex items-center justify-end gap-2 border-t border-slate-200 pt-4">
+                <button type="button" class="close-modal rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Batal</button>
+                <button type="submit" id="btnSimpanMassal"
+                    class="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700">
+                    <i class="fas fa-users mr-1.5"></i> Terapkan ke Semua Terapis
+                </button>
+            </div>
         </form>
     </div>
 </div>

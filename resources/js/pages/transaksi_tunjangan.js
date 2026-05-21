@@ -87,7 +87,7 @@ const setupTransaksiTunjanganPage = () => {
                     className: 'py-4 px-4 border-b border-slate-100 text-center align-middle',
                     render: function (data, type, row) {
                         const tunjanganLabel = row.tunjangan_raw > 0
-                            ? `<span class="text-indigo-600 font-black">${row.tunjangan_info}</span>`
+                            ? `<span class="text-teal-600 font-black">${row.tunjangan_info}</span>`
                             : `<span class="text-slate-400 italic text-[10px]">Belum ada setting</span>`;
                         return `
                             <div class="flex flex-col gap-1 text-[11px] justify-center items-center leading-tight">
@@ -101,7 +101,7 @@ const setupTransaksiTunjanganPage = () => {
                     data: 'id',
                     className: 'py-4 px-4 border-b border-slate-100 text-right align-middle',
                     render: function (data) {
-                        return `<a href="${config.urlDetail}/${data}" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition text-[11px] font-black uppercase tracking-widest shadow-md shadow-slate-900/10"><i class="fas fa-wallet text-[10px]"></i> Kelola</a>`;
+                        return `<a href="${config.urlDetail}/${data}" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition text-[11px] font-medium"><i class="fas fa-wallet text-[10px]"></i> Kelola</a>`;
                     }
                 }
             ],
@@ -109,7 +109,7 @@ const setupTransaksiTunjanganPage = () => {
                 search: "Cari Terapis:",
                 lengthMenu: "Tampilkan _MENU_ data",
                 emptyTable: "Belum ada data terapis aktif.",
-                processing: "<span class='text-indigo-600 font-bold'>Memuat Data...</span>"
+                processing: "<span class='text-teal-600 font-bold'>Memuat Data...</span>"
             },
             drawCallback: function (settings) {
                 const api = this.api();
@@ -128,7 +128,7 @@ const setupTransaksiTunjanganPage = () => {
                     } else {
                         data.forEach(row => {
                             const tunjanganLabel = row.tunjangan_raw > 0
-                                ? `<span class="text-indigo-600 font-black text-xs">${row.tunjangan_info}</span>`
+                                ? `<span class="text-teal-600 font-black text-xs">${row.tunjangan_info}</span>`
                                 : `<span class="text-slate-400 italic text-[10px]">Belum ada setting</span>`;
 
                             const card = `
@@ -138,7 +138,7 @@ const setupTransaksiTunjanganPage = () => {
                                             <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight">${row.nama}</h3>
                                             <span class="inline-flex w-fit items-center px-2 py-0.5 rounded-lg text-[9px] font-bold uppercase tracking-widest bg-slate-100 text-slate-600 border border-slate-200">${row.jabatan}</span>
                                         </div>
-                                        <a href="${config.urlDetail}/${row.id}" class="h-10 w-10 flex items-center justify-center bg-slate-900 text-white rounded-xl shadow-lg shadow-slate-900/20 active:scale-95 transition-all">
+                                        <a href="${config.urlDetail}/${row.id}" class="h-10 w-10 flex items-center justify-center bg-teal-600 text-white rounded-xl active:scale-95 transition-all">
                                             <i class="fas fa-wallet text-sm"></i>
                                         </a>
                                     </div>
@@ -168,7 +168,7 @@ const setupTransaksiTunjanganPage = () => {
                 $('.dataTables_info').addClass('mt-6 text-sm text-slate-500 float-left');
                 $('.dataTables_paginate').addClass('mt-5 flex justify-end items-center gap-1 float-right');
                 $('.dataTables_paginate .paginate_button').addClass('px-3 py-1.5 border border-slate-200 rounded-md bg-white text-slate-600 text-sm font-medium hover:bg-slate-50 cursor-pointer transition-colors inline-flex items-center justify-center');
-                $('.dataTables_paginate .paginate_button.current').removeClass('bg-white text-slate-600').addClass('bg-indigo-600 text-white border-indigo-600');
+                $('.dataTables_paginate .paginate_button.current').removeClass('bg-white text-slate-600').addClass('bg-teal-600 text-white border-teal-600');
             }
         });
 

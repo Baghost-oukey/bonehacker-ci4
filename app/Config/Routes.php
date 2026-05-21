@@ -168,7 +168,7 @@ $routes->group('tag-keluhan', ['namespace' => 'App\Modules\TagComplaint\Controll
 // Tag - Medis(Rekam Medis)
 $routes->group('tag-rekam-medis', ['namespace' => 'App\Modules\TagRekamMedis\Controllers', 'filter' => 'auth'], function ($routes) {
   $routes->get('/', 'MedisController::index');
-  $routes->match(['get', 'post'], 'fetch', 'MedisController::fetch');
+  $routes->match(['GET', 'POST'], 'fetch', 'MedisController::fetch');
   $routes->get('tags', 'MedisController::get_tags');
   $routes->post('store', 'MedisController::store');
   $routes->post('update/(:num)', 'MedisController::update/$1');
@@ -423,7 +423,7 @@ $routes->group('kalender', ['namespace' => 'App\modules\kalender\Controllers', '
   $routes->get('/', 'Kalender::index');
   $routes->post('store', 'Kalender::store');
   $routes->post('store-rutin', 'Kalender::storeRutin');
-  $routes->match(['post', 'delete'], 'destroy/(:num)', 'Kalender::destroy/$1');
+  $routes->match(['POST', 'DELETE'], 'destroy/(:num)', 'Kalender::destroy/$1');
   $routes->post('copy-global', 'Kalender::copyGlobal');
   $routes->get('get-data', 'Kalender::getData');
 });
