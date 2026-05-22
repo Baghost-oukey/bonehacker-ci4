@@ -417,6 +417,8 @@ class Jasapelayanan extends BaseController
             return redirect()->to(base_url('auth'));
         }
 
+
+
         $role = session()->get('role');
         $region_patient = session()->get('region_patient');
         

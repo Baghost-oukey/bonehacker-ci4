@@ -340,8 +340,8 @@ class BerandaController extends BaseController
       ];
     }
 
-    $nominalReguler = $settingsReguler ? (int) $settingsReguler->nominal_per_pasien : 0;
-    $nominalKejantanan = $settingsKejantanan ? (int) $settingsKejantanan->nominal_per_pasien : 0;
+    $nominalReguler = $settingsReguler ? (int) round((float) $settingsReguler->nominal_per_pasien) : 0;
+    $nominalKejantanan = $settingsKejantanan ? (int) round((float) $settingsKejantanan->nominal_per_pasien) : 0;
 
     $terapisIdsReguler = $settingsReguler ? json_decode($settingsReguler->terapis_ids, true) ?? [] : [];
     $terapisIdsKejantanan = $settingsKejantanan ? json_decode($settingsKejantanan->terapis_ids, true) ?? [] : [];
