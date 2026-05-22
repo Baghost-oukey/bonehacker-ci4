@@ -520,14 +520,20 @@
                         <i class="fas fa-plus"></i> Tambah Item
                     </button>
                 </div>
-                <div class="hidden sm:flex border-b border-slate-200 pb-2 mb-3 px-2">
-                    <div class="w-[30%] text-[10px] font-bold text-slate-500 uppercase tracking-wider">Kelompok</div>
-                    <div class="w-[35%] text-[10px] font-bold text-slate-500 uppercase tracking-wider pl-1">Deskripsi</div>
-                    <div class="w-[25%] text-[10px] font-bold text-slate-500 uppercase tracking-wider text-right pr-2">Nominal</div>
-                    <div class="w-[10%] text-[10px] font-bold text-slate-500 uppercase tracking-wider text-center">Aksi</div>
-                </div>
-                <div class="overflow-y-auto max-h-[260px] p-1" id="oc_manual_items_container">
-                    <!-- Baris input komponen manual (card) akan dimuat di sini oleh JS -->
+                <div class="overflow-y-auto max-h-[260px] border border-slate-200 rounded-lg shadow-inner bg-slate-50/20">
+                    <table class="w-full text-left border-collapse text-[11px] table-fixed">
+                        <thead class="hidden sm:table-header-group sticky top-0 bg-slate-50 z-10 shadow-sm">
+                            <tr class="text-slate-500 font-bold uppercase tracking-wider border-b border-slate-200">
+                                <th class="p-2.5 text-[10px] w-[35%] text-slate-500 font-bold uppercase tracking-wider">Kelompok</th>
+                                <th class="p-2.5 text-[10px] w-[35%] text-slate-500 font-bold uppercase tracking-wider">Deskripsi</th>
+                                <th class="p-2.5 text-[10px] w-[22%] text-slate-500 font-bold uppercase tracking-wider text-right">Nominal</th>
+                                <th class="p-2.5 text-[10px] w-[8%] text-slate-500 font-bold uppercase tracking-wider text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="oc_manual_items_container" class="block sm:table-row-group divide-y-0 sm:divide-y divide-slate-100 bg-transparent sm:bg-white p-2 sm:p-0">
+                            <!-- Baris input komponen manual (responsive tr) akan dimuat di sini oleh JS -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -696,14 +702,20 @@
                             <i class="fas fa-plus"></i> Tambah Item
                         </button>
                     </div>
-                    <div class="hidden sm:flex border-b border-slate-200 pb-2 mb-3 px-2">
-                        <div class="w-[30%] text-[10px] font-bold text-slate-500 uppercase tracking-wider">Kelompok</div>
-                        <div class="w-[35%] text-[10px] font-bold text-slate-500 uppercase tracking-wider pl-1">Deskripsi</div>
-                        <div class="w-[25%] text-[10px] font-bold text-slate-500 uppercase tracking-wider text-right pr-2">Nominal</div>
-                        <div class="w-[10%] text-[10px] font-bold text-slate-500 uppercase tracking-wider text-center">Aksi</div>
-                    </div>
-                    <div class="overflow-y-auto max-h-[300px] p-1" id="sm_manual_items_container">
-                        <!-- Dynamic rows loaded here -->
+                    <div class="overflow-x-auto sm:overflow-visible">
+                        <table class="w-full text-left border-collapse text-[11px] mb-2">
+                            <thead class="hidden sm:table-header-group">
+                                <tr class="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-200">
+                                    <th class="p-2 w-[35%]">Kelompok</th>
+                                    <th class="p-2 w-[35%]">Deskripsi</th>
+                                    <th class="p-2 w-[22%] text-right">Nominal</th>
+                                    <th class="p-2 w-[8%] text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sm_manual_items_container" class="block sm:table-row-group divide-y-0 sm:divide-y divide-slate-100 bg-transparent sm:bg-white p-2 sm:p-0">
+                                <!-- Dynamic rows loaded here -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
