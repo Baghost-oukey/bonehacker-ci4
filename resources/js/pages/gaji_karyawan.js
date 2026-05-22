@@ -12,7 +12,7 @@ if (window.jQuery) {
     if ($.fn.getNiceScroll) {
         try {
             $('*').getNiceScroll().remove();
-        } catch (e) {}
+        } catch (e) { }
     }
 }
 
@@ -69,7 +69,7 @@ const createManualRowHTML = (isModal = false) => {
 const loadTerapisList = () => {
     const select = $('#sm_terapis_id');
     if (!select.length) return;
-    
+
     select.html('<option value="">-- Memuat terapis... --</option>');
 
     fetch(window.gajiConfig.getTerapisListUrl)
@@ -95,7 +95,7 @@ const calculateManualSlipTotals = () => {
     let totalTunjangan = 0;
     let totalPotongan = 0;
 
-    $('#sm_manual_items_container .manual-item-row').each(function() {
+    $('#sm_manual_items_container .manual-item-row').each(function () {
         const kelompok = $(this).find('.manual-kelompok').val();
         const nominalStr = $(this).find('.manual-nominal').val() || '0';
         const nominal = parseFloat(nominalStr.replace(/[^0-9]/g, '')) || 0;
@@ -154,31 +154,31 @@ const setupGajiPage = () => {
 
 
     // --- Event Delegation untuk Button Proses Gaji ---
-    $(document).on('click', '.btn-proses-gaji', function(e) {
+    $(document).on('click', '.btn-proses-gaji', function (e) {
         try {
             e.preventDefault();
             const terapisId = this.dataset.terapisId;
             window.bukaOffcanvas(terapisId);
-        } catch (err) {}
+        } catch (err) { }
     });
 
     // --- Event Delegation untuk Button Show Detail Riwayat Modal ---
-    $(document).on('click', '.btn-show-detail-modal', function(e) {
+    $(document).on('click', '.btn-show-detail-modal', function (e) {
         try {
             e.preventDefault();
             const targetId = this.dataset.target;
             window.bukaModalDetail(targetId);
-        } catch (err) {}
+        } catch (err) { }
     });
 
     // --- Close Button Modal Detail ---
-    $(document).on('click', '.btn-close-modal-detail', function(e) {
+    $(document).on('click', '.btn-close-modal-detail', function (e) {
         e.preventDefault();
         window.tutupModalDetail();
     });
 
     // --- Modal Detail Backdrop Click ---
-    $(document).on('click', '#modalDetailRiwayatBackdrop, #modalDetailRiwayat', function(e) {
+    $(document).on('click', '#modalDetailRiwayatBackdrop, #modalDetailRiwayat', function (e) {
         if (e.target === this) {
             window.tutupModalDetail();
         }
@@ -186,20 +186,20 @@ const setupGajiPage = () => {
 
 
     // --- Close Button Offcanvas ---
-    $(document).on('click', '.btn-close-offcanvas', function(e) {
+    $(document).on('click', '.btn-close-offcanvas', function (e) {
         e.preventDefault();
         window.tutupOffcanvas();
     });
 
     // --- Backdrop Click ---
-    $(document).on('click', '.offcanvas-backdrop', function(e) {
-        if(e.target === this) {
+    $(document).on('click', '.offcanvas-backdrop', function (e) {
+        if (e.target === this) {
             window.tutupOffcanvas();
         }
     });
 
     // --- LOGIKA MANUAL COMPONENTS PADA OFFCANVAS ---
-    $(document).on('click', '#btnTambahItemManualOC', function(e) {
+    $(document).on('click', '#btnTambahItemManualOC', function (e) {
         e.preventDefault();
         $('#oc_manual_items_container').append(createManualRowHTML(false));
         if (window.oc_renderPayroll) {
@@ -207,7 +207,7 @@ const setupGajiPage = () => {
         }
     });
 
-    $(document).on('click', '#oc_manual_items_container .btn-hapus-manual-item', function(e) {
+    $(document).on('click', '#oc_manual_items_container .btn-hapus-manual-item', function (e) {
         e.preventDefault();
         $(this).closest('.manual-item-row').remove();
         if (window.oc_renderPayroll) {
@@ -215,7 +215,7 @@ const setupGajiPage = () => {
         }
     });
 
-    $(document).on('input change', '#oc_manual_items_container select, #oc_manual_items_container input', function() {
+    $(document).on('input change', '#oc_manual_items_container select, #oc_manual_items_container input', function () {
         if (window.oc_renderPayroll) {
             window.oc_renderPayroll();
         }
@@ -223,41 +223,41 @@ const setupGajiPage = () => {
 
 
     // --- LOGIKA SLIP GAJI MANUAL (THR, DLL.) ---
-    $(document).on('click', '#btnSlipManual', function(e) {
+    $(document).on('click', '#btnSlipManual', function (e) {
         e.preventDefault();
         window.bukaModalSlipManual();
     });
 
-    $(document).on('click', '.btn-close-modal-manual', function(e) {
+    $(document).on('click', '.btn-close-modal-manual', function (e) {
         e.preventDefault();
         window.tutupModalSlipManual();
     });
 
-    $(document).on('click', '#modalSlipManualBackdrop, #modalSlipManual', function(e) {
+    $(document).on('click', '#modalSlipManualBackdrop, #modalSlipManual', function (e) {
         if (e.target === this) {
             window.tutupModalSlipManual();
         }
     });
 
-    $(document).on('click', '#btnTambahItemManualSM', function(e) {
+    $(document).on('click', '#btnTambahItemManualSM', function (e) {
         e.preventDefault();
         $('#sm_manual_items_container').append(createManualRowHTML(true));
         calculateManualSlipTotals();
     });
 
-    $(document).on('click', '#sm_manual_items_container .btn-hapus-manual-item-sm', function(e) {
+    $(document).on('click', '#sm_manual_items_container .btn-hapus-manual-item-sm', function (e) {
         e.preventDefault();
         $(this).closest('.manual-item-row').remove();
         calculateManualSlipTotals();
     });
 
-    $(document).on('input change', '#sm_manual_items_container select, #sm_manual_items_container input', function() {
+    $(document).on('input change', '#sm_manual_items_container select, #sm_manual_items_container input', function () {
         calculateManualSlipTotals();
     });
 
     const formSlipManual = document.getElementById('formSlipManual');
     if (formSlipManual) {
-        formSlipManual.addEventListener('submit', function(e) {
+        formSlipManual.addEventListener('submit', function (e) {
             e.preventDefault();
             const terapisId = $('#sm_terapis_id').val();
             const rowsCount = $('#sm_manual_items_container .manual-item-row').length;
@@ -406,14 +406,14 @@ window.bukaModalDetail = (targetId) => {
 
         modal.appendTo('body');
         modal.removeClass('hidden').addClass('flex');
-        
+
         setTimeout(() => {
             modal.removeClass('opacity-0').addClass('opacity-100');
             if (content.length > 0) {
                 content.removeClass('scale-95').addClass('scale-100');
             }
         }, 20);
-        
+
         $('body').addClass('modal-open').css('overflow', 'hidden');
     } catch (error) {
         console.error("Buka Modal Detail Error: ", error);
@@ -436,7 +436,7 @@ window.tutupModalDetail = () => {
             modal.removeClass('flex').addClass('hidden');
             $('body').removeClass('modal-open').css('overflow', '');
         }, 300);
-    } catch (err) {}
+    } catch (err) { }
 };
 
 window.bukaModalSlipManual = () => {
@@ -457,14 +457,14 @@ window.bukaModalSlipManual = () => {
 
         modal.appendTo('body');
         modal.removeClass('hidden').addClass('flex');
-        
+
         setTimeout(() => {
             modal.removeClass('opacity-0').addClass('opacity-100');
             if (content.length > 0) {
                 content.removeClass('scale-95').addClass('scale-100');
             }
         }, 20);
-        
+
         $('body').addClass('modal-open').css('overflow', 'hidden');
     } catch (error) {
         console.error("Buka Modal Slip Manual Error: ", error);
@@ -487,7 +487,7 @@ window.tutupModalSlipManual = () => {
             modal.removeClass('flex').addClass('hidden');
             $('body').removeClass('modal-open').css('overflow', '');
         }, 300);
-    } catch (err) {}
+    } catch (err) { }
 };
 
 window.bukaOffcanvas = (terapisId) => {
@@ -531,12 +531,12 @@ window.bukaOffcanvas = (terapisId) => {
                     const totalBenefitNonCash = (kalkulasi && typeof kalkulasi.total_benefit_non_cash !== 'undefined') ? parseInt(kalkulasi.total_benefit_non_cash) : 0;
                     const currentKehadiran = parseInt(data.current_kehadiran) || 0;
                     const currentAbsen = (kalkulasi && typeof kalkulasi.absen !== 'undefined') ? parseInt(kalkulasi.absen) : 0;
-                    
+
                     const attendanceInput = $('#oc_kehadiran');
                     const attendanceGroup = $('#oc_kehadiran_group');
                     const attendanceLabel = $('#oc_kehadiran_label');
                     const tipeInfo = $('#oc_tipe_info');
-                    
+
                     const gajiPokokInput = $('#oc_gaji_pokok');
                     const tunjanganInput = $('#oc_tunjangan');
                     const benefitNonCashInput = $('#oc_benefit_non_cash');
@@ -572,7 +572,7 @@ window.bukaOffcanvas = (terapisId) => {
                             let addBenefitNonCash = 0;
                             let addPotongan = 0;
 
-                            $('#oc_manual_items_container .manual-item-row').each(function() {
+                            $('#oc_manual_items_container .manual-item-row').each(function () {
                                 const kelompok = $(this).find('.manual-kelompok').val();
                                 const nominalStr = $(this).find('.manual-nominal').val() || '0';
                                 const nominal = parseFloat(nominalStr.replace(/[^0-9]/g, '')) || 0;
@@ -638,7 +638,7 @@ window.bukaOffcanvas = (terapisId) => {
                                     benefitNonCashGroup.addClass('hidden');
                                 }
                             }
-                            
+
                             potonganInput.val(formattedPotongan);
                             $('#oc_potongan_text').text(formattedPotongan);
 
@@ -675,9 +675,9 @@ window.bukaOffcanvas = (terapisId) => {
                             $('#oc_kehadiran_text').text(currentKehadiran);
                             attendanceLabel.text('Hadir');
                             tipeInfo.text('Gaji harian dihitung dari kehadiran real karyawan setiap bulan.');
-                            $('#oc_absen_display_group').addClass('hidden');
-                            $('#oc_absen').val(0);
-                            $('#oc_absen_text').text(0);
+                            $('#oc_absen_display_group').removeClass('hidden');
+                            $('#oc_absen').val(currentAbsen);
+                            $('#oc_absen_text').text(currentAbsen);
                         } else {
                             if (data.potong_absen == 1) {
                                 attendanceGroup.removeClass('hidden');
@@ -685,19 +685,19 @@ window.bukaOffcanvas = (terapisId) => {
                                 $('#oc_kehadiran_text').text(currentKehadiran);
                                 attendanceLabel.text('Hadir');
                                 tipeInfo.text('Gaji bulanan dipotong otomatis jika ada hari absen kerja.');
-                                
+
                                 $('#oc_absen_display_group').removeClass('hidden');
                                 $('#oc_absen').val(currentAbsen);
                                 $('#oc_absen_text').text(currentAbsen);
                             } else {
-                                attendanceGroup.addClass('hidden');
-                                attendanceInput.val(0);
-                                $('#oc_kehadiran_text').text(0);
+                                attendanceGroup.removeClass('hidden');
+                                attendanceInput.val(currentKehadiran);
+                                $('#oc_kehadiran_text').text(currentKehadiran);
                                 attendanceLabel.text('Hadir');
                                 tipeInfo.text('Gaji bulanan tetap sesuai nominal yang sudah diatur.');
-                                $('#oc_absen_display_group').addClass('hidden');
-                                $('#oc_absen').val(0);
-                                $('#oc_absen_text').text(0);
+                                $('#oc_absen_display_group').removeClass('hidden');
+                                $('#oc_absen').val(currentAbsen);
+                                $('#oc_absen_text').text(currentAbsen);
                             }
                         }
                     };
@@ -705,7 +705,7 @@ window.bukaOffcanvas = (terapisId) => {
                     if (attendanceInput.length > 0) {
                         attendanceInput.off('input').on('input', renderPayroll);
                     }
-                    
+
                     updateFormState();
                     renderPayroll();
 
@@ -719,7 +719,7 @@ window.bukaOffcanvas = (terapisId) => {
             .catch(err => {
                 loading.html('<p class="text-red-500 mt-4 text-center">Gagal memuat data.</p>');
             });
-    } catch (err) {}
+    } catch (err) { }
 };
 
 window.tutupOffcanvas = () => {
@@ -730,7 +730,7 @@ window.tutupOffcanvas = () => {
         setTimeout(() => {
             if (backdrop.length > 0) backdrop.addClass('hidden');
         }, 300);
-    } catch (err) {}
+    } catch (err) { }
 };
 
 // 5. INITIALIZE (ASYNCHRONOUS READY STATE CHECKER)
@@ -763,5 +763,5 @@ window.addEventListener('beforeunload', () => {
             modalManual.addClass(MODAL_HIDDEN_CLASS);
         }
         document.body.style.overflow = '';
-    } catch (e) {}
+    } catch (e) { }
 });
