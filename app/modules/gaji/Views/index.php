@@ -69,11 +69,16 @@
             <p class="text-xs sm:text-sm text-slate-500 mt-1 font-medium">Sistem penggajian otomatis terintegrasi kehadiran.</p>
         </div>
 
+        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+            <button type="button" id="btnSlipManual" class="w-full md:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition shadow-md text-xs uppercase tracking-widest">
+                <i class="fas fa-file-invoice-dollar"></i> Slip Gaji Manual
+            </button>
+        </div>
+
         <!-- DROPDOWN NAVIGASI MOBILE -->
-        <div class="w-full lg:hidden">
+        <div class="w-full lg:hidden hidden">
             <select onchange="window.location.href=this.value" class="w-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-sm font-bold rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500/20">
                 <option value="<?= site_url('gaji') ?>" selected>💵 Gaji Karyawan</option>
-                <option value="<?= site_url('transaksi-tunjangan') ?>">💰 Tunjangan Terapis</option>
                 <option value="<?= site_url('master-gaji') ?>">⚙️ Master Gaji</option>
                 <option value="<?= site_url('kasbon') ?>">💸 Kasbon Karyawan</option>
             </select>
@@ -507,6 +512,21 @@
 
             <hr class="my-6 border-slate-100">
 
+            <!-- Komponen Gaji Manual -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-3">
+                    <label class="block text-sm font-bold text-slate-700">Komponen Gaji Manual</label>
+                    <button type="button" id="btnTambahItemManualOC" class="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg text-xs font-bold transition">
+                        <i class="fas fa-plus"></i> Tambah Item
+                    </button>
+                </div>
+                <div id="oc_manual_items_container" class="space-y-3">
+                    <!-- Baris input komponen manual akan dimuat di sini oleh JS -->
+                </div>
+            </div>
+
+            <hr class="my-6 border-slate-100">
+
             <!-- Rincian Readonly -->
             <div class="space-y-3 text-sm">
                 <div class="flex justify-between">
@@ -599,6 +619,107 @@
     </div>
 </div>
 
+<!-- MODAL SLIP GAJI MANUAL (THR, dll.) -->
+<div id="modalSlipManual" class="fixed inset-0 z-[100] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+    <!-- Backdrop Overlay -->
+    <div class="absolute inset-0 bg-black/40" id="modalSlipManualBackdrop"></div>
+    
+    <!-- Modal Card Content -->
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform scale-95 transition-transform duration-300 relative z-10 border border-slate-100 mx-4" id="modalSlipManualContent">
+        <!-- Header -->
+        <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+            <div>
+                <h3 class="text-base font-bold text-slate-800 tracking-tight">Buat Slip Gaji Manual / Insidental</h3>
+                <p class="text-[11px] text-slate-500 font-medium mt-0.5">Slip ini tidak memproses data rutin kehadiran.</p>
+            </div>
+            <button type="button" class="btn-close-modal-manual p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+        </div>
+
+        <form id="formSlipManual" action="<?= base_url('gaji/proses_manual') ?>" method="POST">
+            <?= csrf_field() ?>
+            <!-- Body -->
+            <div class="p-6 overflow-y-auto max-h-[60vh] space-y-4">
+                <!-- Dropdown Terapis -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Pilih Terapis / Karyawan</label>
+                    <select name="terapis_id" id="sm_terapis_id" class="w-full text-sm font-semibold border-slate-200 rounded-lg focus:ring-blue-500 bg-white shadow-sm" required>
+                        <option value="">-- Memuat terapis... --</option>
+                    </select>
+                </div>
+
+                <!-- Periode Bulan & Tahun -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Bulan</label>
+                        <select name="bulan" id="sm_bulan" class="w-full text-sm font-semibold border-slate-200 rounded-lg focus:ring-blue-500 bg-white shadow-sm" required>
+                            <?php for ($m = 1; $m <= 12; $m++): ?>
+                                <option value="<?= $m ?>" <?= date('n') == $m ? 'selected' : '' ?>><?= date('F', mktime(0, 0, 0, $m, 1)) ?></option>
+                            <?php endfor; ?>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Tahun</label>
+                        <select name="tahun" id="sm_tahun" class="w-full text-sm font-semibold border-slate-200 rounded-lg focus:ring-blue-500 bg-white shadow-sm" required>
+                            <?php for ($y = date('Y'); $y >= date('Y') - 5; $y--): ?>
+                                <option value="<?= $y ?>" <?= date('Y') == $y ? 'selected' : '' ?>><?= $y ?></option>
+                            <?php endfor; ?>
+                        </select>
+                    </div>
+                </div>
+
+                <hr class="border-slate-100">
+
+                <!-- Komponen Item Manual -->
+                <div>
+                    <div class="flex justify-between items-center mb-3">
+                        <label class="block text-xs font-bold text-slate-500 uppercase">Daftar Rincian Komponen</label>
+                        <button type="button" id="btnTambahItemManualSM" class="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg text-xs font-bold transition">
+                            <i class="fas fa-plus"></i> Tambah Item
+                        </button>
+                    </div>
+                    <div id="sm_manual_items_container" class="space-y-3">
+                        <!-- Dynamic rows loaded here -->
+                    </div>
+                </div>
+
+                <hr class="border-slate-100">
+
+                <!-- Summary Totals -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/60 space-y-2 text-xs font-medium">
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Total Gaji Pokok & Jaspel</span>
+                        <span id="sm_total_pokok" class="text-slate-800 font-bold">Rp 0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Total Tunjangan</span>
+                        <span id="sm_total_tunjangan" class="text-slate-800 font-bold">Rp 0</span>
+                    </div>
+                    <div class="flex justify-between text-red-500">
+                        <span>Total Potongan</span>
+                        <span id="sm_total_potongan" class="font-bold">- Rp 0</span>
+                    </div>
+                    <div class="flex justify-between items-center pt-2 border-t border-slate-200 text-sm font-bold text-green-600 mt-2">
+                        <span>Gaji Bersih (Net)</span>
+                        <span id="sm_total_bersih" class="text-base font-black">Rp 0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/50">
+                <button type="button" class="btn-close-modal-manual px-5 py-2.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all">
+                    Batal
+                </button>
+                <button type="submit" class="px-5 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-all shadow-md">
+                    Proses Slip Manual
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
@@ -610,6 +731,8 @@
         fetchUrl: "<?= base_url('gaji/fetch_estimasi') ?>",
         detailUrl: "<?= base_url('gaji/detail') ?>", // Untuk Offcanvas
         saveSettingUrl: "<?= base_url('gaji/setting/save') ?>",
-        prosesBayarUrl: "<?= base_url('gaji/proses_bayar') ?>"
+        prosesBayarUrl: "<?= base_url('gaji/proses_bayar') ?>",
+        getTerapisListUrl: "<?= base_url('gaji/get_terapis_list') ?>",
+        prosesManualUrl: "<?= base_url('gaji/proses_manual') ?>"
     };</script>
 <?= $this->endSection() ?>

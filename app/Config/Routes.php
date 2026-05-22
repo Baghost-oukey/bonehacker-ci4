@@ -355,6 +355,8 @@ $routes->group('gaji', ['namespace' => 'App\modules\gaji\Controllers', 'filter' 
   $routes->get('fetch_estimasi', 'Gajikaryawan::fetchEstimasi');
   $routes->get('export', 'Gajikaryawan::export');
   $routes->get('monitor', 'Gajikaryawan::monitor');
+  $routes->get('get_terapis_list', 'Gajikaryawan::getTerapisList');
+  $routes->post('proses_manual', 'Gajikaryawan::prosesManual');
 });
 
 // Rutes - Kas bon
@@ -383,16 +385,7 @@ $routes->group('master-gaji', ['namespace' => 'App\modules\tunjangan_karyawan\Co
   $routes->post('save-gaji-pokok', 'Tunjangankaryawan::saveGajiPokok');
 });
 
-// Rutes - transaksi tunjangan
-$routes->group('transaksi-tunjangan', ['namespace' => 'App\modules\transaksi_tunjangan\Controllers', 'filter' => 'auth'], function ($routes) {
-  $routes->get('/', 'Transaksitunjangan::index');
-  $routes->post('fetch', 'Transaksitunjangan::fetch');
-  $routes->get('detail/(:num)', 'Transaksitunjangan::detail/$1');
-  $routes->post('store', 'Transaksitunjangan::store');
-  $routes->post('save-setting', 'Transaksitunjangan::saveSetting');
-  $routes->post('save-setting-massal', 'Transaksitunjangan::saveSettingMassal');
-  $routes->post('delete-setting/(:num)', 'Transaksitunjangan::deleteSetting/$1');
-});
+
 
 // Rutes - potongan rutin
 $routes->group('potongan-rutin', ['namespace' => 'App\modules\potongan_rutin\Controllers', 'filter' => 'auth'], function ($routes) {

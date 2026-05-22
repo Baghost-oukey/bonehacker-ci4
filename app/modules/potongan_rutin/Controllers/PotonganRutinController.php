@@ -4,7 +4,6 @@ namespace App\modules\potongan_rutin\Controllers;
 
 use App\Controllers\BaseController;
 use App\Modules\Karyawan\Models\MKaryawan;
-use App\modules\transaksi_tunjangan\Models\Mtransaksitunjangan;
 use App\modules\kasbon_karyawan\Models\MPotonganRutin;
 
 class PotonganRutinController extends BaseController
@@ -17,7 +16,7 @@ class PotonganRutinController extends BaseController
     public function __construct()
     {
         $this->model_karyawan             = new MKaryawan();
-        $this->model_transaksi_karyawan   = new Mtransaksitunjangan();
+        $this->model_transaksi_karyawan   = $this->model_karyawan;
         $this->model_potongan_rutin       = new MPotonganRutin();
         $this->db                         = \Config\Database::connect();
     }

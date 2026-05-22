@@ -39,6 +39,80 @@ const formatRupiah = (angka, prefix = 'Rp ') => {
 };
 
 // 3. LOGIKA UTAMA (Encapsulated)
+const createManualRowHTML = (isModal = false) => {
+    const hapusClass = isModal ? 'btn-hapus-manual-item-sm' : 'btn-hapus-manual-item';
+    return `
+        <div class="manual-item-row p-3 bg-slate-50/50 rounded-xl border border-slate-200 space-y-2.5">
+            <div class="flex items-center justify-between gap-2">
+                <select name="manual_kelompok[]" class="manual-kelompok border-slate-200 rounded-lg text-xs font-bold bg-white p-2 focus:ring-indigo-500 w-full max-w-[200px]">
+                    <option value="take_home">Gaji Pokok & Jaspel</option>
+                    <option value="benefit">Tunjangan (Cash)</option>
+                    <option value="benefit_non_cash">Tunjangan Non-Tunai</option>
+                    <option value="potongan">Potongan</option>
+                </select>
+                <button type="button" class="${hapusClass} text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition flex-shrink-0">
+                    <i class="fas fa-trash-alt text-xs"></i>
+                </button>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <input type="text" name="manual_deskripsi[]" placeholder="Deskripsi komponen" class="manual-deskripsi border-slate-200 rounded-lg text-xs p-2 focus:ring-indigo-500" required>
+                <input type="text" name="manual_nominal[]" placeholder="Nominal Rp" class="manual-nominal input-rupiah border-slate-200 rounded-lg text-xs p-2 focus:ring-indigo-500 text-right font-bold text-slate-700" required>
+            </div>
+        </div>
+    `;
+};
+
+const loadTerapisList = () => {
+    const select = $('#sm_terapis_id');
+    if (!select.length) return;
+    
+    select.html('<option value="">-- Memuat terapis... --</option>');
+
+    fetch(window.gajiConfig.getTerapisListUrl)
+        .then(response => response.json())
+        .then(res => {
+            if (res.status === 'success') {
+                select.empty();
+                select.append('<option value="">-- Pilih Terapis --</option>');
+                res.data.forEach(t => {
+                    select.append(`<option value="${t.id}">${t.nama} (${t.wilayah})</option>`);
+                });
+            } else {
+                select.html('<option value="">Gagal memuat terapis</option>');
+            }
+        })
+        .catch(err => {
+            select.html('<option value="">Gagal memuat terapis</option>');
+        });
+};
+
+const calculateManualSlipTotals = () => {
+    let totalPokok = 0;
+    let totalTunjangan = 0;
+    let totalPotongan = 0;
+
+    $('#sm_manual_items_container .manual-item-row').each(function() {
+        const kelompok = $(this).find('.manual-kelompok').val();
+        const nominalStr = $(this).find('.manual-nominal').val() || '0';
+        const nominal = parseFloat(nominalStr.replace(/[^0-9]/g, '')) || 0;
+
+        if (kelompok === 'take_home') {
+            totalPokok += nominal;
+        } else if (kelompok === 'benefit') {
+            totalTunjangan += nominal;
+        } else if (kelompok === 'potongan') {
+            totalPotongan += nominal;
+        }
+    });
+
+    const totalBersih = (totalPokok + totalTunjangan) - totalPotongan;
+
+    $('#sm_total_pokok').text(formatRupiah(totalPokok));
+    $('#sm_total_tunjangan').text(formatRupiah(totalTunjangan));
+    $('#sm_total_potongan').text('- ' + formatRupiah(totalPotongan));
+    $('#sm_total_bersih').text(formatRupiah(totalBersih));
+};
+
 const setupGajiPage = () => {
     const config = window.gajiConfig;
     const page = document.getElementById("gajiPage");
@@ -120,6 +194,89 @@ const setupGajiPage = () => {
         }
     });
 
+    // --- LOGIKA MANUAL COMPONENTS PADA OFFCANVAS ---
+    $(document).on('click', '#btnTambahItemManualOC', function(e) {
+        e.preventDefault();
+        $('#oc_manual_items_container').append(createManualRowHTML(false));
+        if (window.oc_renderPayroll) {
+            window.oc_renderPayroll();
+        }
+    });
+
+    $(document).on('click', '#oc_manual_items_container .btn-hapus-manual-item', function(e) {
+        e.preventDefault();
+        $(this).closest('.manual-item-row').remove();
+        if (window.oc_renderPayroll) {
+            window.oc_renderPayroll();
+        }
+    });
+
+    $(document).on('input change', '#oc_manual_items_container select, #oc_manual_items_container input', function() {
+        if (window.oc_renderPayroll) {
+            window.oc_renderPayroll();
+        }
+    });
+
+
+    // --- LOGIKA SLIP GAJI MANUAL (THR, DLL.) ---
+    $(document).on('click', '#btnSlipManual', function(e) {
+        e.preventDefault();
+        window.bukaModalSlipManual();
+    });
+
+    $(document).on('click', '.btn-close-modal-manual', function(e) {
+        e.preventDefault();
+        window.tutupModalSlipManual();
+    });
+
+    $(document).on('click', '#modalSlipManualBackdrop, #modalSlipManual', function(e) {
+        if (e.target === this) {
+            window.tutupModalSlipManual();
+        }
+    });
+
+    $(document).on('click', '#btnTambahItemManualSM', function(e) {
+        e.preventDefault();
+        $('#sm_manual_items_container').append(createManualRowHTML(true));
+        calculateManualSlipTotals();
+    });
+
+    $(document).on('click', '#sm_manual_items_container .btn-hapus-manual-item-sm', function(e) {
+        e.preventDefault();
+        $(this).closest('.manual-item-row').remove();
+        calculateManualSlipTotals();
+    });
+
+    $(document).on('input change', '#sm_manual_items_container select, #sm_manual_items_container input', function() {
+        calculateManualSlipTotals();
+    });
+
+    const formSlipManual = document.getElementById('formSlipManual');
+    if (formSlipManual) {
+        formSlipManual.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const terapisId = $('#sm_terapis_id').val();
+            const rowsCount = $('#sm_manual_items_container .manual-item-row').length;
+            const totalBersihText = $('#sm_total_bersih').text();
+
+            if (!terapisId) {
+                showSwalError('Pilih terapis terlebih dahulu.');
+                return;
+            }
+
+            if (rowsCount === 0) {
+                showSwalError('Masukkan minimal satu komponen gaji manual.');
+                return;
+            }
+
+            confirmSwal(`Yakin ingin memproses slip gaji manual ini?\n\nGaji Bersih: ${totalBersihText}`)
+                .then((result) => {
+                    if (result.isConfirmed) {
+                        formSlipManual.submit();
+                    }
+                });
+        });
+    }
 
     const formBayarGaji = document.getElementById('formBayarGaji');
     if (formBayarGaji) {
@@ -278,6 +435,57 @@ window.tutupModalDetail = () => {
     } catch (err) {}
 };
 
+window.bukaModalSlipManual = () => {
+    try {
+        const modal = $('#modalSlipManual');
+        const content = $('#modalSlipManualContent');
+        if (modal.length === 0) return;
+
+        // Reset form
+        $('#formSlipManual')[0].reset();
+        $('#sm_manual_items_container').empty();
+        $('#sm_total_pokok').text('Rp 0');
+        $('#sm_total_tunjangan').text('Rp 0');
+        $('#sm_total_potongan').text('- Rp 0');
+        $('#sm_total_bersih').text('Rp 0');
+
+        loadTerapisList();
+
+        modal.appendTo('body');
+        modal.removeClass('hidden').addClass('flex');
+        
+        setTimeout(() => {
+            modal.removeClass('opacity-0').addClass('opacity-100');
+            if (content.length > 0) {
+                content.removeClass('scale-95').addClass('scale-100');
+            }
+        }, 20);
+        
+        $('body').addClass('modal-open').css('overflow', 'hidden');
+    } catch (error) {
+        console.error("Buka Modal Slip Manual Error: ", error);
+    }
+};
+
+window.tutupModalSlipManual = () => {
+    try {
+        const modal = $('#modalSlipManual');
+        const content = $('#modalSlipManualContent');
+
+        if (modal.length === 0) return;
+
+        modal.removeClass('opacity-100').addClass('opacity-0');
+        if (content.length > 0) {
+            content.removeClass('scale-100').addClass('scale-95');
+        }
+
+        setTimeout(() => {
+            modal.removeClass('flex').addClass('hidden');
+            $('body').removeClass('modal-open').css('overflow', '');
+        }, 300);
+    } catch (err) {}
+};
+
 window.bukaOffcanvas = (terapisId) => {
     try {
         const config = window.gajiConfig;
@@ -295,6 +503,9 @@ window.bukaOffcanvas = (terapisId) => {
         offcanvas.removeClass('translate-x-full');
         loading.removeClass('hidden');
         form.addClass('hidden');
+
+        // Reset manual items
+        $('#oc_manual_items_container').empty();
 
         const fetchUrl = `${config.detailUrl}/${terapisId}`;
 
@@ -351,21 +562,48 @@ window.bukaOffcanvas = (terapisId) => {
                                 }
                             }
 
-                            const gajiBersih = Math.max(0, (gajiPokokTotal - potonganAbsen) + totalTunjangan - totalPotongan);
+                            // Sum manual components from offcanvas
+                            let addPokok = 0;
+                            let addTunjangan = 0;
+                            let addBenefitNonCash = 0;
+                            let addPotongan = 0;
 
-                            gajiPokokInput.val(formatRupiah(gajiPokokTotal));
-                            tunjanganInput.val(formatRupiah(totalTunjangan));
+                            $('#oc_manual_items_container .manual-item-row').each(function() {
+                                const kelompok = $(this).find('.manual-kelompok').val();
+                                const nominalStr = $(this).find('.manual-nominal').val() || '0';
+                                const nominal = parseFloat(nominalStr.replace(/[^0-9]/g, '')) || 0;
+
+                                if (kelompok === 'take_home') {
+                                    addPokok += nominal;
+                                } else if (kelompok === 'benefit') {
+                                    addTunjangan += nominal;
+                                } else if (kelompok === 'benefit_non_cash') {
+                                    addBenefitNonCash += nominal;
+                                } else if (kelompok === 'potongan') {
+                                    addPotongan += nominal;
+                                }
+                            });
+
+                            const finalGajiPokok = gajiPokokTotal + addPokok;
+                            const finalTunjangan = totalTunjangan + addTunjangan;
+                            const finalBenefitNonCash = totalBenefitNonCash + addBenefitNonCash;
+                            const finalPotongan = totalPotongan + addPotongan;
+
+                            const gajiBersih = Math.max(0, (finalGajiPokok - potonganAbsen) + finalTunjangan - finalPotongan);
+
+                            gajiPokokInput.val(formatRupiah(finalGajiPokok));
+                            tunjanganInput.val(formatRupiah(finalTunjangan));
                             if (benefitNonCashInput.length > 0) {
-                                benefitNonCashInput.val(formatRupiah(totalBenefitNonCash));
+                                benefitNonCashInput.val(formatRupiah(finalBenefitNonCash));
                             }
                             if (benefitNonCashGroup.length > 0) {
-                                if (totalBenefitNonCash > 0) {
+                                if (finalBenefitNonCash > 0) {
                                     benefitNonCashGroup.removeClass('hidden');
                                 } else {
                                     benefitNonCashGroup.addClass('hidden');
                                 }
                             }
-                            potonganInput.val(formatRupiah(totalPotongan));
+                            potonganInput.val(formatRupiah(finalPotongan));
                             bersihInput.val(formatRupiah(gajiBersih));
 
                             if (tipeGaji === 'bulanan' && potonganAbsen > 0) {
@@ -374,8 +612,12 @@ window.bukaOffcanvas = (terapisId) => {
                             } else {
                                 if (potonganAbsenGroup.length > 0) potonganAbsenGroup.addClass('hidden');
                             }
-                        } catch (calcErr) {}
+                        } catch (calcErr) {
+                            console.error(calcErr);
+                        }
                     };
+
+                    window.oc_renderPayroll = renderPayroll;
 
                     const updateFormState = () => {
                         tipeGajiField.val(tipeGaji);
@@ -454,6 +696,7 @@ window.addEventListener('beforeunload', () => {
         const offcanvas = $('#offcanvasProses');
         const modal = $('#modalSetting');
         const modalDetail = $('#modalDetailRiwayat');
+        const modalManual = $('#modalSlipManual');
         if (backdrop.length > 0) backdrop.addClass('hidden');
         if (offcanvas.length > 0) offcanvas.addClass('translate-x-full');
         if (modal.length > 0) {
@@ -463,6 +706,10 @@ window.addEventListener('beforeunload', () => {
         if (modalDetail.length > 0) {
             modalDetail.removeClass(MODAL_VISIBLE_CLASS);
             modalDetail.addClass(MODAL_HIDDEN_CLASS);
+        }
+        if (modalManual.length > 0) {
+            modalManual.removeClass(MODAL_VISIBLE_CLASS);
+            modalManual.addClass(MODAL_HIDDEN_CLASS);
         }
         document.body.style.overflow = '';
     } catch (e) {}

@@ -175,15 +175,47 @@ class Gajikaryawan extends BaseController
 
         $k = $dataDetail['komponen'];
 
+        // Proses komponen manual tambahan
+        $manualKelompok = $this->request->getPost('manual_kelompok') ?? [];
+        $manualDeskripsi = $this->request->getPost('manual_deskripsi') ?? [];
+        $manualNominal = $this->request->getPost('manual_nominal') ?? [];
+
+        $addPokok = 0;
+        $addTunjangan = 0;
+        $addPotongan = 0;
+        $manualDetailBatch = [];
+
+        foreach ($manualKelompok as $i => $kelompok) {
+            $deskripsi = trim($manualDeskripsi[$i] ?? '');
+            $nominalStr = $manualNominal[$i] ?? '0';
+            $nominal = (float)preg_replace('/[^0-9]/', '', $nominalStr);
+
+            if (!empty($deskripsi) && $nominal > 0) {
+                if ($kelompok === 'benefit') {
+                    $addTunjangan += $nominal;
+                } elseif ($kelompok === 'potongan') {
+                    $addPotongan += $nominal;
+                } elseif ($kelompok === 'take_home') {
+                    $addPokok += $nominal;
+                }
+
+                $manualDetailBatch[] = [
+                    'kelompok' => $kelompok,
+                    'nama_komponen' => $deskripsi,
+                    'nominal' => $nominal
+                ];
+            }
+        }
+
         $dataGaji = [
             'terapis_id'       => $terapisId,
             'periode_bulan'    => date('n'),
             'periode_tahun'    => date('Y'),
             'total_kehadiran'  => $k['kehadiran'],
-            'gaji_pokok_total' => $k['gaji_pokok'],
-            'total_tunjangan'  => $k['total_A'] - $k['gaji_pokok'] + $k['total_B'],
-            'total_potongan'   => $k['total_C'] + $k['potongan_absen'],
-            'gaji_bersih'      => $k['gaji_bersih'],
+            'gaji_pokok_total' => $k['gaji_pokok'] + $addPokok,
+            'total_tunjangan'  => $k['total_A'] - $k['gaji_pokok'] + $k['total_B'] + $addTunjangan,
+            'total_potongan'   => $k['total_C'] + $k['potongan_absen'] + $addPotongan,
+            'gaji_bersih'      => $k['gaji_bersih'] + $addPokok + $addTunjangan - $addPotongan,
             'tanggal_bayar'    => date('Y-m-d H:i:s'),
             'status'           => 'lunas'
         ];
@@ -212,6 +244,12 @@ class Gajikaryawan extends BaseController
         if ($k['potongan_absen'] > 0)
             $detailBatch[] = ['riwayat_gaji_id' => $riwayatId, 'kelompok' => 'potongan', 'nama_komponen' => 'Potongan Absensi (' . $k['absen'] . ' Hari)', 'nominal' => $k['potongan_absen']];
 
+        // Tambah manual components ke detailBatch
+        foreach ($manualDetailBatch as $detail) {
+            $detail['riwayat_gaji_id'] = $riwayatId;
+            $detailBatch[] = $detail;
+        }
+
         if (!empty($detailBatch))
             $this->db->table('riwayat_gaji_detail')->insertBatch($detailBatch);
 
@@ -227,6 +265,127 @@ class Gajikaryawan extends BaseController
         }
 
         return redirect()->to('/gaji')->with('success', 'Gaji karyawan berhasil diproses dan dibayarkan.');
+    }
+
+    public function getTerapisList()
+    {
+        $redirect = $this->checkAdminAccess();
+        if ($redirect) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Unauthorized']);
+        }
+
+        $region_patient = session()->get('region_patient');
+        $sessionRegionId = ($region_patient !== 'all' && !empty($region_patient))
+            ? (is_array($region_patient) ? $region_patient[0] : $region_patient)
+            : 'all';
+
+        $builder = $this->db->table('terapis t')
+            ->select('t.id, t.nama, r.name as wilayah')
+            ->join('regions r', 'r.id = t.region_id', 'left')
+            ->where('t.is_active', 1);
+
+        if ($sessionRegionId !== 'all') {
+            $builder->where('t.region_id', $sessionRegionId);
+        }
+
+        $terapis = $builder->orderBy('t.nama', 'ASC')->get()->getResultArray();
+
+        return $this->response->setJSON([
+            'status' => 'success',
+            'data' => $terapis,
+            'csrfHash' => csrf_hash()
+        ]);
+    }
+
+    public function prosesManual()
+    {
+        $redirect = $this->checkAdminAccess();
+        if ($redirect) return $redirect;
+
+        $terapisId = (int)$this->request->getPost('terapis_id');
+        $bulan = (int)$this->request->getPost('bulan');
+        $tahun = (int)$this->request->getPost('tahun');
+
+        if (empty($terapisId) || $terapisId <= 0) {
+            return redirect()->to('/gaji')->with('error', 'Silakan pilih terapis terlebih dahulu.');
+        }
+        if (empty($bulan) || empty($tahun)) {
+            return redirect()->to('/gaji')->with('error', 'Periode bulan dan tahun tidak valid.');
+        }
+
+        // Ambil data terapis
+        $terapis = $this->db->table('terapis')->where('id', $terapisId)->get()->getRowArray();
+        if (!$terapis) {
+            return redirect()->to('/gaji')->with('error', 'Data terapis tidak ditemukan.');
+        }
+
+        $manualKelompok = $this->request->getPost('manual_kelompok') ?? [];
+        $manualDeskripsi = $this->request->getPost('manual_deskripsi') ?? [];
+        $manualNominal = $this->request->getPost('manual_nominal') ?? [];
+
+        $gajiPokokTotal = 0;
+        $totalTunjangan = 0;
+        $totalPotongan = 0;
+        $manualDetailBatch = [];
+
+        foreach ($manualKelompok as $i => $kelompok) {
+            $deskripsi = trim($manualDeskripsi[$i] ?? '');
+            $nominalStr = $manualNominal[$i] ?? '0';
+            $nominal = (float)preg_replace('/[^0-9]/', '', $nominalStr);
+
+            if (!empty($deskripsi) && $nominal > 0) {
+                if ($kelompok === 'benefit') {
+                    $totalTunjangan += $nominal;
+                } elseif ($kelompok === 'potongan') {
+                    $totalPotongan += $nominal;
+                } elseif ($kelompok === 'take_home') {
+                    $gajiPokokTotal += $nominal;
+                }
+
+                $manualDetailBatch[] = [
+                    'kelompok' => $kelompok,
+                    'nama_komponen' => $deskripsi,
+                    'nominal' => $nominal
+                ];
+            }
+        }
+
+        if (empty($manualDetailBatch)) {
+            return redirect()->to('/gaji')->with('error', 'Harap masukkan minimal satu komponen gaji manual.');
+        }
+
+        $gajiBersih = ($gajiPokokTotal + $totalTunjangan) - $totalPotongan;
+
+        $dataGaji = [
+            'terapis_id'       => $terapisId,
+            'periode_bulan'    => $bulan,
+            'periode_tahun'    => $tahun,
+            'total_kehadiran'  => 0,
+            'gaji_pokok_total' => $gajiPokokTotal,
+            'total_tunjangan'  => $totalTunjangan,
+            'total_potongan'   => $totalPotongan,
+            'gaji_bersih'      => $gajiBersih,
+            'tanggal_bayar'    => date('Y-m-d H:i:s'),
+            'status'           => 'lunas'
+        ];
+
+        $this->db->transStart();
+        $riwayatId = $this->Mriwayatgaji->insert($dataGaji, true);
+
+        // Pasangkan riwayat_gaji_id ke setiap item batch detail
+        foreach ($manualDetailBatch as &$detail) {
+            $detail['riwayat_gaji_id'] = $riwayatId;
+        }
+        unset($detail);
+
+        $this->db->table('riwayat_gaji_detail')->insertBatch($manualDetailBatch);
+        $this->db->transComplete();
+
+        if ($this->db->transStatus() === FALSE) {
+            return redirect()->to('/gaji')->with('error', 'Gagal memproses slip gaji manual.');
+        }
+
+        return redirect()->to('/gaji')->with('success', 'Slip gaji manual berhasil diproses dan dibayarkan.');
     }
     public function fetchEstimasi()
     {

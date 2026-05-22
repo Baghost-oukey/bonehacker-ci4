@@ -417,4 +417,83 @@ class MKaryawan extends Model
     {
         return $this->update($id, $data);
     }
+
+    public function get_datatables_terapis($search, $start, $length, $regionFilter = null)
+    {
+        $builder = $this->db->table('terapis t');
+        $builder->select('t.id, t.nama, j.nama_jabatan, g.nominal_gaji');
+        $builder->join('jabatan j', 'j.id = t.jabatan_id', 'left');
+        $builder->join('gaji_karyawan g', 'g.terapis_id = t.id', 'left');
+        $builder->where('t.is_active', 1);
+
+        if (!empty($regionFilter) && $regionFilter !== 'all') {
+            if (is_array($regionFilter)) {
+                $builder->whereIn('t.region_id', $regionFilter);
+            } else {
+                $builder->where('t.region_id', $regionFilter);
+            }
+        }
+
+        if ($search) {
+            $builder->groupStart()
+                ->like('t.nama', $search)
+                ->orLike('j.nama_jabatan', $search)
+                ->groupEnd();
+        }
+
+        $builder->limit($length, $start);
+        return $builder->get()->getResultArray();
+    }
+
+    public function count_all_terapis($regionFilter = null)
+    {
+        $builder = $this->db->table('terapis t');
+        $builder->where('t.is_active', 1);
+
+        if (!empty($regionFilter) && $regionFilter !== 'all') {
+            if (is_array($regionFilter)) {
+                $builder->whereIn('t.region_id', $regionFilter);
+            } else {
+                $builder->where('t.region_id', $regionFilter);
+            }
+        }
+
+        return $builder->countAllResults();
+    }
+
+    public function count_filtered_terapis($search, $regionFilter = null)
+    {
+        $builder = $this->db->table('terapis t');
+        $builder->join('jabatan j', 'j.id = t.jabatan_id', 'left');
+        $builder->where('t.is_active', 1);
+
+        if (!empty($regionFilter) && $regionFilter !== 'all') {
+            if (is_array($regionFilter)) {
+                $builder->whereIn('t.region_id', $regionFilter);
+            } else {
+                $builder->where('t.region_id', $regionFilter);
+            }
+        }
+
+        if ($search) {
+            $builder->groupStart()
+                ->like('t.nama', $search)
+                ->orLike('j.nama_jabatan', $search)
+                ->groupEnd();
+        }
+
+        return $builder->countAllResults();
+    }
+
+    public function getDetailTerapis($id)
+    {
+        return $this->db->table('terapis t')
+            ->select('t.*, j.nama_jabatan, g.nominal_gaji')
+            ->join('jabatan j', 'j.id = t.jabatan_id', 'left')
+            ->join('gaji_karyawan g', 'g.terapis_id = t.id', 'left')
+            ->where('t.id', $id)
+            ->get()
+            ->getRowArray();
+    }
 }
+

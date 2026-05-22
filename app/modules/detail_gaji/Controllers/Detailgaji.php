@@ -52,18 +52,49 @@ class Detailgaji extends BaseController
             return $this->response->setJSON(['status' => 'error', 'message' => 'Data tidak ditemukan.', 'csrfHash' => csrf_hash()]);
         }
 
-        $k          = $dataDetail['komponen'];
-        $gajiBersih = $k['gaji_bersih'];
+        $k = $dataDetail['komponen'];
+
+        // Proses komponen manual tambahan
+        $manualKelompok = $this->request->getPost('manual_kelompok') ?? [];
+        $manualDeskripsi = $this->request->getPost('manual_deskripsi') ?? [];
+        $manualNominal = $this->request->getPost('manual_nominal') ?? [];
+
+        $addPokok = 0;
+        $addTunjangan = 0;
+        $addPotongan = 0;
+        $manualDetailBatch = [];
+
+        foreach ($manualKelompok as $i => $kelompok) {
+            $deskripsi = trim($manualDeskripsi[$i] ?? '');
+            $nominalStr = $manualNominal[$i] ?? '0';
+            $nominal = (float)preg_replace('/[^0-9]/', '', $nominalStr);
+
+            if (!empty($deskripsi) && $nominal > 0) {
+                if ($kelompok === 'benefit') {
+                    $addTunjangan += $nominal;
+                } elseif ($kelompok === 'potongan') {
+                    $addPotongan += $nominal;
+                } elseif ($kelompok === 'take_home') {
+                    $addPokok += $nominal;
+                }
+
+                $manualDetailBatch[] = [
+                    'kelompok' => $kelompok,
+                    'nama_komponen' => $deskripsi,
+                    'nominal' => $nominal
+                ];
+            }
+        }
 
         $dataGaji = [
             'terapis_id'       => $terapisId,
             'periode_bulan'    => date('n'),
             'periode_tahun'    => date('Y'),
             'total_kehadiran'  => $k['kehadiran'],
-            'gaji_pokok_total' => $k['gaji_pokok'],
-            'total_tunjangan'  => $k['total_A'] - $k['gaji_pokok'] + $k['total_B'],
-            'total_potongan'   => $k['total_C'] + $k['potongan_absen'],
-            'gaji_bersih'      => $gajiBersih,
+            'gaji_pokok_total' => $k['gaji_pokok'] + $addPokok,
+            'total_tunjangan'  => $k['total_A'] - $k['gaji_pokok'] + $k['total_B'] + $addTunjangan,
+            'total_potongan'   => $k['total_C'] + $k['potongan_absen'] + $addPotongan,
+            'gaji_bersih'      => $k['gaji_bersih'] + $addPokok + $addTunjangan - $addPotongan,
             'tanggal_bayar'    => date('Y-m-d H:i:s'),
             'status'           => 'lunas'
         ];
@@ -99,6 +130,12 @@ class Detailgaji extends BaseController
             $detailBatch[] = ['riwayat_gaji_id' => $riwayatId, 'kelompok' => 'potongan', 'nama_komponen' => 'Cicilan Kasbon', 'nominal' => $k['total_kasbon']];
         if ($k['potongan_absen'] > 0)
             $detailBatch[] = ['riwayat_gaji_id' => $riwayatId, 'kelompok' => 'potongan', 'nama_komponen' => 'Potongan Absensi (' . $k['absen'] . ' Hari)', 'nominal' => $k['potongan_absen']];
+
+        // Tambah manual components ke detailBatch
+        foreach ($manualDetailBatch as $detail) {
+            $detail['riwayat_gaji_id'] = $riwayatId;
+            $detailBatch[] = $detail;
+        }
 
         if (!empty($detailBatch))
             $this->db->table('riwayat_gaji_detail')->insertBatch($detailBatch);
