@@ -67,31 +67,31 @@
                             </div>
                         </div>
 
-                        <div class="mt-5 grid gap-3 lg:grid-cols-[1.3fr_1fr] lg:items-center">
-                            <div class="flex items-center gap-3">
-                                <input type="hidden" name="absen[<?= $index ?>][terapis_id]" value="<?= $t->id ?>">
-                                <label class="cursor-pointer flex-1">
+                        <div class="mt-4">
+                            <input type="hidden" name="absen[<?= $index ?>][terapis_id]" value="<?= $t->id ?>">
+                            <div class="grid grid-cols-4 gap-2 sm:gap-3">
+                                <label class="cursor-pointer">
                                     <input type="radio" name="absen[<?= $index ?>][status]" value="Hadir" class="peer sr-only" checked>
-                                    <div class="flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition-all peer-checked:border-emerald-500 peer-checked:ring-1 peer-checked:ring-emerald-500 peer-checked:bg-emerald-50 peer-checked:text-emerald-700">
-                                        <i class="fas fa-check-circle"></i> Hadir
+                                    <div class="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 rounded-xl border border-slate-300 bg-white p-2 sm:px-4 sm:py-2 text-[10px] sm:text-sm font-bold text-slate-600 transition-all peer-checked:border-emerald-500 peer-checked:ring-1 peer-checked:ring-emerald-500 peer-checked:bg-emerald-50 peer-checked:text-emerald-700 text-center h-full">
+                                        <i class="fas fa-check-circle text-sm sm:text-base"></i> <span class="leading-tight">Hadir</span>
                                     </div>
                                 </label>
-                                <label class="cursor-pointer flex-1">
+                                <label class="cursor-pointer">
                                     <input type="radio" name="absen[<?= $index ?>][status]" value="Tidak Hadir" class="peer sr-only">
-                                    <div class="flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition-all peer-checked:border-rose-500 peer-checked:ring-1 peer-checked:ring-rose-500 peer-checked:bg-rose-50 peer-checked:text-rose-700">
-                                        <i class="fas fa-times-circle"></i> Tidak Hadir
+                                    <div class="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 rounded-xl border border-slate-300 bg-white p-2 sm:px-4 sm:py-2 text-[10px] sm:text-sm font-bold text-slate-600 transition-all peer-checked:border-rose-500 peer-checked:ring-1 peer-checked:ring-rose-500 peer-checked:bg-rose-50 peer-checked:text-rose-700 text-center h-full">
+                                        <i class="fas fa-times-circle text-sm sm:text-base"></i> <span class="leading-tight">Tidak<br class="sm:hidden">Hadir</span>
                                     </div>
                                 </label>
-                                <label class="cursor-pointer flex-1">
+                                <label class="cursor-pointer">
                                     <input type="radio" name="absen[<?= $index ?>][status]" value="Izin" class="peer sr-only">
-                                    <div class="flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition-all peer-checked:border-blue-500 peer-checked:ring-1 peer-checked:ring-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700">
-                                        <i class="fas fa-info-circle"></i> Izin
+                                    <div class="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 rounded-xl border border-slate-300 bg-white p-2 sm:px-4 sm:py-2 text-[10px] sm:text-sm font-bold text-slate-600 transition-all peer-checked:border-blue-500 peer-checked:ring-1 peer-checked:ring-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 text-center h-full">
+                                        <i class="fas fa-info-circle text-sm sm:text-base"></i> <span class="leading-tight">Izin</span>
                                     </div>
                                 </label>
-                                <label class="cursor-pointer flex-1">
+                                <label class="cursor-pointer">
                                     <input type="radio" name="absen[<?= $index ?>][status]" value="Cuti" class="peer sr-only">
-                                    <div class="flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition-all peer-checked:border-orange-500 peer-checked:ring-1 peer-checked:ring-orange-500 peer-checked:bg-orange-50 peer-checked:text-orange-700">
-                                        <i class="fas fa-calendar-times"></i> Cuti
+                                    <div class="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 rounded-xl border border-slate-300 bg-white p-2 sm:px-4 sm:py-2 text-[10px] sm:text-sm font-bold text-slate-600 transition-all peer-checked:border-orange-500 peer-checked:ring-1 peer-checked:ring-orange-500 peer-checked:bg-orange-50 peer-checked:text-orange-700 text-center h-full">
+                                        <i class="fas fa-calendar-times text-sm sm:text-base"></i> <span class="leading-tight">Cuti</span>
                                     </div>
                                 </label>
                             </div>
