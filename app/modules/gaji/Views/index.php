@@ -69,11 +69,7 @@
             <p class="text-xs sm:text-sm text-slate-500 mt-1 font-medium">Sistem penggajian otomatis terintegrasi kehadiran.</p>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
-            <button type="button" id="btnSlipManual" class="w-full md:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition shadow-md text-xs uppercase tracking-widest">
-                <i class="fas fa-file-invoice-dollar"></i> Slip Gaji Manual
-            </button>
-        </div>
+
 
         <!-- DROPDOWN NAVIGASI MOBILE -->
         <div class="w-full lg:hidden hidden">
@@ -473,95 +469,118 @@
 </div>
 
 <!-- OFFCANVAS PROSES GAJI (Sliding dari Kanan) -->
-<div id="offcanvasProses" class="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-white shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
-    <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+<div id="offcanvasProses" class="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-white shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
+    <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
         <h3 class="text-lg font-bold text-slate-800">Rincian Penggajian</h3>
         <button class="btn-close-offcanvas text-slate-400 hover:text-slate-600 p-2">&times;</button>
     </div>
 
-    <div class="flex-1 overflow-y-auto p-6" id="offcanvasContent">
-        <!-- Loading State -->
-        <div id="loadingState" class="text-center py-10 hidden">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900 mx-auto mb-4"></div>
-            <p class="text-sm text-slate-500">Menghitung kalkulasi gaji...</p>
-        </div>
+    <!-- Loading State -->
+    <div id="loadingState" class="flex-1 flex flex-col items-center justify-center p-6 hidden">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900 mb-4"></div>
+        <p class="text-sm text-slate-500">Menghitung kalkulasi gaji...</p>
+    </div>
 
-        <!-- Form Konten -->
-        <form id="formBayarGaji" action="<?= base_url('gaji/proses_bayar') ?>" method="POST" class="hidden">
-            <?= csrf_field() ?>
-            <input type="hidden" name="terapis_id" id="oc_terapis_id">
-            <input type="hidden" name="tipe_gaji" id="oc_tipe_gaji" value="bulanan">
+    <!-- Form Konten -->
+    <form id="formBayarGaji" action="<?= base_url('gaji/proses_bayar') ?>" method="POST" class="flex-1 flex flex-col overflow-hidden hidden">
+        <?= csrf_field() ?>
+        <input type="hidden" name="terapis_id" id="oc_terapis_id">
+        <input type="hidden" name="tipe_gaji" id="oc_tipe_gaji" value="bulanan">
 
-            <div class="mb-6 p-4 bg-slate-50 rounded-lg border border-slate-100">
-                <p class="text-xs text-slate-500 uppercase tracking-wider mb-1">Penerima</p>
-                <p class="font-bold text-slate-800 text-lg" id="oc_nama_terapis">-</p>
-                <p class="mt-2 text-xs text-slate-500" id="oc_tipe_info">-</p>
-            </div>
-
-            <!-- Input Dinamis (Sistem otomatis menghitung kehadiran terapis) -->
-            <div class="mb-4" id="oc_kehadiran_group">
-                <label class="block text-sm font-medium text-slate-700 mb-1" id="oc_kehadiran_label">Total Kehadiran (Hari)</label>
-                <input type="number" name="total_kehadiran" id="oc_kehadiran" value="0" class="w-full border-slate-200 rounded-lg bg-slate-50 text-slate-500 font-semibold cursor-not-allowed mb-3" readonly required>
-                
-                <div id="oc_absen_display_group" class="hidden">
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Total Absen (Hari)</label>
-                    <input type="number" id="oc_absen" value="0" class="w-full border-slate-200 rounded-lg bg-slate-50 text-slate-500 font-semibold cursor-not-allowed" readonly>
+        <div class="flex-1 overflow-y-auto p-6 space-y-4" id="offcanvasContent">
+            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                <div class="flex justify-between items-start gap-4">
+                    <div class="flex-1">
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Penerima</p>
+                        <p class="font-extrabold text-slate-800 text-base leading-tight" id="oc_nama_terapis">-</p>
+                        <p class="text-[10px] text-slate-500 mt-1 font-medium leading-normal" id="oc_tipe_info">-</p>
+                    </div>
+                    <!-- Kehadiran & Absen Ringkas -->
+                    <div class="flex gap-2 shrink-0">
+                        <div id="oc_kehadiran_group" class="bg-indigo-50 border border-indigo-100 rounded-xl p-2 min-w-[64px] text-center shadow-sm">
+                            <span class="block text-[8px] font-bold text-indigo-500 uppercase tracking-wider" id="oc_kehadiran_label">Hadir</span>
+                            <span class="block text-sm font-extrabold text-indigo-700 mt-0.5" id="oc_kehadiran_text">0</span>
+                            <input type="hidden" name="total_kehadiran" id="oc_kehadiran" value="0">
+                        </div>
+                        <div id="oc_absen_display_group" class="bg-rose-50 border border-rose-100 rounded-xl p-2 min-w-[64px] text-center shadow-sm hidden">
+                            <span class="block text-[8px] font-bold text-rose-500 uppercase tracking-wider">Absen</span>
+                            <span class="block text-sm font-extrabold text-rose-700 mt-0.5" id="oc_absen_text">0</span>
+                            <input type="hidden" id="oc_absen" value="0">
+                        </div>
+                    </div>
                 </div>
-                <p class="mt-2 text-xs text-slate-500" id="oc_kehadiran_help">Kehadiran real terapis yang tercatat di sistem presensi bulan ini.</p>
+                <p class="mt-2.5 pt-2 border-t border-slate-200/60 text-[10px] text-slate-400" id="oc_kehadiran_help">Kehadiran real terapis yang tercatat di sistem presensi bulan ini.</p>
             </div>
-
-            <hr class="my-6 border-slate-100">
 
             <!-- Komponen Gaji Manual -->
-            <div class="mb-6">
-                <div class="flex justify-between items-center mb-3">
-                    <label class="block text-sm font-bold text-slate-700">Komponen Gaji Manual</label>
+            <div class="mb-4">
+                <div class="flex justify-between items-center mb-2.5">
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Komponen Gaji Manual</label>
                     <button type="button" id="btnTambahItemManualOC" class="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg text-xs font-bold transition">
                         <i class="fas fa-plus"></i> Tambah Item
                     </button>
                 </div>
-                <div id="oc_manual_items_container" class="space-y-3">
-                    <!-- Baris input komponen manual akan dimuat di sini oleh JS -->
+                <div class="overflow-y-auto max-h-[260px] border border-slate-200 rounded-lg shadow-inner bg-slate-50/20">
+                    <table class="w-full text-left border-collapse text-[11px] table-fixed">
+                        <thead class="sticky top-0 bg-slate-50 z-10 shadow-sm">
+                            <tr class="text-slate-500 font-bold uppercase tracking-wider border-b border-slate-200">
+                                <th class="p-2.5 text-[10px] w-[32%] text-slate-500 font-bold uppercase tracking-wider">Kelompok</th>
+                                <th class="p-2.5 text-[10px] w-[38%] text-slate-500 font-bold uppercase tracking-wider">Deskripsi</th>
+                                <th class="p-2.5 text-[10px] w-[22%] text-slate-500 font-bold uppercase tracking-wider text-right">Nominal</th>
+                                <th class="p-2.5 text-[10px] w-[8%] text-slate-500 font-bold uppercase tracking-wider text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="oc_manual_items_container" class="divide-y divide-slate-100 bg-white">
+                            <!-- Baris input komponen manual (tr) akan dimuat di sini oleh JS -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
+        </div>
 
-            <hr class="my-6 border-slate-100">
-
+        <!-- Fixed Footer -->
+        <div class="p-6 border-t border-slate-200 bg-slate-50 shrink-0" id="offcanvasFixedFooter">
             <!-- Rincian Readonly -->
             <div class="space-y-3 text-sm">
-                <div class="flex justify-between">
+                <div class="flex justify-between items-center">
                     <span class="text-slate-500">Gaji Pokok / Dasar</span>
-                    <input type="text" name="gaji_pokok_total" id="oc_gaji_pokok" class="text-right font-medium text-slate-800 border-none bg-transparent p-0 w-1/2 focus:ring-0" readonly>
+                    <span id="oc_gaji_pokok_text" class="font-semibold text-slate-800 text-sm">Rp 0</span>
+                    <input type="hidden" name="gaji_pokok_total" id="oc_gaji_pokok" value="0">
                 </div>
-                <div class="flex justify-between">
+                <div class="flex justify-between items-center">
                     <span class="text-slate-500 text-indigo-700">Total Tunjangan</span>
-                    <input type="text" name="total_tunjangan" id="oc_tunjangan" class="text-right font-medium text-indigo-700 border-none bg-transparent p-0 w-1/2 focus:ring-0" readonly>
+                    <span id="oc_tunjangan_text" class="font-semibold text-indigo-700 text-sm">Rp 0</span>
+                    <input type="hidden" name="total_tunjangan" id="oc_tunjangan" value="0">
                 </div>
                 <div class="flex justify-between items-center hidden" id="oc_benefit_non_cash_group">
                     <span class="text-slate-500 text-teal-600">Benefit (Non-Cash)</span>
-                    <input type="text" id="oc_benefit_non_cash" class="text-right font-medium text-teal-600 border-none bg-transparent p-0 w-1/2 focus:ring-0" readonly>
+                    <span id="oc_benefit_non_cash_text" class="font-semibold text-teal-600 text-sm">Rp 0</span>
+                    <input type="hidden" id="oc_benefit_non_cash" value="0">
                 </div>
-                <div class="flex justify-between">
+                <div class="flex justify-between items-center">
                     <span class="text-slate-500 text-red-500">Total Potongan (Rutin & Kasbon)</span>
-                    <input type="text" name="total_potongan" id="oc_potongan" class="text-right font-medium text-red-600 border-none bg-transparent p-0 w-1/2 focus:ring-0" readonly>
+                    <span id="oc_potongan_text" class="font-semibold text-red-600 text-sm">Rp 0</span>
+                    <input type="hidden" name="total_potongan" id="oc_potongan" value="0">
                 </div>
                 <div class="flex justify-between items-center" id="oc_potongan_absen_group">
                     <span class="text-slate-500 text-amber-600">Potongan Hari (Absen)</span>
-                    <input type="text" id="oc_potongan_absen" class="text-right font-medium text-amber-600 border-none bg-transparent p-0 w-1/2 focus:ring-0" readonly>
+                    <span id="oc_potongan_absen_text" class="font-semibold text-amber-600 text-sm">- Rp 0</span>
+                    <input type="hidden" id="oc_potongan_absen" value="0">
                 </div>
                 <div class="flex justify-between items-center pt-4 border-t border-slate-200 mt-4">
                     <span class="font-bold text-slate-800 text-base">Gaji Bersih (Take Home)</span>
-                    <input type="text" name="gaji_bersih" id="oc_bersih" class="text-right font-bold text-green-600 text-lg border-none bg-transparent p-0 w-1/2 focus:ring-0" readonly>
+                    <span id="oc_bersih_text" class="font-extrabold text-green-600 text-lg">Rp 0</span>
+                    <input type="hidden" name="gaji_bersih" id="oc_bersih" value="0">
                 </div>
             </div>
 
-            <div class="mt-8">
+            <div class="mt-6">
                 <button type="submit" class="w-full py-3 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 transition shadow-md">
                     Setujui & Bayarkan
                 </button>
             </div>
-        </form>
-    </div>
+        </div>
+    </form>
 </div>
 <div id="offcanvasBackdrop" class="offcanvas-backdrop fixed inset-0 bg-slate-900/20 z-40 hidden transition-opacity"></div>
 
@@ -679,8 +698,20 @@
                             <i class="fas fa-plus"></i> Tambah Item
                         </button>
                     </div>
-                    <div id="sm_manual_items_container" class="space-y-3">
-                        <!-- Dynamic rows loaded here -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-[11px] mb-2">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-200">
+                                    <th class="p-2 w-1/3">Kelompok</th>
+                                    <th class="p-2 w-1/3">Deskripsi</th>
+                                    <th class="p-2 w-1/4 text-right">Nominal</th>
+                                    <th class="p-2 w-8 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sm_manual_items_container" class="divide-y divide-slate-100">
+                                <!-- Dynamic rows loaded here -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 

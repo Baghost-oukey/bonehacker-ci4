@@ -180,8 +180,20 @@
                             <i class="fas fa-plus"></i> Tambah Item
                         </button>
                     </div>
-                    <div id="review_manual_items_container" class="space-y-3">
-                        <!-- Baris input komponen manual akan dimuat di sini oleh JS -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-[11px] mb-2">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-200">
+                                    <th class="p-2 w-1/3">Kelompok</th>
+                                    <th class="p-2 w-1/3">Deskripsi</th>
+                                    <th class="p-2 w-1/4 text-right">Nominal</th>
+                                    <th class="p-2 w-8 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="review_manual_items_container" class="divide-y divide-slate-100">
+                                <!-- Baris input komponen manual akan dimuat di sini oleh JS -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 

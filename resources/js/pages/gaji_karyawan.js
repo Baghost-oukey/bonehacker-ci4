@@ -42,23 +42,27 @@ const formatRupiah = (angka, prefix = 'Rp ') => {
 const createManualRowHTML = (isModal = false) => {
     const hapusClass = isModal ? 'btn-hapus-manual-item-sm' : 'btn-hapus-manual-item';
     return `
-        <div class="manual-item-row p-3 bg-slate-50/50 rounded-xl border border-slate-200 space-y-2.5">
-            <div class="flex items-center justify-between gap-2">
-                <select name="manual_kelompok[]" class="manual-kelompok border-slate-200 rounded-lg text-xs font-bold bg-white p-2 focus:ring-indigo-500 w-full max-w-[200px]">
+        <tr class="manual-item-row hover:bg-slate-50 transition-colors">
+            <td class="p-2 align-middle">
+                <select name="manual_kelompok[]" class="manual-kelompok border border-slate-200 rounded-lg text-[11px] bg-white p-1.5 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 w-full transition">
                     <option value="take_home">Gaji Pokok & Jaspel</option>
                     <option value="benefit">Tunjangan (Cash)</option>
                     <option value="benefit_non_cash">Tunjangan Non-Tunai</option>
                     <option value="potongan">Potongan</option>
                 </select>
-                <button type="button" class="${hapusClass} text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition flex-shrink-0">
-                    <i class="fas fa-trash-alt text-xs"></i>
+            </td>
+            <td class="p-2 align-middle">
+                <input type="text" name="manual_deskripsi[]" placeholder="Deskripsi" class="manual-deskripsi border border-slate-200 rounded-lg text-[11px] bg-slate-50/30 p-1.5 focus:bg-white focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 w-full transition" required>
+            </td>
+            <td class="p-2 align-middle">
+                <input type="text" name="manual_nominal[]" placeholder="Rp" class="manual-nominal input-rupiah border border-slate-200 rounded-lg text-[11px] bg-slate-50/30 p-1.5 focus:bg-white focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-right font-bold text-slate-700 w-full transition" required>
+            </td>
+            <td class="p-2 align-middle text-center">
+                <button type="button" class="${hapusClass} text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-1.5 rounded-lg transition-all">
+                    <i class="fas fa-trash-alt"></i>
                 </button>
-            </div>
-            <div class="grid grid-cols-2 gap-2">
-                <input type="text" name="manual_deskripsi[]" placeholder="Deskripsi komponen" class="manual-deskripsi border-slate-200 rounded-lg text-xs p-2 focus:ring-indigo-500" required>
-                <input type="text" name="manual_nominal[]" placeholder="Nominal Rp" class="manual-nominal input-rupiah border-slate-200 rounded-lg text-xs p-2 focus:ring-indigo-500 text-right font-bold text-slate-700" required>
-            </div>
-        </div>
+            </td>
+        </tr>
     `;
 };
 
@@ -591,10 +595,21 @@ window.bukaOffcanvas = (terapisId) => {
 
                             const gajiBersih = Math.max(0, (finalGajiPokok - potonganAbsen) + finalTunjangan - finalPotongan);
 
-                            gajiPokokInput.val(formatRupiah(finalGajiPokok));
-                            tunjanganInput.val(formatRupiah(finalTunjangan));
+                            const formattedGajiPokok = formatRupiah(finalGajiPokok);
+                            const formattedTunjangan = formatRupiah(finalTunjangan);
+                            const formattedBenefitNonCash = formatRupiah(finalBenefitNonCash);
+                            const formattedPotongan = formatRupiah(finalPotongan);
+                            const formattedGajiBersih = formatRupiah(gajiBersih);
+
+                            gajiPokokInput.val(formattedGajiPokok);
+                            $('#oc_gaji_pokok_text').text(formattedGajiPokok);
+
+                            tunjanganInput.val(formattedTunjangan);
+                            $('#oc_tunjangan_text').text(formattedTunjangan);
+
                             if (benefitNonCashInput.length > 0) {
-                                benefitNonCashInput.val(formatRupiah(finalBenefitNonCash));
+                                benefitNonCashInput.val(formattedBenefitNonCash);
+                                $('#oc_benefit_non_cash_text').text(formattedBenefitNonCash);
                             }
                             if (benefitNonCashGroup.length > 0) {
                                 if (finalBenefitNonCash > 0) {
@@ -603,12 +618,20 @@ window.bukaOffcanvas = (terapisId) => {
                                     benefitNonCashGroup.addClass('hidden');
                                 }
                             }
-                            potonganInput.val(formatRupiah(finalPotongan));
-                            bersihInput.val(formatRupiah(gajiBersih));
+                            
+                            potonganInput.val(formattedPotongan);
+                            $('#oc_potongan_text').text(formattedPotongan);
+
+                            bersihInput.val(formattedGajiBersih);
+                            $('#oc_bersih_text').text(formattedGajiBersih);
 
                             if (tipeGaji === 'bulanan' && potonganAbsen > 0) {
                                 if (potonganAbsenGroup.length > 0) potonganAbsenGroup.removeClass('hidden');
-                                if (potonganAbsenInput.length > 0) potonganAbsenInput.val(`- ${formatRupiah(potonganAbsen)}`);
+                                const formattedPotonganAbsen = `- ${formatRupiah(potonganAbsen)}`;
+                                if (potonganAbsenInput.length > 0) {
+                                    potonganAbsenInput.val(formattedPotonganAbsen);
+                                }
+                                $('#oc_potongan_absen_text').text(formattedPotonganAbsen);
                             } else {
                                 if (potonganAbsenGroup.length > 0) potonganAbsenGroup.addClass('hidden');
                             }
@@ -623,30 +646,38 @@ window.bukaOffcanvas = (terapisId) => {
                         tipeGajiField.val(tipeGaji);
                         form.attr('data-tipe-gaji', tipeGaji);
 
+                        // Ensure hidden input is never HTML5 required to avoid non-focusable validation issues
+                        attendanceInput.prop('required', false);
+
                         if (tipeGaji === 'harian') {
                             attendanceGroup.removeClass('hidden');
-                            attendanceInput.prop('required', true);
                             attendanceInput.val(currentKehadiran);
-                            attendanceLabel.text('Total Kehadiran (Hari)');
+                            $('#oc_kehadiran_text').text(currentKehadiran);
+                            attendanceLabel.text('Hadir');
                             tipeInfo.text('Gaji harian dihitung dari kehadiran real karyawan setiap bulan.');
                             $('#oc_absen_display_group').addClass('hidden');
+                            $('#oc_absen').val(0);
+                            $('#oc_absen_text').text(0);
                         } else {
                             if (data.potong_absen == 1) {
                                 attendanceGroup.removeClass('hidden');
-                                attendanceInput.prop('required', true);
                                 attendanceInput.val(currentKehadiran);
-                                attendanceLabel.text('Kehadiran Terdeteksi (Hari)');
+                                $('#oc_kehadiran_text').text(currentKehadiran);
+                                attendanceLabel.text('Hadir');
                                 tipeInfo.text('Gaji bulanan dipotong otomatis jika ada hari absen kerja.');
                                 
                                 $('#oc_absen_display_group').removeClass('hidden');
                                 $('#oc_absen').val(currentAbsen);
+                                $('#oc_absen_text').text(currentAbsen);
                             } else {
                                 attendanceGroup.addClass('hidden');
-                                attendanceInput.prop('required', false);
                                 attendanceInput.val(0);
-                                attendanceLabel.text('Kehadiran tidak diperlukan');
+                                $('#oc_kehadiran_text').text(0);
+                                attendanceLabel.text('Hadir');
                                 tipeInfo.text('Gaji bulanan tetap sesuai nominal yang sudah diatur.');
                                 $('#oc_absen_display_group').addClass('hidden');
+                                $('#oc_absen').val(0);
+                                $('#oc_absen_text').text(0);
                             }
                         }
                     };

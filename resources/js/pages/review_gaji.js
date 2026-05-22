@@ -19,23 +19,27 @@ $(document).ready(function() {
 
     const createManualRowHTML = () => {
         return `
-            <div class="manual-item-row p-3 bg-slate-50/50 rounded-xl border border-slate-200 space-y-2.5">
-                <div class="flex items-center justify-between gap-2">
-                    <select name="manual_kelompok[]" class="manual-kelompok border-slate-200 rounded-lg text-xs font-bold bg-white p-2 focus:ring-indigo-500 w-full max-w-[200px]">
+            <tr class="manual-item-row hover:bg-slate-50 transition-colors">
+                <td class="p-2">
+                    <select name="manual_kelompok[]" class="manual-kelompok border-slate-200 rounded-lg text-[11px] bg-white p-1.5 focus:ring-indigo-500 w-full">
                         <option value="take_home">Gaji Pokok & Jaspel</option>
                         <option value="benefit">Tunjangan (Cash)</option>
                         <option value="benefit_non_cash">Tunjangan Non-Tunai</option>
                         <option value="potongan">Potongan</option>
                     </select>
-                    <button type="button" class="btn-hapus-manual-item text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition flex-shrink-0">
-                        <i class="fas fa-trash-alt text-xs"></i>
+                </td>
+                <td class="p-2">
+                    <input type="text" name="manual_deskripsi[]" placeholder="Deskripsi" class="manual-deskripsi border-slate-200 rounded-lg text-[11px] p-1.5 focus:ring-indigo-500 w-full" required>
+                </td>
+                <td class="p-2">
+                    <input type="text" name="manual_nominal[]" placeholder="Rp" class="manual-nominal input-rupiah border-slate-200 rounded-lg text-[11px] p-1.5 focus:ring-indigo-500 text-right font-bold text-slate-700 w-full" required>
+                </td>
+                <td class="p-2 text-center">
+                    <button type="button" class="btn-hapus-manual-item text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-1.5 rounded-lg transition">
+                        <i class="fas fa-trash-alt"></i>
                     </button>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="text" name="manual_deskripsi[]" placeholder="Deskripsi komponen" class="manual-deskripsi border-slate-200 rounded-lg text-xs p-2 focus:ring-indigo-500" required>
-                    <input type="text" name="manual_nominal[]" placeholder="Nominal Rp" class="manual-nominal input-rupiah border-slate-200 rounded-lg text-xs p-2 focus:ring-indigo-500 text-right font-bold text-slate-700" required>
-                </div>
-            </div>
+                </td>
+            </tr>
         `;
     };
 
