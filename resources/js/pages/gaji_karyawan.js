@@ -596,13 +596,33 @@ window.bukaOffcanvas = (terapisId) => {
                             const gajiBersih = Math.max(0, (finalGajiPokok - potonganAbsen) + finalTunjangan - finalPotongan);
 
                             const formattedGajiPokok = formatRupiah(finalGajiPokok);
-                            const formattedTunjangan = formatRupiah(finalTunjangan);
+
+                            // Calculate Jaspel dynamically from kalkulasi
+                            const jaspelReguler = kalkulasi ? (parseInt(kalkulasi.jaspel_reguler) || 0) : 0;
+                            const jaspelKejantanan = kalkulasi ? (parseInt(kalkulasi.jaspel_kejantanan) || 0) : 0;
+                            const totalJaspel = jaspelReguler + jaspelKejantanan;
+
+                            // Visual adjustment: subtract Jaspel from Total Tunjangan display
+                            const displayedTunjangan = Math.max(0, finalTunjangan - totalJaspel);
+                            const formattedTunjangan = formatRupiah(displayedTunjangan);
+
                             const formattedBenefitNonCash = formatRupiah(finalBenefitNonCash);
                             const formattedPotongan = formatRupiah(finalPotongan);
                             const formattedGajiBersih = formatRupiah(gajiBersih);
 
                             gajiPokokInput.val(formattedGajiPokok);
                             $('#oc_gaji_pokok_text').text(formattedGajiPokok);
+
+                            // Set Jaspel Row
+                            const jaspelGroup = $('#oc_jaspel_group');
+                            if (jaspelGroup.length > 0) {
+                                if (totalJaspel > 0) {
+                                    jaspelGroup.removeClass('hidden');
+                                    $('#oc_jaspel_text').text(formatRupiah(totalJaspel));
+                                } else {
+                                    jaspelGroup.addClass('hidden');
+                                }
+                            }
 
                             tunjanganInput.val(formattedTunjangan);
                             $('#oc_tunjangan_text').text(formattedTunjangan);

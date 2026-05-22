@@ -547,6 +547,10 @@
                     <span id="oc_gaji_pokok_text" class="font-semibold text-slate-800 text-sm">Rp 0</span>
                     <input type="hidden" name="gaji_pokok_total" id="oc_gaji_pokok" value="0">
                 </div>
+                <div class="flex justify-between items-center hidden" id="oc_jaspel_group">
+                    <span class="text-slate-500 text-emerald-600 font-semibold">Total Jasa Pelayanan (Jaspel)</span>
+                    <span id="oc_jaspel_text" class="font-bold text-emerald-600 text-sm">Rp 0</span>
+                </div>
                 <div class="flex justify-between items-center">
                     <span class="text-slate-500 text-indigo-700">Total Tunjangan</span>
                     <span id="oc_tunjangan_text" class="font-semibold text-indigo-700 text-sm">Rp 0</span>

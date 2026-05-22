@@ -60,9 +60,12 @@ class Mgajikaryawan extends Model
 
     public function getPayrollEstimates($regionId = 'all')
     {
+        $currentMonth = date('n');
+        $currentYear = date('Y');
+
         $builder = $this->db->table('terapis t');
-        // SUB QUERY UNTUK JUMLAH TINDAKAN
-        $subQueryTindakan = "(SELECT COUNT(h.id) FROM histories h WHERE FIND_IN_SET(t.id, h.terapis_id))";
+        // SUB QUERY UNTUK JUMLAH TINDAKAN BULAN INI (DI-RESET TIAP BULAN)
+        $subQueryTindakan = "(SELECT COUNT(h.id) FROM histories h WHERE FIND_IN_SET(t.id, h.terapis_id) AND h.is_delete = 0 AND MONTH(h.date) = {$currentMonth} AND YEAR(h.date) = {$currentYear})";
         $subQueryKasbon = "(SELECT COALESCE(SUM(nominal), 0) FROM kasbon_karyawan WHERE terapis_id = t.id AND status_potongan IN ('belum_lunas', 'belum_dipotong'))";
         $subQueryTunjangan = "(SELECT COALESCE(SUM(tt.nominal), 0) FROM tunjangan_terapis tt WHERE tt.terapis_id = t.id AND tt.is_active = 1 AND tt.tipe = 'bulanan')";
 

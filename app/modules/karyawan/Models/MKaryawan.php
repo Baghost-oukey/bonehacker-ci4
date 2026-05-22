@@ -70,7 +70,10 @@ class MKaryawan extends Model
         $jsonRegionCond = $this->buildJsonRegionCondition($regionIds);
         $terapisRegionIn = empty($regionIds) ? '' : ' AND t.region_id IN (' . implode(',', $regionIds) . ')';
 
-        // Pre-aggregate tindakan counts per terapis — avoids expensive per-row correlated subquery
+        $currentMonth = date('n');
+        $currentYear = date('Y');
+
+        // Pre-aggregate tindakan counts per terapis for CURRENT MONTH only
         $tindakanJoin = "LEFT JOIN (
             SELECT SUBSTRING_INDEX(SUBSTRING_INDEX(h.terapis_id, ',', numbers.n), ',', -1) AS tid,
                    COUNT(*) AS cnt
@@ -78,6 +81,9 @@ class MKaryawan extends Model
             INNER JOIN (
                 SELECT 1 n UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5
             ) numbers ON CHAR_LENGTH(h.terapis_id) - CHAR_LENGTH(REPLACE(h.terapis_id, ',', '')) >= numbers.n - 1
+            WHERE h.is_delete = 0 
+              AND MONTH(h.date) = {$currentMonth} 
+              AND YEAR(h.date) = {$currentYear}
             GROUP BY tid
         ) ht ON ht.tid = t.id";
 
