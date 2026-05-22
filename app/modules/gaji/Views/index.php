@@ -72,11 +72,11 @@
 
 
         <!-- DROPDOWN NAVIGASI MOBILE -->
-        <div class="w-full lg:hidden hidden">
+        <div class="w-full lg:hidden mb-2">
             <select onchange="window.location.href=this.value" class="w-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-sm font-bold rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500/20">
-                <option value="<?= site_url('gaji') ?>" selected>💵 Gaji Karyawan</option>
-                <option value="<?= site_url('master-gaji') ?>">⚙️ Master Gaji</option>
-                <option value="<?= site_url('kasbon') ?>">💸 Kasbon Karyawan</option>
+                <option value="<?= base_url('gaji') ?>" selected>💵 Gaji Karyawan</option>
+                <option value="<?= base_url('master-gaji') ?>">⚙️ Master Gaji</option>
+                <option value="<?= base_url('kasbon') ?>">💸 Kasbon Karyawan</option>
             </select>
         </div>
     </div>

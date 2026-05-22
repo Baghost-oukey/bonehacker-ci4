@@ -4,9 +4,20 @@
 <div class="p-4 sm:p-6 bg-slate-50 min-h-screen">
 
     <!-- PAGE HEADER -->
-    <div class="mb-6">
-        <h2 class="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">Master Gaji</h2>
-        <p class="text-xs sm:text-sm text-slate-500 mt-1">Kelola gaji pokok terapis dan master item tunjangan.</p>
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <div class="w-full md:w-auto">
+            <h2 class="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">Master Gaji</h2>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1 font-medium">Kelola gaji pokok terapis dan master item tunjangan.</p>
+        </div>
+
+        <!-- DROPDOWN NAVIGASI MOBILE -->
+        <div class="w-full lg:hidden mb-2">
+            <select onchange="window.location.href=this.value" class="w-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-sm font-bold rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500/20">
+                <option value="<?= base_url('gaji') ?>">💵 Gaji Karyawan</option>
+                <option value="<?= base_url('master-gaji') ?>" selected>⚙️ Master Gaji</option>
+                <option value="<?= base_url('kasbon') ?>">💸 Kasbon Karyawan</option>
+            </select>
+        </div>
     </div>
 
     <!-- TAB NAVIGATION -->
