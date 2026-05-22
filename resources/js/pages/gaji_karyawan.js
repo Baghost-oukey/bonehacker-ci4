@@ -42,27 +42,30 @@ const formatRupiah = (angka, prefix = 'Rp ') => {
 const createManualRowHTML = (isModal = false) => {
     const hapusClass = isModal ? 'btn-hapus-manual-item-sm' : 'btn-hapus-manual-item';
     return `
-        <tr class="manual-item-row hover:bg-slate-50 transition-colors">
-            <td class="p-2 align-middle">
-                <select name="manual_kelompok[]" class="manual-kelompok border border-slate-200 rounded-lg text-[11px] bg-white p-1.5 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 w-full transition">
+        <div class="manual-item-row bg-white border border-slate-200 rounded-xl p-3 mb-3 shadow-sm flex flex-col sm:flex-row gap-3 items-start sm:items-center relative">
+            <div class="w-full sm:w-[30%]">
+                <label class="block sm:hidden text-[10px] font-bold text-slate-500 uppercase mb-1">Kelompok</label>
+                <select name="manual_kelompok[]" class="manual-kelompok border border-slate-200 rounded-lg text-xs bg-white p-2 focus:ring-1 focus:ring-indigo-500 w-full transition">
                     <option value="take_home">Gaji Pokok & Jaspel</option>
                     <option value="benefit">Tunjangan (Cash)</option>
                     <option value="benefit_non_cash">Tunjangan Non-Tunai</option>
                     <option value="potongan">Potongan</option>
                 </select>
-            </td>
-            <td class="p-2 align-middle">
-                <input type="text" name="manual_deskripsi[]" placeholder="Deskripsi" class="manual-deskripsi border border-slate-200 rounded-lg text-[11px] bg-slate-50/30 p-1.5 focus:bg-white focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 w-full transition" required>
-            </td>
-            <td class="p-2 align-middle">
-                <input type="text" name="manual_nominal[]" placeholder="Rp" class="manual-nominal input-rupiah border border-slate-200 rounded-lg text-[11px] bg-slate-50/30 p-1.5 focus:bg-white focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-right font-bold text-slate-700 w-full transition" required>
-            </td>
-            <td class="p-2 align-middle text-center">
-                <button type="button" class="${hapusClass} text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-1.5 rounded-lg transition-all">
-                    <i class="fas fa-trash-alt"></i>
+            </div>
+            <div class="w-full sm:w-[35%]">
+                <label class="block sm:hidden text-[10px] font-bold text-slate-500 uppercase mb-1">Deskripsi</label>
+                <input type="text" name="manual_deskripsi[]" placeholder="Deskripsi Komponen" class="manual-deskripsi border border-slate-200 rounded-lg text-xs bg-slate-50/50 p-2 focus:bg-white focus:ring-1 focus:ring-indigo-500 w-full transition" required>
+            </div>
+            <div class="w-full sm:w-[25%]">
+                <label class="block sm:hidden text-[10px] font-bold text-slate-500 uppercase mb-1">Nominal</label>
+                <input type="text" name="manual_nominal[]" placeholder="Rp 0" class="manual-nominal input-rupiah border border-slate-200 rounded-lg text-xs bg-slate-50/50 p-2 focus:bg-white focus:ring-1 focus:ring-indigo-500 text-right font-bold text-slate-700 w-full transition" required>
+            </div>
+            <div class="w-full sm:w-[10%] flex justify-end sm:justify-center mt-2 sm:mt-0 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-100">
+                <button type="button" class="${hapusClass} text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-2 rounded-lg transition-all w-full sm:w-auto border border-rose-100 sm:border-transparent flex justify-center items-center gap-2">
+                    <i class="fas fa-trash-alt"></i> <span class="sm:hidden text-xs font-bold">Hapus Item</span>
                 </button>
-            </td>
-        </tr>
+            </div>
+        </div>
     `;
 };
 

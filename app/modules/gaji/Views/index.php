@@ -520,66 +520,60 @@
                         <i class="fas fa-plus"></i> Tambah Item
                     </button>
                 </div>
-                <div class="overflow-y-auto max-h-[260px] border border-slate-200 rounded-lg shadow-inner bg-slate-50/20">
-                    <table class="w-full text-left border-collapse text-[11px] table-fixed">
-                        <thead class="sticky top-0 bg-slate-50 z-10 shadow-sm">
-                            <tr class="text-slate-500 font-bold uppercase tracking-wider border-b border-slate-200">
-                                <th class="p-2.5 text-[10px] w-[32%] text-slate-500 font-bold uppercase tracking-wider">Kelompok</th>
-                                <th class="p-2.5 text-[10px] w-[38%] text-slate-500 font-bold uppercase tracking-wider">Deskripsi</th>
-                                <th class="p-2.5 text-[10px] w-[22%] text-slate-500 font-bold uppercase tracking-wider text-right">Nominal</th>
-                                <th class="p-2.5 text-[10px] w-[8%] text-slate-500 font-bold uppercase tracking-wider text-center">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="oc_manual_items_container" class="divide-y divide-slate-100 bg-white">
-                            <!-- Baris input komponen manual (tr) akan dimuat di sini oleh JS -->
-                        </tbody>
-                    </table>
+                <div class="hidden sm:flex border-b border-slate-200 pb-2 mb-3 px-2">
+                    <div class="w-[30%] text-[10px] font-bold text-slate-500 uppercase tracking-wider">Kelompok</div>
+                    <div class="w-[35%] text-[10px] font-bold text-slate-500 uppercase tracking-wider pl-1">Deskripsi</div>
+                    <div class="w-[25%] text-[10px] font-bold text-slate-500 uppercase tracking-wider text-right pr-2">Nominal</div>
+                    <div class="w-[10%] text-[10px] font-bold text-slate-500 uppercase tracking-wider text-center">Aksi</div>
+                </div>
+                <div class="overflow-y-auto max-h-[260px] p-1" id="oc_manual_items_container">
+                    <!-- Baris input komponen manual (card) akan dimuat di sini oleh JS -->
                 </div>
             </div>
         </div>
 
         <!-- Fixed Footer -->
-        <div class="p-6 border-t border-slate-200 bg-slate-50 shrink-0" id="offcanvasFixedFooter">
+        <div class="p-4 border-t border-slate-200 bg-slate-50 shrink-0" id="offcanvasFixedFooter">
             <!-- Rincian Readonly -->
-            <div class="space-y-3 text-sm">
+            <div class="space-y-1.5 text-xs">
                 <div class="flex justify-between items-center">
                     <span class="text-slate-500">Gaji Pokok / Dasar</span>
-                    <span id="oc_gaji_pokok_text" class="font-semibold text-slate-800 text-sm">Rp 0</span>
+                    <span id="oc_gaji_pokok_text" class="font-semibold text-slate-800 text-xs">Rp 0</span>
                     <input type="hidden" name="gaji_pokok_total" id="oc_gaji_pokok" value="0">
                 </div>
                 <div class="flex justify-between items-center hidden" id="oc_jaspel_group">
                     <span class="text-slate-500 text-emerald-600 font-semibold">Total Jasa Pelayanan (Jaspel)</span>
-                    <span id="oc_jaspel_text" class="font-bold text-emerald-600 text-sm">Rp 0</span>
+                    <span id="oc_jaspel_text" class="font-bold text-emerald-600 text-xs">Rp 0</span>
                 </div>
                 <div class="flex justify-between items-center">
                     <span class="text-slate-500 text-indigo-700">Total Tunjangan</span>
-                    <span id="oc_tunjangan_text" class="font-semibold text-indigo-700 text-sm">Rp 0</span>
+                    <span id="oc_tunjangan_text" class="font-semibold text-indigo-700 text-xs">Rp 0</span>
                     <input type="hidden" name="total_tunjangan" id="oc_tunjangan" value="0">
                 </div>
                 <div class="flex justify-between items-center hidden" id="oc_benefit_non_cash_group">
                     <span class="text-slate-500 text-teal-600">Benefit (Non-Cash)</span>
-                    <span id="oc_benefit_non_cash_text" class="font-semibold text-teal-600 text-sm">Rp 0</span>
+                    <span id="oc_benefit_non_cash_text" class="font-semibold text-teal-600 text-xs">Rp 0</span>
                     <input type="hidden" id="oc_benefit_non_cash" value="0">
                 </div>
                 <div class="flex justify-between items-center">
                     <span class="text-slate-500 text-red-500">Total Potongan (Rutin & Kasbon)</span>
-                    <span id="oc_potongan_text" class="font-semibold text-red-600 text-sm">Rp 0</span>
+                    <span id="oc_potongan_text" class="font-semibold text-red-600 text-xs">Rp 0</span>
                     <input type="hidden" name="total_potongan" id="oc_potongan" value="0">
                 </div>
                 <div class="flex justify-between items-center" id="oc_potongan_absen_group">
                     <span class="text-slate-500 text-amber-600">Potongan Hari (Absen)</span>
-                    <span id="oc_potongan_absen_text" class="font-semibold text-amber-600 text-sm">- Rp 0</span>
+                    <span id="oc_potongan_absen_text" class="font-semibold text-amber-600 text-xs">- Rp 0</span>
                     <input type="hidden" id="oc_potongan_absen" value="0">
                 </div>
-                <div class="flex justify-between items-center pt-4 border-t border-slate-200 mt-4">
-                    <span class="font-bold text-slate-800 text-base">Gaji Bersih (Take Home)</span>
-                    <span id="oc_bersih_text" class="font-extrabold text-green-600 text-lg">Rp 0</span>
+                <div class="flex justify-between items-center pt-2 border-t border-slate-200 mt-2">
+                    <span class="font-bold text-slate-800 text-sm">Gaji Bersih (Take Home)</span>
+                    <span id="oc_bersih_text" class="font-extrabold text-green-600 text-base">Rp 0</span>
                     <input type="hidden" name="gaji_bersih" id="oc_bersih" value="0">
                 </div>
             </div>
 
-            <div class="mt-6">
-                <button type="submit" class="w-full py-3 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 transition shadow-md">
+            <div class="mt-3">
+                <button type="submit" class="w-full py-2.5 bg-slate-900 text-white rounded-xl text-sm font-medium hover:bg-slate-800 transition shadow-md">
                     Setujui & Bayarkan
                 </button>
             </div>
@@ -702,20 +696,14 @@
                             <i class="fas fa-plus"></i> Tambah Item
                         </button>
                     </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse text-[11px] mb-2">
-                            <thead>
-                                <tr class="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-200">
-                                    <th class="p-2 w-1/3">Kelompok</th>
-                                    <th class="p-2 w-1/3">Deskripsi</th>
-                                    <th class="p-2 w-1/4 text-right">Nominal</th>
-                                    <th class="p-2 w-8 text-center">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="sm_manual_items_container" class="divide-y divide-slate-100">
-                                <!-- Dynamic rows loaded here -->
-                            </tbody>
-                        </table>
+                    <div class="hidden sm:flex border-b border-slate-200 pb-2 mb-3 px-2">
+                        <div class="w-[30%] text-[10px] font-bold text-slate-500 uppercase tracking-wider">Kelompok</div>
+                        <div class="w-[35%] text-[10px] font-bold text-slate-500 uppercase tracking-wider pl-1">Deskripsi</div>
+                        <div class="w-[25%] text-[10px] font-bold text-slate-500 uppercase tracking-wider text-right pr-2">Nominal</div>
+                        <div class="w-[10%] text-[10px] font-bold text-slate-500 uppercase tracking-wider text-center">Aksi</div>
+                    </div>
+                    <div class="overflow-y-auto max-h-[300px] p-1" id="sm_manual_items_container">
+                        <!-- Dynamic rows loaded here -->
                     </div>
                 </div>
 
